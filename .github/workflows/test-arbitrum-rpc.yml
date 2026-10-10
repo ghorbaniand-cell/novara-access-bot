@@ -16,6 +16,7 @@ jobs:
           python - <<'PY'
           import json
           import urllib.request
+          import urllib.error
 
           RPC_URL = "https://arbitrum.drpc.org"
 
@@ -30,36 +31,78 @@ jobs:
               request = urllib.request.Request(
                   RPC_URL,
                   data=json.dumps(payload).encode("utf-8"),
-                  headers={"Content-Type": "application/json"},
+                  headers={
+                      "Content-Type": "application/json",
+                      "Accept": "application/json",
+                      "User-Agent": "NOVARA-RPC-Test/1.0"
+                  },
                   method="POST"
               )
 
-              with urllib.request.urlopen(
-                  request, timeout=20
-              ) as response:
-                  result = json.loads(
-                      response.read().decode("utf-8")
+              try:
+                  with urllib.request.urlopen(
+                      request, timeout=20
+                  ) as response:
+                      body = response.read().decode("utf-8")
+                      result = json.loads(body)
+
+              except urllib.error.HTTPError as error:
+                  print(f"RPC URL: {RPC_URL}")
+                  print(f"HTTP STATUS: {error.code}")
+                  print(f"HTTP REASON: {error.reason}")
+
+                  try:
+                      body = error.read().decode(
+                          "utf-8", errors="replace"
+                      )
+                      print("SERVER RESPONSE:", body[:1000])
+                  except Exception:
+                      print("Could not read server response.")
+
+                  print(
+                      "SERVER HEADER:",
+                      error.headers.get("Server")
                   )
+                  print(
+                      "CONTENT TYPE:",
+                      error.headers.get("Content-Type")
+                  )
+                  raise
+
+              except Exception as error:
+                  print(f"RPC URL: {RPC_URL}")
+                  print(
+                      f"CONNECTION ERROR: "
+                      f"{type(error).__name__}: {error}"
+                  )
+                  raise
 
               if "error" in result:
                   raise RuntimeError(
-                      f"RPC error: {result['error']}"
+                      f"JSON-RPC error: {result['error']}"
+                  )
+
+              if "result" not in result:
+                  raise RuntimeError(
+                      f"Unexpected RPC response: {result}"
                   )
 
               return result["result"]
 
           try:
-              chain_id = rpc_call("eth_chainId")
+              print("Testing Arbitrum One RPC...")
+              print("RPC endpoint:", RPC_URL)
 
-              print(f"Connected chain ID: {chain_id}")
+              chain_id = rpc_call("eth_chainId")
+              print("Connected chain ID:", chain_id)
 
               if int(chain_id, 16) != 42161:
                   raise RuntimeError(
-                      "Wrong network! Expected Arbitrum One."
+                      "Wrong network! Expected Arbitrum One "
+                      "(Chain ID 42161)."
                   )
 
               block_number = rpc_call("eth_blockNumber")
-
               print(
                   "Latest block number:",
                   int(block_number, 16)
@@ -67,7 +110,7 @@ jobs:
 
               print("ARBITRUM_RPC_TEST_SUCCESS")
 
-          except Exception as error:
+          except Exception:
               print("ARBITRUM_RPC_TEST_FAILED")
-              raise error
+              raise
           PY
