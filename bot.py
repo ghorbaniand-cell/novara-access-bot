@@ -96,6 +96,11 @@ async def start_handler(message: Message):
     )
 
 
+@dp.message(Command("myid"))
+async def myid_handler(message: Message):
+    await message.answer(
+        f"Your Telegram ID: <code>{message.from_user.id}</code>"
+    )
 @dp.message(Command("help"))
 async def help_handler(message: Message):
     await message.answer(
