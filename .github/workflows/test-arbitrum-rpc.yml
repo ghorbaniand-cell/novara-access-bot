@@ -17,7 +17,7 @@ jobs:
           import json
           import urllib.request
 
-          RPC_URL = "https://arb1.arbitrum.io/rpc"
+          RPC_URL = "https://arbitrum-one-rpc.publicnode.com"
 
           def rpc_call(method):
               payload = {
