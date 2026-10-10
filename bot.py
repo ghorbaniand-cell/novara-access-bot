@@ -71,6 +71,13 @@ def main_menu():
     )
 
 
+@dp.channel_post()
+async def detect_channel_id(message: Message):
+    logging.info(
+        "NOVARA_CHANNEL_DETECTED | "
+        f"chat_id={message.chat.id} | "
+        f"title={message.chat.title}"
+    )
 @dp.message(CommandStart())
 async def start_handler(message: Message):
     text = (
