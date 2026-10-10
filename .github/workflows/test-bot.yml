@@ -26,7 +26,15 @@ jobs:
       - name: Run NOVARA bot
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          VIP_CHANNEL_ID: ${{ secrets.VIP_CHANNEL_ID }}
+          ADMIN_TELEGRAM_ID: ${{ secrets.ADMIN_TELEGRAM_ID }}
         run: |
+          timeout --signal=TERM 4m python -u bot.py || {
+            result=$?
+            if [ "$result" -ne 124 ] && [ "$result" -ne 143 ]; then
+              exit "$result"
+            fi
+          }
           timeout --signal=TERM 4m python -u bot.py || {
             result=$?
             if [ "$result" -ne 124 ] && [ "$result" -ne 143 ]; then
