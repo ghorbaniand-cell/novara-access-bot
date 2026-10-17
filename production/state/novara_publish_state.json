@@ -1,7 +1,7 @@
 {
   "date": "2026-10-17",
   "freeSent": 5,
-  "vipSent": 86,
+  "vipSent": 87,
   "sentKeys": [
     "2026-10-17|0xe2823659be02e0f48a4660e4da008b5e1abfdf29|ETH|LONG",
     "2026-10-17|0x8bae3527e5a33fa0cf184f37bc112d071463ab6d|kNEIRO|LONG",
@@ -88,7 +88,8 @@
     "2026-10-17|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|ZEC|LONG",
     "2026-10-17|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|STBL|SHORT",
     "2026-10-17|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|PENDLE|LONG",
-    "2026-10-17|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|NEAR|LONG"
+    "2026-10-17|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|NEAR|LONG",
+    "2026-10-17|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|FET|LONG"
   ],
   "openTrades": [
     {
@@ -228,33 +229,16 @@
       "alertType": "OPEN_BAND"
     },
     {
-      "key": "2026-10-17|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|PENDLE|LONG",
-      "coin": "PENDLE",
+      "key": "2026-10-17|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|FET|LONG",
+      "coin": "FET",
       "side": "LONG",
       "trader": "⭐ Trader 23 ⭐ — STRK short candidate — profitable open short",
-      "entry": 2.07698,
-      "tp": 2.0977498,
-      "sl": 2.0665951,
+      "entry": 0.191863,
+      "tp": 0.19378163,
+      "sl": 0.19090368500000002,
       "leverage": 5,
-      "notional": 8419.6992,
-      "signalAt": 1792276949961,
-      "status": "OPEN",
-      "destinations": [
-        "-1004446412486"
-      ],
-      "alertType": "OPEN_BAND"
-    },
-    {
-      "key": "2026-10-17|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|NEAR|LONG",
-      "coin": "NEAR",
-      "side": "LONG",
-      "trader": "⭐ Trader 23 ⭐ — STRK short candidate — profitable open short",
-      "entry": 4.93545,
-      "tp": 4.9848045,
-      "sl": 4.9107727500000005,
-      "leverage": 10,
-      "notional": 365900.992,
-      "signalAt": 1792276949961,
+      "notional": 144477.97293,
+      "signalAt": 1792277260535,
       "status": "OPEN",
       "destinations": [
         "-1004446412486"
@@ -439,6 +423,28 @@
       "leverage": 3,
       "notional": 1119.863304,
       "resolvedAt": 1792276949961
+    },
+    {
+      "key": "2026-10-17|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|PENDLE|LONG",
+      "coin": "PENDLE",
+      "side": "LONG",
+      "status": "SL_HIT",
+      "entry": 2.07698,
+      "exitPrice": 2.0665951,
+      "leverage": 5,
+      "notional": 8419.6992,
+      "resolvedAt": 1792277260535
+    },
+    {
+      "key": "2026-10-17|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|NEAR|LONG",
+      "coin": "NEAR",
+      "side": "LONG",
+      "status": "SL_HIT",
+      "entry": 4.93545,
+      "exitPrice": 4.9107727500000005,
+      "leverage": 10,
+      "notional": 365900.992,
+      "resolvedAt": 1792277260535
     }
   ]
 }
