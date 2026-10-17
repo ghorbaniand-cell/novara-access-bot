@@ -271,23 +271,6 @@
         "-1004446412486"
       ],
       "alertType": "NEW_ENTRY"
-    },
-    {
-      "key": "2026-10-17|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|ALGO|LONG",
-      "coin": "ALGO",
-      "side": "LONG",
-      "trader": "⭐ Trader 23 ⭐ — STRK short candidate — profitable open short",
-      "entry": 0.112658,
-      "tp": 0.11378458,
-      "sl": 0.11209471,
-      "leverage": 5,
-      "notional": 163204.30266,
-      "signalAt": 1792280680217,
-      "status": "OPEN",
-      "destinations": [
-        "-1004446412486"
-      ],
-      "alertType": "OPEN_BAND"
     }
   ],
   "pendingOutcomes": [],
@@ -577,6 +560,17 @@
       "leverage": 20,
       "notional": 2574,
       "resolvedAt": 1792280369370
+    },
+    {
+      "key": "2026-10-17|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|ALGO|LONG",
+      "coin": "ALGO",
+      "side": "LONG",
+      "status": "SL_HIT",
+      "entry": 0.112658,
+      "exitPrice": 0.11209471,
+      "leverage": 5,
+      "notional": 163204.30266,
+      "resolvedAt": 1792280990445
     }
   ]
 }
