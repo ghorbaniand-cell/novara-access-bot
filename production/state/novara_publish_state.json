@@ -1,7 +1,7 @@
 {
   "date": "2026-10-17",
   "freeSent": 5,
-  "vipSent": 79,
+  "vipSent": 80,
   "sentKeys": [
     "2026-10-17|0xe2823659be02e0f48a4660e4da008b5e1abfdf29|ETH|LONG",
     "2026-10-17|0x8bae3527e5a33fa0cf184f37bc112d071463ab6d|kNEIRO|LONG",
@@ -81,7 +81,8 @@
     "2026-10-17|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|FOGO|LONG",
     "2026-10-17|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|XMR|LONG",
     "2026-10-17|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|kLUNC|LONG",
-    "2026-10-17|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|0G|LONG"
+    "2026-10-17|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|0G|LONG",
+    "2026-10-17|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|GMX|SHORT"
   ],
   "openTrades": [
     {
@@ -255,33 +256,16 @@
       "alertType": "OPEN_BAND"
     },
     {
-      "key": "2026-10-17|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|kLUNC|LONG",
-      "coin": "kLUNC",
-      "side": "LONG",
+      "key": "2026-10-17|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|GMX|SHORT",
+      "coin": "GMX",
+      "side": "SHORT",
       "trader": "⭐ Trader 23 ⭐ — STRK short candidate — profitable open short",
-      "entry": 0.047632,
-      "tp": 0.04810832,
-      "sl": 0.04739384,
+      "entry": 8.6028,
+      "tp": 8.516772,
+      "sl": 8.645814,
       "leverage": 3,
-      "notional": 3043.545009,
-      "signalAt": 1792274468186,
-      "status": "OPEN",
-      "destinations": [
-        "-1004446412486"
-      ],
-      "alertType": "OPEN_BAND"
-    },
-    {
-      "key": "2026-10-17|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|0G|LONG",
-      "coin": "0G",
-      "side": "LONG",
-      "trader": "⭐ Trader 23 ⭐ — STRK short candidate — profitable open short",
-      "entry": 0.235537,
-      "tp": 0.23789237,
-      "sl": 0.23435931499999998,
-      "leverage": 3,
-      "notional": 25483.66081,
-      "signalAt": 1792274468186,
+      "notional": 41590.198143,
+      "signalAt": 1792274776546,
       "status": "OPEN",
       "destinations": [
         "-1004446412486"
@@ -367,6 +351,28 @@
       "leverage": 5,
       "notional": 906970.3881,
       "resolvedAt": 1792274468186
+    },
+    {
+      "key": "2026-10-17|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|kLUNC|LONG",
+      "coin": "kLUNC",
+      "side": "LONG",
+      "status": "SL_HIT",
+      "entry": 0.047632,
+      "exitPrice": 0.04739384,
+      "leverage": 3,
+      "notional": 3043.545009,
+      "resolvedAt": 1792274776546
+    },
+    {
+      "key": "2026-10-17|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|0G|LONG",
+      "coin": "0G",
+      "side": "LONG",
+      "status": "SL_HIT",
+      "entry": 0.235537,
+      "exitPrice": 0.23435931499999998,
+      "leverage": 3,
+      "notional": 25483.66081,
+      "resolvedAt": 1792274776546
     }
   ]
 }
