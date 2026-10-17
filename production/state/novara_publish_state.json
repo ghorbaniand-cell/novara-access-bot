@@ -1,7 +1,7 @@
 {
   "date": "2026-10-17",
   "freeSent": 5,
-  "vipSent": 94,
+  "vipSent": 95,
   "sentKeys": [
     "2026-10-17|0xe2823659be02e0f48a4660e4da008b5e1abfdf29|ETH|LONG",
     "2026-10-17|0x8bae3527e5a33fa0cf184f37bc112d071463ab6d|kNEIRO|LONG",
@@ -96,7 +96,8 @@
     "2026-10-17|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|PENGU|LONG",
     "2026-10-17|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|STBL|LONG",
     "2026-10-17|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|AR|LONG",
-    "2026-10-17|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|LAYER|LONG"
+    "2026-10-17|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|LAYER|LONG",
+    "2026-10-17|0xc0b2a1ce425d0cd8bc321c445fa6ae0eaed2e688|XRP|LONG"
   ],
   "openTrades": [
     {
@@ -246,6 +247,23 @@
       "leverage": 10,
       "notional": 698.316624,
       "signalAt": 1792277571890,
+      "status": "OPEN",
+      "destinations": [
+        "-1004446412486"
+      ],
+      "alertType": "OPEN_BAND"
+    },
+    {
+      "key": "2026-10-17|0xc0b2a1ce425d0cd8bc321c445fa6ae0eaed2e688|XRP|LONG",
+      "coin": "XRP",
+      "side": "LONG",
+      "trader": "⭐ Trader 7 ⭐",
+      "entry": 1.275,
+      "tp": 1.28775,
+      "sl": 1.268625,
+      "leverage": 20,
+      "notional": 2574,
+      "signalAt": 1792280058468,
       "status": "OPEN",
       "destinations": [
         "-1004446412486"
