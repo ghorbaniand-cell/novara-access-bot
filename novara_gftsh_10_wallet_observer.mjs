@@ -18,7 +18,7 @@ import path from 'node:path';
  * not endorsements or automated-copy targets.
  */
 
-const VERSION = 'GFTSH-28W-LIVE-OBSERVER-V3.26.0-REMOVE-27-29-30-RENUMBERED-1PCT';
+const VERSION = 'GFTSH-28W-LIVE-OBSERVER-V3.27.0-TP-SL-OUTCOME-TRACKING-VIP-FORMAT';
 const API = process.env.HYPERLIQUID_API_URL || 'https://api.hyperliquid.xyz/info';
 const TG_TOKEN = process.env.TELEGRAM_TOKEN || process.env.TELEGRAM_BOT_TOKEN || '';
 const TG_CHAT = process.env.TELEGRAM_CHAT_ID || '';
@@ -28,6 +28,9 @@ const NOVARA_VIP_CHAT = process.env.NOVARA_VIP_CHAT_ID || '';
 const NOVARA_FREE_DAILY_LIMIT = Math.max(0, Number(process.env.NOVARA_FREE_DAILY_LIMIT || 5));
 const NOVARA_VIP_DAILY_LIMIT = Math.max(0, Number(process.env.NOVARA_VIP_DAILY_LIMIT || 100));
 const NOVARA_STATE_FILE = process.env.NOVARA_PUBLISH_STATE_FILE || 'production/state/novara_publish_state.json';
+const MODEL_SL_PCT = Math.max(0.01, Number(process.env.GFTSH_MODEL_SL_PCT || 0.5));
+const MODEL_TP_R = Math.max(0.1, Number(process.env.GFTSH_MODEL_TP_R || 2));
+const TELEGRAM_MIN_GAP_MS = Math.max(1000, Number(process.env.NOVARA_TELEGRAM_MIN_GAP_MS || 3200));
 
 const SCAN_INTERVAL_MIN = Math.max(1, Number(process.env.GFTSH_SCAN_INTERVAL_MIN || 5));
 const LOOKBACK_MIN = Math.max(5, Number(process.env.GFTSH_LOOKBACK_MIN || 20));
@@ -122,6 +125,23 @@ function fmtPct(value) {
 function fmtLev(value) {
   const n = Number(value);
   return Number.isFinite(n) && n > 0 ? `${n.toFixed(n >= 10 ? 1 : 2)}x` : 'Not provided';
+}
+function modelLevels(entryValue, side) {
+  const entry = num(entryValue);
+  const slDistance = entry * MODEL_SL_PCT / 100;
+  const tpDistance = slDistance * MODEL_TP_R;
+  return {
+    sl: side === 'LONG' ? entry - slDistance : entry + slDistance,
+    tp: side === 'LONG' ? entry + tpDistance : entry - tpDistance,
+    slPct: MODEL_SL_PCT, tpPct: MODEL_SL_PCT * MODEL_TP_R
+  };
+}
+function signedMovePct(entry, exit, side) {
+  if (!(num(entry) > 0) || !(num(exit) > 0)) return 0;
+  return ((num(exit) - num(entry)) / num(entry)) * (side === 'LONG' ? 100 : -100);
+}
+function estimatedPnl(notionalValue, entry, exit, side) {
+  return num(notionalValue) * signedMovePct(entry, exit, side) / 100;
 }
 function notional(fill) {
   return Math.abs(num(fill?.sz) * num(fill?.px));
@@ -238,86 +258,110 @@ async function fetchMids() {
 
 function formatAlert(a) {
   const icon = a.side === 'LONG' ? '🟢' : '🔴';
-  const entry = num(a.entry);
-  const slDistance = entry * 0.005;
-  const tpDistance = slDistance * 2;
-  const modelSL = a.side === 'LONG' ? entry - slDistance : entry + slDistance;
-  const modelTP = a.side === 'LONG' ? entry + tpDistance : entry - tpDistance;
-  const eventTitle = a.alertType === 'NEW_ENTRY'
-    ? '🐋 SMART MONEY — NEW POSITION DETECTED'
-    : '🐋 SMART MONEY — OPEN POSITION NEAR ENTRY';
+  const levels = modelLevels(a.entry, a.side);
   return [
-    eventTitle, '━━━━━━━━━━━━━━━━━━', `👤 ${a.trader}`, `🔗 ${a.address}`, '',
-    `${icon} ${a.side} ${a.coin}`,
-    `🔔 Event: ${a.alertType === 'NEW_ENTRY' ? 'NEW ENTRY FILL' : 'OPEN POSITION WITHIN ENTRY BAND'}`,
-    `⚡ Leverage: ${fmtLev(a.leverage)}`, `📍 Entry: ${fmtPx(a.entry)}`,
-    `💵 Current Mark: ${fmtPx(a.current)}`, `📏 Mark-to-entry distance: ${fmtPct(a.distancePct)}`,
-    `💰 Position/fill notional: $${num(a.notional).toLocaleString('en-US', { maximumFractionDigits: 2 })}`,
-    `🕒 Fill time: ${a.fillTime ? new Date(a.fillTime).toISOString() : 'not available'}`, '',
-    `🎯 Reference TP (not trader's TP): ${fmtPx(modelTP)}`,
-    `🛑 Reference SL (not trader's SL): ${fmtPx(modelSL)}`,
-    `📐 Existing-position entry band: ${ENTRY_BAND_PCT.toFixed(2)}%`, '',
-    '⚠️ Reference TP/SL are illustrative only; they are not read from the trader.',
-    '🛡 READ-ONLY | NO ORDERS | NO AUTO-COPY'
+    '🐋 GFTSH | SMART-MONEY OBSERVER',
+    '━━━━━━━━━━━━━━━━━━',
+    `${icon} ${a.coin} · ${a.side}`,
+    `👤 Wallet: ${a.trader}`,
+    `⚡ Leverage: ${fmtLev(a.leverage)}`,
+    `📍 Entry: ${fmtPx(a.entry)}`,
+    `💹 Current price: ${fmtPx(a.current)}`,
+    `📏 Distance from entry: ${fmtPct(a.distancePct)}`,
+    `💰 Signal notional: $${num(a.notional).toLocaleString('en-US', { maximumFractionDigits: 2 })}`,
+    `🎯 Model TP: ${fmtPx(levels.tp)} (+${fmtPct(levels.tpPct)})`,
+    `🛑 Model SL: ${fmtPx(levels.sl)} (-${fmtPct(levels.slPct)})`,
+    `🕒 Fill time: ${a.fillTime ? new Date(a.fillTime).toISOString() : 'not available'}`,
+    '⚠️ TP/SL are simulated NOVARA levels, not the trader’s verified orders.',
+    '🛡️ READ-ONLY · NO ORDERS · NO AUTO-COPY'
   ].join('\n');
 }
 
-function formatNovaraAlert(a) {
+function formatNovaraAlert(a, tier = 'VIP') {
   const icon = a.side === 'LONG' ? '🟢' : '🔴';
   const entry = num(a.entry);
-  const slDistance = entry * 0.005;
-  const tpDistance = slDistance * 2;
-  const modelSL = a.side === 'LONG' ? entry - slDistance : entry + slDistance;
-  const modelTP = a.side === 'LONG' ? entry + tpDistance : entry - tpDistance;
-  const move = entry > 0 && num(a.current) > 0
-    ? ((num(a.current) - entry) / entry) * (a.side === 'LONG' ? 100 : -100) : null;
-  const sideEn = a.side === 'LONG' ? 'LONG' : 'SHORT';
-  const sideAr = a.side === 'LONG' ? 'شراء (LONG)' : 'بيع (SHORT)';
-  const eventEn = a.alertType === 'NEW_ENTRY' ? 'New position detected' : 'Existing position near entry zone';
-  const eventAr = a.alertType === 'NEW_ENTRY' ? 'تم رصد مركز جديد' : 'مركز قائم بالقرب من منطقة الدخول';
+  const levels = modelLevels(entry, a.side);
+  const move = signedMovePct(entry, a.current, a.side);
+  const leverage = num(a.leverage);
+  const notionalValue = num(a.notional);
+  const tpRoi = leverage > 0 ? levels.tpPct * leverage : null;
+  const slRoi = leverage > 0 ? -levels.slPct * leverage : null;
+  const tpPnl = estimatedPnl(notionalValue, entry, levels.tp, a.side);
+  const slPnl = estimatedPnl(notionalValue, entry, levels.sl, a.side);
+  const sideText = a.side === 'LONG' ? 'LONG | شراء' : 'SHORT | بيع';
+  if (tier === 'FREE') {
+    return [
+      '📣 NOVARA · PUBLIC SIGNAL | إشارة عامة',
+      '━━━━━━━━━━━━━━━━━━',
+      `${icon} #${a.coin} | ${sideText}`,
+      `📍 ENTRY: ${fmtPx(entry)} | سعر الدخول`,
+      `🎯 TAKE PROFIT (TP): ${fmtPx(levels.tp)} | جني الأرباح`,
+      `🛑 STOP LOSS (SL): ${fmtPx(levels.sl)} | وقف الخسارة`,
+      `⚡ Observed leverage: ${fmtLev(leverage)} | الرافعة المرصودة`,
+      `💹 Current price: ${fmtPx(a.current)} | السعر الحالي`,
+      `📏 Entry distance: ${fmtPct(a.distancePct)} | البعد عن الدخول`,
+      '🏁 TP/SL outcome will be reported here after monitoring. | سيتم نشر نتيجة TP/SL هنا بعد المتابعة.',
+      '⚠️ Simulated reference levels; no real trade was executed. | مستويات مرجعية محاكاة؛ لم تُنفّذ صفقة حقيقية.'
+    ].join('\n');
+  }
+  const eventText = a.alertType === 'NEW_ENTRY'
+    ? 'New entry detected | تم رصد دخول جديد'
+    : 'Open position near entry zone | مركز مفتوح قرب منطقة الدخول';
   return [
-    '🔷 NOVARA | PREMIUM SIGNAL', '',
-    `${icon} ${a.coin} — ${sideEn}`,
+    '💎 NOVARA VIP · SMART MONEY SIGNAL | إشارة الأموال الذكية',
     '━━━━━━━━━━━━━━━━━━',
-    '📊 MARKET SETUP',
-    `Entry Reference: ${fmtPx(entry)}`,
-    `Current Market Price: ${fmtPx(a.current)}`,
-    `Move vs. Entry: ${move === null ? '—' : fmtPct(move)}`,
-    `Observed Leverage: ${fmtLev(a.leverage)}`,
-    `Signal Event: ${eventEn}`,
+    `${icon} #${a.coin}  |  ${sideText}`,
+    `⚡ LEVERAGE: ${fmtLev(leverage)} | الرافعة المالية`,
+    `📍 ENTRY: ${fmtPx(entry)} | سعر الدخول`,
+    `💹 MARK PRICE: ${fmtPx(a.current)} (${fmtPct(move)}) | السعر الحالي`,
+    `🎯 TAKE PROFIT (TP): ${fmtPx(levels.tp)} | جني الأرباح`,
+    `🛑 STOP LOSS (SL): ${fmtPx(levels.sl)} | وقف الخسارة`,
+    `📈 Est. ROI at TP: ${tpRoi === null ? '—' : '+' + fmtPct(tpRoi)} on margin | العائد التقديري عند TP`,
+    `📉 Est. ROI at SL: ${slRoi === null ? '—' : fmtPct(slRoi)} on margin | العائد التقديري عند SL`,
+    `💰 Est. gross profit at TP: ${leverage > 0 ? '+$' + Math.abs(tpPnl).toFixed(2) : '—'} | الربح الإجمالي التقديري`,
+    `💸 Est. gross loss at SL: ${leverage > 0 ? '-$' + Math.abs(slPnl).toFixed(2) : '—'} | الخسارة الإجمالية التقديرية`,
     '━━━━━━━━━━━━━━━━━━',
-    '🎯 NOVARA REFERENCE LEVELS',
-    `Target 1 (illustrative): ${fmtPx(modelTP)}`,
-    `Invalidation Level (illustrative): ${fmtPx(modelSL)}`,
+    `🐋 WALLET: ${a.trader} | المحفظة`,
+    `🧭 SIGNAL TYPE: ${eventText} | نوع الإشارة`,
+    `📏 DISTANCE TO ENTRY: ${fmtPct(a.distancePct)} | المسافة إلى الدخول`,
+    `💵 NOTIONAL BASIS: $${notionalValue.toLocaleString('en-US', { maximumFractionDigits: 2 })} | قيمة الصفقة المعتمدة للحساب`,
     '',
-    '🔎 SIGNAL INSIGHT',
-    'Market activity indicates a position was opened or observed near its entry zone. These are NOVARA reference calculations, not verified trader-set orders.',
-    '',
-    '🛡 RISK DISCLOSURE',
-    'Market information only; not an executed trade or a guarantee of results. Leverage increases both potential gains and losses.',
-    '━━━━━━━━━━━━━━━━━━',
-    '🔷 NOVARA | إشارات تداول احترافية', '',
-    `${icon} ${a.coin} — ${sideAr}`,
-    '📊 بيانات السوق',
-    `سعر الدخول المرجعي: ${fmtPx(entry)}`,
-    `السعر الحالي: ${fmtPx(a.current)}`,
-    `التغير مقابل الدخول: ${move === null ? '—' : fmtPct(move)}`,
-    `الرافعة المالية المرصودة: ${fmtLev(a.leverage)}`,
-    `الحدث: ${eventAr}`,
-    '━━━━━━━━━━━━━━━━━━',
-    '🎯 المستويات المرجعية من NOVARA',
-    `الهدف الأول (تقديري): ${fmtPx(modelTP)}`,
-    `مستوى إبطال الفكرة (تقديري): ${fmtPx(modelSL)}`,
-    '',
-    '🔎 قراءة الإشارة',
-    'تشير بيانات السوق إلى رصد مركز جديد أو مركز قائم بالقرب من منطقة الدخول. هذه حسابات مرجعية من NOVARA وليست أوامر مؤكدة للمتداول.',
-    '',
-    '🛡️ تنويه المخاطر',
-    'هذه معلومات سوقية وليست صفقة منفذة أو ضماناً للربح. الرافعة المالية تزيد الأرباح والخسائر المحتملة.',
-    '',
-    'NOVARA — Clarity. Discipline. Transparency.'
+    '📊 TP/SL outcome will be reported automatically when a level is reached. | سيتم نشر النتيجة تلقائياً عند الوصول إلى TP أو SL.',
+    '⚠️ Simulated reference entry and model TP/SL; not the trader’s verified orders. Gross estimates exclude fees and funding. | دخول مرجعي ومستويات TP/SL محاكاة وليست أوامر مؤكدة للمتداول. التقديرات الإجمالية لا تشمل الرسوم والتمويل.',
+    '🛡️ NOVARA · TRANSPARENT RESULTS, RISK FIRST | نتائج شفافة وإدارة المخاطر أولاً'
   ].join('\n');
 }
+
+function formatOutcomeMessage(trade) {
+  const isWin = trade.status === 'TP_HIT';
+  const icon = isWin ? '✅🏆' : '🛑🔻';
+  const raw = signedMovePct(trade.entry, trade.exitPrice, trade.side);
+  const leveragedRoi = num(trade.leverage) > 0 ? raw * num(trade.leverage) : null;
+  const pnl = estimatedPnl(trade.notional, trade.entry, trade.exitPrice, trade.side);
+  const outcomeEn = isWin ? 'TAKE PROFIT HIT' : 'STOP LOSS HIT';
+  const outcomeAr = isWin ? 'تم الوصول إلى جني الأرباح' : 'تم الوصول إلى وقف الخسارة';
+  return [
+    `${icon} NOVARA · TRADE RESULT | نتيجة الصفقة`,
+    '━━━━━━━━━━━━━━━━━━',
+    `${isWin ? '🟢' : '🔴'} #${trade.coin} | ${trade.side === 'LONG' ? 'LONG | شراء' : 'SHORT | بيع'}`,
+    `🏁 RESULT: ${outcomeEn} | النتيجة: ${outcomeAr}`,
+    `📍 ENTRY: ${fmtPx(trade.entry)} | سعر الدخول`,
+    `🚪 SIMULATED EXIT: ${fmtPx(trade.exitPrice)} | سعر الخروج المحاكى`,
+    `🎯 TAKE PROFIT (TP): ${fmtPx(trade.tp)} | جني الأرباح`,
+    `🛑 STOP LOSS (SL): ${fmtPx(trade.sl)} | وقف الخسارة`,
+    `⚡ LEVERAGE: ${fmtLev(trade.leverage)} | الرافعة المالية`,
+    `📊 PRICE MOVE: ${fmtPct(raw)} | تغير السعر`,
+    `💹 Est. ROI on margin: ${leveragedRoi === null ? '—' : (leveragedRoi >= 0 ? '+' : '') + fmtPct(leveragedRoi)} | العائد التقديري على الهامش`,
+    `💰 Est. gross P/L: ${(pnl >= 0 ? '+' : '-') + '$' + Math.abs(pnl).toFixed(2)} | الربح/الخسارة الإجمالية التقديرية`,
+    `💵 NOTIONAL BASIS: $${num(trade.notional).toLocaleString('en-US', { maximumFractionDigits: 2 })} | قيمة الصفقة المعتمدة للحساب`,
+    `🕒 RESULT DETECTED (UTC): ${new Date(trade.resolvedAt).toISOString()} | وقت رصد النتيجة`,
+    '',
+    'ℹ️ Based on monitored price and model levels; no real trade was executed. Fees/funding excluded. | النتيجة مبنية على السعر المرصود ومستويات النموذج؛ لم تُنفّذ صفقة حقيقية. الرسوم والتمويل غير مشمولين.',
+    '🛡️ NOVARA · TRANSPARENT RESULTS | نتائج شفافة'
+  ].join('\n');
+}
+
+let nextTelegramSendAt = 0;
 async function sendTelegram(message, chatId = TG_CHAT) {
   if (!TG_TOKEN || !chatId) {
     return { sent: false, reason: !TG_TOKEN ? 'telegram_token_not_configured' : 'telegram_chat_not_configured' };
@@ -325,16 +369,30 @@ async function sendTelegram(message, chatId = TG_CHAT) {
   const text = message.length > TELEGRAM_MAX
     ? `${message.slice(0, TELEGRAM_MAX - 60)}\n\n⚠️ Message truncated.`
     : message;
-  const response = await fetch(`https://api.telegram.org/bot${TG_TOKEN}/sendMessage`, {
-    method: 'POST',
-    headers: { 'content-type': 'application/json' },
-    body: JSON.stringify({ chat_id: chatId, text, disable_web_page_preview: true })
-  });
-  const responseText = await response.text();
-  if (!response.ok) throw new Error(`Telegram HTTP ${response.status}: ${responseText.slice(0, 200)}`);
-  const data = JSON.parse(responseText);
-  if (!data.ok) throw new Error(`Telegram API returned ok=false: ${responseText.slice(0, 200)}`);
-  return { sent: true };
+  for (let attempt = 1; attempt <= 4; attempt++) {
+    const wait = Math.max(0, nextTelegramSendAt - Date.now());
+    if (wait) await sleep(wait);
+    nextTelegramSendAt = Date.now() + TELEGRAM_MIN_GAP_MS;
+    const response = await fetch(`https://api.telegram.org/bot${TG_TOKEN}/sendMessage`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ chat_id: chatId, text, disable_web_page_preview: true })
+    });
+    const responseText = await response.text();
+    let data = {};
+    try { data = JSON.parse(responseText); } catch {}
+    if (response.ok && data.ok) return { sent: true };
+    const retryAfter = num(data?.parameters?.retry_after);
+    if ((response.status === 429 || data?.error_code === 429) && attempt < 4) {
+      const waitMs = Math.max(retryAfter * 1000, TELEGRAM_MIN_GAP_MS);
+      console.warn(`[TELEGRAM][RATE-LIMIT] waiting ${Math.ceil(waitMs / 1000)}s before retry (${attempt}/3).`);
+      await sleep(waitMs + 250);
+      nextTelegramSendAt = Date.now() + TELEGRAM_MIN_GAP_MS;
+      continue;
+    }
+    throw new Error(`Telegram HTTP ${response.status}: ${responseText.slice(0, 200)}`);
+  }
+  throw new Error('Telegram send failed after retry attempts.');
 }
 async function sendStartupStatus() {
   if (!SEND_STARTUP_STATUS) return;
@@ -380,7 +438,7 @@ async function main() {
   const [mids, tgState, novaraState] = await Promise.all([
     fetchMids(),
     readJson(TG_STATE_FILE, { initialized: false, lastStartupAt: 0, lastCycleAt: 0 }),
-    readJson(NOVARA_STATE_FILE, { date: '', freeSent: 0, vipSent: 0, sentKeys: [] })
+    readJson(NOVARA_STATE_FILE, { date: '', freeSent: 0, vipSent: 0, sentKeys: [], openTrades: [], pendingOutcomes: [], completedOutcomes: [] })
   ]);
   const todayUtc = new Date(now).toISOString().slice(0, 10);
   if (novaraState.date !== todayUtc) {
@@ -390,9 +448,81 @@ async function main() {
     novaraState.sentKeys = [];
   }
   if (!Array.isArray(novaraState.sentKeys)) novaraState.sentKeys = [];
+  if (!Array.isArray(novaraState.openTrades)) novaraState.openTrades = [];
+  if (!Array.isArray(novaraState.pendingOutcomes)) novaraState.pendingOutcomes = [];
+  if (!Array.isArray(novaraState.completedOutcomes)) novaraState.completedOutcomes = [];
   const openDedupe = new Set(state.alertedOpenPositionKeys.map(String));
   const fillDedupe = new Set(state.alertedNewEntryFillKeys.map(String));
   const alerts = [];
+  let outcomesDetected = 0, outcomesSent = 0, outcomeErrors = 0;
+  const disabledDestinations = new Set();
+
+  // Track model TP/SL outcomes for previously published NOVARA signals.
+  // These are paper-tracked reference trades, never real orders.
+  for (const trade of novaraState.openTrades) {
+    if (trade.status !== 'OPEN') continue;
+    const mark = num(mids?.[trade.coin]);
+    if (!(mark > 0)) continue;
+    let status = null;
+    if (trade.side === 'LONG') {
+      if (mark >= num(trade.tp)) status = 'TP_HIT';
+      else if (mark <= num(trade.sl)) status = 'SL_HIT';
+    } else {
+      if (mark <= num(trade.tp)) status = 'TP_HIT';
+      else if (mark >= num(trade.sl)) status = 'SL_HIT';
+    }
+    if (!status) continue;
+    trade.status = status;
+    trade.exitPrice = status === 'TP_HIT' ? num(trade.tp) : num(trade.sl);
+    trade.observedPrice = mark;
+    trade.resolvedAt = now;
+    trade.pendingDestinations = Array.isArray(trade.destinations) ? [...trade.destinations] : [];
+    novaraState.pendingOutcomes.push(trade);
+    outcomesDetected++;
+  }
+  novaraState.openTrades = novaraState.openTrades.filter(t => t.status === 'OPEN');
+  await writeJson(NOVARA_STATE_FILE, novaraState);
+
+  for (const trade of novaraState.pendingOutcomes) {
+    const originalDestinations = [...(trade.pendingDestinations || [])];
+    const remaining = [];
+    for (let i = 0; i < originalDestinations.length; i++) {
+      const destination = originalDestinations[i];
+      if (disabledDestinations.has(destination)) {
+        remaining.push(destination);
+        continue;
+      }
+      try {
+        const result = await sendTelegram(formatOutcomeMessage(trade), destination);
+        if (result.sent) outcomesSent++;
+        else remaining.push(destination);
+      } catch (error) {
+        remaining.push(destination);
+        outcomeErrors++;
+        if (String(error?.message || error).includes('HTTP 403') && String(error?.message || error).toLowerCase().includes('not a member')) {
+          disabledDestinations.add(destination);
+        }
+        console.error(`[OUTCOME][ERROR] ${trade.coin} ${trade.status}: ${error?.message || error}`);
+      }
+      trade.pendingDestinations = [...remaining, ...originalDestinations.slice(i + 1)];
+      // Persist after each destination so a later failure cannot resend a confirmed result.
+      await writeJson(NOVARA_STATE_FILE, novaraState);
+    }
+    trade.pendingDestinations = remaining;
+  }
+  const stillPending = [];
+  for (const trade of novaraState.pendingOutcomes) {
+    if ((trade.pendingDestinations || []).length) stillPending.push(trade);
+    else novaraState.completedOutcomes.push({
+      key: trade.key, coin: trade.coin, side: trade.side, status: trade.status,
+      entry: trade.entry, exitPrice: trade.exitPrice, leverage: trade.leverage,
+      notional: trade.notional, resolvedAt: trade.resolvedAt
+    });
+  }
+  novaraState.pendingOutcomes = stillPending;
+  novaraState.completedOutcomes = novaraState.completedOutcomes.slice(-1000);
+  await writeJson(NOVARA_STATE_FILE, novaraState);
+
   let walletsSucceeded = 0, walletErrors = 0, positionsChecked = 0;
   let inBand = 0, outsideBand = 0, alreadyAlerted = 0, averagingIgnored = 0;
   let alertSendErrors = 0, alertsSent = 0, newEntryCount = 0;
@@ -506,37 +636,43 @@ async function main() {
 
     const novaraKey = `${todayUtc}|${alert.fillKey}`;
     if (!novaraState.sentKeys.includes(novaraKey)) {
-      const customerMessage = formatNovaraAlert(alert);
       let novaraDelivered = false;
+      const deliveredDestinations = [];
 
-      if (NOVARA_VIP_CHAT && novaraState.vipSent < NOVARA_VIP_DAILY_LIMIT) {
+      if (NOVARA_VIP_CHAT && novaraState.vipSent < NOVARA_VIP_DAILY_LIMIT && !disabledDestinations.has(NOVARA_VIP_CHAT)) {
         try {
-          const result = await sendTelegram(customerMessage, NOVARA_VIP_CHAT);
+          const vipMessage = formatNovaraAlert(alert, 'VIP');
+          const result = await sendTelegram(vipMessage, NOVARA_VIP_CHAT);
           if (result.sent) {
             novaraState.vipSent++;
             novaraDelivered = true;
             deliveredAnywhere = true;
+            deliveredDestinations.push(NOVARA_VIP_CHAT);
           } else {
             console.warn(`[NOVARA][VIP-SKIPPED] ${alert.coin}: ${result.reason}`);
           }
         } catch (error) {
+          if (String(error?.message || error).includes('HTTP 403') && String(error?.message || error).toLowerCase().includes('not a member')) disabledDestinations.add(NOVARA_VIP_CHAT);
           console.error(`[NOVARA][VIP-ERROR] ${alert.coin}: ${error?.message || error}`);
         }
       } else if (!NOVARA_VIP_CHAT) {
         console.warn('[NOVARA][VIP-SKIPPED] NOVARA_VIP_CHAT_ID is not configured.');
       }
 
-      if (NOVARA_FREE_CHAT && novaraState.freeSent < NOVARA_FREE_DAILY_LIMIT) {
+      if (NOVARA_FREE_CHAT && novaraState.freeSent < NOVARA_FREE_DAILY_LIMIT && !disabledDestinations.has(NOVARA_FREE_CHAT)) {
         try {
-          const result = await sendTelegram(customerMessage, NOVARA_FREE_CHAT);
+          const freeMessage = formatNovaraAlert(alert, 'FREE');
+          const result = await sendTelegram(freeMessage, NOVARA_FREE_CHAT);
           if (result.sent) {
             novaraState.freeSent++;
             novaraDelivered = true;
             deliveredAnywhere = true;
+            deliveredDestinations.push(NOVARA_FREE_CHAT);
           } else {
             console.warn(`[NOVARA][FREE-SKIPPED] ${alert.coin}: ${result.reason}`);
           }
         } catch (error) {
+          if (String(error?.message || error).includes('HTTP 403') && String(error?.message || error).toLowerCase().includes('not a member')) disabledDestinations.add(NOVARA_FREE_CHAT);
           console.error(`[NOVARA][FREE-ERROR] ${alert.coin}: ${error?.message || error}`);
         }
       } else if (!NOVARA_FREE_CHAT) {
@@ -548,6 +684,16 @@ async function main() {
       if (novaraDelivered) {
         novaraState.sentKeys.push(novaraKey);
         novaraState.sentKeys = novaraState.sentKeys.slice(-5000);
+        if (!novaraState.openTrades.some(t => t.key === novaraKey) && num(alert.entry) > 0) {
+          const levels = modelLevels(alert.entry, alert.side);
+          novaraState.openTrades.push({
+            key: novaraKey, coin: alert.coin, side: alert.side, trader: alert.trader,
+            entry: num(alert.entry), tp: levels.tp, sl: levels.sl,
+            leverage: num(alert.leverage), notional: num(alert.notional),
+            signalAt: now, status: 'OPEN', destinations: [...new Set(deliveredDestinations)],
+            alertType: alert.alertType
+          });
+        }
       }
       await writeJson(NOVARA_STATE_FILE, novaraState);
     } else {
@@ -596,6 +742,9 @@ async function main() {
     '',
     `🆕 New-entry signals found: ${newEntryCount}`,
     `🔔 Telegram alerts sent: ${alertsSent}`,
+    `🏁 TP/SL outcomes detected: ${outcomesDetected}`,
+    `📣 Outcome messages sent: ${outcomesSent}`,
+    `⚠️ Outcome delivery errors: ${outcomeErrors}`,
     `🔁 Already alerted in current lifecycle: ${alreadyAlerted}`,
     `⚠️ Alert delivery errors: ${alertSendErrors}`,
     `🎯 Open positions inside ${ENTRY_BAND_PCT.toFixed(2)}% band: ${inBand}`,
@@ -619,7 +768,7 @@ async function main() {
   tgState.lastCycleErrors = walletErrors;
   await writeJson(TG_STATE_FILE, tgState);
 
-  console.log(`[CYCLE] wallets=${walletsSucceeded}/${WALLETS.length} positions=${positionsChecked} newEntries=${newEntryCount} inBand=${inBand} sent=${alertsSent} alreadyAlerted=${alreadyAlerted} alertErrors=${alertSendErrors} averagingIgnored=${averagingIgnored} outsideBand=${outsideBand} errors=${walletErrors} runtime=${runtimeSec}s`);
+  console.log(`[CYCLE] wallets=${walletsSucceeded}/${WALLETS.length} positions=${positionsChecked} newEntries=${newEntryCount} inBand=${inBand} sent=${alertsSent} alreadyAlerted=${alreadyAlerted} alertErrors=${alertSendErrors} outcomesDetected=${outcomesDetected} outcomesSent=${outcomesSent} outcomeErrors=${outcomeErrors} openPaperTrades=${novaraState.openTrades.length} averagingIgnored=${averagingIgnored} outsideBand=${outsideBand} errors=${walletErrors} runtime=${runtimeSec}s`);
 }
 
 main().catch(error => {
