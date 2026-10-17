@@ -208,23 +208,6 @@
       "alertType": "OPEN_BAND"
     },
     {
-      "key": "2026-10-17|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|WLFI|LONG",
-      "coin": "WLFI",
-      "side": "LONG",
-      "trader": "⭐ Trader 23 ⭐ — STRK short candidate — profitable open short",
-      "entry": 0.056319,
-      "tp": 0.05688219,
-      "sl": 0.056037405,
-      "leverage": 5,
-      "notional": 68665.497764,
-      "signalAt": 1792273899422,
-      "status": "OPEN",
-      "destinations": [
-        "-1004446412486"
-      ],
-      "alertType": "OPEN_BAND"
-    },
-    {
       "key": "2026-10-17|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|ZEC|SHORT",
       "coin": "ZEC",
       "side": "SHORT",
@@ -409,6 +392,17 @@
       "leverage": 5,
       "notional": 133088.331519,
       "resolvedAt": 1792275395893
+    },
+    {
+      "key": "2026-10-17|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|WLFI|LONG",
+      "coin": "WLFI",
+      "side": "LONG",
+      "status": "TP_HIT",
+      "entry": 0.056319,
+      "exitPrice": 0.05688219,
+      "leverage": 5,
+      "notional": 68665.497764,
+      "resolvedAt": 1792276016221
     }
   ]
 }
