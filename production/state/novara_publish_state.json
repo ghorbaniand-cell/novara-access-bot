@@ -1,7 +1,7 @@
 {
   "date": "2026-10-17",
   "freeSent": 5,
-  "vipSent": 83,
+  "vipSent": 84,
   "sentKeys": [
     "2026-10-17|0xe2823659be02e0f48a4660e4da008b5e1abfdf29|ETH|LONG",
     "2026-10-17|0x8bae3527e5a33fa0cf184f37bc112d071463ab6d|kNEIRO|LONG",
@@ -85,7 +85,8 @@
     "2026-10-17|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|GMX|SHORT",
     "2026-10-17|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|DYM|LONG",
     "2026-10-17|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|SAND|LONG",
-    "2026-10-17|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|ZEC|LONG"
+    "2026-10-17|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|ZEC|LONG",
+    "2026-10-17|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|STBL|SHORT"
   ],
   "openTrades": [
     {
@@ -252,6 +253,23 @@
       "leverage": 10,
       "notional": 212.762,
       "signalAt": 1792275395893,
+      "status": "OPEN",
+      "destinations": [
+        "-1004446412486"
+      ],
+      "alertType": "OPEN_BAND"
+    },
+    {
+      "key": "2026-10-17|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|STBL|SHORT",
+      "coin": "STBL",
+      "side": "SHORT",
+      "trader": "⭐ Trader 23 ⭐ — STRK short candidate — profitable open short",
+      "entry": 0.023272,
+      "tp": 0.023039280000000002,
+      "sl": 0.02338836,
+      "leverage": 3,
+      "notional": 265.707688,
+      "signalAt": 1792276328014,
       "status": "OPEN",
       "destinations": [
         "-1004446412486"
