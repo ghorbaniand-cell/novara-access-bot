@@ -1,7 +1,7 @@
 {
   "date": "2026-10-17",
   "freeSent": 5,
-  "vipSent": 82,
+  "vipSent": 83,
   "sentKeys": [
     "2026-10-17|0xe2823659be02e0f48a4660e4da008b5e1abfdf29|ETH|LONG",
     "2026-10-17|0x8bae3527e5a33fa0cf184f37bc112d071463ab6d|kNEIRO|LONG",
@@ -84,7 +84,8 @@
     "2026-10-17|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|0G|LONG",
     "2026-10-17|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|GMX|SHORT",
     "2026-10-17|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|DYM|LONG",
-    "2026-10-17|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|SAND|LONG"
+    "2026-10-17|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|SAND|LONG",
+    "2026-10-17|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|ZEC|LONG"
   ],
   "openTrades": [
     {
@@ -258,33 +259,16 @@
       "alertType": "OPEN_BAND"
     },
     {
-      "key": "2026-10-17|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|DYM|LONG",
-      "coin": "DYM",
+      "key": "2026-10-17|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|ZEC|LONG",
+      "coin": "ZEC",
       "side": "LONG",
       "trader": "⭐ Trader 23 ⭐ — STRK short candidate — profitable open short",
-      "entry": 0.01783,
-      "tp": 0.018008299999999998,
-      "sl": 0.01774085,
-      "leverage": 3,
-      "notional": 8949.697714,
-      "signalAt": 1792275086926,
-      "status": "OPEN",
-      "destinations": [
-        "-1004446412486"
-      ],
-      "alertType": "OPEN_BAND"
-    },
-    {
-      "key": "2026-10-17|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|SAND|LONG",
-      "coin": "SAND",
-      "side": "LONG",
-      "trader": "⭐ Trader 23 ⭐ — STRK short candidate — profitable open short",
-      "entry": 0.060732,
-      "tp": 0.06133932,
-      "sl": 0.060428340000000004,
-      "leverage": 5,
-      "notional": 133088.331519,
-      "signalAt": 1792275086926,
+      "entry": 1119.4348,
+      "tp": 1130.629148,
+      "sl": 1113.837626,
+      "leverage": 10,
+      "notional": 212.762,
+      "signalAt": 1792275395893,
       "status": "OPEN",
       "destinations": [
         "-1004446412486"
@@ -403,6 +387,28 @@
       "leverage": 3,
       "notional": 41590.198143,
       "resolvedAt": 1792275086926
+    },
+    {
+      "key": "2026-10-17|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|DYM|LONG",
+      "coin": "DYM",
+      "side": "LONG",
+      "status": "SL_HIT",
+      "entry": 0.01783,
+      "exitPrice": 0.01774085,
+      "leverage": 3,
+      "notional": 8949.697714,
+      "resolvedAt": 1792275395893
+    },
+    {
+      "key": "2026-10-17|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|SAND|LONG",
+      "coin": "SAND",
+      "side": "LONG",
+      "status": "SL_HIT",
+      "entry": 0.060732,
+      "exitPrice": 0.060428340000000004,
+      "leverage": 5,
+      "notional": 133088.331519,
+      "resolvedAt": 1792275395893
     }
   ]
 }
