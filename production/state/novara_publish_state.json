@@ -1,7 +1,7 @@
 {
   "date": "2026-10-17",
   "freeSent": 5,
-  "vipSent": 84,
+  "vipSent": 86,
   "sentKeys": [
     "2026-10-17|0xe2823659be02e0f48a4660e4da008b5e1abfdf29|ETH|LONG",
     "2026-10-17|0x8bae3527e5a33fa0cf184f37bc112d071463ab6d|kNEIRO|LONG",
@@ -86,7 +86,9 @@
     "2026-10-17|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|DYM|LONG",
     "2026-10-17|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|SAND|LONG",
     "2026-10-17|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|ZEC|LONG",
-    "2026-10-17|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|STBL|SHORT"
+    "2026-10-17|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|STBL|SHORT",
+    "2026-10-17|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|PENDLE|LONG",
+    "2026-10-17|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|NEAR|LONG"
   ],
   "openTrades": [
     {
@@ -158,23 +160,6 @@
       "alertType": "NEW_ENTRY"
     },
     {
-      "key": "2026-10-17|0xd4c1f7e8d876c4749228d515473d36f919583d1d|UNI|SHORT",
-      "coin": "UNI",
-      "side": "SHORT",
-      "trader": "⭐ Trader 21 ⭐ — PONS short candidate — profitable open short",
-      "entry": 7.11016,
-      "tp": 7.039058399999999,
-      "sl": 7.1457108,
-      "leverage": 10,
-      "notional": 3522.342744,
-      "signalAt": 1792273899422,
-      "status": "OPEN",
-      "destinations": [
-        "-1004446412486"
-      ],
-      "alertType": "OPEN_BAND"
-    },
-    {
       "key": "2026-10-17|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|POL|LONG",
       "coin": "POL",
       "side": "LONG",
@@ -226,23 +211,6 @@
       "alertType": "OPEN_BAND"
     },
     {
-      "key": "2026-10-17|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|FOGO|LONG",
-      "coin": "FOGO",
-      "side": "LONG",
-      "trader": "⭐ Trader 23 ⭐ — STRK short candidate — profitable open short",
-      "entry": 0.003958,
-      "tp": 0.00399758,
-      "sl": 0.003938209999999999,
-      "leverage": 3,
-      "notional": 1119.863304,
-      "signalAt": 1792273899422,
-      "status": "OPEN",
-      "destinations": [
-        "-1004446412486"
-      ],
-      "alertType": "OPEN_BAND"
-    },
-    {
       "key": "2026-10-17|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|ZEC|LONG",
       "coin": "ZEC",
       "side": "LONG",
@@ -253,6 +221,40 @@
       "leverage": 10,
       "notional": 212.762,
       "signalAt": 1792275395893,
+      "status": "OPEN",
+      "destinations": [
+        "-1004446412486"
+      ],
+      "alertType": "OPEN_BAND"
+    },
+    {
+      "key": "2026-10-17|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|PENDLE|LONG",
+      "coin": "PENDLE",
+      "side": "LONG",
+      "trader": "⭐ Trader 23 ⭐ — STRK short candidate — profitable open short",
+      "entry": 2.07698,
+      "tp": 2.0977498,
+      "sl": 2.0665951,
+      "leverage": 5,
+      "notional": 8419.6992,
+      "signalAt": 1792276949961,
+      "status": "OPEN",
+      "destinations": [
+        "-1004446412486"
+      ],
+      "alertType": "OPEN_BAND"
+    },
+    {
+      "key": "2026-10-17|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|NEAR|LONG",
+      "coin": "NEAR",
+      "side": "LONG",
+      "trader": "⭐ Trader 23 ⭐ — STRK short candidate — profitable open short",
+      "entry": 4.93545,
+      "tp": 4.9848045,
+      "sl": 4.9107727500000005,
+      "leverage": 10,
+      "notional": 365900.992,
+      "signalAt": 1792276949961,
       "status": "OPEN",
       "destinations": [
         "-1004446412486"
@@ -415,6 +417,28 @@
       "leverage": 3,
       "notional": 265.707688,
       "resolvedAt": 1792276640004
+    },
+    {
+      "key": "2026-10-17|0xd4c1f7e8d876c4749228d515473d36f919583d1d|UNI|SHORT",
+      "coin": "UNI",
+      "side": "SHORT",
+      "status": "SL_HIT",
+      "entry": 7.11016,
+      "exitPrice": 7.1457108,
+      "leverage": 10,
+      "notional": 3522.342744,
+      "resolvedAt": 1792276949961
+    },
+    {
+      "key": "2026-10-17|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|FOGO|LONG",
+      "coin": "FOGO",
+      "side": "LONG",
+      "status": "TP_HIT",
+      "entry": 0.003958,
+      "exitPrice": 0.00399758,
+      "leverage": 3,
+      "notional": 1119.863304,
+      "resolvedAt": 1792276949961
     }
   ]
 }
