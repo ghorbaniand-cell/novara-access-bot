@@ -1,7 +1,7 @@
 {
   "date": "2026-10-17",
   "freeSent": 5,
-  "vipSent": 97,
+  "vipSent": 99,
   "sentKeys": [
     "2026-10-17|0xe2823659be02e0f48a4660e4da008b5e1abfdf29|ETH|LONG",
     "2026-10-17|0x8bae3527e5a33fa0cf184f37bc112d071463ab6d|kNEIRO|LONG",
@@ -99,7 +99,9 @@
     "2026-10-17|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|LAYER|LONG",
     "2026-10-17|0xc0b2a1ce425d0cd8bc321c445fa6ae0eaed2e688|XRP|LONG",
     "2026-10-17|0xe31501c472d557bfa145ce105d325fb2dd4cb867|fill|1083207005196106",
-    "2026-10-17|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|ALGO|LONG"
+    "2026-10-17|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|ALGO|LONG",
+    "2026-10-17|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|ETC|LONG",
+    "2026-10-17|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|BRETT|LONG"
   ],
   "openTrades": [
     {
@@ -271,6 +273,40 @@
         "-1004446412486"
       ],
       "alertType": "NEW_ENTRY"
+    },
+    {
+      "key": "2026-10-17|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|ETC|LONG",
+      "coin": "ETC",
+      "side": "LONG",
+      "trader": "⭐ Trader 23 ⭐ — STRK short candidate — profitable open short",
+      "entry": 7.861,
+      "tp": 7.93961,
+      "sl": 7.821695,
+      "leverage": 5,
+      "notional": 244709.046375,
+      "signalAt": 1792281299719,
+      "status": "OPEN",
+      "destinations": [
+        "-1004446412486"
+      ],
+      "alertType": "OPEN_BAND"
+    },
+    {
+      "key": "2026-10-17|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|BRETT|LONG",
+      "coin": "BRETT",
+      "side": "LONG",
+      "trader": "⭐ Trader 23 ⭐ — STRK short candidate — profitable open short",
+      "entry": 0.00472,
+      "tp": 0.0047672,
+      "sl": 0.0046964,
+      "leverage": 3,
+      "notional": 5261.6377,
+      "signalAt": 1792281299719,
+      "status": "OPEN",
+      "destinations": [
+        "-1004446412486"
+      ],
+      "alertType": "OPEN_BAND"
     }
   ],
   "pendingOutcomes": [],
