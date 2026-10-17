@@ -258,23 +258,6 @@
         "-1004446412486"
       ],
       "alertType": "OPEN_BAND"
-    },
-    {
-      "key": "2026-10-17|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|STBL|SHORT",
-      "coin": "STBL",
-      "side": "SHORT",
-      "trader": "⭐ Trader 23 ⭐ — STRK short candidate — profitable open short",
-      "entry": 0.023272,
-      "tp": 0.023039280000000002,
-      "sl": 0.02338836,
-      "leverage": 3,
-      "notional": 265.707688,
-      "signalAt": 1792276328014,
-      "status": "OPEN",
-      "destinations": [
-        "-1004446412486"
-      ],
-      "alertType": "OPEN_BAND"
     }
   ],
   "pendingOutcomes": [],
@@ -421,6 +404,17 @@
       "leverage": 5,
       "notional": 68665.497764,
       "resolvedAt": 1792276016221
+    },
+    {
+      "key": "2026-10-17|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|STBL|SHORT",
+      "coin": "STBL",
+      "side": "SHORT",
+      "status": "SL_HIT",
+      "entry": 0.023272,
+      "exitPrice": 0.02338836,
+      "leverage": 3,
+      "notional": 265.707688,
+      "resolvedAt": 1792276640004
     }
   ]
 }
