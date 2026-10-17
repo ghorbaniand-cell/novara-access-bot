@@ -251,57 +251,6 @@
         "-1004446412486"
       ],
       "alertType": "OPEN_BAND"
-    },
-    {
-      "key": "2026-10-17|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|STBL|LONG",
-      "coin": "STBL",
-      "side": "LONG",
-      "trader": "⭐ Trader 23 ⭐ — STRK short candidate — profitable open short",
-      "entry": 0.023682,
-      "tp": 0.02391882,
-      "sl": 0.023563590000000002,
-      "leverage": 3,
-      "notional": 209.78714,
-      "signalAt": 1792278817629,
-      "status": "OPEN",
-      "destinations": [
-        "-1004446412486"
-      ],
-      "alertType": "OPEN_BAND"
-    },
-    {
-      "key": "2026-10-17|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|AR|LONG",
-      "coin": "AR",
-      "side": "LONG",
-      "trader": "⭐ Trader 23 ⭐ — STRK short candidate — profitable open short",
-      "entry": 3.8598,
-      "tp": 3.898398,
-      "sl": 3.8405009999999997,
-      "leverage": 5,
-      "notional": 117094.8961,
-      "signalAt": 1792279128751,
-      "status": "OPEN",
-      "destinations": [
-        "-1004446412486"
-      ],
-      "alertType": "OPEN_BAND"
-    },
-    {
-      "key": "2026-10-17|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|LAYER|LONG",
-      "coin": "LAYER",
-      "side": "LONG",
-      "trader": "⭐ Trader 23 ⭐ — STRK short candidate — profitable open short",
-      "entry": 0.065913,
-      "tp": 0.06657213,
-      "sl": 0.065583435,
-      "leverage": 3,
-      "notional": 1578.847578,
-      "signalAt": 1792279128751,
-      "status": "OPEN",
-      "destinations": [
-        "-1004446412486"
-      ],
-      "alertType": "OPEN_BAND"
     }
   ],
   "pendingOutcomes": [],
@@ -547,6 +496,39 @@
       "leverage": 5,
       "notional": 128272.565241,
       "resolvedAt": 1792279128751
+    },
+    {
+      "key": "2026-10-17|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|STBL|LONG",
+      "coin": "STBL",
+      "side": "LONG",
+      "status": "SL_HIT",
+      "entry": 0.023682,
+      "exitPrice": 0.023563590000000002,
+      "leverage": 3,
+      "notional": 209.78714,
+      "resolvedAt": 1792279438672
+    },
+    {
+      "key": "2026-10-17|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|AR|LONG",
+      "coin": "AR",
+      "side": "LONG",
+      "status": "SL_HIT",
+      "entry": 3.8598,
+      "exitPrice": 3.8405009999999997,
+      "leverage": 5,
+      "notional": 117094.8961,
+      "resolvedAt": 1792279438672
+    },
+    {
+      "key": "2026-10-17|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|LAYER|LONG",
+      "coin": "LAYER",
+      "side": "LONG",
+      "status": "SL_HIT",
+      "entry": 0.065913,
+      "exitPrice": 0.065583435,
+      "leverage": 3,
+      "notional": 1578.847578,
+      "resolvedAt": 1792279438672
     }
   ]
 }
