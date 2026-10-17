@@ -95,7 +95,7 @@ jobs:
             echo "No state changes to commit."
             exit 0
           fi
-          git commit -m "chore: persist GFTSH 31-wallet observer state"
+          git commit -m "chore: persist GFTSH 28-wallet observer state"
           git push origin HEAD:${GITHUB_REF_NAME}
 
       - name: Notify Telegram on workflow failure
