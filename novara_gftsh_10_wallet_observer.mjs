@@ -259,7 +259,7 @@ function formatAlert(a) {
     `📐 Existing-position entry band: ${ENTRY_BAND_PCT.toFixed(2)}%`, '',
     '⚠️ Reference TP/SL are illustrative only; they are not read from the trader.',
     '🛡 READ-ONLY | NO ORDERS | NO AUTO-COPY'
-  ].join('\\n');
+  ].join('\n');
 }
 
 function formatNovaraAlert(a) {
@@ -316,10 +316,12 @@ function formatNovaraAlert(a) {
     'هذه معلومات سوقية وليست صفقة منفذة أو ضماناً للربح. الرافعة المالية تزيد الأرباح والخسائر المحتملة.',
     '',
     'NOVARA — Clarity. Discipline. Transparency.'
-  ].join('\\n');
+  ].join('\n');
 }
-async function sendTelegram(message) {
-  if (!TG_TOKEN || !TG_CHAT) return { sent: false, reason: 'telegram_not_configured' };
+async function sendTelegram(message, chatId = TG_CHAT) {
+  if (!TG_TOKEN || !chatId) {
+    return { sent: false, reason: !TG_TOKEN ? 'telegram_token_not_configured' : 'telegram_chat_not_configured' };
+  }
   const text = message.length > TELEGRAM_MAX
     ? `${message.slice(0, TELEGRAM_MAX - 60)}\n\n⚠️ Message truncated.`
     : message;
@@ -487,48 +489,89 @@ async function main() {
     }
   }
 
-  // Deliver signals; persist dedupe only after Telegram confirms delivery.
+  // Publish independently to the legacy observer chat, NOVARA VIP, and NOVARA Free.
+  // A missing/failed legacy destination must never block customer-channel publication.
   for (const alert of alerts) {
+    let deliveredAnywhere = false;
     try {
-      const result = await sendTelegram(formatAlert(alert));
-      if (!result.sent) {
-        alertSendErrors++;
-        continue;
+      const legacyResult = await sendTelegram(formatAlert(alert), TG_CHAT);
+      if (legacyResult.sent) {
+        deliveredAnywhere = true;
+      } else {
+        console.warn(`[TELEGRAM][LEGACY-SKIPPED] ${alert.coin}: ${legacyResult.reason}`);
       }
-      // Best-effort bilingual NOVARA publication; legacy destination and
-      // signal detection remain unchanged. Free/VIP daily limits are independent.
-      const novaraKey = `${todayUtc}|${alert.fillKey}`;
-      if (!novaraState.sentKeys.includes(novaraKey)) {
-        const customerMessage = formatNovaraAlert(alert);
-        if (NOVARA_VIP_CHAT && novaraState.vipSent < NOVARA_VIP_DAILY_LIMIT) {
-          try {
-            const r = await sendTelegram(customerMessage, NOVARA_VIP_CHAT);
-            if (r.sent) novaraState.vipSent++;
-          } catch (e) { console.error(`[NOVARA][VIP-ERROR] ${alert.coin}: ${e?.message || e}`); }
+    } catch (error) {
+      console.error(`[TELEGRAM][LEGACY-ERROR] ${alert.trader} ${alert.coin}: ${error?.message || error}`);
+    }
+
+    const novaraKey = `${todayUtc}|${alert.fillKey}`;
+    if (!novaraState.sentKeys.includes(novaraKey)) {
+      const customerMessage = formatNovaraAlert(alert);
+      let novaraDelivered = false;
+
+      if (NOVARA_VIP_CHAT && novaraState.vipSent < NOVARA_VIP_DAILY_LIMIT) {
+        try {
+          const result = await sendTelegram(customerMessage, NOVARA_VIP_CHAT);
+          if (result.sent) {
+            novaraState.vipSent++;
+            novaraDelivered = true;
+            deliveredAnywhere = true;
+          } else {
+            console.warn(`[NOVARA][VIP-SKIPPED] ${alert.coin}: ${result.reason}`);
+          }
+        } catch (error) {
+          console.error(`[NOVARA][VIP-ERROR] ${alert.coin}: ${error?.message || error}`);
         }
-        if (NOVARA_FREE_CHAT && novaraState.freeSent < NOVARA_FREE_DAILY_LIMIT) {
-          try {
-            const r = await sendTelegram(customerMessage, NOVARA_FREE_CHAT);
-            if (r.sent) novaraState.freeSent++;
-          } catch (e) { console.error(`[NOVARA][FREE-ERROR] ${alert.coin}: ${e?.message || e}`); }
+      } else if (!NOVARA_VIP_CHAT) {
+        console.warn('[NOVARA][VIP-SKIPPED] NOVARA_VIP_CHAT_ID is not configured.');
+      }
+
+      if (NOVARA_FREE_CHAT && novaraState.freeSent < NOVARA_FREE_DAILY_LIMIT) {
+        try {
+          const result = await sendTelegram(customerMessage, NOVARA_FREE_CHAT);
+          if (result.sent) {
+            novaraState.freeSent++;
+            novaraDelivered = true;
+            deliveredAnywhere = true;
+          } else {
+            console.warn(`[NOVARA][FREE-SKIPPED] ${alert.coin}: ${result.reason}`);
+          }
+        } catch (error) {
+          console.error(`[NOVARA][FREE-ERROR] ${alert.coin}: ${error?.message || error}`);
         }
+      } else if (!NOVARA_FREE_CHAT) {
+        console.warn('[NOVARA][FREE-SKIPPED] NOVARA_FREE_CHAT_ID is not configured.');
+      }
+
+      // Only mark the NOVARA event published after at least one customer destination confirms it.
+      // If both sends fail, leave it eligible for retry on a later scan.
+      if (novaraDelivered) {
         novaraState.sentKeys.push(novaraKey);
         novaraState.sentKeys = novaraState.sentKeys.slice(-5000);
-        await writeJson(NOVARA_STATE_FILE, novaraState);
       }
-      if (alert.alertType === 'NEW_ENTRY') {
-        fillDedupe.add(alert.fillKey);
-        state.alertedNewEntryFillKeys = [...fillDedupe].slice(-12000);
-      } else {
-        openDedupe.add(alert.fillKey);
-        state.alertedOpenPositionKeys = [...openDedupe].slice(-6000);
-      }
-      alertsSent++;
-      await writeJson(STATE_FILE, state);
-    } catch (error) {
-      alertSendErrors++;
-      console.error(`[TELEGRAM][ALERT-ERROR] ${alert.trader} ${alert.coin}: ${error?.message || error}`);
+      await writeJson(NOVARA_STATE_FILE, novaraState);
+    } else {
+      // Already published to at least one NOVARA destination earlier today.
+      // The observer's legacy alert can still be delivered independently.
+      if (TG_CHAT && TG_TOKEN) deliveredAnywhere = true;
     }
+
+    if (!deliveredAnywhere) {
+      alertSendErrors++;
+      console.error(`[DELIVERY][FAILED] ${alert.trader} ${alert.coin}: no configured destination confirmed delivery; will not persist alert dedupe.`);
+      continue;
+    }
+
+    // Persist observer dedupe only after at least one Telegram destination confirms delivery.
+    if (alert.alertType === 'NEW_ENTRY') {
+      fillDedupe.add(alert.fillKey);
+      state.alertedNewEntryFillKeys = [...fillDedupe].slice(-12000);
+    } else {
+      openDedupe.add(alert.fillKey);
+      state.alertedOpenPositionKeys = [...openDedupe].slice(-6000);
+    }
+    alertsSent++;
+    await writeJson(STATE_FILE, state);
   }
 
   state.version = VERSION;
