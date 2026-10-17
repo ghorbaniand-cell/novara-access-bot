@@ -1,7 +1,7 @@
 {
   "date": "2026-10-17",
   "freeSent": 5,
-  "vipSent": 92,
+  "vipSent": 94,
   "sentKeys": [
     "2026-10-17|0xe2823659be02e0f48a4660e4da008b5e1abfdf29|ETH|LONG",
     "2026-10-17|0x8bae3527e5a33fa0cf184f37bc112d071463ab6d|kNEIRO|LONG",
@@ -94,7 +94,9 @@
     "2026-10-17|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|VIRTUAL|LONG",
     "2026-10-17|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|ALT|LONG",
     "2026-10-17|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|PENGU|LONG",
-    "2026-10-17|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|STBL|LONG"
+    "2026-10-17|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|STBL|LONG",
+    "2026-10-17|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|AR|LONG",
+    "2026-10-17|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|LAYER|LONG"
   ],
   "openTrades": [
     {
@@ -251,23 +253,6 @@
       "alertType": "OPEN_BAND"
     },
     {
-      "key": "2026-10-17|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|PENGU|LONG",
-      "coin": "PENGU",
-      "side": "LONG",
-      "trader": "⭐ Trader 23 ⭐ — STRK short candidate — profitable open short",
-      "entry": 0.0075,
-      "tp": 0.007575,
-      "sl": 0.0074624999999999995,
-      "leverage": 5,
-      "notional": 128272.565241,
-      "signalAt": 1792278817629,
-      "status": "OPEN",
-      "destinations": [
-        "-1004446412486"
-      ],
-      "alertType": "OPEN_BAND"
-    },
-    {
       "key": "2026-10-17|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|STBL|LONG",
       "coin": "STBL",
       "side": "LONG",
@@ -278,6 +263,40 @@
       "leverage": 3,
       "notional": 209.78714,
       "signalAt": 1792278817629,
+      "status": "OPEN",
+      "destinations": [
+        "-1004446412486"
+      ],
+      "alertType": "OPEN_BAND"
+    },
+    {
+      "key": "2026-10-17|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|AR|LONG",
+      "coin": "AR",
+      "side": "LONG",
+      "trader": "⭐ Trader 23 ⭐ — STRK short candidate — profitable open short",
+      "entry": 3.8598,
+      "tp": 3.898398,
+      "sl": 3.8405009999999997,
+      "leverage": 5,
+      "notional": 117094.8961,
+      "signalAt": 1792279128751,
+      "status": "OPEN",
+      "destinations": [
+        "-1004446412486"
+      ],
+      "alertType": "OPEN_BAND"
+    },
+    {
+      "key": "2026-10-17|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|LAYER|LONG",
+      "coin": "LAYER",
+      "side": "LONG",
+      "trader": "⭐ Trader 23 ⭐ — STRK short candidate — profitable open short",
+      "entry": 0.065913,
+      "tp": 0.06657213,
+      "sl": 0.065583435,
+      "leverage": 3,
+      "notional": 1578.847578,
+      "signalAt": 1792279128751,
       "status": "OPEN",
       "destinations": [
         "-1004446412486"
@@ -517,6 +536,17 @@
       "leverage": 3,
       "notional": 58713.289157,
       "resolvedAt": 1792278507090
+    },
+    {
+      "key": "2026-10-17|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|PENGU|LONG",
+      "coin": "PENGU",
+      "side": "LONG",
+      "status": "SL_HIT",
+      "entry": 0.0075,
+      "exitPrice": 0.0074624999999999995,
+      "leverage": 5,
+      "notional": 128272.565241,
+      "resolvedAt": 1792279128751
     }
   ]
 }
