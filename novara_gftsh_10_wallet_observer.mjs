@@ -283,52 +283,62 @@ function formatNovaraAlert(a, tier = 'VIP') {
   const levels = modelLevels(entry, a.side);
   const move = signedMovePct(entry, a.current, a.side);
   const leverage = num(a.leverage);
-  const notionalValue = num(a.notional);
-  const tpRoi = leverage > 0 ? levels.tpPct * leverage : null;
-  const slRoi = leverage > 0 ? -levels.slPct * leverage : null;
-  const tpPnl = estimatedPnl(notionalValue, entry, levels.tp, a.side);
-  const slPnl = estimatedPnl(notionalValue, entry, levels.sl, a.side);
-  const sideText = a.side === 'LONG' ? 'LONG | شراء' : 'SHORT | بيع';
-  if (tier === 'FREE') {
-    return [
-      '📣 NOVARA · PUBLIC SIGNAL | إشارة عامة',
-      '━━━━━━━━━━━━━━━━━━',
-      `${icon} #${a.coin} | ${sideText}`,
-      `📍 ENTRY: ${fmtPx(entry)} | سعر الدخول`,
-      `🎯 TAKE PROFIT (TP): ${fmtPx(levels.tp)} | جني الأرباح`,
-      `🛑 STOP LOSS (SL): ${fmtPx(levels.sl)} | وقف الخسارة`,
-      `⚡ Observed leverage: ${fmtLev(leverage)} | الرافعة المرصودة`,
-      `💹 Current price: ${fmtPx(a.current)} | السعر الحالي`,
-      `📏 Entry distance: ${fmtPct(a.distancePct)} | البعد عن الدخول`,
-      '🏁 TP/SL outcome will be reported here after monitoring. | سيتم نشر نتيجة TP/SL هنا بعد المتابعة.',
-      '⚠️ Simulated reference levels; no real trade was executed. | مستويات مرجعية محاكاة؛ لم تُنفّذ صفقة حقيقية.'
-    ].join('\n');
-  }
-  const eventText = a.alertType === 'NEW_ENTRY'
-    ? 'New entry detected | تم رصد دخول جديد'
-    : 'Open position near entry zone | مركز مفتوح قرب منطقة الدخول';
+  const eventEn = a.alertType === 'NEW_ENTRY'
+    ? 'New position entry detected'
+    : 'Existing position near entry zone';
+  const eventAr = a.alertType === 'NEW_ENTRY'
+    ? 'تم رصد دخول مركز جديد'
+    : 'مركز قائم بالقرب من منطقة الدخول';
+  const titleEn = tier === 'FREE' ? 'NOVARA | MARKET SIGNAL' : 'NOVARA | PREMIUM SIGNAL';
+  const titleAr = tier === 'FREE' ? 'NOVARA | إشارة السوق' : 'NOVARA | إشارة مميزة';
+  const sideAr = a.side === 'LONG' ? 'شراء (LONG)' : 'بيع (SHORT)';
+
+  // Keep customer-facing posts clean: never expose internal trader labels or wallet details.
+  // English section first, followed by a complete Arabic section.
   return [
-    '💎 NOVARA VIP · SMART MONEY SIGNAL | إشارة الأموال الذكية',
-    '━━━━━━━━━━━━━━━━━━',
-    `${icon} #${a.coin}  |  ${sideText}`,
-    `⚡ LEVERAGE: ${fmtLev(leverage)} | الرافعة المالية`,
-    `📍 ENTRY: ${fmtPx(entry)} | سعر الدخول`,
-    `💹 MARK PRICE: ${fmtPx(a.current)} (${fmtPct(move)}) | السعر الحالي`,
-    `🎯 TAKE PROFIT (TP): ${fmtPx(levels.tp)} | جني الأرباح`,
-    `🛑 STOP LOSS (SL): ${fmtPx(levels.sl)} | وقف الخسارة`,
-    `📈 Est. ROI at TP: ${tpRoi === null ? '—' : '+' + fmtPct(tpRoi)} on margin | العائد التقديري عند TP`,
-    `📉 Est. ROI at SL: ${slRoi === null ? '—' : fmtPct(slRoi)} on margin | العائد التقديري عند SL`,
-    `💰 Est. gross profit at TP: ${leverage > 0 ? '+$' + Math.abs(tpPnl).toFixed(2) : '—'} | الربح الإجمالي التقديري`,
-    `💸 Est. gross loss at SL: ${leverage > 0 ? '-$' + Math.abs(slPnl).toFixed(2) : '—'} | الخسارة الإجمالية التقديرية`,
-    '━━━━━━━━━━━━━━━━━━',
-    `🐋 WALLET: ${a.trader} | المحفظة`,
-    `🧭 SIGNAL TYPE: ${eventText} | نوع الإشارة`,
-    `📏 DISTANCE TO ENTRY: ${fmtPct(a.distancePct)} | المسافة إلى الدخول`,
-    `💵 NOTIONAL BASIS: $${notionalValue.toLocaleString('en-US', { maximumFractionDigits: 2 })} | قيمة الصفقة المعتمدة للحساب`,
+    `🔷 ${titleEn}`,
     '',
-    '📊 TP/SL outcome will be reported automatically when a level is reached. | سيتم نشر النتيجة تلقائياً عند الوصول إلى TP أو SL.',
-    '⚠️ Simulated reference entry and model TP/SL; not the trader’s verified orders. Gross estimates exclude fees and funding. | دخول مرجعي ومستويات TP/SL محاكاة وليست أوامر مؤكدة للمتداول. التقديرات الإجمالية لا تشمل الرسوم والتمويل.',
-    '🛡️ NOVARA · TRANSPARENT RESULTS, RISK FIRST | نتائج شفافة وإدارة المخاطر أولاً'
+    `${icon} ${a.coin} — ${a.side}`,
+    '━━━━━━━━━━━━━━━━━━',
+    '📊 MARKET SETUP',
+    `Entry Reference: ${fmtPx(entry)}`,
+    `Current Market Price: ${fmtPx(a.current)}`,
+    `Move vs. Entry: ${fmtPct(move)}`,
+    `Observed Leverage: ${fmtLev(leverage)}`,
+    `Signal Event: ${eventEn}`,
+    '━━━━━━━━━━━━━━━━━━',
+    '🎯 NOVARA REFERENCE LEVELS',
+    `Target 1 (illustrative): ${fmtPx(levels.tp)}`,
+    `Invalidation Level (illustrative): ${fmtPx(levels.sl)}`,
+    '',
+    '🔎 SIGNAL INSIGHT',
+    'Market activity indicates a position was opened or observed near its entry zone. These are NOVARA reference calculations, not verified trader-set orders.',
+    '',
+    '🛡 RISK DISCLOSURE',
+    'Market information only; not an executed trade or a guarantee of results. Leverage increases both potential gains and losses.',
+    '━━━━━━━━━━━━━━━━━━',
+    '',
+    `🔷 ${titleAr}`,
+    '',
+    `${icon} ${a.coin} — ${sideAr}`,
+    '📊 بيانات السوق',
+    `سعر الدخول المرجعي: ${fmtPx(entry)}`,
+    `السعر الحالي: ${fmtPx(a.current)}`,
+    `التغير مقابل الدخول: ${fmtPct(move)}`,
+    `الرافعة المالية المرصودة: ${fmtLev(leverage)}`,
+    `الحدث: ${eventAr}`,
+    '━━━━━━━━━━━━━━━━━━',
+    '🎯 المستويات المرجعية من NOVARA',
+    `الهدف الأول (تقديري): ${fmtPx(levels.tp)}`,
+    `مستوى إبطال الفكرة (تقديري): ${fmtPx(levels.sl)}`,
+    '',
+    '🔎 قراءة الإشارة',
+    'تشير بيانات السوق إلى رصد مركز جديد أو مركز قائم بالقرب من منطقة الدخول. هذه حسابات مرجعية من NOVARA وليست أوامر مؤكدة للمتداول.',
+    '',
+    '🛡️ تنويه المخاطر',
+    'هذه معلومات سوقية وليست صفقة منفذة أو ضماناً للربح. الرافعة المالية تزيد الأرباح والخسائر المحتملة.',
+    '',
+    'NOVARA — Clarity. Discipline. Transparency.'
   ].join('\n');
 }
 
@@ -338,26 +348,43 @@ function formatOutcomeMessage(trade) {
   const raw = signedMovePct(trade.entry, trade.exitPrice, trade.side);
   const leveragedRoi = num(trade.leverage) > 0 ? raw * num(trade.leverage) : null;
   const pnl = estimatedPnl(trade.notional, trade.entry, trade.exitPrice, trade.side);
-  const outcomeEn = isWin ? 'TAKE PROFIT HIT' : 'STOP LOSS HIT';
-  const outcomeAr = isWin ? 'تم الوصول إلى جني الأرباح' : 'تم الوصول إلى وقف الخسارة';
+  const outcomeEn = isWin ? 'TAKE PROFIT REACHED' : 'INVALIDATION / STOP LEVEL REACHED';
+  const outcomeAr = isWin ? 'تم الوصول إلى الهدف' : 'تم الوصول إلى مستوى الإبطال / وقف الخسارة';
+  const sideEn = trade.side === 'LONG' ? 'LONG' : 'SHORT';
+  const sideAr = trade.side === 'LONG' ? 'شراء (LONG)' : 'بيع (SHORT)';
+  const roiEn = leveragedRoi === null ? '—' : `${leveragedRoi >= 0 ? '+' : ''}${fmtPct(leveragedRoi)}`;
+  const pnlEn = `${pnl >= 0 ? '+' : '-'}$${Math.abs(pnl).toFixed(2)}`;
   return [
-    `${icon} NOVARA · TRADE RESULT | نتيجة الصفقة`,
-    '━━━━━━━━━━━━━━━━━━',
-    `${isWin ? '🟢' : '🔴'} #${trade.coin} | ${trade.side === 'LONG' ? 'LONG | شراء' : 'SHORT | بيع'}`,
-    `🏁 RESULT: ${outcomeEn} | النتيجة: ${outcomeAr}`,
-    `📍 ENTRY: ${fmtPx(trade.entry)} | سعر الدخول`,
-    `🚪 SIMULATED EXIT: ${fmtPx(trade.exitPrice)} | سعر الخروج المحاكى`,
-    `🎯 TAKE PROFIT (TP): ${fmtPx(trade.tp)} | جني الأرباح`,
-    `🛑 STOP LOSS (SL): ${fmtPx(trade.sl)} | وقف الخسارة`,
-    `⚡ LEVERAGE: ${fmtLev(trade.leverage)} | الرافعة المالية`,
-    `📊 PRICE MOVE: ${fmtPct(raw)} | تغير السعر`,
-    `💹 Est. ROI on margin: ${leveragedRoi === null ? '—' : (leveragedRoi >= 0 ? '+' : '') + fmtPct(leveragedRoi)} | العائد التقديري على الهامش`,
-    `💰 Est. gross P/L: ${(pnl >= 0 ? '+' : '-') + '$' + Math.abs(pnl).toFixed(2)} | الربح/الخسارة الإجمالية التقديرية`,
-    `💵 NOTIONAL BASIS: $${num(trade.notional).toLocaleString('en-US', { maximumFractionDigits: 2 })} | قيمة الصفقة المعتمدة للحساب`,
-    `🕒 RESULT DETECTED (UTC): ${new Date(trade.resolvedAt).toISOString()} | وقت رصد النتيجة`,
+    '🔷 NOVARA | SIGNAL UPDATE',
     '',
-    'ℹ️ Based on monitored price and model levels; no real trade was executed. Fees/funding excluded. | النتيجة مبنية على السعر المرصود ومستويات النموذج؛ لم تُنفّذ صفقة حقيقية. الرسوم والتمويل غير مشمولين.',
-    '🛡️ NOVARA · TRANSPARENT RESULTS | نتائج شفافة'
+    `${icon} ${trade.coin} — ${sideEn}`,
+    `Result: ${outcomeEn}`,
+    `Entry Reference: ${fmtPx(trade.entry)}`,
+    `Observed Exit Price: ${fmtPx(trade.exitPrice)}`,
+    `Target 1: ${fmtPx(trade.tp)}`,
+    `Invalidation Level: ${fmtPx(trade.sl)}`,
+    `Observed Leverage: ${fmtLev(trade.leverage)}`,
+    `Estimated ROI on margin: ${roiEn}`,
+    `Estimated gross P/L: ${pnlEn}`,
+    '',
+    'This update is based on monitored market prices and illustrative NOVARA levels. It does not represent an executed trade. Fees and funding are excluded.',
+    '━━━━━━━━━━━━━━━━━━',
+    '',
+    '🔷 NOVARA | تحديث الإشارة',
+    '',
+    `${icon} ${trade.coin} — ${sideAr}`,
+    `النتيجة: ${outcomeAr}`,
+    `سعر الدخول المرجعي: ${fmtPx(trade.entry)}`,
+    `سعر الخروج المرصود: ${fmtPx(trade.exitPrice)}`,
+    `الهدف الأول: ${fmtPx(trade.tp)}`,
+    `مستوى الإبطال: ${fmtPx(trade.sl)}`,
+    `الرافعة المالية المرصودة: ${fmtLev(trade.leverage)}`,
+    `العائد التقديري على الهامش: ${roiEn}`,
+    `الربح/الخسارة الإجمالية التقديرية: ${pnlEn}`,
+    '',
+    'يعتمد هذا التحديث على أسعار السوق المرصودة ومستويات NOVARA التقديرية، ولا يمثل صفقة منفذة. الرسوم والتمويل غير مشمولين.',
+    '',
+    'NOVARA — Clarity. Discipline. Transparency.'
   ].join('\n');
 }
 
