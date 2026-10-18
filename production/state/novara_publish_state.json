@@ -192,23 +192,6 @@
       "alertType": "OPEN_BAND"
     },
     {
-      "key": "2026-10-18|0x3dd462347e7b42b5a3ea15132b677a4978af7a81|VVV|SHORT",
-      "coin": "VVV",
-      "side": "SHORT",
-      "trader": "⭐ Trader 10 ⭐",
-      "entry": 22.9988,
-      "tp": 22.768812,
-      "sl": 23.113794,
-      "leverage": 3,
-      "notional": 62646.26372,
-      "signalAt": 1792296243942,
-      "status": "OPEN",
-      "destinations": [
-        "-1004446412486"
-      ],
-      "alertType": "OPEN_BAND"
-    },
-    {
       "key": "2026-10-18|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|CHIP|SHORT",
       "coin": "CHIP",
       "side": "SHORT",
@@ -887,6 +870,17 @@
       "leverage": 5,
       "notional": 25857.284616,
       "resolvedAt": 1792295932570
+    },
+    {
+      "key": "2026-10-18|0x3dd462347e7b42b5a3ea15132b677a4978af7a81|VVV|SHORT",
+      "coin": "VVV",
+      "side": "SHORT",
+      "status": "TP_HIT",
+      "entry": 22.9988,
+      "exitPrice": 22.768812,
+      "leverage": 3,
+      "notional": 62646.26372,
+      "resolvedAt": 1792296554454
     }
   ]
 }
