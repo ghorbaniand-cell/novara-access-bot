@@ -198,23 +198,6 @@
         "-1004446412486"
       ],
       "alertType": "OPEN_BAND"
-    },
-    {
-      "key": "2026-10-18|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|S|LONG",
-      "coin": "S",
-      "side": "LONG",
-      "trader": "⭐ Trader 23 ⭐ — STRK short candidate — profitable open short",
-      "entry": 0.0539,
-      "tp": 0.054439,
-      "sl": 0.053630500000000005,
-      "leverage": 5,
-      "notional": 32936.43036,
-      "signalAt": 1792305269763,
-      "status": "OPEN",
-      "destinations": [
-        "-1004446412486"
-      ],
-      "alertType": "OPEN_BAND"
     }
   ],
   "pendingOutcomes": [],
@@ -977,6 +960,17 @@
       "leverage": 5,
       "notional": 3795.42,
       "resolvedAt": 1792305269763
+    },
+    {
+      "key": "2026-10-18|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|S|LONG",
+      "coin": "S",
+      "side": "LONG",
+      "status": "SL_HIT",
+      "entry": 0.0539,
+      "exitPrice": 0.053630500000000005,
+      "leverage": 5,
+      "notional": 32936.43036,
+      "resolvedAt": 1792305892405
     }
   ]
 }
