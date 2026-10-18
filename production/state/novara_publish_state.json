@@ -1,7 +1,7 @@
 {
   "date": "2026-10-18",
   "freeSent": 5,
-  "vipSent": 55,
+  "vipSent": 56,
   "sentKeys": [
     "2026-10-18|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|MEGA|SHORT",
     "2026-10-18|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|HBAR|SHORT",
@@ -57,7 +57,8 @@
     "2026-10-18|0xc0b2a1ce425d0cd8bc321c445fa6ae0eaed2e688|fill|1119242831775995",
     "2026-10-18|0xc0b2a1ce425d0cd8bc321c445fa6ae0eaed2e688|fill|649190673196999",
     "2026-10-18|0xde0e9b1a35322a809165d09f0490cca3fa7562e5|fill|327940713559808",
-    "2026-10-18|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|kLUNC|SHORT"
+    "2026-10-18|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|kLUNC|SHORT",
+    "2026-10-18|0x1081e214bd6f0137234b92432d9b6033b88965b7|fill|1051249744042477"
   ],
   "openTrades": [
     {
@@ -247,6 +248,23 @@
         "-1004446412486"
       ],
       "alertType": "OPEN_BAND"
+    },
+    {
+      "key": "2026-10-18|0x1081e214bd6f0137234b92432d9b6033b88965b7|fill|1051249744042477",
+      "coin": "para:PAPER",
+      "side": "SHORT",
+      "trader": "⭐ Trader 24 ⭐",
+      "entry": 0.029999,
+      "tp": 0.02969901,
+      "sl": 0.030148995,
+      "leverage": 0,
+      "notional": 414.97616700000003,
+      "signalAt": 1792331455394,
+      "status": "OPEN",
+      "destinations": [
+        "-1004446412486"
+      ],
+      "alertType": "NEW_ENTRY"
     }
   ],
   "pendingOutcomes": [],
