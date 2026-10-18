@@ -1,12 +1,14 @@
 {
   "date": "2026-10-18",
-  "freeSent": 4,
-  "vipSent": 4,
+  "freeSent": 5,
+  "vipSent": 6,
   "sentKeys": [
     "2026-10-18|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|MEGA|SHORT",
     "2026-10-18|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|HBAR|SHORT",
     "2026-10-18|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|CRV|LONG",
-    "2026-10-18|0x1081e214bd6f0137234b92432d9b6033b88965b7|fill|799258416307315"
+    "2026-10-18|0x1081e214bd6f0137234b92432d9b6033b88965b7|fill|799258416307315",
+    "2026-10-18|0xd4c1f7e8d876c4749228d515473d36f919583d1d|SUI|SHORT",
+    "2026-10-18|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|SPX|LONG"
   ],
   "openTrades": [
     {
@@ -95,23 +97,6 @@
       "alertType": "OPEN_BAND"
     },
     {
-      "key": "2026-10-17|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|ZEC|SHORT",
-      "coin": "ZEC",
-      "side": "SHORT",
-      "trader": "⭐ Trader 23 ⭐ — STRK short candidate — profitable open short",
-      "entry": 1124.257,
-      "tp": 1113.0144300000002,
-      "sl": 1129.878285,
-      "leverage": 10,
-      "notional": 45011.563002,
-      "signalAt": 1792273899422,
-      "status": "OPEN",
-      "destinations": [
-        "-1004446412486"
-      ],
-      "alertType": "OPEN_BAND"
-    },
-    {
       "key": "2026-10-17|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|ZEC|LONG",
       "coin": "ZEC",
       "side": "LONG",
@@ -122,23 +107,6 @@
       "leverage": 10,
       "notional": 212.762,
       "signalAt": 1792275395893,
-      "status": "OPEN",
-      "destinations": [
-        "-1004446412486"
-      ],
-      "alertType": "OPEN_BAND"
-    },
-    {
-      "key": "2026-10-17|0xd4c1f7e8d876c4749228d515473d36f919583d1d|WLD|LONG",
-      "coin": "WLD",
-      "side": "LONG",
-      "trader": "⭐ Trader 21 ⭐ — PONS short candidate — profitable open short",
-      "entry": 0.48952,
-      "tp": 0.4944152,
-      "sl": 0.4870724,
-      "leverage": 10,
-      "notional": 698.316624,
-      "signalAt": 1792277571890,
       "status": "OPEN",
       "destinations": [
         "-1004446412486"
@@ -197,6 +165,41 @@
         "@NovaraSignalsHQ"
       ],
       "alertType": "NEW_ENTRY"
+    },
+    {
+      "key": "2026-10-18|0xd4c1f7e8d876c4749228d515473d36f919583d1d|SUI|SHORT",
+      "coin": "SUI",
+      "side": "SHORT",
+      "trader": "⭐ Trader 21 ⭐ — PONS short candidate — profitable open short",
+      "entry": 0.98902,
+      "tp": 0.9791298,
+      "sl": 0.9939651,
+      "leverage": 10,
+      "notional": 24524.800272,
+      "signalAt": 1792285341386,
+      "status": "OPEN",
+      "destinations": [
+        "-1004446412486",
+        "@NovaraSignalsHQ"
+      ],
+      "alertType": "OPEN_BAND"
+    },
+    {
+      "key": "2026-10-18|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|SPX|LONG",
+      "coin": "SPX",
+      "side": "LONG",
+      "trader": "⭐ Trader 23 ⭐ — STRK short candidate — profitable open short",
+      "entry": 0.36887,
+      "tp": 0.37255869999999996,
+      "sl": 0.36702565,
+      "leverage": 5,
+      "notional": 30523.655655,
+      "signalAt": 1792285341386,
+      "status": "OPEN",
+      "destinations": [
+        "-1004446412486"
+      ],
+      "alertType": "OPEN_BAND"
     }
   ],
   "pendingOutcomes": [],
@@ -552,6 +555,28 @@
       "leverage": 3,
       "notional": 75565.411614,
       "resolvedAt": 1792283788085
+    },
+    {
+      "key": "2026-10-17|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|ZEC|SHORT",
+      "coin": "ZEC",
+      "side": "SHORT",
+      "status": "SL_HIT",
+      "entry": 1124.257,
+      "exitPrice": 1129.878285,
+      "leverage": 10,
+      "notional": 45011.563002,
+      "resolvedAt": 1792285341386
+    },
+    {
+      "key": "2026-10-17|0xd4c1f7e8d876c4749228d515473d36f919583d1d|WLD|LONG",
+      "coin": "WLD",
+      "side": "LONG",
+      "status": "TP_HIT",
+      "entry": 0.48952,
+      "exitPrice": 0.4944152,
+      "leverage": 10,
+      "notional": 698.316624,
+      "resolvedAt": 1792285341386
     }
   ]
 }
