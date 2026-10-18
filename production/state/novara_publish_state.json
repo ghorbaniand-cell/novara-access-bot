@@ -198,40 +198,6 @@
         "-1004446412486"
       ],
       "alertType": "OPEN_BAND"
-    },
-    {
-      "key": "2026-10-18|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|fill|816587898487858",
-      "coin": "ZEC",
-      "side": "SHORT",
-      "trader": "⭐ Trader 23 ⭐ — STRK short candidate — profitable open short",
-      "entry": 1142,
-      "tp": 1130.58,
-      "sl": 1147.71,
-      "leverage": 10,
-      "notional": 673.78,
-      "signalAt": 1792290638550,
-      "status": "OPEN",
-      "destinations": [
-        "-1004446412486"
-      ],
-      "alertType": "NEW_ENTRY"
-    },
-    {
-      "key": "2026-10-18|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|ZEC|SHORT",
-      "coin": "ZEC",
-      "side": "SHORT",
-      "trader": "⭐ Trader 23 ⭐ — STRK short candidate — profitable open short",
-      "entry": 1143.7481,
-      "tp": 1132.310619,
-      "sl": 1149.4668405,
-      "leverage": 10,
-      "notional": 37465.854,
-      "signalAt": 1792291575772,
-      "status": "OPEN",
-      "destinations": [
-        "-1004446412486"
-      ],
-      "alertType": "OPEN_BAND"
     }
   ],
   "pendingOutcomes": [],
@@ -774,6 +740,28 @@
       "leverage": 3,
       "notional": 275.24115,
       "resolvedAt": 1792292195456
+    },
+    {
+      "key": "2026-10-18|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|fill|816587898487858",
+      "coin": "ZEC",
+      "side": "SHORT",
+      "status": "SL_HIT",
+      "entry": 1142,
+      "exitPrice": 1147.71,
+      "leverage": 10,
+      "notional": 673.78,
+      "resolvedAt": 1792292508644
+    },
+    {
+      "key": "2026-10-18|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|ZEC|SHORT",
+      "coin": "ZEC",
+      "side": "SHORT",
+      "status": "SL_HIT",
+      "entry": 1143.7481,
+      "exitPrice": 1149.4668405,
+      "leverage": 10,
+      "notional": 37465.854,
+      "resolvedAt": 1792292508644
     }
   ]
 }
