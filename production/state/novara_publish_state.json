@@ -1,7 +1,7 @@
 {
   "date": "2026-10-18",
   "freeSent": 5,
-  "vipSent": 42,
+  "vipSent": 43,
   "sentKeys": [
     "2026-10-18|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|MEGA|SHORT",
     "2026-10-18|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|HBAR|SHORT",
@@ -44,7 +44,8 @@
     "2026-10-18|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|POLYX|LONG",
     "2026-10-18|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|S|LONG",
     "2026-10-18|0x0c1f6941fdcde9488dfd36ca16fed6b3bc49672b|fill|1008642623061564",
-    "2026-10-18|0xe31501c472d557bfa145ce105d325fb2dd4cb867|fill|636415768506487"
+    "2026-10-18|0xe31501c472d557bfa145ce105d325fb2dd4cb867|fill|636415768506487",
+    "2026-10-18|0x0c1f6941fdcde9488dfd36ca16fed6b3bc49672b|STRK|LONG"
   ],
   "openTrades": [
     {
@@ -202,23 +203,6 @@
       "alertType": "OPEN_BAND"
     },
     {
-      "key": "2026-10-18|0x0c1f6941fdcde9488dfd36ca16fed6b3bc49672b|fill|1008642623061564",
-      "coin": "STRK",
-      "side": "LONG",
-      "trader": "⭐ Trader 12 ⭐",
-      "entry": 0.06332,
-      "tp": 0.0639532,
-      "sl": 0.0630034,
-      "leverage": 5,
-      "notional": 200.255832,
-      "signalAt": 1792312433218,
-      "status": "OPEN",
-      "destinations": [
-        "-1004446412486"
-      ],
-      "alertType": "NEW_ENTRY"
-    },
-    {
       "key": "2026-10-18|0xe31501c472d557bfa145ce105d325fb2dd4cb867|fill|636415768506487",
       "coin": "xyz:SMH",
       "side": "SHORT",
@@ -234,6 +218,23 @@
         "-1004446412486"
       ],
       "alertType": "NEW_ENTRY"
+    },
+    {
+      "key": "2026-10-18|0x0c1f6941fdcde9488dfd36ca16fed6b3bc49672b|STRK|LONG",
+      "coin": "STRK",
+      "side": "LONG",
+      "trader": "⭐ Trader 12 ⭐",
+      "entry": 0.06347,
+      "tp": 0.0641047,
+      "sl": 0.06315265,
+      "leverage": 5,
+      "notional": 86547.300714,
+      "signalAt": 1792313678439,
+      "status": "OPEN",
+      "destinations": [
+        "-1004446412486"
+      ],
+      "alertType": "OPEN_BAND"
     }
   ],
   "pendingOutcomes": [],
@@ -1007,6 +1008,17 @@
       "leverage": 5,
       "notional": 32936.43036,
       "resolvedAt": 1792305892405
+    },
+    {
+      "key": "2026-10-18|0x0c1f6941fdcde9488dfd36ca16fed6b3bc49672b|fill|1008642623061564",
+      "coin": "STRK",
+      "side": "LONG",
+      "status": "TP_HIT",
+      "entry": 0.06332,
+      "exitPrice": 0.0639532,
+      "leverage": 5,
+      "notional": 200.255832,
+      "resolvedAt": 1792313678439
     }
   ]
 }
