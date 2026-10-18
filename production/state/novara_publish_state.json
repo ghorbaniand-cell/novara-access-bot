@@ -1,7 +1,7 @@
 {
   "date": "2026-10-18",
   "freeSent": 5,
-  "vipSent": 17,
+  "vipSent": 19,
   "sentKeys": [
     "2026-10-18|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|MEGA|SHORT",
     "2026-10-18|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|HBAR|SHORT",
@@ -19,7 +19,9 @@
     "2026-10-18|0xf9faba57a81d1575d3e506dd3eafe7db6f2a3275|INJ|LONG",
     "2026-10-18|0x936cf4fb95c30ce83f658b5bbb247e4bb381bb0f|NEAR|SHORT",
     "2026-10-18|0xf9faba57a81d1575d3e506dd3eafe7db6f2a3275|fill|3269700395250",
-    "2026-10-18|0xd4c1f7e8d876c4749228d515473d36f919583d1d|DOGE|LONG"
+    "2026-10-18|0xd4c1f7e8d876c4749228d515473d36f919583d1d|DOGE|LONG",
+    "2026-10-18|0xf9faba57a81d1575d3e506dd3eafe7db6f2a3275|BTC|SHORT",
+    "2026-10-18|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|SPX|SHORT"
   ],
   "openTrades": [
     {
@@ -188,6 +190,40 @@
       "leverage": 10,
       "notional": 2820.322746,
       "signalAt": 1792289701953,
+      "status": "OPEN",
+      "destinations": [
+        "-1004446412486"
+      ],
+      "alertType": "OPEN_BAND"
+    },
+    {
+      "key": "2026-10-18|0xf9faba57a81d1575d3e506dd3eafe7db6f2a3275|BTC|SHORT",
+      "coin": "BTC",
+      "side": "SHORT",
+      "trader": "⭐ Trader 6 ⭐",
+      "entry": 81603,
+      "tp": 80786.97,
+      "sl": 82011.015,
+      "leverage": 40,
+      "notional": 2449440,
+      "signalAt": 1792290014363,
+      "status": "OPEN",
+      "destinations": [
+        "-1004446412486"
+      ],
+      "alertType": "OPEN_BAND"
+    },
+    {
+      "key": "2026-10-18|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|SPX|SHORT",
+      "coin": "SPX",
+      "side": "SHORT",
+      "trader": "⭐ Trader 23 ⭐ — STRK short candidate — profitable open short",
+      "entry": 0.376,
+      "tp": 0.37224,
+      "sl": 0.37788,
+      "leverage": 5,
+      "notional": 8190.80001,
+      "signalAt": 1792290014363,
       "status": "OPEN",
       "destinations": [
         "-1004446412486"
