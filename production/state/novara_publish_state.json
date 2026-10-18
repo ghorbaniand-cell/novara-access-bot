@@ -198,23 +198,6 @@
       "alertType": "OPEN_BAND"
     },
     {
-      "key": "2026-10-18|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|DASH|LONG",
-      "coin": "DASH",
-      "side": "LONG",
-      "trader": "⭐ Trader 23 ⭐ — STRK short candidate — profitable open short",
-      "entry": 47.7892,
-      "tp": 48.267092,
-      "sl": 47.550254,
-      "leverage": 5,
-      "notional": 2188.25712,
-      "signalAt": 1792301842457,
-      "status": "OPEN",
-      "destinations": [
-        "-1004446412486"
-      ],
-      "alertType": "OPEN_BAND"
-    },
-    {
       "key": "2026-10-18|0xd4c1f7e8d876c4749228d515473d36f919583d1d|XRP|SHORT",
       "coin": "XRP",
       "side": "SHORT",
@@ -965,6 +948,17 @@
       "leverage": 3,
       "notional": 5745.48048,
       "resolvedAt": 1792301842457
+    },
+    {
+      "key": "2026-10-18|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|DASH|LONG",
+      "coin": "DASH",
+      "side": "LONG",
+      "status": "TP_HIT",
+      "entry": 47.7892,
+      "exitPrice": 48.267092,
+      "leverage": 5,
+      "notional": 2188.25712,
+      "resolvedAt": 1792303089961
     }
   ]
 }
