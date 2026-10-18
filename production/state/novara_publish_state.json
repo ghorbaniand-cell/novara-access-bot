@@ -149,23 +149,6 @@
       "alertType": "NEW_ENTRY"
     },
     {
-      "key": "2026-10-18|0x936cf4fb95c30ce83f658b5bbb247e4bb381bb0f|NEAR|SHORT",
-      "coin": "NEAR",
-      "side": "SHORT",
-      "trader": "⭐ Trader 20 ⭐ — PONS short candidate — large open short; reported PONS realized PnL",
-      "entry": 4.9626,
-      "tp": 4.912974,
-      "sl": 4.987413,
-      "leverage": 3,
-      "notional": 275.24115,
-      "signalAt": 1792288136208,
-      "status": "OPEN",
-      "destinations": [
-        "-1004446412486"
-      ],
-      "alertType": "OPEN_BAND"
-    },
-    {
       "key": "2026-10-18|0xf9faba57a81d1575d3e506dd3eafe7db6f2a3275|fill|3269700395250",
       "coin": "BTC",
       "side": "SHORT",
@@ -780,6 +763,17 @@
       "leverage": 5,
       "notional": 14666.55831,
       "resolvedAt": 1792291575772
+    },
+    {
+      "key": "2026-10-18|0x936cf4fb95c30ce83f658b5bbb247e4bb381bb0f|NEAR|SHORT",
+      "coin": "NEAR",
+      "side": "SHORT",
+      "status": "SL_HIT",
+      "entry": 4.9626,
+      "exitPrice": 4.987413,
+      "leverage": 3,
+      "notional": 275.24115,
+      "resolvedAt": 1792292195456
     }
   ]
 }
