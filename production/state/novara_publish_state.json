@@ -1,7 +1,7 @@
 {
   "date": "2026-10-18",
   "freeSent": 5,
-  "vipSent": 15,
+  "vipSent": 16,
   "sentKeys": [
     "2026-10-18|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|MEGA|SHORT",
     "2026-10-18|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|HBAR|SHORT",
@@ -17,7 +17,8 @@
     "2026-10-18|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|BIGTIME|LONG",
     "2026-10-18|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|USELESS|LONG",
     "2026-10-18|0xf9faba57a81d1575d3e506dd3eafe7db6f2a3275|INJ|LONG",
-    "2026-10-18|0x936cf4fb95c30ce83f658b5bbb247e4bb381bb0f|NEAR|SHORT"
+    "2026-10-18|0x936cf4fb95c30ce83f658b5bbb247e4bb381bb0f|NEAR|SHORT",
+    "2026-10-18|0xf9faba57a81d1575d3e506dd3eafe7db6f2a3275|fill|3269700395250"
   ],
   "openTrades": [
     {
@@ -174,6 +175,23 @@
         "-1004446412486"
       ],
       "alertType": "OPEN_BAND"
+    },
+    {
+      "key": "2026-10-18|0xf9faba57a81d1575d3e506dd3eafe7db6f2a3275|fill|3269700395250",
+      "coin": "BTC",
+      "side": "SHORT",
+      "trader": "⭐ Trader 6 ⭐",
+      "entry": 81603,
+      "tp": 80786.97,
+      "sl": 82011.015,
+      "leverage": 40,
+      "notional": 7439.74551,
+      "signalAt": 1792289072310,
+      "status": "OPEN",
+      "destinations": [
+        "-1004446412486"
+      ],
+      "alertType": "NEW_ENTRY"
     }
   ],
   "pendingOutcomes": [],
