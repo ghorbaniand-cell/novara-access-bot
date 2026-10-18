@@ -1,7 +1,7 @@
 {
   "date": "2026-10-18",
   "freeSent": 5,
-  "vipSent": 59,
+  "vipSent": 63,
   "sentKeys": [
     "2026-10-18|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|MEGA|SHORT",
     "2026-10-18|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|HBAR|SHORT",
@@ -61,7 +61,11 @@
     "2026-10-18|0x1081e214bd6f0137234b92432d9b6033b88965b7|fill|1051249744042477",
     "2026-10-18|0xc0b2a1ce425d0cd8bc321c445fa6ae0eaed2e688|fill|879516886934289",
     "2026-10-18|0xc0b2a1ce425d0cd8bc321c445fa6ae0eaed2e688|ZRO|LONG",
-    "2026-10-18|0xc0b2a1ce425d0cd8bc321c445fa6ae0eaed2e688|PONS|LONG"
+    "2026-10-18|0xc0b2a1ce425d0cd8bc321c445fa6ae0eaed2e688|PONS|LONG",
+    "2026-10-18|0xfdbaa5eee7cdf45eec3a71a672065a67191fda7a|ZEC|SHORT",
+    "2026-10-18|0x0c1f6941fdcde9488dfd36ca16fed6b3bc49672b|MORPHO|LONG",
+    "2026-10-18|0x936cf4fb95c30ce83f658b5bbb247e4bb381bb0f|XPL|SHORT",
+    "2026-10-18|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|PUMP|SHORT"
   ],
   "openTrades": [
     {
@@ -236,23 +240,6 @@
       "alertType": "NEW_ENTRY"
     },
     {
-      "key": "2026-10-18|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|kLUNC|SHORT",
-      "coin": "kLUNC",
-      "side": "SHORT",
-      "trader": "⭐ Trader 23 ⭐ — STRK short candidate — profitable open short",
-      "entry": 0.046131,
-      "tp": 0.04566969,
-      "sl": 0.046361655,
-      "leverage": 3,
-      "notional": 107.565832,
-      "signalAt": 1792330831798,
-      "status": "OPEN",
-      "destinations": [
-        "-1004446412486"
-      ],
-      "alertType": "OPEN_BAND"
-    },
-    {
       "key": "2026-10-18|0x1081e214bd6f0137234b92432d9b6033b88965b7|fill|1051249744042477",
       "coin": "para:PAPER",
       "side": "SHORT",
@@ -268,6 +255,74 @@
         "-1004446412486"
       ],
       "alertType": "NEW_ENTRY"
+    },
+    {
+      "key": "2026-10-18|0xfdbaa5eee7cdf45eec3a71a672065a67191fda7a|ZEC|SHORT",
+      "coin": "ZEC",
+      "side": "SHORT",
+      "trader": "⭐ Trader 9 ⭐",
+      "entry": 1091.7047,
+      "tp": 1080.787653,
+      "sl": 1097.1632235,
+      "leverage": 10,
+      "notional": 142.454,
+      "signalAt": 1792333957417,
+      "status": "OPEN",
+      "destinations": [
+        "-1004446412486"
+      ],
+      "alertType": "OPEN_BAND"
+    },
+    {
+      "key": "2026-10-18|0x0c1f6941fdcde9488dfd36ca16fed6b3bc49672b|MORPHO|LONG",
+      "coin": "MORPHO",
+      "side": "LONG",
+      "trader": "⭐ Trader 12 ⭐",
+      "entry": 2.30538,
+      "tp": 2.3284338,
+      "sl": 2.2938531,
+      "leverage": 5,
+      "notional": 101111.79194,
+      "signalAt": 1792333957417,
+      "status": "OPEN",
+      "destinations": [
+        "-1004446412486"
+      ],
+      "alertType": "OPEN_BAND"
+    },
+    {
+      "key": "2026-10-18|0x936cf4fb95c30ce83f658b5bbb247e4bb381bb0f|XPL|SHORT",
+      "coin": "XPL",
+      "side": "SHORT",
+      "trader": "⭐ Trader 20 ⭐ — PONS short candidate — large open short; reported PONS realized PnL",
+      "entry": 0.076757,
+      "tp": 0.07598943000000001,
+      "sl": 0.077140785,
+      "leverage": 3,
+      "notional": 336.945472,
+      "signalAt": 1792333957417,
+      "status": "OPEN",
+      "destinations": [
+        "-1004446412486"
+      ],
+      "alertType": "OPEN_BAND"
+    },
+    {
+      "key": "2026-10-18|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|PUMP|SHORT",
+      "coin": "PUMP",
+      "side": "SHORT",
+      "trader": "⭐ Trader 23 ⭐ — STRK short candidate — profitable open short",
+      "entry": 0.004227,
+      "tp": 0.00418473,
+      "sl": 0.004248135,
+      "leverage": 10,
+      "notional": 98949.165875,
+      "signalAt": 1792333957417,
+      "status": "OPEN",
+      "destinations": [
+        "-1004446412486"
+      ],
+      "alertType": "OPEN_BAND"
     }
   ],
   "pendingOutcomes": [],
@@ -1217,6 +1272,17 @@
       "leverage": 3,
       "notional": 1068.36,
       "resolvedAt": 1792333645445
+    },
+    {
+      "key": "2026-10-18|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|kLUNC|SHORT",
+      "coin": "kLUNC",
+      "side": "SHORT",
+      "status": "TP_HIT",
+      "entry": 0.046131,
+      "exitPrice": 0.04566969,
+      "leverage": 3,
+      "notional": 107.565832,
+      "resolvedAt": 1792333957417
     }
   ]
 }
