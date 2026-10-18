@@ -258,23 +258,6 @@
       "alertType": "NEW_ENTRY"
     },
     {
-      "key": "2026-10-18|0xfdbaa5eee7cdf45eec3a71a672065a67191fda7a|ZEC|SHORT",
-      "coin": "ZEC",
-      "side": "SHORT",
-      "trader": "⭐ Trader 9 ⭐",
-      "entry": 1091.7047,
-      "tp": 1080.787653,
-      "sl": 1097.1632235,
-      "leverage": 10,
-      "notional": 142.454,
-      "signalAt": 1792333957417,
-      "status": "OPEN",
-      "destinations": [
-        "-1004446412486"
-      ],
-      "alertType": "OPEN_BAND"
-    },
-    {
       "key": "2026-10-18|0x0c1f6941fdcde9488dfd36ca16fed6b3bc49672b|MORPHO|LONG",
       "coin": "MORPHO",
       "side": "LONG",
@@ -1301,6 +1284,29 @@
       "leverage": 3,
       "notional": 107.565832,
       "resolvedAt": 1792333957417
+    },
+    {
+      "key": "2026-10-18|0xfdbaa5eee7cdf45eec3a71a672065a67191fda7a|ZEC|SHORT",
+      "coin": "ZEC",
+      "side": "SHORT",
+      "status": "SL_HIT",
+      "entry": 1091.7047,
+      "tp": 1080.787653,
+      "sl": 1097.1632235,
+      "exitPrice": 1097.1632235,
+      "leverage": 10,
+      "notional": 142.454,
+      "signalAt": 1792333957417,
+      "resolvedAt": 1792335511914,
+      "destinations": [
+        "-1004446412486"
+      ],
+      "alertType": "OPEN_BAND"
     }
-  ]
+  ],
+  "dailyReportLastSentAt": {
+    "@NovaraSignalsHQ": 1792335511914,
+    "-1004446412486": 1792335511914
+  },
+  "dailyReportProgress": {}
 }
