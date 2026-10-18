@@ -1,7 +1,7 @@
 {
   "date": "2026-10-18",
   "freeSent": 5,
-  "vipSent": 16,
+  "vipSent": 17,
   "sentKeys": [
     "2026-10-18|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|MEGA|SHORT",
     "2026-10-18|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|HBAR|SHORT",
@@ -18,7 +18,8 @@
     "2026-10-18|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|USELESS|LONG",
     "2026-10-18|0xf9faba57a81d1575d3e506dd3eafe7db6f2a3275|INJ|LONG",
     "2026-10-18|0x936cf4fb95c30ce83f658b5bbb247e4bb381bb0f|NEAR|SHORT",
-    "2026-10-18|0xf9faba57a81d1575d3e506dd3eafe7db6f2a3275|fill|3269700395250"
+    "2026-10-18|0xf9faba57a81d1575d3e506dd3eafe7db6f2a3275|fill|3269700395250",
+    "2026-10-18|0xd4c1f7e8d876c4749228d515473d36f919583d1d|DOGE|LONG"
   ],
   "openTrades": [
     {
@@ -175,6 +176,23 @@
         "-1004446412486"
       ],
       "alertType": "NEW_ENTRY"
+    },
+    {
+      "key": "2026-10-18|0xd4c1f7e8d876c4749228d515473d36f919583d1d|DOGE|LONG",
+      "coin": "DOGE",
+      "side": "LONG",
+      "trader": "⭐ Trader 21 ⭐ — PONS short candidate — profitable open short",
+      "entry": 0.079149,
+      "tp": 0.07994049,
+      "sl": 0.078753255,
+      "leverage": 10,
+      "notional": 2820.322746,
+      "signalAt": 1792289701953,
+      "status": "OPEN",
+      "destinations": [
+        "-1004446412486"
+      ],
+      "alertType": "OPEN_BAND"
     }
   ],
   "pendingOutcomes": [],
