@@ -319,25 +319,6 @@
       "alertType": "OPEN_BAND"
     },
     {
-      "key": "2026-10-18|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|BSV|LONG",
-      "coin": "BSV",
-      "side": "LONG",
-      "trader": "⭐ Trader 23 ⭐ — STRK short candidate — profitable open short",
-      "entry": 17.3881,
-      "tp": 17.561981000000003,
-      "sl": 17.3011595,
-      "leverage": 3,
-      "observedLeverage": 3,
-      "signalLeverage": 3,
-      "notional": 6198.14824,
-      "signalAt": 1792339071321,
-      "status": "OPEN",
-      "destinations": [
-        "-1004446412486"
-      ],
-      "alertType": "OPEN_BAND"
-    },
-    {
       "key": "2026-10-18|0xc0b2a1ce425d0cd8bc321c445fa6ae0eaed2e688|fill|853354838723907",
       "coin": "PUMP",
       "side": "LONG",
@@ -1461,6 +1442,26 @@
       "notional": 874061.51814,
       "signalAt": 1792340866606,
       "resolvedAt": 1792342686054,
+      "destinations": [
+        "-1004446412486"
+      ],
+      "alertType": "OPEN_BAND"
+    },
+    {
+      "key": "2026-10-18|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|BSV|LONG",
+      "coin": "BSV",
+      "side": "LONG",
+      "status": "TP_HIT",
+      "entry": 17.3881,
+      "tp": 17.561981000000003,
+      "sl": 17.3011595,
+      "exitPrice": 17.561981000000003,
+      "leverage": 3,
+      "observedLeverage": 3,
+      "signalLeverage": 3,
+      "notional": 6198.14824,
+      "signalAt": 1792339071321,
+      "resolvedAt": 1792344363016,
       "destinations": [
         "-1004446412486"
       ],
