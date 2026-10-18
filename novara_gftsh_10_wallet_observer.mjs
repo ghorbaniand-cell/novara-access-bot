@@ -18,7 +18,7 @@ import path from 'node:path';
  * not endorsements or automated-copy targets.
  */
 
-const VERSION = 'GFTSH-28W-LIVE-OBSERVER-V3.28.0-VIP-24H-DAILY-PERFORMANCE-REPORT';
+const VERSION = 'GFTSH-28W-LIVE-OBSERVER-V3.29.0-VIP-24H-RESOLVED-ONLY-REPORT';
 const API = process.env.HYPERLIQUID_API_URL || 'https://api.hyperliquid.xyz/info';
 const TG_TOKEN = process.env.TELEGRAM_TOKEN || process.env.TELEGRAM_BOT_TOKEN || '';
 const TG_CHAT = process.env.TELEGRAM_CHAT_ID || '';
@@ -406,93 +406,125 @@ function vipSignalRecords(novaraState) {
   return [...unique.values()];
 }
 
+function tradeLeverage(trade) {
+  // Preserve compatibility with prior state versions while preferring the exact
+  // leverage captured from the signal object at publication time.
+  const candidates = [
+    trade?.leverage,
+    trade?.observedLeverage,
+    trade?.signalLeverage,
+    trade?.leverageValue,
+    trade?.alert?.leverage,
+    trade?.signal?.leverage
+  ];
+  for (const candidate of candidates) {
+    const value = num(candidate);
+    if (value > 0) return value;
+  }
+  return 0;
+}
+
 function dailyReportSnapshot(novaraState, mids, now) {
   const windowStart = now - 24 * 60 * 60 * 1000;
   const allVip = vipSignalRecords(novaraState);
-  const rows = allVip
+  // Count every VIP-published signal whose publication timestamp is inside the
+  // reporting window. Keep unresolved signals in this count, but never present
+  // them as results or include them in win-rate / ROI calculations.
+  const publishedRows = allVip
     .filter(t => num(t.signalAt) >= windowStart && num(t.signalAt) <= now)
     .map(t => {
       const status = t.status || 'OPEN';
-      const mark = num(mids?.[t.coin]);
-      const exit = status === 'TP_HIT' || status === 'SL_HIT' ? num(t.exitPrice) : mark;
-      const priceMovePct = exit > 0 ? signedMovePct(t.entry, exit, t.side) : null;
-      const roi = priceMovePct !== null && num(t.leverage) > 0 ? priceMovePct * num(t.leverage) : null;
+      const isResolved = status === 'TP_HIT' || status === 'SL_HIT';
+      const exit = isResolved ? num(t.exitPrice) : 0;
+      const priceMovePct = isResolved && exit > 0
+        ? signedMovePct(t.entry, exit, t.side)
+        : null;
+      const leverage = tradeLeverage(t);
+      const roi = priceMovePct !== null && leverage > 0 ? priceMovePct * leverage : null;
       const signalTime = new Date(num(t.signalAt)).toISOString().slice(5, 16).replace('T', ' ');
+      if (!(leverage > 0)) {
+        console.warn(`[NOVARA][REPORT-LEVERAGE-MISSING] key=${String(t.key)} coin=${String(t.coin || '—')} signalAt=${num(t.signalAt)}; source record has no saved leverage.`);
+      }
       return {
         key: String(t.key), signalAt: num(t.signalAt), time: `${signalTime} UTC`,
-        coin: String(t.coin || '—'), side: String(t.side || '—'), leverage: num(t.leverage),
-        status, roi, mark, entry: num(t.entry), tp: num(t.tp), sl: num(t.sl)
+        coin: String(t.coin || '—'), side: String(t.side || '—'), leverage,
+        status, resolvedAt: num(t.resolvedAt), roi,
+        entry: num(t.entry), tp: num(t.tp), sl: num(t.sl)
       };
     })
     .sort((a, b) => a.signalAt - b.signalAt);
 
+  const rows = publishedRows.filter(r => r.status === 'TP_HIT' || r.status === 'SL_HIT');
   const wins = rows.filter(r => r.status === 'TP_HIT').length;
   const losses = rows.filter(r => r.status === 'SL_HIT').length;
-  const active = rows.filter(r => r.status === 'OPEN' || !['TP_HIT', 'SL_HIT'].includes(r.status)).length;
-  const resolved = wins + losses;
+  const resolved = rows.length;
   const winRate = resolved ? `${(wins / resolved * 100).toFixed(2)}%` : 'N/A (no resolved signals)';
-  const averageResolvedRoi = rows.filter(r => ['TP_HIT', 'SL_HIT'].includes(r.status) && r.roi !== null);
-  const avgRoi = averageResolvedRoi.length
-    ? `${(averageResolvedRoi.reduce((sum, r) => sum + r.roi, 0) / averageResolvedRoi.length) >= 0 ? '+' : ''}${(averageResolvedRoi.reduce((sum, r) => sum + r.roi, 0) / averageResolvedRoi.length).toFixed(2)}%`
-    : 'N/A';
+  const resolvedRois = rows.filter(r => r.roi !== null).map(r => r.roi);
+  const avgValue = resolvedRois.length
+    ? resolvedRois.reduce((sum, value) => sum + value, 0) / resolvedRois.length
+    : null;
+  const avgRoi = avgValue === null ? 'N/A (leverage data unavailable)' : `${avgValue >= 0 ? '+' : ''}${avgValue.toFixed(2)}%`;
+  const reportRowsEn = rows.length ? rows.map(r => {
+    const side = r.side === 'LONG' ? 'LONG' : 'SHORT';
+    const leverage = r.leverage > 0 ? `${r.leverage.toFixed(r.leverage >= 10 ? 1 : 2)}x` : 'DATA ERROR';
+    const result = r.status === 'TP_HIT' ? 'TARGET HIT' : 'STOP / INVALIDATION HIT';
+    const roi = r.roi === null ? 'ROI UNAVAILABLE' : `${r.roi >= 0 ? '+' : ''}${r.roi.toFixed(2)}%`;
+    return `${r.time} | ${r.coin} | ${side} | ${leverage} | ${result} | ${roi}`;
+  }) : ['No signals were resolved during this reporting window.'];
+  const reportRowsAr = rows.length ? rows.map(r => {
+    const side = r.side === 'LONG' ? 'شراء' : 'بيع';
+    const leverage = r.leverage > 0 ? `${r.leverage.toFixed(r.leverage >= 10 ? 1 : 2)}x` : 'خطأ في البيانات';
+    const result = r.status === 'TP_HIT' ? 'تحقق الهدف' : 'تم لمس وقف الخسارة / مستوى الإبطال';
+    const roi = r.roi === null ? 'العائد غير متاح' : `${r.roi >= 0 ? '+' : ''}${r.roi.toFixed(2)}%`;
+    return `${r.time} | ${r.coin} | ${side} | ${leverage} | ${result} | ${roi}`;
+  }) : ['لم تُحسم أي إشارة خلال فترة التقرير.'];
 
   const english = [
-    '🔷 NOVARA | DAILY VIP PERFORMANCE REPORT',
+    '🔷 NOVARA | 24-HOUR VIP PERFORMANCE REPORT',
     '━━━━━━━━━━━━━━━━━━',
     'Reporting window: Last 24 hours (UTC)',
-    `VIP signals published: ${rows.length}`,
+    `VIP signals published: ${publishedRows.length}`,
     `🎯 Target reached: ${wins}`,
-    `🛑 Invalidation reached: ${losses}`,
-    `⏳ Active / unresolved: ${active}`,
-    `📊 Resolved signals: ${resolved}`,
+    `🛑 Stop / invalidation reached: ${losses}`,
+    `📊 Resolved signals reported: ${resolved}`,
     `🏆 Win rate (resolved signals only): ${winRate}`,
     `📈 Average estimated ROI of resolved signals: ${avgRoi}`,
     '━━━━━━━━━━━━━━━━━━',
-    '📋 VIP SIGNAL LOG',
+    '📋 RESOLVED SIGNALS ONLY',
     'Time UTC | Symbol | Side | Leverage | Result | Est. ROI',
-    ...rows.map(r => {
-      const side = r.side === 'LONG' ? 'LONG' : 'SHORT';
-      const leverage = r.leverage > 0 ? `${r.leverage.toFixed(r.leverage >= 10 ? 1 : 2)}x` : 'N/A';
-      const result = r.status === 'TP_HIT' ? 'TARGET' : r.status === 'SL_HIT' ? 'INVALIDATION' : 'ACTIVE';
-      const roi = r.roi === null ? 'N/A' : `${r.roi >= 0 ? '+' : ''}${r.roi.toFixed(2)}%`;
-      return `${r.time} | ${r.coin} | ${side} | ${leverage} | ${result} | ${roi}`;
-    }),
+    ...reportRowsEn,
     '━━━━━━━━━━━━━━━━━━',
-    'This is a daily, reference-based performance report. Results may differ tomorrow or in the following days as market conditions change. No signal or strategy is guaranteed to win.',
-    'Targets and invalidation levels are illustrative NOVARA levels, not proof of executed trades. Active-signal ROI is a market-price snapshot; resolved ROI uses the reference level. Fees and funding are excluded.',
-    'Our team works continuously to analyze the market and strive to deliver high-quality signals at the most appropriate times possible. Always manage risk responsibly; leverage magnifies gains and losses.',
+    'The published-signal count includes every VIP signal issued during this 24-hour window. Only signals whose target or invalidation level has been reached are listed as results. Open / unresolved signals are excluded from the results table, win rate, and average resolved ROI.',
+    'This is reference-based monitoring, not proof of executed trades. Targets and invalidation levels are illustrative NOVARA levels. Fees and funding are excluded. No signal or strategy is guaranteed to win.',
+    'Our team works continuously to analyze the market and strive to deliver high-quality signals at appropriate times. Always manage risk responsibly; leverage magnifies gains and losses.',
     'NOVARA — Clarity. Discipline. Transparency.'
   ].join('\n');
 
   const arabic = [
-    '🔷 NOVARA | التقرير اليومي لأداء VIP',
+    '🔷 NOVARA | تقرير أداء VIP خلال 24 ساعة',
     '━━━━━━━━━━━━━━━━━━',
     'الفترة: آخر 24 ساعة (بتوقيت UTC)',
-    `إجمالي إشارات VIP المنشورة: ${rows.length}`,
+    `إجمالي إشارات VIP المنشورة: ${publishedRows.length}`,
     `🎯 إشارات وصلت إلى الهدف: ${wins}`,
-    `🛑 إشارات وصلت إلى مستوى الإبطال: ${losses}`,
-    `⏳ إشارات نشطة / لم تُحسم: ${active}`,
-    `📊 الإشارات المحسومة: ${resolved}`,
+    `🛑 إشارات وصلت إلى وقف الخسارة / مستوى الإبطال: ${losses}`,
+    `📊 الإشارات المحسومة المعروضة: ${resolved}`,
     `🏆 نسبة النجاح (للإشارات المحسومة فقط): ${winRate}`,
     `📈 متوسط العائد التقديري للإشارات المحسومة: ${avgRoi}`,
     '━━━━━━━━━━━━━━━━━━',
-    '📋 سجل إشارات VIP',
+    '📋 الإشارات المحسومة فقط',
     'الوقت UTC | العملة | الاتجاه | الرافعة | النتيجة | العائد التقديري',
-    ...rows.map(r => {
-      const side = r.side === 'LONG' ? 'شراء' : 'بيع';
-      const leverage = r.leverage > 0 ? `${r.leverage.toFixed(r.leverage >= 10 ? 1 : 2)}x` : 'غير متاح';
-      const result = r.status === 'TP_HIT' ? 'الهدف' : r.status === 'SL_HIT' ? 'الإبطال' : 'نشطة';
-      const roi = r.roi === null ? 'غير متاح' : `${r.roi >= 0 ? '+' : ''}${r.roi.toFixed(2)}%`;
-      return `${r.time} | ${r.coin} | ${side} | ${leverage} | ${result} | ${roi}`;
-    }),
+    ...reportRowsAr,
     '━━━━━━━━━━━━━━━━━━',
-    'هذا تقرير أداء يومي استناداً إلى مستويات مرجعية وأسعار السوق المرصودة. قد تختلف النتائج غداً أو في الأيام التالية مع تغير ظروف السوق. لا توجد إشارة أو استراتيجية مضمونة النجاح.',
-    'الأهداف ومستويات الإبطال هي مستويات تقديرية من NOVARA، ولا تثبت تنفيذ صفقات فعلية. العائد للإشارات النشطة هو لقطة تقديرية وفق السعر الحالي، أما الإشارات المحسومة فيُحسب عائدها وفق المستوى المرجعي. الرسوم والتمويل غير مشمولين.',
-    'يعمل فريقنا باستمرار على تحليل السوق ويسعى إلى تقديم إشارات عالية الجودة في الأوقات المناسبة قدر الإمكان. احرصوا دائماً على إدارة المخاطر بمسؤولية، فالرافعة المالية تضاعف الأرباح والخسائر.',
+    'يشمل عدد الإشارات المنشورة جميع إشارات VIP التي صدرت خلال فترة الـ24 ساعة. تُعرض فقط الإشارات التي وصلت إلى الهدف أو إلى مستوى الإبطال ضمن النتائج. تُستبعد الإشارات المفتوحة أو غير المحسومة من جدول النتائج ونسبة النجاح ومتوسط العائد للإشارات المحسومة.',
+    'يعتمد هذا التقرير على مراقبة مستويات مرجعية، ولا يثبت تنفيذ صفقات فعلية. الأهداف ومستويات الإبطال تقديرية من NOVARA. الرسوم والتمويل غير مشمولين، ولا توجد إشارة أو استراتيجية مضمونة النجاح.',
+    'يعمل فريقنا باستمرار على تحليل السوق ويسعى إلى تقديم إشارات عالية الجودة في الأوقات المناسبة. احرصوا دائماً على إدارة المخاطر بمسؤولية، فالرافعة المالية تضاعف الأرباح والخسائر.',
     'NOVARA — الوضوح. الانضباط. الشفافية.'
   ].join('\n');
 
-  return { createdAt: now, windowStart, rowsCount: rows.length, english, arabic };
+  return {
+    createdAt: now, windowStart, rowsCount: publishedRows.length,
+    resolvedCount: resolved, english, arabic
+  };
 }
 
 function splitTelegramText(message, maxChars = Math.max(1000, TELEGRAM_MAX - 100)) {
@@ -739,7 +771,7 @@ async function main() {
     else novaraState.completedOutcomes.push({
       key: trade.key, coin: trade.coin, side: trade.side, status: trade.status,
       entry: trade.entry, tp: trade.tp, sl: trade.sl, exitPrice: trade.exitPrice,
-      leverage: trade.leverage, notional: trade.notional, signalAt: trade.signalAt,
+      leverage: trade.leverage, observedLeverage: trade.observedLeverage, signalLeverage: trade.signalLeverage, notional: trade.notional, signalAt: trade.signalAt,
       resolvedAt: trade.resolvedAt, destinations: Array.isArray(trade.destinations) ? [...trade.destinations] : [],
       alertType: trade.alertType
     });
@@ -914,7 +946,7 @@ async function main() {
           novaraState.openTrades.push({
             key: novaraKey, coin: alert.coin, side: alert.side, trader: alert.trader,
             entry: num(alert.entry), tp: levels.tp, sl: levels.sl,
-            leverage: num(alert.leverage), notional: num(alert.notional),
+            leverage: num(alert.leverage), observedLeverage: num(alert.leverage), signalLeverage: num(alert.leverage), notional: num(alert.notional),
             signalAt: now, status: 'OPEN', destinations: [...new Set(deliveredDestinations)],
             alertType: alert.alertType
           });
