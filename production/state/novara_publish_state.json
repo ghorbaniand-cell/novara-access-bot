@@ -1,7 +1,7 @@
 {
   "date": "2026-10-18",
   "freeSent": 5,
-  "vipSent": 45,
+  "vipSent": 46,
   "sentKeys": [
     "2026-10-18|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|MEGA|SHORT",
     "2026-10-18|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|HBAR|SHORT",
@@ -47,7 +47,8 @@
     "2026-10-18|0xe31501c472d557bfa145ce105d325fb2dd4cb867|fill|636415768506487",
     "2026-10-18|0x0c1f6941fdcde9488dfd36ca16fed6b3bc49672b|STRK|LONG",
     "2026-10-18|0xd4c1f7e8d876c4749228d515473d36f919583d1d|NEAR|SHORT",
-    "2026-10-18|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|SKR|LONG"
+    "2026-10-18|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|SKR|LONG",
+    "2026-10-18|0xd4c1f7e8d876c4749228d515473d36f919583d1d|LTC|SHORT"
   ],
   "openTrades": [
     {
@@ -154,23 +155,6 @@
       "alertType": "NEW_ENTRY"
     },
     {
-      "key": "2026-10-18|0xf9faba57a81d1575d3e506dd3eafe7db6f2a3275|fill|3269700395250",
-      "coin": "BTC",
-      "side": "SHORT",
-      "trader": "⭐ Trader 6 ⭐",
-      "entry": 81603,
-      "tp": 80786.97,
-      "sl": 82011.015,
-      "leverage": 40,
-      "notional": 7439.74551,
-      "signalAt": 1792289072310,
-      "status": "OPEN",
-      "destinations": [
-        "-1004446412486"
-      ],
-      "alertType": "NEW_ENTRY"
-    },
-    {
       "key": "2026-10-18|0xd4c1f7e8d876c4749228d515473d36f919583d1d|DOGE|LONG",
       "coin": "DOGE",
       "side": "LONG",
@@ -181,23 +165,6 @@
       "leverage": 10,
       "notional": 2820.322746,
       "signalAt": 1792289701953,
-      "status": "OPEN",
-      "destinations": [
-        "-1004446412486"
-      ],
-      "alertType": "OPEN_BAND"
-    },
-    {
-      "key": "2026-10-18|0xf9faba57a81d1575d3e506dd3eafe7db6f2a3275|BTC|SHORT",
-      "coin": "BTC",
-      "side": "SHORT",
-      "trader": "⭐ Trader 6 ⭐",
-      "entry": 81603,
-      "tp": 80786.97,
-      "sl": 82011.015,
-      "leverage": 40,
-      "notional": 2449440,
-      "signalAt": 1792290014363,
       "status": "OPEN",
       "destinations": [
         "-1004446412486"
@@ -232,6 +199,23 @@
       "leverage": 10,
       "notional": 317.14956,
       "signalAt": 1792314611755,
+      "status": "OPEN",
+      "destinations": [
+        "-1004446412486"
+      ],
+      "alertType": "OPEN_BAND"
+    },
+    {
+      "key": "2026-10-18|0xd4c1f7e8d876c4749228d515473d36f919583d1d|LTC|SHORT",
+      "coin": "LTC",
+      "side": "SHORT",
+      "trader": "⭐ Trader 21 ⭐ — PONS short candidate — profitable open short",
+      "entry": 60.0264,
+      "tp": 59.426136,
+      "sl": 60.326532,
+      "leverage": 10,
+      "notional": 16173.95052,
+      "signalAt": 1792315866171,
       "status": "OPEN",
       "destinations": [
         "-1004446412486"
@@ -1043,6 +1027,28 @@
       "leverage": 3,
       "notional": 13678.558008,
       "resolvedAt": 1792315235139
+    },
+    {
+      "key": "2026-10-18|0xf9faba57a81d1575d3e506dd3eafe7db6f2a3275|fill|3269700395250",
+      "coin": "BTC",
+      "side": "SHORT",
+      "status": "SL_HIT",
+      "entry": 81603,
+      "exitPrice": 82011.015,
+      "leverage": 40,
+      "notional": 7439.74551,
+      "resolvedAt": 1792315866171
+    },
+    {
+      "key": "2026-10-18|0xf9faba57a81d1575d3e506dd3eafe7db6f2a3275|BTC|SHORT",
+      "coin": "BTC",
+      "side": "SHORT",
+      "status": "SL_HIT",
+      "entry": 81603,
+      "exitPrice": 82011.015,
+      "leverage": 40,
+      "notional": 2449440,
+      "resolvedAt": 1792315866171
     }
   ]
 }
