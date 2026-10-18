@@ -1,7 +1,7 @@
 {
   "date": "2026-10-18",
   "freeSent": 5,
-  "vipSent": 66,
+  "vipSent": 69,
   "sentKeys": [
     "2026-10-18|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|MEGA|SHORT",
     "2026-10-18|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|HBAR|SHORT",
@@ -68,7 +68,10 @@
     "2026-10-18|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|PUMP|SHORT",
     "2026-10-18|0xe31501c472d557bfa145ce105d325fb2dd4cb867|fill|690114478479975",
     "2026-10-18|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|POLYX|SHORT",
-    "2026-10-18|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|BSV|LONG"
+    "2026-10-18|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|BSV|LONG",
+    "2026-10-18|0xc0b2a1ce425d0cd8bc321c445fa6ae0eaed2e688|fill|853354838723907",
+    "2026-10-18|0x19f5c3bc2e0978d9a1da389d7d4cfe33cd770fe9|PUMP|LONG",
+    "2026-10-18|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|PUMP|LONG"
   ],
   "openTrades": [
     {
@@ -294,23 +297,6 @@
       "alertType": "OPEN_BAND"
     },
     {
-      "key": "2026-10-18|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|PUMP|SHORT",
-      "coin": "PUMP",
-      "side": "SHORT",
-      "trader": "⭐ Trader 23 ⭐ — STRK short candidate — profitable open short",
-      "entry": 0.004227,
-      "tp": 0.00418473,
-      "sl": 0.004248135,
-      "leverage": 10,
-      "notional": 98949.165875,
-      "signalAt": 1792333957417,
-      "status": "OPEN",
-      "destinations": [
-        "-1004446412486"
-      ],
-      "alertType": "OPEN_BAND"
-    },
-    {
       "key": "2026-10-18|0xe31501c472d557bfa145ce105d325fb2dd4cb867|fill|690114478479975",
       "coin": "xyz:RIVN",
       "side": "LONG",
@@ -359,6 +345,63 @@
       "signalLeverage": 3,
       "notional": 6198.14824,
       "signalAt": 1792339071321,
+      "status": "OPEN",
+      "destinations": [
+        "-1004446412486"
+      ],
+      "alertType": "OPEN_BAND"
+    },
+    {
+      "key": "2026-10-18|0xc0b2a1ce425d0cd8bc321c445fa6ae0eaed2e688|fill|853354838723907",
+      "coin": "PUMP",
+      "side": "LONG",
+      "trader": "⭐ Trader 7 ⭐",
+      "entry": 0.004111,
+      "tp": 0.00415211,
+      "sl": 0.004090445,
+      "leverage": 3,
+      "observedLeverage": 3,
+      "signalLeverage": 3,
+      "notional": 2055.5,
+      "signalAt": 1792340866606,
+      "status": "OPEN",
+      "destinations": [
+        "-1004446412486"
+      ],
+      "alertType": "NEW_ENTRY"
+    },
+    {
+      "key": "2026-10-18|0x19f5c3bc2e0978d9a1da389d7d4cfe33cd770fe9|PUMP|LONG",
+      "coin": "PUMP",
+      "side": "LONG",
+      "trader": "⭐ Trader 15 ⭐",
+      "entry": 0.004149,
+      "tp": 0.00419049,
+      "sl": 0.004128255,
+      "leverage": 10,
+      "observedLeverage": 10,
+      "signalLeverage": 10,
+      "notional": 874061.51814,
+      "signalAt": 1792340866606,
+      "status": "OPEN",
+      "destinations": [
+        "-1004446412486"
+      ],
+      "alertType": "OPEN_BAND"
+    },
+    {
+      "key": "2026-10-18|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|PUMP|LONG",
+      "coin": "PUMP",
+      "side": "LONG",
+      "trader": "⭐ Trader 23 ⭐ — STRK short candidate — profitable open short",
+      "entry": 0.004129,
+      "tp": 0.00417029,
+      "sl": 0.004108355,
+      "leverage": 10,
+      "observedLeverage": 10,
+      "signalLeverage": 10,
+      "notional": 113600.609084,
+      "signalAt": 1792340866606,
       "status": "OPEN",
       "destinations": [
         "-1004446412486"
@@ -1338,6 +1381,24 @@
       "notional": 142.454,
       "signalAt": 1792333957417,
       "resolvedAt": 1792335511914,
+      "destinations": [
+        "-1004446412486"
+      ],
+      "alertType": "OPEN_BAND"
+    },
+    {
+      "key": "2026-10-18|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|PUMP|SHORT",
+      "coin": "PUMP",
+      "side": "SHORT",
+      "status": "TP_HIT",
+      "entry": 0.004227,
+      "tp": 0.00418473,
+      "sl": 0.004248135,
+      "exitPrice": 0.00418473,
+      "leverage": 10,
+      "notional": 98949.165875,
+      "signalAt": 1792333957417,
+      "resolvedAt": 1792340866606,
       "destinations": [
         "-1004446412486"
       ],
