@@ -1,7 +1,7 @@
 {
   "date": "2026-10-18",
   "freeSent": 5,
-  "vipSent": 46,
+  "vipSent": 47,
   "sentKeys": [
     "2026-10-18|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|MEGA|SHORT",
     "2026-10-18|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|HBAR|SHORT",
@@ -48,7 +48,8 @@
     "2026-10-18|0x0c1f6941fdcde9488dfd36ca16fed6b3bc49672b|STRK|LONG",
     "2026-10-18|0xd4c1f7e8d876c4749228d515473d36f919583d1d|NEAR|SHORT",
     "2026-10-18|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|SKR|LONG",
-    "2026-10-18|0xd4c1f7e8d876c4749228d515473d36f919583d1d|LTC|SHORT"
+    "2026-10-18|0xd4c1f7e8d876c4749228d515473d36f919583d1d|LTC|SHORT",
+    "2026-10-18|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|BABY|LONG"
   ],
   "openTrades": [
     {
@@ -199,6 +200,23 @@
       "leverage": 10,
       "notional": 317.14956,
       "signalAt": 1792314611755,
+      "status": "OPEN",
+      "destinations": [
+        "-1004446412486"
+      ],
+      "alertType": "OPEN_BAND"
+    },
+    {
+      "key": "2026-10-18|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|BABY|LONG",
+      "coin": "BABY",
+      "side": "LONG",
+      "trader": "⭐ Trader 23 ⭐ — STRK short candidate — profitable open short",
+      "entry": 0.012263,
+      "tp": 0.01238563,
+      "sl": 0.012201685,
+      "leverage": 3,
+      "notional": 28887.023907,
+      "signalAt": 1792321469231,
       "status": "OPEN",
       "destinations": [
         "-1004446412486"
