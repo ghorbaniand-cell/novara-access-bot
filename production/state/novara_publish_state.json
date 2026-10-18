@@ -1,7 +1,7 @@
 {
   "date": "2026-10-18",
   "freeSent": 5,
-  "vipSent": 58,
+  "vipSent": 59,
   "sentKeys": [
     "2026-10-18|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|MEGA|SHORT",
     "2026-10-18|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|HBAR|SHORT",
@@ -60,7 +60,8 @@
     "2026-10-18|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|kLUNC|SHORT",
     "2026-10-18|0x1081e214bd6f0137234b92432d9b6033b88965b7|fill|1051249744042477",
     "2026-10-18|0xc0b2a1ce425d0cd8bc321c445fa6ae0eaed2e688|fill|879516886934289",
-    "2026-10-18|0xc0b2a1ce425d0cd8bc321c445fa6ae0eaed2e688|ZRO|LONG"
+    "2026-10-18|0xc0b2a1ce425d0cd8bc321c445fa6ae0eaed2e688|ZRO|LONG",
+    "2026-10-18|0xc0b2a1ce425d0cd8bc321c445fa6ae0eaed2e688|PONS|LONG"
   ],
   "openTrades": [
     {
@@ -279,6 +280,23 @@
       "leverage": 5,
       "notional": 890.35,
       "signalAt": 1792332398331,
+      "status": "OPEN",
+      "destinations": [
+        "-1004446412486"
+      ],
+      "alertType": "OPEN_BAND"
+    },
+    {
+      "key": "2026-10-18|0xc0b2a1ce425d0cd8bc321c445fa6ae0eaed2e688|PONS|LONG",
+      "coin": "PONS",
+      "side": "LONG",
+      "trader": "⭐ Trader 7 ⭐",
+      "entry": 0.26875,
+      "tp": 0.2714375,
+      "sl": 0.26740625,
+      "leverage": 3,
+      "notional": 1068.36,
+      "signalAt": 1792333335123,
       "status": "OPEN",
       "destinations": [
         "-1004446412486"
