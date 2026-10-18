@@ -1,7 +1,7 @@
 {
   "date": "2026-10-18",
   "freeSent": 5,
-  "vipSent": 64,
+  "vipSent": 65,
   "sentKeys": [
     "2026-10-18|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|MEGA|SHORT",
     "2026-10-18|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|HBAR|SHORT",
@@ -66,7 +66,8 @@
     "2026-10-18|0x0c1f6941fdcde9488dfd36ca16fed6b3bc49672b|MORPHO|LONG",
     "2026-10-18|0x936cf4fb95c30ce83f658b5bbb247e4bb381bb0f|XPL|SHORT",
     "2026-10-18|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|PUMP|SHORT",
-    "2026-10-18|0xe31501c472d557bfa145ce105d325fb2dd4cb867|fill|690114478479975"
+    "2026-10-18|0xe31501c472d557bfa145ce105d325fb2dd4cb867|fill|690114478479975",
+    "2026-10-18|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|POLYX|SHORT"
   ],
   "openTrades": [
     {
@@ -324,6 +325,25 @@
         "-1004446412486"
       ],
       "alertType": "NEW_ENTRY"
+    },
+    {
+      "key": "2026-10-18|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|POLYX|SHORT",
+      "coin": "POLYX",
+      "side": "SHORT",
+      "trader": "⭐ Trader 23 ⭐ — STRK short candidate — profitable open short",
+      "entry": 0.033762,
+      "tp": 0.033424380000000004,
+      "sl": 0.03393081,
+      "leverage": 3,
+      "observedLeverage": 3,
+      "signalLeverage": 3,
+      "notional": 79.327442,
+      "signalAt": 1792337374304,
+      "status": "OPEN",
+      "destinations": [
+        "-1004446412486"
+      ],
+      "alertType": "OPEN_BAND"
     }
   ],
   "pendingOutcomes": [],
