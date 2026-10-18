@@ -188,57 +188,6 @@
         "-1004446412486"
       ],
       "alertType": "OPEN_BAND"
-    },
-    {
-      "key": "2026-10-18|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|CHIP|LONG",
-      "coin": "CHIP",
-      "side": "LONG",
-      "trader": "⭐ Trader 23 ⭐ — STRK short candidate — profitable open short",
-      "entry": 0.042867,
-      "tp": 0.04329567,
-      "sl": 0.042652665,
-      "leverage": 3,
-      "notional": 197.995039,
-      "signalAt": 1792293130592,
-      "status": "OPEN",
-      "destinations": [
-        "-1004446412486"
-      ],
-      "alertType": "OPEN_BAND"
-    },
-    {
-      "key": "2026-10-18|0x936cf4fb95c30ce83f658b5bbb247e4bb381bb0f|XMR|LONG",
-      "coin": "XMR",
-      "side": "LONG",
-      "trader": "⭐ Trader 20 ⭐ — PONS short candidate — large open short; reported PONS realized PnL",
-      "entry": 599.245,
-      "tp": 605.23745,
-      "sl": 596.248775,
-      "leverage": 3,
-      "notional": 1078.75992,
-      "signalAt": 1792293753340,
-      "status": "OPEN",
-      "destinations": [
-        "-1004446412486"
-      ],
-      "alertType": "OPEN_BAND"
-    },
-    {
-      "key": "2026-10-18|0x88250cf2f6402e856bc85fc65095e4a48bb12cb7|SAND|SHORT",
-      "coin": "SAND",
-      "side": "SHORT",
-      "trader": "⭐ Trader 11 ⭐",
-      "entry": 0.06288,
-      "tp": 0.062251200000000007,
-      "sl": 0.06319440000000001,
-      "leverage": 5,
-      "notional": 25857.284616,
-      "signalAt": 1792294999319,
-      "status": "OPEN",
-      "destinations": [
-        "-1004446412486"
-      ],
-      "alertType": "OPEN_BAND"
     }
   ],
   "pendingOutcomes": [],
@@ -869,6 +818,39 @@
       "leverage": 10,
       "notional": 213882.79275,
       "resolvedAt": 1792295621790
+    },
+    {
+      "key": "2026-10-18|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|CHIP|LONG",
+      "coin": "CHIP",
+      "side": "LONG",
+      "status": "TP_HIT",
+      "entry": 0.042867,
+      "exitPrice": 0.04329567,
+      "leverage": 3,
+      "notional": 197.995039,
+      "resolvedAt": 1792295932570
+    },
+    {
+      "key": "2026-10-18|0x936cf4fb95c30ce83f658b5bbb247e4bb381bb0f|XMR|LONG",
+      "coin": "XMR",
+      "side": "LONG",
+      "status": "TP_HIT",
+      "entry": 599.245,
+      "exitPrice": 605.23745,
+      "leverage": 3,
+      "notional": 1078.75992,
+      "resolvedAt": 1792295932570
+    },
+    {
+      "key": "2026-10-18|0x88250cf2f6402e856bc85fc65095e4a48bb12cb7|SAND|SHORT",
+      "coin": "SAND",
+      "side": "SHORT",
+      "status": "TP_HIT",
+      "entry": 0.06288,
+      "exitPrice": 0.062251200000000007,
+      "leverage": 5,
+      "notional": 25857.284616,
+      "resolvedAt": 1792295932570
     }
   ]
 }
