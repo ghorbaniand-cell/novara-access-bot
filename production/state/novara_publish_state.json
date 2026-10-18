@@ -1,7 +1,7 @@
 {
   "date": "2026-10-18",
   "freeSent": 5,
-  "vipSent": 20,
+  "vipSent": 21,
   "sentKeys": [
     "2026-10-18|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|MEGA|SHORT",
     "2026-10-18|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|HBAR|SHORT",
@@ -22,7 +22,8 @@
     "2026-10-18|0xd4c1f7e8d876c4749228d515473d36f919583d1d|DOGE|LONG",
     "2026-10-18|0xf9faba57a81d1575d3e506dd3eafe7db6f2a3275|BTC|SHORT",
     "2026-10-18|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|SPX|SHORT",
-    "2026-10-18|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|fill|816587898487858"
+    "2026-10-18|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|fill|816587898487858",
+    "2026-10-18|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|APE|LONG"
   ],
   "openTrades": [
     {
@@ -247,6 +248,23 @@
         "-1004446412486"
       ],
       "alertType": "NEW_ENTRY"
+    },
+    {
+      "key": "2026-10-18|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|APE|LONG",
+      "coin": "APE",
+      "side": "LONG",
+      "trader": "⭐ Trader 23 ⭐ — STRK short candidate — profitable open short",
+      "entry": 0.14945,
+      "tp": 0.1509445,
+      "sl": 0.14870275,
+      "leverage": 5,
+      "notional": 14666.55831,
+      "signalAt": 1792290951220,
+      "status": "OPEN",
+      "destinations": [
+        "-1004446412486"
+      ],
+      "alertType": "OPEN_BAND"
     }
   ],
   "pendingOutcomes": [],
