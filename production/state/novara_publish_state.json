@@ -1,7 +1,7 @@
 {
   "date": "2026-10-18",
   "freeSent": 5,
-  "vipSent": 39,
+  "vipSent": 40,
   "sentKeys": [
     "2026-10-18|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|MEGA|SHORT",
     "2026-10-18|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|HBAR|SHORT",
@@ -41,7 +41,8 @@
     "2026-10-18|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|DASH|LONG",
     "2026-10-18|0xd4c1f7e8d876c4749228d515473d36f919583d1d|XRP|SHORT",
     "2026-10-18|0x936cf4fb95c30ce83f658b5bbb247e4bb381bb0f|MON|LONG",
-    "2026-10-18|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|POLYX|LONG"
+    "2026-10-18|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|POLYX|LONG",
+    "2026-10-18|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|S|LONG"
   ],
   "openTrades": [
     {
@@ -199,33 +200,16 @@
       "alertType": "OPEN_BAND"
     },
     {
-      "key": "2026-10-18|0xd4c1f7e8d876c4749228d515473d36f919583d1d|XRP|SHORT",
-      "coin": "XRP",
-      "side": "SHORT",
-      "trader": "⭐ Trader 21 ⭐ — PONS short candidate — profitable open short",
-      "entry": 1.291926,
-      "tp": 1.2790067399999998,
-      "sl": 1.2983856299999998,
-      "leverage": 20,
-      "notional": 8243.472159,
-      "signalAt": 1792302463594,
-      "status": "OPEN",
-      "destinations": [
-        "-1004446412486"
-      ],
-      "alertType": "OPEN_BAND"
-    },
-    {
-      "key": "2026-10-18|0x936cf4fb95c30ce83f658b5bbb247e4bb381bb0f|MON|LONG",
-      "coin": "MON",
+      "key": "2026-10-18|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|S|LONG",
+      "coin": "S",
       "side": "LONG",
-      "trader": "⭐ Trader 20 ⭐ — PONS short candidate — large open short; reported PONS realized PnL",
-      "entry": 0.021229,
-      "tp": 0.021441290000000002,
-      "sl": 0.021122855000000003,
+      "trader": "⭐ Trader 23 ⭐ — STRK short candidate — profitable open short",
+      "entry": 0.0539,
+      "tp": 0.054439,
+      "sl": 0.053630500000000005,
       "leverage": 5,
-      "notional": 3795.42,
-      "signalAt": 1792302777794,
+      "notional": 32936.43036,
+      "signalAt": 1792305269763,
       "status": "OPEN",
       "destinations": [
         "-1004446412486"
@@ -971,6 +955,28 @@
       "leverage": 3,
       "notional": 1856.5888,
       "resolvedAt": 1792304335254
+    },
+    {
+      "key": "2026-10-18|0xd4c1f7e8d876c4749228d515473d36f919583d1d|XRP|SHORT",
+      "coin": "XRP",
+      "side": "SHORT",
+      "status": "SL_HIT",
+      "entry": 1.291926,
+      "exitPrice": 1.2983856299999998,
+      "leverage": 20,
+      "notional": 8243.472159,
+      "resolvedAt": 1792305269763
+    },
+    {
+      "key": "2026-10-18|0x936cf4fb95c30ce83f658b5bbb247e4bb381bb0f|MON|LONG",
+      "coin": "MON",
+      "side": "LONG",
+      "status": "TP_HIT",
+      "entry": 0.021229,
+      "exitPrice": 0.021441290000000002,
+      "leverage": 5,
+      "notional": 3795.42,
+      "resolvedAt": 1792305269763
     }
   ]
 }
