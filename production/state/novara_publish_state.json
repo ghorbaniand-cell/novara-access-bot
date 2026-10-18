@@ -193,23 +193,6 @@
       "alertType": "OPEN_BAND"
     },
     {
-      "key": "2026-10-18|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|CHIP|SHORT",
-      "coin": "CHIP",
-      "side": "SHORT",
-      "trader": "⭐ Trader 23 ⭐ — STRK short candidate — profitable open short",
-      "entry": 0.043576,
-      "tp": 0.043140239999999996,
-      "sl": 0.04379387999999999,
-      "leverage": 3,
-      "notional": 3946.55051,
-      "signalAt": 1792296243942,
-      "status": "OPEN",
-      "destinations": [
-        "-1004446412486"
-      ],
-      "alertType": "OPEN_BAND"
-    },
-    {
       "key": "2026-10-18|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|AIXBT|SHORT",
       "coin": "AIXBT",
       "side": "SHORT",
@@ -899,6 +882,17 @@
       "leverage": 3,
       "notional": 62646.26372,
       "resolvedAt": 1792296554454
+    },
+    {
+      "key": "2026-10-18|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|CHIP|SHORT",
+      "coin": "CHIP",
+      "side": "SHORT",
+      "status": "SL_HIT",
+      "entry": 0.043576,
+      "exitPrice": 0.04379387999999999,
+      "leverage": 3,
+      "notional": 3946.55051,
+      "resolvedAt": 1792297175899
     }
   ]
 }
