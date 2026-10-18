@@ -1,7 +1,7 @@
 {
   "date": "2026-10-18",
   "freeSent": 5,
-  "vipSent": 22,
+  "vipSent": 26,
   "sentKeys": [
     "2026-10-18|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|MEGA|SHORT",
     "2026-10-18|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|HBAR|SHORT",
@@ -24,7 +24,11 @@
     "2026-10-18|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|SPX|SHORT",
     "2026-10-18|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|fill|816587898487858",
     "2026-10-18|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|APE|LONG",
-    "2026-10-18|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|ZEC|SHORT"
+    "2026-10-18|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|ZEC|SHORT",
+    "2026-10-18|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|EIGEN|SHORT",
+    "2026-10-18|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|HYPE|LONG",
+    "2026-10-18|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|SOPH|LONG",
+    "2026-10-18|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|CHIP|LONG"
   ],
   "openTrades": [
     {
@@ -113,24 +117,6 @@
       "alertType": "NEW_ENTRY"
     },
     {
-      "key": "2026-10-18|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|CRV|LONG",
-      "coin": "CRV",
-      "side": "LONG",
-      "trader": "⭐ Trader 23 ⭐ — STRK short candidate — profitable open short",
-      "entry": 0.34456,
-      "tp": 0.34800559999999997,
-      "sl": 0.34283719999999995,
-      "leverage": 10,
-      "notional": 2151.950909,
-      "signalAt": 1792283167703,
-      "status": "OPEN",
-      "destinations": [
-        "-1004446412486",
-        "@NovaraSignalsHQ"
-      ],
-      "alertType": "OPEN_BAND"
-    },
-    {
       "key": "2026-10-18|0x1081e214bd6f0137234b92432d9b6033b88965b7|fill|799258416307315",
       "coin": "xyz:LRCX",
       "side": "LONG",
@@ -193,6 +179,74 @@
       "leverage": 40,
       "notional": 2449440,
       "signalAt": 1792290014363,
+      "status": "OPEN",
+      "destinations": [
+        "-1004446412486"
+      ],
+      "alertType": "OPEN_BAND"
+    },
+    {
+      "key": "2026-10-18|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|EIGEN|SHORT",
+      "coin": "EIGEN",
+      "side": "SHORT",
+      "trader": "⭐ Trader 23 ⭐ — STRK short candidate — profitable open short",
+      "entry": 0.255,
+      "tp": 0.25245,
+      "sl": 0.25627500000000003,
+      "leverage": 5,
+      "notional": 133425.16407,
+      "signalAt": 1792293130592,
+      "status": "OPEN",
+      "destinations": [
+        "-1004446412486"
+      ],
+      "alertType": "OPEN_BAND"
+    },
+    {
+      "key": "2026-10-18|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|HYPE|LONG",
+      "coin": "HYPE",
+      "side": "LONG",
+      "trader": "⭐ Trader 23 ⭐ — STRK short candidate — profitable open short",
+      "entry": 79.8687,
+      "tp": 80.667387,
+      "sl": 79.4693565,
+      "leverage": 10,
+      "notional": 1250317.2786,
+      "signalAt": 1792293130592,
+      "status": "OPEN",
+      "destinations": [
+        "-1004446412486"
+      ],
+      "alertType": "OPEN_BAND"
+    },
+    {
+      "key": "2026-10-18|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|SOPH|LONG",
+      "coin": "SOPH",
+      "side": "LONG",
+      "trader": "⭐ Trader 23 ⭐ — STRK short candidate — profitable open short",
+      "entry": 0.002208,
+      "tp": 0.0022300799999999997,
+      "sl": 0.00219696,
+      "leverage": 3,
+      "notional": 6758.574464,
+      "signalAt": 1792293130592,
+      "status": "OPEN",
+      "destinations": [
+        "-1004446412486"
+      ],
+      "alertType": "OPEN_BAND"
+    },
+    {
+      "key": "2026-10-18|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|CHIP|LONG",
+      "coin": "CHIP",
+      "side": "LONG",
+      "trader": "⭐ Trader 23 ⭐ — STRK short candidate — profitable open short",
+      "entry": 0.042867,
+      "tp": 0.04329567,
+      "sl": 0.042652665,
+      "leverage": 3,
+      "notional": 197.995039,
+      "signalAt": 1792293130592,
       "status": "OPEN",
       "destinations": [
         "-1004446412486"
@@ -762,6 +816,17 @@
       "leverage": 10,
       "notional": 37465.854,
       "resolvedAt": 1792292508644
+    },
+    {
+      "key": "2026-10-18|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|CRV|LONG",
+      "coin": "CRV",
+      "side": "LONG",
+      "status": "TP_HIT",
+      "entry": 0.34456,
+      "exitPrice": 0.34800559999999997,
+      "leverage": 10,
+      "notional": 2151.950909,
+      "resolvedAt": 1792293130592
     }
   ]
 }
