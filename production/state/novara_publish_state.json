@@ -237,23 +237,6 @@
         "-1004446412486"
       ],
       "alertType": "OPEN_BAND"
-    },
-    {
-      "key": "2026-10-18|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|SKR|LONG",
-      "coin": "SKR",
-      "side": "LONG",
-      "trader": "⭐ Trader 23 ⭐ — STRK short candidate — profitable open short",
-      "entry": 0.015,
-      "tp": 0.01515,
-      "sl": 0.014924999999999999,
-      "leverage": 3,
-      "notional": 13678.558008,
-      "signalAt": 1792314924316,
-      "status": "OPEN",
-      "destinations": [
-        "-1004446412486"
-      ],
-      "alertType": "OPEN_BAND"
     }
   ],
   "pendingOutcomes": [],
@@ -1049,6 +1032,17 @@
       "leverage": 5,
       "notional": 86547.300714,
       "resolvedAt": 1792313990720
+    },
+    {
+      "key": "2026-10-18|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|SKR|LONG",
+      "coin": "SKR",
+      "side": "LONG",
+      "status": "SL_HIT",
+      "entry": 0.015,
+      "exitPrice": 0.014924999999999999,
+      "leverage": 3,
+      "notional": 13678.558008,
+      "resolvedAt": 1792315235139
     }
   ]
 }
