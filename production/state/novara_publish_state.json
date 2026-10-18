@@ -1,7 +1,7 @@
 {
   "date": "2026-10-18",
   "freeSent": 5,
-  "vipSent": 26,
+  "vipSent": 27,
   "sentKeys": [
     "2026-10-18|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|MEGA|SHORT",
     "2026-10-18|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|HBAR|SHORT",
@@ -28,7 +28,8 @@
     "2026-10-18|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|EIGEN|SHORT",
     "2026-10-18|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|HYPE|LONG",
     "2026-10-18|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|SOPH|LONG",
-    "2026-10-18|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|CHIP|LONG"
+    "2026-10-18|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|CHIP|LONG",
+    "2026-10-18|0x936cf4fb95c30ce83f658b5bbb247e4bb381bb0f|XMR|LONG"
   ],
   "openTrades": [
     {
@@ -186,23 +187,6 @@
       "alertType": "OPEN_BAND"
     },
     {
-      "key": "2026-10-18|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|EIGEN|SHORT",
-      "coin": "EIGEN",
-      "side": "SHORT",
-      "trader": "⭐ Trader 23 ⭐ — STRK short candidate — profitable open short",
-      "entry": 0.255,
-      "tp": 0.25245,
-      "sl": 0.25627500000000003,
-      "leverage": 5,
-      "notional": 133425.16407,
-      "signalAt": 1792293130592,
-      "status": "OPEN",
-      "destinations": [
-        "-1004446412486"
-      ],
-      "alertType": "OPEN_BAND"
-    },
-    {
       "key": "2026-10-18|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|CHIP|LONG",
       "coin": "CHIP",
       "side": "LONG",
@@ -213,6 +197,23 @@
       "leverage": 3,
       "notional": 197.995039,
       "signalAt": 1792293130592,
+      "status": "OPEN",
+      "destinations": [
+        "-1004446412486"
+      ],
+      "alertType": "OPEN_BAND"
+    },
+    {
+      "key": "2026-10-18|0x936cf4fb95c30ce83f658b5bbb247e4bb381bb0f|XMR|LONG",
+      "coin": "XMR",
+      "side": "LONG",
+      "trader": "⭐ Trader 20 ⭐ — PONS short candidate — large open short; reported PONS realized PnL",
+      "entry": 599.245,
+      "tp": 605.23745,
+      "sl": 596.248775,
+      "leverage": 3,
+      "notional": 1078.75992,
+      "signalAt": 1792293753340,
       "status": "OPEN",
       "destinations": [
         "-1004446412486"
@@ -815,6 +816,17 @@
       "leverage": 3,
       "notional": 6758.574464,
       "resolvedAt": 1792293441473
+    },
+    {
+      "key": "2026-10-18|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|EIGEN|SHORT",
+      "coin": "EIGEN",
+      "side": "SHORT",
+      "status": "TP_HIT",
+      "entry": 0.255,
+      "exitPrice": 0.25245,
+      "leverage": 5,
+      "notional": 133425.16407,
+      "resolvedAt": 1792293753340
     }
   ]
 }
