@@ -1,7 +1,7 @@
 {
   "date": "2026-10-18",
   "freeSent": 5,
-  "vipSent": 32,
+  "vipSent": 33,
   "sentKeys": [
     "2026-10-18|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|MEGA|SHORT",
     "2026-10-18|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|HBAR|SHORT",
@@ -34,7 +34,8 @@
     "2026-10-18|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|kSHIB|LONG",
     "2026-10-18|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|JUP|LONG",
     "2026-10-18|0x3dd462347e7b42b5a3ea15132b677a4978af7a81|VVV|SHORT",
-    "2026-10-18|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|CHIP|SHORT"
+    "2026-10-18|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|CHIP|SHORT",
+    "2026-10-18|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|AIXBT|SHORT"
   ],
   "openTrades": [
     {
@@ -202,6 +203,23 @@
       "leverage": 3,
       "notional": 3946.55051,
       "signalAt": 1792296243942,
+      "status": "OPEN",
+      "destinations": [
+        "-1004446412486"
+      ],
+      "alertType": "OPEN_BAND"
+    },
+    {
+      "key": "2026-10-18|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|AIXBT|SHORT",
+      "coin": "AIXBT",
+      "side": "SHORT",
+      "trader": "⭐ Trader 23 ⭐ — STRK short candidate — profitable open short",
+      "entry": 0.018619,
+      "tp": 0.01843281,
+      "sl": 0.018712095,
+      "leverage": 3,
+      "notional": 106.089534,
+      "signalAt": 1792296865237,
       "status": "OPEN",
       "destinations": [
         "-1004446412486"
