@@ -1,10 +1,11 @@
 {
   "date": "2026-10-18",
-  "freeSent": 2,
-  "vipSent": 2,
+  "freeSent": 3,
+  "vipSent": 3,
   "sentKeys": [
     "2026-10-18|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|MEGA|SHORT",
-    "2026-10-18|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|HBAR|SHORT"
+    "2026-10-18|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|HBAR|SHORT",
+    "2026-10-18|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|CRV|LONG"
   ],
   "openTrades": [
     {
@@ -189,6 +190,24 @@
       "leverage": 5,
       "notional": 112034.5596,
       "signalAt": 1792282545420,
+      "status": "OPEN",
+      "destinations": [
+        "-1004446412486",
+        "@NovaraSignalsHQ"
+      ],
+      "alertType": "OPEN_BAND"
+    },
+    {
+      "key": "2026-10-18|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|CRV|LONG",
+      "coin": "CRV",
+      "side": "LONG",
+      "trader": "⭐ Trader 23 ⭐ — STRK short candidate — profitable open short",
+      "entry": 0.34456,
+      "tp": 0.34800559999999997,
+      "sl": 0.34283719999999995,
+      "leverage": 10,
+      "notional": 2151.950909,
+      "signalAt": 1792283167703,
       "status": "OPEN",
       "destinations": [
         "-1004446412486",
