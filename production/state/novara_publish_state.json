@@ -218,23 +218,6 @@
         "-1004446412486"
       ],
       "alertType": "NEW_ENTRY"
-    },
-    {
-      "key": "2026-10-18|0x0c1f6941fdcde9488dfd36ca16fed6b3bc49672b|STRK|LONG",
-      "coin": "STRK",
-      "side": "LONG",
-      "trader": "⭐ Trader 12 ⭐",
-      "entry": 0.06347,
-      "tp": 0.0641047,
-      "sl": 0.06315265,
-      "leverage": 5,
-      "notional": 86547.300714,
-      "signalAt": 1792313678439,
-      "status": "OPEN",
-      "destinations": [
-        "-1004446412486"
-      ],
-      "alertType": "OPEN_BAND"
     }
   ],
   "pendingOutcomes": [],
@@ -1019,6 +1002,17 @@
       "leverage": 5,
       "notional": 200.255832,
       "resolvedAt": 1792313678439
+    },
+    {
+      "key": "2026-10-18|0x0c1f6941fdcde9488dfd36ca16fed6b3bc49672b|STRK|LONG",
+      "coin": "STRK",
+      "side": "LONG",
+      "status": "TP_HIT",
+      "entry": 0.06347,
+      "exitPrice": 0.0641047,
+      "leverage": 5,
+      "notional": 86547.300714,
+      "resolvedAt": 1792313990720
     }
   ]
 }
