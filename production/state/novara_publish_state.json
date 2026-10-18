@@ -268,40 +268,6 @@
         "-1004446412486"
       ],
       "alertType": "NEW_ENTRY"
-    },
-    {
-      "key": "2026-10-18|0xc0b2a1ce425d0cd8bc321c445fa6ae0eaed2e688|ZRO|LONG",
-      "coin": "ZRO",
-      "side": "LONG",
-      "trader": "⭐ Trader 7 ⭐",
-      "entry": 1.7842,
-      "tp": 1.802042,
-      "sl": 1.775279,
-      "leverage": 5,
-      "notional": 890.35,
-      "signalAt": 1792332398331,
-      "status": "OPEN",
-      "destinations": [
-        "-1004446412486"
-      ],
-      "alertType": "OPEN_BAND"
-    },
-    {
-      "key": "2026-10-18|0xc0b2a1ce425d0cd8bc321c445fa6ae0eaed2e688|PONS|LONG",
-      "coin": "PONS",
-      "side": "LONG",
-      "trader": "⭐ Trader 7 ⭐",
-      "entry": 0.26875,
-      "tp": 0.2714375,
-      "sl": 0.26740625,
-      "leverage": 3,
-      "notional": 1068.36,
-      "signalAt": 1792333335123,
-      "status": "OPEN",
-      "destinations": [
-        "-1004446412486"
-      ],
-      "alertType": "OPEN_BAND"
     }
   ],
   "pendingOutcomes": [],
@@ -1229,6 +1195,28 @@
       "leverage": 3,
       "notional": 541.6600000000001,
       "resolvedAt": 1792332710334
+    },
+    {
+      "key": "2026-10-18|0xc0b2a1ce425d0cd8bc321c445fa6ae0eaed2e688|ZRO|LONG",
+      "coin": "ZRO",
+      "side": "LONG",
+      "status": "SL_HIT",
+      "entry": 1.7842,
+      "exitPrice": 1.775279,
+      "leverage": 5,
+      "notional": 890.35,
+      "resolvedAt": 1792333645445
+    },
+    {
+      "key": "2026-10-18|0xc0b2a1ce425d0cd8bc321c445fa6ae0eaed2e688|PONS|LONG",
+      "coin": "PONS",
+      "side": "LONG",
+      "status": "SL_HIT",
+      "entry": 0.26875,
+      "exitPrice": 0.26740625,
+      "leverage": 3,
+      "notional": 1068.36,
+      "resolvedAt": 1792333645445
     }
   ]
 }
