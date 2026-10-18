@@ -142,23 +142,6 @@
       "alertType": "NEW_ENTRY"
     },
     {
-      "key": "2026-10-18|0xd4c1f7e8d876c4749228d515473d36f919583d1d|BTC|SHORT",
-      "coin": "BTC",
-      "side": "SHORT",
-      "trader": "⭐ Trader 21 ⭐ — PONS short candidate — profitable open short",
-      "entry": 82503.3,
-      "tp": 81678.267,
-      "sl": 82915.8165,
-      "leverage": 12,
-      "notional": 5771600.781611,
-      "signalAt": 1792287825248,
-      "status": "OPEN",
-      "destinations": [
-        "-1004446412486"
-      ],
-      "alertType": "OPEN_BAND"
-    },
-    {
       "key": "2026-10-18|0xf9faba57a81d1575d3e506dd3eafe7db6f2a3275|INJ|LONG",
       "coin": "INJ",
       "side": "LONG",
@@ -678,6 +661,17 @@
       "leverage": 3,
       "notional": 89549.87079,
       "resolvedAt": 1792288136208
+    },
+    {
+      "key": "2026-10-18|0xd4c1f7e8d876c4749228d515473d36f919583d1d|BTC|SHORT",
+      "coin": "BTC",
+      "side": "SHORT",
+      "status": "TP_HIT",
+      "entry": 82503.3,
+      "exitPrice": 81678.267,
+      "leverage": 12,
+      "notional": 5771600.781611,
+      "resolvedAt": 1792288449376
     }
   ]
 }
