@@ -269,23 +269,6 @@
       "alertType": "NEW_ENTRY"
     },
     {
-      "key": "2026-10-18|0xc0b2a1ce425d0cd8bc321c445fa6ae0eaed2e688|fill|879516886934289",
-      "coin": "PONS",
-      "side": "LONG",
-      "trader": "⭐ Trader 7 ⭐",
-      "entry": 0.27083,
-      "tp": 0.2735383,
-      "sl": 0.26947585,
-      "leverage": 3,
-      "notional": 541.6600000000001,
-      "signalAt": 1792332398331,
-      "status": "OPEN",
-      "destinations": [
-        "-1004446412486"
-      ],
-      "alertType": "NEW_ENTRY"
-    },
-    {
       "key": "2026-10-18|0xc0b2a1ce425d0cd8bc321c445fa6ae0eaed2e688|ZRO|LONG",
       "coin": "ZRO",
       "side": "LONG",
@@ -1217,6 +1200,17 @@
       "leverage": 10,
       "notional": 2820.322746,
       "resolvedAt": 1792330212489
+    },
+    {
+      "key": "2026-10-18|0xc0b2a1ce425d0cd8bc321c445fa6ae0eaed2e688|fill|879516886934289",
+      "coin": "PONS",
+      "side": "LONG",
+      "status": "SL_HIT",
+      "entry": 0.27083,
+      "exitPrice": 0.26947585,
+      "leverage": 3,
+      "notional": 541.6600000000001,
+      "resolvedAt": 1792332710334
     }
   ]
 }
