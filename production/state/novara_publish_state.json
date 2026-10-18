@@ -170,74 +170,6 @@
         "@NovaraSignalsHQ"
       ],
       "alertType": "OPEN_BAND"
-    },
-    {
-      "key": "2026-10-18|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|ZRO|LONG",
-      "coin": "ZRO",
-      "side": "LONG",
-      "trader": "⭐ Trader 23 ⭐ — STRK short candidate — profitable open short",
-      "entry": 1.90326,
-      "tp": 1.9222926,
-      "sl": 1.8937437,
-      "leverage": 5,
-      "notional": 68118.9252,
-      "signalAt": 1792285653595,
-      "status": "OPEN",
-      "destinations": [
-        "-1004446412486"
-      ],
-      "alertType": "OPEN_BAND"
-    },
-    {
-      "key": "2026-10-18|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|PEOPLE|LONG",
-      "coin": "PEOPLE",
-      "side": "LONG",
-      "trader": "⭐ Trader 23 ⭐ — STRK short candidate — profitable open short",
-      "entry": 0.007757,
-      "tp": 0.00783457,
-      "sl": 0.007718215,
-      "leverage": 3,
-      "notional": 19310.030312,
-      "signalAt": 1792285653595,
-      "status": "OPEN",
-      "destinations": [
-        "-1004446412486"
-      ],
-      "alertType": "OPEN_BAND"
-    },
-    {
-      "key": "2026-10-18|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|TAO|LONG",
-      "coin": "TAO",
-      "side": "LONG",
-      "trader": "⭐ Trader 23 ⭐ — STRK short candidate — profitable open short",
-      "entry": 272.917,
-      "tp": 275.64617,
-      "sl": 271.552415,
-      "leverage": 5,
-      "notional": 250311.123405,
-      "signalAt": 1792285653595,
-      "status": "OPEN",
-      "destinations": [
-        "-1004446412486"
-      ],
-      "alertType": "OPEN_BAND"
-    },
-    {
-      "key": "2026-10-18|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|MON|LONG",
-      "coin": "MON",
-      "side": "LONG",
-      "trader": "⭐ Trader 23 ⭐ — STRK short candidate — profitable open short",
-      "entry": 0.02208,
-      "tp": 0.0223008,
-      "sl": 0.0219696,
-      "leverage": 5,
-      "notional": 80872.166001,
-      "signalAt": 1792285653595,
-      "status": "OPEN",
-      "destinations": [
-        "-1004446412486"
-      ],
-      "alertType": "OPEN_BAND"
     }
   ],
   "pendingOutcomes": [],
@@ -637,6 +569,50 @@
       "leverage": 5,
       "notional": 30523.655655,
       "resolvedAt": 1792285653595
+    },
+    {
+      "key": "2026-10-18|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|ZRO|LONG",
+      "coin": "ZRO",
+      "side": "LONG",
+      "status": "SL_HIT",
+      "entry": 1.90326,
+      "exitPrice": 1.8937437,
+      "leverage": 5,
+      "notional": 68118.9252,
+      "resolvedAt": 1792285963254
+    },
+    {
+      "key": "2026-10-18|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|PEOPLE|LONG",
+      "coin": "PEOPLE",
+      "side": "LONG",
+      "status": "SL_HIT",
+      "entry": 0.007757,
+      "exitPrice": 0.007718215,
+      "leverage": 3,
+      "notional": 19310.030312,
+      "resolvedAt": 1792285963254
+    },
+    {
+      "key": "2026-10-18|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|TAO|LONG",
+      "coin": "TAO",
+      "side": "LONG",
+      "status": "SL_HIT",
+      "entry": 272.917,
+      "exitPrice": 271.552415,
+      "leverage": 5,
+      "notional": 250311.123405,
+      "resolvedAt": 1792285963254
+    },
+    {
+      "key": "2026-10-18|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|MON|LONG",
+      "coin": "MON",
+      "side": "LONG",
+      "status": "SL_HIT",
+      "entry": 0.02208,
+      "exitPrice": 0.0219696,
+      "leverage": 5,
+      "notional": 80872.166001,
+      "resolvedAt": 1792285963254
     }
   ]
 }
