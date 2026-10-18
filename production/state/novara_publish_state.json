@@ -1,7 +1,7 @@
 {
   "date": "2026-10-18",
   "freeSent": 5,
-  "vipSent": 35,
+  "vipSent": 36,
   "sentKeys": [
     "2026-10-18|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|MEGA|SHORT",
     "2026-10-18|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|HBAR|SHORT",
@@ -37,7 +37,8 @@
     "2026-10-18|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|CHIP|SHORT",
     "2026-10-18|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|AIXBT|SHORT",
     "2026-10-18|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|ZEC|LONG",
-    "2026-10-18|0x936cf4fb95c30ce83f658b5bbb247e4bb381bb0f|XMR|SHORT"
+    "2026-10-18|0x936cf4fb95c30ce83f658b5bbb247e4bb381bb0f|XMR|SHORT",
+    "2026-10-18|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|DASH|LONG"
   ],
   "openTrades": [
     {
@@ -195,16 +196,16 @@
       "alertType": "OPEN_BAND"
     },
     {
-      "key": "2026-10-18|0x936cf4fb95c30ce83f658b5bbb247e4bb381bb0f|XMR|SHORT",
-      "coin": "XMR",
-      "side": "SHORT",
-      "trader": "⭐ Trader 20 ⭐ — PONS short candidate — large open short; reported PONS realized PnL",
-      "entry": 597.079,
-      "tp": 591.10821,
-      "sl": 600.064395,
-      "leverage": 3,
-      "notional": 5745.48048,
-      "signalAt": 1792301222814,
+      "key": "2026-10-18|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|DASH|LONG",
+      "coin": "DASH",
+      "side": "LONG",
+      "trader": "⭐ Trader 23 ⭐ — STRK short candidate — profitable open short",
+      "entry": 47.7892,
+      "tp": 48.267092,
+      "sl": 47.550254,
+      "leverage": 5,
+      "notional": 2188.25712,
+      "signalAt": 1792301842457,
       "status": "OPEN",
       "destinations": [
         "-1004446412486"
@@ -917,6 +918,17 @@
       "leverage": 3,
       "notional": 106.089534,
       "resolvedAt": 1792301222814
+    },
+    {
+      "key": "2026-10-18|0x936cf4fb95c30ce83f658b5bbb247e4bb381bb0f|XMR|SHORT",
+      "coin": "XMR",
+      "side": "SHORT",
+      "status": "TP_HIT",
+      "entry": 597.079,
+      "exitPrice": 591.10821,
+      "leverage": 3,
+      "notional": 5745.48048,
+      "resolvedAt": 1792301842457
     }
   ]
 }
