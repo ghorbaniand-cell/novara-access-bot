@@ -216,23 +216,6 @@
       "alertType": "OPEN_BAND"
     },
     {
-      "key": "2026-10-18|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|SPX|SHORT",
-      "coin": "SPX",
-      "side": "SHORT",
-      "trader": "⭐ Trader 23 ⭐ — STRK short candidate — profitable open short",
-      "entry": 0.376,
-      "tp": 0.37224,
-      "sl": 0.37788,
-      "leverage": 5,
-      "notional": 8190.80001,
-      "signalAt": 1792290014363,
-      "status": "OPEN",
-      "destinations": [
-        "-1004446412486"
-      ],
-      "alertType": "OPEN_BAND"
-    },
-    {
       "key": "2026-10-18|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|fill|816587898487858",
       "coin": "ZEC",
       "side": "SHORT",
@@ -774,6 +757,17 @@
       "leverage": 5,
       "notional": 304759,
       "resolvedAt": 1792289388135
+    },
+    {
+      "key": "2026-10-18|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|SPX|SHORT",
+      "coin": "SPX",
+      "side": "SHORT",
+      "status": "TP_HIT",
+      "entry": 0.376,
+      "exitPrice": 0.37224,
+      "leverage": 5,
+      "notional": 8190.80001,
+      "resolvedAt": 1792291264189
     }
   ]
 }
