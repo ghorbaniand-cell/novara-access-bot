@@ -1,7 +1,7 @@
 {
   "date": "2026-10-18",
   "freeSent": 5,
-  "vipSent": 41,
+  "vipSent": 42,
   "sentKeys": [
     "2026-10-18|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|MEGA|SHORT",
     "2026-10-18|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|HBAR|SHORT",
@@ -43,7 +43,8 @@
     "2026-10-18|0x936cf4fb95c30ce83f658b5bbb247e4bb381bb0f|MON|LONG",
     "2026-10-18|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|POLYX|LONG",
     "2026-10-18|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|S|LONG",
-    "2026-10-18|0x0c1f6941fdcde9488dfd36ca16fed6b3bc49672b|fill|1008642623061564"
+    "2026-10-18|0x0c1f6941fdcde9488dfd36ca16fed6b3bc49672b|fill|1008642623061564",
+    "2026-10-18|0xe31501c472d557bfa145ce105d325fb2dd4cb867|fill|636415768506487"
   ],
   "openTrades": [
     {
@@ -211,6 +212,23 @@
       "leverage": 5,
       "notional": 200.255832,
       "signalAt": 1792312433218,
+      "status": "OPEN",
+      "destinations": [
+        "-1004446412486"
+      ],
+      "alertType": "NEW_ENTRY"
+    },
+    {
+      "key": "2026-10-18|0xe31501c472d557bfa145ce105d325fb2dd4cb867|fill|636415768506487",
+      "coin": "xyz:SMH",
+      "side": "SHORT",
+      "trader": "⭐ Trader 19 ⭐",
+      "entry": 540.58,
+      "tp": 535.1742,
+      "sl": 543.2829,
+      "leverage": 0,
+      "notional": 961.15124,
+      "signalAt": 1792312746392,
       "status": "OPEN",
       "destinations": [
         "-1004446412486"
