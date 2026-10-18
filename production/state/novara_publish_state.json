@@ -1,11 +1,12 @@
 {
   "date": "2026-10-18",
-  "freeSent": 3,
-  "vipSent": 3,
+  "freeSent": 4,
+  "vipSent": 4,
   "sentKeys": [
     "2026-10-18|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|MEGA|SHORT",
     "2026-10-18|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|HBAR|SHORT",
-    "2026-10-18|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|CRV|LONG"
+    "2026-10-18|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|CRV|LONG",
+    "2026-10-18|0x1081e214bd6f0137234b92432d9b6033b88965b7|fill|799258416307315"
   ],
   "openTrades": [
     {
@@ -178,6 +179,24 @@
         "@NovaraSignalsHQ"
       ],
       "alertType": "OPEN_BAND"
+    },
+    {
+      "key": "2026-10-18|0x1081e214bd6f0137234b92432d9b6033b88965b7|fill|799258416307315",
+      "coin": "xyz:LRCX",
+      "side": "LONG",
+      "trader": "⭐ Trader 24 ⭐",
+      "entry": 262.52,
+      "tp": 265.1452,
+      "sl": 261.2074,
+      "leverage": 0,
+      "notional": 212.6412,
+      "signalAt": 1792284719803,
+      "status": "OPEN",
+      "destinations": [
+        "-1004446412486",
+        "@NovaraSignalsHQ"
+      ],
+      "alertType": "NEW_ENTRY"
     }
   ],
   "pendingOutcomes": [],
