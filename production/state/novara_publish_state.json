@@ -188,23 +188,6 @@
         "-1004446412486"
       ],
       "alertType": "NEW_ENTRY"
-    },
-    {
-      "key": "2026-10-18|0xd4c1f7e8d876c4749228d515473d36f919583d1d|NEAR|SHORT",
-      "coin": "NEAR",
-      "side": "SHORT",
-      "trader": "⭐ Trader 21 ⭐ — PONS short candidate — profitable open short",
-      "entry": 4.9924,
-      "tp": 4.942476,
-      "sl": 5.017362,
-      "leverage": 10,
-      "notional": 317.14956,
-      "signalAt": 1792314611755,
-      "status": "OPEN",
-      "destinations": [
-        "-1004446412486"
-      ],
-      "alertType": "OPEN_BAND"
     }
   ],
   "pendingOutcomes": [],
@@ -1055,6 +1038,17 @@
       "leverage": 3,
       "notional": 28887.023907,
       "resolvedAt": 1792321777945
+    },
+    {
+      "key": "2026-10-18|0xd4c1f7e8d876c4749228d515473d36f919583d1d|NEAR|SHORT",
+      "coin": "NEAR",
+      "side": "SHORT",
+      "status": "TP_HIT",
+      "entry": 4.9924,
+      "exitPrice": 4.942476,
+      "leverage": 10,
+      "notional": 317.14956,
+      "resolvedAt": 1792323332299
     }
   ]
 }
