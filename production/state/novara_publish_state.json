@@ -1,7 +1,7 @@
 {
   "date": "2026-10-18",
   "freeSent": 5,
-  "vipSent": 38,
+  "vipSent": 39,
   "sentKeys": [
     "2026-10-18|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|MEGA|SHORT",
     "2026-10-18|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|HBAR|SHORT",
@@ -40,7 +40,8 @@
     "2026-10-18|0x936cf4fb95c30ce83f658b5bbb247e4bb381bb0f|XMR|SHORT",
     "2026-10-18|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|DASH|LONG",
     "2026-10-18|0xd4c1f7e8d876c4749228d515473d36f919583d1d|XRP|SHORT",
-    "2026-10-18|0x936cf4fb95c30ce83f658b5bbb247e4bb381bb0f|MON|LONG"
+    "2026-10-18|0x936cf4fb95c30ce83f658b5bbb247e4bb381bb0f|MON|LONG",
+    "2026-10-18|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|POLYX|LONG"
   ],
   "openTrades": [
     {
@@ -225,6 +226,23 @@
       "leverage": 5,
       "notional": 3795.42,
       "signalAt": 1792302777794,
+      "status": "OPEN",
+      "destinations": [
+        "-1004446412486"
+      ],
+      "alertType": "OPEN_BAND"
+    },
+    {
+      "key": "2026-10-18|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|POLYX|LONG",
+      "coin": "POLYX",
+      "side": "LONG",
+      "trader": "⭐ Trader 23 ⭐ — STRK short candidate — profitable open short",
+      "entry": 0.034956,
+      "tp": 0.03530556,
+      "sl": 0.03478122,
+      "leverage": 3,
+      "notional": 1856.5888,
+      "signalAt": 1792304023544,
       "status": "OPEN",
       "destinations": [
         "-1004446412486"
