@@ -1,7 +1,7 @@
 {
   "date": "2026-10-18",
   "freeSent": 5,
-  "vipSent": 72,
+  "vipSent": 75,
   "sentKeys": [
     "2026-10-18|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|MEGA|SHORT",
     "2026-10-18|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|HBAR|SHORT",
@@ -74,7 +74,10 @@
     "2026-10-18|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|PUMP|LONG",
     "2026-10-18|0xc0b2a1ce425d0cd8bc321c445fa6ae0eaed2e688|HYPE|LONG",
     "2026-10-18|0xc0b2a1ce425d0cd8bc321c445fa6ae0eaed2e688|PUMP|LONG",
-    "2026-10-18|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|AIXBT|LONG"
+    "2026-10-18|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|AIXBT|LONG",
+    "2026-10-18|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|BSV|SHORT",
+    "2026-10-18|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|FIL|LONG",
+    "2026-10-18|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|ICP|LONG"
   ],
   "openTrades": [
     {
@@ -388,6 +391,63 @@
       "signalLeverage": 3,
       "notional": 253.306142,
       "signalAt": 1792342686054,
+      "status": "OPEN",
+      "destinations": [
+        "-1004446412486"
+      ],
+      "alertType": "OPEN_BAND"
+    },
+    {
+      "key": "2026-10-18|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|BSV|SHORT",
+      "coin": "BSV",
+      "side": "SHORT",
+      "trader": "⭐ Trader 23 ⭐ — STRK short candidate — profitable open short",
+      "entry": 17.5694,
+      "tp": 17.393706,
+      "sl": 17.657247,
+      "leverage": 3,
+      "observedLeverage": 3,
+      "signalLeverage": 3,
+      "notional": 2866.26868,
+      "signalAt": 1792347395719,
+      "status": "OPEN",
+      "destinations": [
+        "-1004446412486"
+      ],
+      "alertType": "OPEN_BAND"
+    },
+    {
+      "key": "2026-10-18|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|FIL|LONG",
+      "coin": "FIL",
+      "side": "LONG",
+      "trader": "⭐ Trader 23 ⭐ — STRK short candidate — profitable open short",
+      "entry": 1.0196,
+      "tp": 1.0297960000000002,
+      "sl": 1.014502,
+      "leverage": 5,
+      "observedLeverage": 5,
+      "signalLeverage": 5,
+      "notional": 11043.3307,
+      "signalAt": 1792347395719,
+      "status": "OPEN",
+      "destinations": [
+        "-1004446412486"
+      ],
+      "alertType": "OPEN_BAND"
+    },
+    {
+      "key": "2026-10-18|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|ICP|LONG",
+      "coin": "ICP",
+      "side": "LONG",
+      "trader": "⭐ Trader 23 ⭐ — STRK short candidate — profitable open short",
+      "entry": 2.80906,
+      "tp": 2.8371506,
+      "sl": 2.7950147000000003,
+      "leverage": 5,
+      "observedLeverage": 5,
+      "signalLeverage": 5,
+      "notional": 4458.73584,
+      "signalAt": 1792347395719,
       "status": "OPEN",
       "destinations": [
         "-1004446412486"
