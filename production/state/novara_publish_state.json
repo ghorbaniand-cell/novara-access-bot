@@ -1,7 +1,7 @@
 {
   "date": "2026-10-18",
   "freeSent": 5,
-  "vipSent": 54,
+  "vipSent": 55,
   "sentKeys": [
     "2026-10-18|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|MEGA|SHORT",
     "2026-10-18|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|HBAR|SHORT",
@@ -56,7 +56,8 @@
     "2026-10-18|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|HBAR|LONG",
     "2026-10-18|0xc0b2a1ce425d0cd8bc321c445fa6ae0eaed2e688|fill|1119242831775995",
     "2026-10-18|0xc0b2a1ce425d0cd8bc321c445fa6ae0eaed2e688|fill|649190673196999",
-    "2026-10-18|0xde0e9b1a35322a809165d09f0490cca3fa7562e5|fill|327940713559808"
+    "2026-10-18|0xde0e9b1a35322a809165d09f0490cca3fa7562e5|fill|327940713559808",
+    "2026-10-18|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|kLUNC|SHORT"
   ],
   "openTrades": [
     {
@@ -229,6 +230,23 @@
         "-1004446412486"
       ],
       "alertType": "NEW_ENTRY"
+    },
+    {
+      "key": "2026-10-18|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|kLUNC|SHORT",
+      "coin": "kLUNC",
+      "side": "SHORT",
+      "trader": "⭐ Trader 23 ⭐ — STRK short candidate — profitable open short",
+      "entry": 0.046131,
+      "tp": 0.04566969,
+      "sl": 0.046361655,
+      "leverage": 3,
+      "notional": 107.565832,
+      "signalAt": 1792330831798,
+      "status": "OPEN",
+      "destinations": [
+        "-1004446412486"
+      ],
+      "alertType": "OPEN_BAND"
     }
   ],
   "pendingOutcomes": [],
