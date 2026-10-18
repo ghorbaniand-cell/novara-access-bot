@@ -1,7 +1,7 @@
 {
   "date": "2026-10-18",
   "freeSent": 5,
-  "vipSent": 19,
+  "vipSent": 20,
   "sentKeys": [
     "2026-10-18|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|MEGA|SHORT",
     "2026-10-18|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|HBAR|SHORT",
@@ -21,7 +21,8 @@
     "2026-10-18|0xf9faba57a81d1575d3e506dd3eafe7db6f2a3275|fill|3269700395250",
     "2026-10-18|0xd4c1f7e8d876c4749228d515473d36f919583d1d|DOGE|LONG",
     "2026-10-18|0xf9faba57a81d1575d3e506dd3eafe7db6f2a3275|BTC|SHORT",
-    "2026-10-18|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|SPX|SHORT"
+    "2026-10-18|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|SPX|SHORT",
+    "2026-10-18|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|fill|816587898487858"
   ],
   "openTrades": [
     {
@@ -229,6 +230,23 @@
         "-1004446412486"
       ],
       "alertType": "OPEN_BAND"
+    },
+    {
+      "key": "2026-10-18|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|fill|816587898487858",
+      "coin": "ZEC",
+      "side": "SHORT",
+      "trader": "⭐ Trader 23 ⭐ — STRK short candidate — profitable open short",
+      "entry": 1142,
+      "tp": 1130.58,
+      "sl": 1147.71,
+      "leverage": 10,
+      "notional": 673.78,
+      "signalAt": 1792290638550,
+      "status": "OPEN",
+      "destinations": [
+        "-1004446412486"
+      ],
+      "alertType": "NEW_ENTRY"
     }
   ],
   "pendingOutcomes": [],
