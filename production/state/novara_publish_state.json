@@ -1,7 +1,7 @@
 {
   "date": "2026-10-18",
   "freeSent": 5,
-  "vipSent": 75,
+  "vipSent": 76,
   "sentKeys": [
     "2026-10-18|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|MEGA|SHORT",
     "2026-10-18|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|HBAR|SHORT",
@@ -77,7 +77,8 @@
     "2026-10-18|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|AIXBT|LONG",
     "2026-10-18|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|BSV|SHORT",
     "2026-10-18|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|FIL|LONG",
-    "2026-10-18|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|ICP|LONG"
+    "2026-10-18|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|ICP|LONG",
+    "2026-10-18|0xd4c1f7e8d876c4749228d515473d36f919583d1d|ETH|LONG"
   ],
   "openTrades": [
     {
@@ -448,6 +449,25 @@
       "signalLeverage": 5,
       "notional": 4458.73584,
       "signalAt": 1792347395719,
+      "status": "OPEN",
+      "destinations": [
+        "-1004446412486"
+      ],
+      "alertType": "OPEN_BAND"
+    },
+    {
+      "key": "2026-10-18|0xd4c1f7e8d876c4749228d515473d36f919583d1d|ETH|LONG",
+      "coin": "ETH",
+      "side": "LONG",
+      "trader": "⭐ Trader 21 ⭐ — PONS short candidate — profitable open short",
+      "entry": 2363.95,
+      "tp": 2387.5895,
+      "sl": 2352.1302499999997,
+      "leverage": 12,
+      "observedLeverage": 12,
+      "signalLeverage": 12,
+      "notional": 98181.92328,
+      "signalAt": 1792349493268,
       "status": "OPEN",
       "destinations": [
         "-1004446412486"
