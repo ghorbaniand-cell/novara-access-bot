@@ -143,23 +143,6 @@
       "alertType": "NEW_ENTRY"
     },
     {
-      "key": "2026-10-18|0xf9faba57a81d1575d3e506dd3eafe7db6f2a3275|INJ|LONG",
-      "coin": "INJ",
-      "side": "LONG",
-      "trader": "⭐ Trader 6 ⭐",
-      "entry": 8.68231,
-      "tp": 8.7691331,
-      "sl": 8.63889845,
-      "leverage": 5,
-      "notional": 304759,
-      "signalAt": 1792288136208,
-      "status": "OPEN",
-      "destinations": [
-        "-1004446412486"
-      ],
-      "alertType": "OPEN_BAND"
-    },
-    {
       "key": "2026-10-18|0x936cf4fb95c30ce83f658b5bbb247e4bb381bb0f|NEAR|SHORT",
       "coin": "NEAR",
       "side": "SHORT",
@@ -690,6 +673,17 @@
       "leverage": 12,
       "notional": 5771600.781611,
       "resolvedAt": 1792288449376
+    },
+    {
+      "key": "2026-10-18|0xf9faba57a81d1575d3e506dd3eafe7db6f2a3275|INJ|LONG",
+      "coin": "INJ",
+      "side": "LONG",
+      "status": "SL_HIT",
+      "entry": 8.68231,
+      "exitPrice": 8.63889845,
+      "leverage": 5,
+      "notional": 304759,
+      "resolvedAt": 1792289388135
     }
   ]
 }
