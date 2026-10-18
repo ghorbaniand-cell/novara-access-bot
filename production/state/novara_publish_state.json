@@ -162,24 +162,6 @@
       "alertType": "NEW_ENTRY"
     },
     {
-      "key": "2026-10-18|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|MEGA|SHORT",
-      "coin": "MEGA",
-      "side": "SHORT",
-      "trader": "⭐ Trader 23 ⭐ — STRK short candidate — profitable open short",
-      "entry": 0.045934,
-      "tp": 0.04547466,
-      "sl": 0.046163670000000004,
-      "leverage": 3,
-      "notional": 75565.411614,
-      "signalAt": 1792281921396,
-      "status": "OPEN",
-      "destinations": [
-        "-1004446412486",
-        "@NovaraSignalsHQ"
-      ],
-      "alertType": "OPEN_BAND"
-    },
-    {
       "key": "2026-10-18|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|CRV|LONG",
       "coin": "CRV",
       "side": "LONG",
@@ -540,6 +522,17 @@
       "leverage": 5,
       "notional": 112034.5596,
       "resolvedAt": 1792283477733
+    },
+    {
+      "key": "2026-10-18|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|MEGA|SHORT",
+      "coin": "MEGA",
+      "side": "SHORT",
+      "status": "TP_HIT",
+      "entry": 0.045934,
+      "exitPrice": 0.04547466,
+      "leverage": 3,
+      "notional": 75565.411614,
+      "resolvedAt": 1792283788085
     }
   ]
 }
