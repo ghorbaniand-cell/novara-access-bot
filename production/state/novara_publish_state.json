@@ -162,23 +162,6 @@
       "alertType": "NEW_ENTRY"
     },
     {
-      "key": "2026-10-18|0xd4c1f7e8d876c4749228d515473d36f919583d1d|DOGE|LONG",
-      "coin": "DOGE",
-      "side": "LONG",
-      "trader": "⭐ Trader 21 ⭐ — PONS short candidate — profitable open short",
-      "entry": 0.079149,
-      "tp": 0.07994049,
-      "sl": 0.078753255,
-      "leverage": 10,
-      "notional": 2820.322746,
-      "signalAt": 1792289701953,
-      "status": "OPEN",
-      "destinations": [
-        "-1004446412486"
-      ],
-      "alertType": "OPEN_BAND"
-    },
-    {
       "key": "2026-10-18|0xe31501c472d557bfa145ce105d325fb2dd4cb867|fill|636415768506487",
       "coin": "xyz:SMH",
       "side": "SHORT",
@@ -1133,6 +1116,17 @@
       "leverage": 5,
       "notional": 1863.68833,
       "resolvedAt": 1792328643232
+    },
+    {
+      "key": "2026-10-18|0xd4c1f7e8d876c4749228d515473d36f919583d1d|DOGE|LONG",
+      "coin": "DOGE",
+      "side": "LONG",
+      "status": "SL_HIT",
+      "entry": 0.079149,
+      "exitPrice": 0.078753255,
+      "leverage": 10,
+      "notional": 2820.322746,
+      "resolvedAt": 1792330212489
     }
   ]
 }
