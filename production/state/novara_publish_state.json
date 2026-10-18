@@ -204,23 +204,6 @@
         "-1004446412486"
       ],
       "alertType": "OPEN_BAND"
-    },
-    {
-      "key": "2026-10-18|0xd4c1f7e8d876c4749228d515473d36f919583d1d|LTC|SHORT",
-      "coin": "LTC",
-      "side": "SHORT",
-      "trader": "⭐ Trader 21 ⭐ — PONS short candidate — profitable open short",
-      "entry": 60.0264,
-      "tp": 59.426136,
-      "sl": 60.326532,
-      "leverage": 10,
-      "notional": 16173.95052,
-      "signalAt": 1792315866171,
-      "status": "OPEN",
-      "destinations": [
-        "-1004446412486"
-      ],
-      "alertType": "OPEN_BAND"
     }
   ],
   "pendingOutcomes": [],
@@ -1049,6 +1032,17 @@
       "leverage": 40,
       "notional": 2449440,
       "resolvedAt": 1792315866171
+    },
+    {
+      "key": "2026-10-18|0xd4c1f7e8d876c4749228d515473d36f919583d1d|LTC|SHORT",
+      "coin": "LTC",
+      "side": "SHORT",
+      "status": "TP_HIT",
+      "entry": 60.0264,
+      "exitPrice": 59.426136,
+      "leverage": 10,
+      "notional": 16173.95052,
+      "resolvedAt": 1792317732056
     }
   ]
 }
