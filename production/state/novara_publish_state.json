@@ -203,40 +203,6 @@
       "alertType": "OPEN_BAND"
     },
     {
-      "key": "2026-10-18|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|HYPE|LONG",
-      "coin": "HYPE",
-      "side": "LONG",
-      "trader": "⭐ Trader 23 ⭐ — STRK short candidate — profitable open short",
-      "entry": 79.8687,
-      "tp": 80.667387,
-      "sl": 79.4693565,
-      "leverage": 10,
-      "notional": 1250317.2786,
-      "signalAt": 1792293130592,
-      "status": "OPEN",
-      "destinations": [
-        "-1004446412486"
-      ],
-      "alertType": "OPEN_BAND"
-    },
-    {
-      "key": "2026-10-18|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|SOPH|LONG",
-      "coin": "SOPH",
-      "side": "LONG",
-      "trader": "⭐ Trader 23 ⭐ — STRK short candidate — profitable open short",
-      "entry": 0.002208,
-      "tp": 0.0022300799999999997,
-      "sl": 0.00219696,
-      "leverage": 3,
-      "notional": 6758.574464,
-      "signalAt": 1792293130592,
-      "status": "OPEN",
-      "destinations": [
-        "-1004446412486"
-      ],
-      "alertType": "OPEN_BAND"
-    },
-    {
       "key": "2026-10-18|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|CHIP|LONG",
       "coin": "CHIP",
       "side": "LONG",
@@ -827,6 +793,28 @@
       "leverage": 10,
       "notional": 2151.950909,
       "resolvedAt": 1792293130592
+    },
+    {
+      "key": "2026-10-18|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|HYPE|LONG",
+      "coin": "HYPE",
+      "side": "LONG",
+      "status": "SL_HIT",
+      "entry": 79.8687,
+      "exitPrice": 79.4693565,
+      "leverage": 10,
+      "notional": 1250317.2786,
+      "resolvedAt": 1792293441473
+    },
+    {
+      "key": "2026-10-18|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|SOPH|LONG",
+      "coin": "SOPH",
+      "side": "LONG",
+      "status": "SL_HIT",
+      "entry": 0.002208,
+      "exitPrice": 0.00219696,
+      "leverage": 3,
+      "notional": 6758.574464,
+      "resolvedAt": 1792293441473
     }
   ]
 }
