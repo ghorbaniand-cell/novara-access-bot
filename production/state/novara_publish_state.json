@@ -300,25 +300,6 @@
       "alertType": "NEW_ENTRY"
     },
     {
-      "key": "2026-10-18|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|POLYX|SHORT",
-      "coin": "POLYX",
-      "side": "SHORT",
-      "trader": "⭐ Trader 23 ⭐ — STRK short candidate — profitable open short",
-      "entry": 0.033762,
-      "tp": 0.033424380000000004,
-      "sl": 0.03393081,
-      "leverage": 3,
-      "observedLeverage": 3,
-      "signalLeverage": 3,
-      "notional": 79.327442,
-      "signalAt": 1792337374304,
-      "status": "OPEN",
-      "destinations": [
-        "-1004446412486"
-      ],
-      "alertType": "OPEN_BAND"
-    },
-    {
       "key": "2026-10-18|0xc0b2a1ce425d0cd8bc321c445fa6ae0eaed2e688|fill|853354838723907",
       "coin": "PUMP",
       "side": "LONG",
@@ -1462,6 +1443,26 @@
       "notional": 6198.14824,
       "signalAt": 1792339071321,
       "resolvedAt": 1792344363016,
+      "destinations": [
+        "-1004446412486"
+      ],
+      "alertType": "OPEN_BAND"
+    },
+    {
+      "key": "2026-10-18|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|POLYX|SHORT",
+      "coin": "POLYX",
+      "side": "SHORT",
+      "status": "TP_HIT",
+      "entry": 0.033762,
+      "tp": 0.033424380000000004,
+      "sl": 0.03393081,
+      "exitPrice": 0.033424380000000004,
+      "leverage": 3,
+      "observedLeverage": 3,
+      "signalLeverage": 3,
+      "notional": 79.327442,
+      "signalAt": 1792337374304,
+      "resolvedAt": 1792345966070,
       "destinations": [
         "-1004446412486"
       ],
