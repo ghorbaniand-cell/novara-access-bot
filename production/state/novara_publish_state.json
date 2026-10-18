@@ -1,7 +1,7 @@
 {
   "date": "2026-10-18",
   "freeSent": 5,
-  "vipSent": 27,
+  "vipSent": 28,
   "sentKeys": [
     "2026-10-18|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|MEGA|SHORT",
     "2026-10-18|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|HBAR|SHORT",
@@ -29,7 +29,8 @@
     "2026-10-18|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|HYPE|LONG",
     "2026-10-18|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|SOPH|LONG",
     "2026-10-18|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|CHIP|LONG",
-    "2026-10-18|0x936cf4fb95c30ce83f658b5bbb247e4bb381bb0f|XMR|LONG"
+    "2026-10-18|0x936cf4fb95c30ce83f658b5bbb247e4bb381bb0f|XMR|LONG",
+    "2026-10-18|0x88250cf2f6402e856bc85fc65095e4a48bb12cb7|SAND|SHORT"
   ],
   "openTrades": [
     {
@@ -214,6 +215,23 @@
       "leverage": 3,
       "notional": 1078.75992,
       "signalAt": 1792293753340,
+      "status": "OPEN",
+      "destinations": [
+        "-1004446412486"
+      ],
+      "alertType": "OPEN_BAND"
+    },
+    {
+      "key": "2026-10-18|0x88250cf2f6402e856bc85fc65095e4a48bb12cb7|SAND|SHORT",
+      "coin": "SAND",
+      "side": "SHORT",
+      "trader": "⭐ Trader 11 ⭐",
+      "entry": 0.06288,
+      "tp": 0.062251200000000007,
+      "sl": 0.06319440000000001,
+      "leverage": 5,
+      "notional": 25857.284616,
+      "signalAt": 1792294999319,
       "status": "OPEN",
       "destinations": [
         "-1004446412486"
