@@ -239,40 +239,6 @@
         "-1004446412486"
       ],
       "alertType": "OPEN_BAND"
-    },
-    {
-      "key": "2026-10-18|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|kSHIB|LONG",
-      "coin": "kSHIB",
-      "side": "LONG",
-      "trader": "⭐ Trader 23 ⭐ — STRK short candidate — profitable open short",
-      "entry": 0.005046,
-      "tp": 0.005096460000000001,
-      "sl": 0.00502077,
-      "leverage": 10,
-      "notional": 22259.867136,
-      "signalAt": 1792295310132,
-      "status": "OPEN",
-      "destinations": [
-        "-1004446412486"
-      ],
-      "alertType": "OPEN_BAND"
-    },
-    {
-      "key": "2026-10-18|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|JUP|LONG",
-      "coin": "JUP",
-      "side": "LONG",
-      "trader": "⭐ Trader 23 ⭐ — STRK short candidate — profitable open short",
-      "entry": 0.296338,
-      "tp": 0.29930138,
-      "sl": 0.29485631,
-      "leverage": 10,
-      "notional": 213882.79275,
-      "signalAt": 1792295310132,
-      "status": "OPEN",
-      "destinations": [
-        "-1004446412486"
-      ],
-      "alertType": "OPEN_BAND"
     }
   ],
   "pendingOutcomes": [],
@@ -881,6 +847,28 @@
       "leverage": 5,
       "notional": 133425.16407,
       "resolvedAt": 1792293753340
+    },
+    {
+      "key": "2026-10-18|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|kSHIB|LONG",
+      "coin": "kSHIB",
+      "side": "LONG",
+      "status": "SL_HIT",
+      "entry": 0.005046,
+      "exitPrice": 0.00502077,
+      "leverage": 10,
+      "notional": 22259.867136,
+      "resolvedAt": 1792295621790
+    },
+    {
+      "key": "2026-10-18|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|JUP|LONG",
+      "coin": "JUP",
+      "side": "LONG",
+      "status": "SL_HIT",
+      "entry": 0.296338,
+      "exitPrice": 0.29485631,
+      "leverage": 10,
+      "notional": 213882.79275,
+      "resolvedAt": 1792295621790
     }
   ]
 }
