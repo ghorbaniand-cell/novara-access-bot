@@ -18,7 +18,7 @@ import path from 'node:path';
  * not endorsements or automated-copy targets.
  */
 
-const VERSION = 'GFTSH-28W-LIVE-OBSERVER-V3.27.0-TP-SL-OUTCOME-TRACKING-VIP-FORMAT';
+const VERSION = 'GFTSH-28W-LIVE-OBSERVER-V3.28.0-VIP-24H-DAILY-PERFORMANCE-REPORT';
 const API = process.env.HYPERLIQUID_API_URL || 'https://api.hyperliquid.xyz/info';
 const TG_TOKEN = process.env.TELEGRAM_TOKEN || process.env.TELEGRAM_BOT_TOKEN || '';
 const TG_CHAT = process.env.TELEGRAM_CHAT_ID || '';
@@ -388,6 +388,200 @@ function formatOutcomeMessage(trade) {
   ].join('\n');
 }
 
+function vipSignalRecords(novaraState) {
+  const vipChat = String(NOVARA_VIP_CHAT || '');
+  if (!vipChat) return [];
+  const records = [
+    ...(Array.isArray(novaraState.openTrades) ? novaraState.openTrades : []),
+    ...(Array.isArray(novaraState.pendingOutcomes) ? novaraState.pendingOutcomes : []),
+    ...(Array.isArray(novaraState.completedOutcomes) ? novaraState.completedOutcomes : [])
+  ];
+  const unique = new Map();
+  for (const trade of records) {
+    const destinations = Array.isArray(trade.destinations) ? trade.destinations.map(String) : [];
+    if (!destinations.includes(vipChat)) continue;
+    if (!trade.key || !(num(trade.signalAt) > 0) || !(num(trade.entry) > 0)) continue;
+    unique.set(String(trade.key), trade);
+  }
+  return [...unique.values()];
+}
+
+function dailyReportSnapshot(novaraState, mids, now) {
+  const windowStart = now - 24 * 60 * 60 * 1000;
+  const allVip = vipSignalRecords(novaraState);
+  const rows = allVip
+    .filter(t => num(t.signalAt) >= windowStart && num(t.signalAt) <= now)
+    .map(t => {
+      const status = t.status || 'OPEN';
+      const mark = num(mids?.[t.coin]);
+      const exit = status === 'TP_HIT' || status === 'SL_HIT' ? num(t.exitPrice) : mark;
+      const priceMovePct = exit > 0 ? signedMovePct(t.entry, exit, t.side) : null;
+      const roi = priceMovePct !== null && num(t.leverage) > 0 ? priceMovePct * num(t.leverage) : null;
+      const signalTime = new Date(num(t.signalAt)).toISOString().slice(5, 16).replace('T', ' ');
+      return {
+        key: String(t.key), signalAt: num(t.signalAt), time: `${signalTime} UTC`,
+        coin: String(t.coin || '—'), side: String(t.side || '—'), leverage: num(t.leverage),
+        status, roi, mark, entry: num(t.entry), tp: num(t.tp), sl: num(t.sl)
+      };
+    })
+    .sort((a, b) => a.signalAt - b.signalAt);
+
+  const wins = rows.filter(r => r.status === 'TP_HIT').length;
+  const losses = rows.filter(r => r.status === 'SL_HIT').length;
+  const active = rows.filter(r => r.status === 'OPEN' || !['TP_HIT', 'SL_HIT'].includes(r.status)).length;
+  const resolved = wins + losses;
+  const winRate = resolved ? `${(wins / resolved * 100).toFixed(2)}%` : 'N/A (no resolved signals)';
+  const averageResolvedRoi = rows.filter(r => ['TP_HIT', 'SL_HIT'].includes(r.status) && r.roi !== null);
+  const avgRoi = averageResolvedRoi.length
+    ? `${(averageResolvedRoi.reduce((sum, r) => sum + r.roi, 0) / averageResolvedRoi.length) >= 0 ? '+' : ''}${(averageResolvedRoi.reduce((sum, r) => sum + r.roi, 0) / averageResolvedRoi.length).toFixed(2)}%`
+    : 'N/A';
+
+  const english = [
+    '🔷 NOVARA | DAILY VIP PERFORMANCE REPORT',
+    '━━━━━━━━━━━━━━━━━━',
+    'Reporting window: Last 24 hours (UTC)',
+    `VIP signals published: ${rows.length}`,
+    `🎯 Target reached: ${wins}`,
+    `🛑 Invalidation reached: ${losses}`,
+    `⏳ Active / unresolved: ${active}`,
+    `📊 Resolved signals: ${resolved}`,
+    `🏆 Win rate (resolved signals only): ${winRate}`,
+    `📈 Average estimated ROI of resolved signals: ${avgRoi}`,
+    '━━━━━━━━━━━━━━━━━━',
+    '📋 VIP SIGNAL LOG',
+    'Time UTC | Symbol | Side | Leverage | Result | Est. ROI',
+    ...rows.map(r => {
+      const side = r.side === 'LONG' ? 'LONG' : 'SHORT';
+      const leverage = r.leverage > 0 ? `${r.leverage.toFixed(r.leverage >= 10 ? 1 : 2)}x` : 'N/A';
+      const result = r.status === 'TP_HIT' ? 'TARGET' : r.status === 'SL_HIT' ? 'INVALIDATION' : 'ACTIVE';
+      const roi = r.roi === null ? 'N/A' : `${r.roi >= 0 ? '+' : ''}${r.roi.toFixed(2)}%`;
+      return `${r.time} | ${r.coin} | ${side} | ${leverage} | ${result} | ${roi}`;
+    }),
+    '━━━━━━━━━━━━━━━━━━',
+    'This is a daily, reference-based performance report. Results may differ tomorrow or in the following days as market conditions change. No signal or strategy is guaranteed to win.',
+    'Targets and invalidation levels are illustrative NOVARA levels, not proof of executed trades. Active-signal ROI is a market-price snapshot; resolved ROI uses the reference level. Fees and funding are excluded.',
+    'Our team works continuously to analyze the market and strive to deliver high-quality signals at the most appropriate times possible. Always manage risk responsibly; leverage magnifies gains and losses.',
+    'NOVARA — Clarity. Discipline. Transparency.'
+  ].join('\n');
+
+  const arabic = [
+    '🔷 NOVARA | التقرير اليومي لأداء VIP',
+    '━━━━━━━━━━━━━━━━━━',
+    'الفترة: آخر 24 ساعة (بتوقيت UTC)',
+    `إجمالي إشارات VIP المنشورة: ${rows.length}`,
+    `🎯 إشارات وصلت إلى الهدف: ${wins}`,
+    `🛑 إشارات وصلت إلى مستوى الإبطال: ${losses}`,
+    `⏳ إشارات نشطة / لم تُحسم: ${active}`,
+    `📊 الإشارات المحسومة: ${resolved}`,
+    `🏆 نسبة النجاح (للإشارات المحسومة فقط): ${winRate}`,
+    `📈 متوسط العائد التقديري للإشارات المحسومة: ${avgRoi}`,
+    '━━━━━━━━━━━━━━━━━━',
+    '📋 سجل إشارات VIP',
+    'الوقت UTC | العملة | الاتجاه | الرافعة | النتيجة | العائد التقديري',
+    ...rows.map(r => {
+      const side = r.side === 'LONG' ? 'شراء' : 'بيع';
+      const leverage = r.leverage > 0 ? `${r.leverage.toFixed(r.leverage >= 10 ? 1 : 2)}x` : 'غير متاح';
+      const result = r.status === 'TP_HIT' ? 'الهدف' : r.status === 'SL_HIT' ? 'الإبطال' : 'نشطة';
+      const roi = r.roi === null ? 'غير متاح' : `${r.roi >= 0 ? '+' : ''}${r.roi.toFixed(2)}%`;
+      return `${r.time} | ${r.coin} | ${side} | ${leverage} | ${result} | ${roi}`;
+    }),
+    '━━━━━━━━━━━━━━━━━━',
+    'هذا تقرير أداء يومي استناداً إلى مستويات مرجعية وأسعار السوق المرصودة. قد تختلف النتائج غداً أو في الأيام التالية مع تغير ظروف السوق. لا توجد إشارة أو استراتيجية مضمونة النجاح.',
+    'الأهداف ومستويات الإبطال هي مستويات تقديرية من NOVARA، ولا تثبت تنفيذ صفقات فعلية. العائد للإشارات النشطة هو لقطة تقديرية وفق السعر الحالي، أما الإشارات المحسومة فيُحسب عائدها وفق المستوى المرجعي. الرسوم والتمويل غير مشمولين.',
+    'يعمل فريقنا باستمرار على تحليل السوق ويسعى إلى تقديم إشارات عالية الجودة في الأوقات المناسبة قدر الإمكان. احرصوا دائماً على إدارة المخاطر بمسؤولية، فالرافعة المالية تضاعف الأرباح والخسائر.',
+    'NOVARA — الوضوح. الانضباط. الشفافية.'
+  ].join('\n');
+
+  return { createdAt: now, windowStart, rowsCount: rows.length, english, arabic };
+}
+
+function splitTelegramText(message, maxChars = Math.max(1000, TELEGRAM_MAX - 100)) {
+  const chunks = [];
+  let chunk = '';
+  for (const line of String(message).split('\n')) {
+    if (line.length > maxChars) {
+      if (chunk) chunks.push(chunk), chunk = '';
+      for (let i = 0; i < line.length; i += maxChars) chunks.push(line.slice(i, i + maxChars));
+      continue;
+    }
+    const candidate = chunk ? `${chunk}\n${line}` : line;
+    if (candidate.length > maxChars && chunk) {
+      chunks.push(chunk);
+      chunk = line;
+    } else {
+      chunk = candidate;
+    }
+  }
+  if (chunk) chunks.push(chunk);
+  return chunks.length ? chunks : [''];
+}
+
+async function deliverDailyReports(novaraState, mids, now) {
+  const destinations = [...new Set([NOVARA_FREE_CHAT, NOVARA_VIP_CHAT].filter(Boolean))];
+  if (!destinations.length) return;
+  if (!novaraState.dailyReportLastSentAt || typeof novaraState.dailyReportLastSentAt !== 'object') novaraState.dailyReportLastSentAt = {};
+  if (!novaraState.dailyReportProgress || typeof novaraState.dailyReportProgress !== 'object') novaraState.dailyReportProgress = {};
+
+  let snapshot = novaraState.dailyReportSnapshot || null;
+  const due = destinations.filter(chatId => {
+    const last = num(novaraState.dailyReportLastSentAt[chatId]);
+    const progress = novaraState.dailyReportProgress[chatId];
+    return (progress && snapshot && progress.reportId === snapshot.reportId) || !last || now - last >= 24 * 60 * 60 * 1000;
+  });
+  if (!snapshot && due.length) {
+    const history = vipSignalRecords(novaraState);
+    // Avoid an empty first-ever report; after at least one VIP signal exists, report even if the latest 24h window has zero signals.
+    if (!history.length) return;
+    const content = dailyReportSnapshot(novaraState, mids, now);
+    snapshot = {
+      reportId: String(now), createdAt: now, windowStart: content.windowStart,
+      rowsCount: content.rowsCount, destinations: due,
+      englishChunks: splitTelegramText(content.english),
+      arabicChunks: splitTelegramText(content.arabic)
+    };
+    novaraState.dailyReportSnapshot = snapshot;
+    for (const chatId of due) novaraState.dailyReportProgress[chatId] = { reportId: snapshot.reportId, nextChunk: 0 };
+    await writeJson(NOVARA_STATE_FILE, novaraState);
+  }
+  if (!snapshot) return;
+
+  const snapshotDestinations = Array.isArray(snapshot.destinations) ? snapshot.destinations : [];
+  const chunks = [...(snapshot.englishChunks || []), ...(snapshot.arabicChunks || [])];
+  for (const chatId of snapshotDestinations) {
+    const progress = novaraState.dailyReportProgress[chatId];
+    if (!progress || progress.reportId !== snapshot.reportId) continue;
+    while (num(progress.nextChunk) < chunks.length) {
+      const index = num(progress.nextChunk);
+      try {
+        const result = await sendTelegram(chunks[index], chatId);
+        if (!result.sent) {
+          console.warn(`[NOVARA][DAILY-REPORT-SKIPPED] chat=${chatId}: ${result.reason}`);
+          break;
+        }
+        progress.nextChunk = index + 1;
+        novaraState.dailyReportProgress[chatId] = progress;
+        await writeJson(NOVARA_STATE_FILE, novaraState);
+      } catch (error) {
+        console.error(`[NOVARA][DAILY-REPORT-ERROR] chat=${chatId} chunk=${index + 1}/${chunks.length}: ${error?.message || error}`);
+        break;
+      }
+    }
+    if (num(progress.nextChunk) >= chunks.length) {
+      novaraState.dailyReportLastSentAt[chatId] = now;
+      delete novaraState.dailyReportProgress[chatId];
+      await writeJson(NOVARA_STATE_FILE, novaraState);
+    }
+  }
+
+  const allSnapshotDestinationsDone = snapshotDestinations.every(chatId =>
+    !novaraState.dailyReportProgress[chatId] && num(novaraState.dailyReportLastSentAt[chatId]) >= num(snapshot.createdAt)
+  );
+  if (allSnapshotDestinationsDone) {
+    delete novaraState.dailyReportSnapshot;
+    await writeJson(NOVARA_STATE_FILE, novaraState);
+  }
+}
+
 let nextTelegramSendAt = 0;
 async function sendTelegram(message, chatId = TG_CHAT) {
   if (!TG_TOKEN || !chatId) {
@@ -465,7 +659,7 @@ async function main() {
   const [mids, tgState, novaraState] = await Promise.all([
     fetchMids(),
     readJson(TG_STATE_FILE, { initialized: false, lastStartupAt: 0, lastCycleAt: 0 }),
-    readJson(NOVARA_STATE_FILE, { date: '', freeSent: 0, vipSent: 0, sentKeys: [], openTrades: [], pendingOutcomes: [], completedOutcomes: [] })
+    readJson(NOVARA_STATE_FILE, { date: '', freeSent: 0, vipSent: 0, sentKeys: [], openTrades: [], pendingOutcomes: [], completedOutcomes: [], dailyReportLastSentAt: {}, dailyReportProgress: {} })
   ]);
   const todayUtc = new Date(now).toISOString().slice(0, 10);
   if (novaraState.date !== todayUtc) {
@@ -478,6 +672,8 @@ async function main() {
   if (!Array.isArray(novaraState.openTrades)) novaraState.openTrades = [];
   if (!Array.isArray(novaraState.pendingOutcomes)) novaraState.pendingOutcomes = [];
   if (!Array.isArray(novaraState.completedOutcomes)) novaraState.completedOutcomes = [];
+  if (!novaraState.dailyReportLastSentAt || typeof novaraState.dailyReportLastSentAt !== 'object') novaraState.dailyReportLastSentAt = {};
+  if (!novaraState.dailyReportProgress || typeof novaraState.dailyReportProgress !== 'object') novaraState.dailyReportProgress = {};
   const openDedupe = new Set(state.alertedOpenPositionKeys.map(String));
   const fillDedupe = new Set(state.alertedNewEntryFillKeys.map(String));
   const alerts = [];
@@ -542,8 +738,10 @@ async function main() {
     if ((trade.pendingDestinations || []).length) stillPending.push(trade);
     else novaraState.completedOutcomes.push({
       key: trade.key, coin: trade.coin, side: trade.side, status: trade.status,
-      entry: trade.entry, exitPrice: trade.exitPrice, leverage: trade.leverage,
-      notional: trade.notional, resolvedAt: trade.resolvedAt
+      entry: trade.entry, tp: trade.tp, sl: trade.sl, exitPrice: trade.exitPrice,
+      leverage: trade.leverage, notional: trade.notional, signalAt: trade.signalAt,
+      resolvedAt: trade.resolvedAt, destinations: Array.isArray(trade.destinations) ? [...trade.destinations] : [],
+      alertType: trade.alertType
     });
   }
   novaraState.pendingOutcomes = stillPending;
@@ -746,6 +944,12 @@ async function main() {
     alertsSent++;
     await writeJson(STATE_FILE, state);
   }
+
+  // Publish the rolling 24-hour report of ALL VIP-delivered signals to both public and VIP channels.
+  // English chunks are sent first, followed by the complete Arabic translation; progress persists across runs.
+  try { await deliverDailyReports(novaraState, mids, now); }
+  catch (error) { console.error(`[NOVARA][DAILY-REPORT-ERROR] ${error?.message || error}`); }
+  await writeJson(NOVARA_STATE_FILE, novaraState);
 
   state.version = VERSION;
   state.initialized = true;
