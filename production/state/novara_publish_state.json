@@ -1,7 +1,7 @@
 {
   "date": "2026-10-18",
   "freeSent": 5,
-  "vipSent": 69,
+  "vipSent": 72,
   "sentKeys": [
     "2026-10-18|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|MEGA|SHORT",
     "2026-10-18|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|HBAR|SHORT",
@@ -71,7 +71,10 @@
     "2026-10-18|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|BSV|LONG",
     "2026-10-18|0xc0b2a1ce425d0cd8bc321c445fa6ae0eaed2e688|fill|853354838723907",
     "2026-10-18|0x19f5c3bc2e0978d9a1da389d7d4cfe33cd770fe9|PUMP|LONG",
-    "2026-10-18|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|PUMP|LONG"
+    "2026-10-18|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|PUMP|LONG",
+    "2026-10-18|0xc0b2a1ce425d0cd8bc321c445fa6ae0eaed2e688|HYPE|LONG",
+    "2026-10-18|0xc0b2a1ce425d0cd8bc321c445fa6ae0eaed2e688|PUMP|LONG",
+    "2026-10-18|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|AIXBT|LONG"
   ],
   "openTrades": [
     {
@@ -280,23 +283,6 @@
       "alertType": "OPEN_BAND"
     },
     {
-      "key": "2026-10-18|0x936cf4fb95c30ce83f658b5bbb247e4bb381bb0f|XPL|SHORT",
-      "coin": "XPL",
-      "side": "SHORT",
-      "trader": "⭐ Trader 20 ⭐ — PONS short candidate — large open short; reported PONS realized PnL",
-      "entry": 0.076757,
-      "tp": 0.07598943000000001,
-      "sl": 0.077140785,
-      "leverage": 3,
-      "notional": 336.945472,
-      "signalAt": 1792333957417,
-      "status": "OPEN",
-      "destinations": [
-        "-1004446412486"
-      ],
-      "alertType": "OPEN_BAND"
-    },
-    {
       "key": "2026-10-18|0xe31501c472d557bfa145ce105d325fb2dd4cb867|fill|690114478479975",
       "coin": "xyz:RIVN",
       "side": "LONG",
@@ -371,25 +357,6 @@
       "alertType": "NEW_ENTRY"
     },
     {
-      "key": "2026-10-18|0x19f5c3bc2e0978d9a1da389d7d4cfe33cd770fe9|PUMP|LONG",
-      "coin": "PUMP",
-      "side": "LONG",
-      "trader": "⭐ Trader 15 ⭐",
-      "entry": 0.004149,
-      "tp": 0.00419049,
-      "sl": 0.004128255,
-      "leverage": 10,
-      "observedLeverage": 10,
-      "signalLeverage": 10,
-      "notional": 874061.51814,
-      "signalAt": 1792340866606,
-      "status": "OPEN",
-      "destinations": [
-        "-1004446412486"
-      ],
-      "alertType": "OPEN_BAND"
-    },
-    {
       "key": "2026-10-18|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|PUMP|LONG",
       "coin": "PUMP",
       "side": "LONG",
@@ -402,6 +369,63 @@
       "signalLeverage": 10,
       "notional": 113600.609084,
       "signalAt": 1792340866606,
+      "status": "OPEN",
+      "destinations": [
+        "-1004446412486"
+      ],
+      "alertType": "OPEN_BAND"
+    },
+    {
+      "key": "2026-10-18|0xc0b2a1ce425d0cd8bc321c445fa6ae0eaed2e688|HYPE|LONG",
+      "coin": "HYPE",
+      "side": "LONG",
+      "trader": "⭐ Trader 7 ⭐",
+      "entry": 77,
+      "tp": 77.77,
+      "sl": 76.615,
+      "leverage": 3,
+      "observedLeverage": 3,
+      "signalLeverage": 3,
+      "notional": 7697.9,
+      "signalAt": 1792342686054,
+      "status": "OPEN",
+      "destinations": [
+        "-1004446412486"
+      ],
+      "alertType": "OPEN_BAND"
+    },
+    {
+      "key": "2026-10-18|0xc0b2a1ce425d0cd8bc321c445fa6ae0eaed2e688|PUMP|LONG",
+      "coin": "PUMP",
+      "side": "LONG",
+      "trader": "⭐ Trader 7 ⭐",
+      "entry": 0.004111,
+      "tp": 0.00415211,
+      "sl": 0.004090445,
+      "leverage": 3,
+      "observedLeverage": 3,
+      "signalLeverage": 3,
+      "notional": 2062.5,
+      "signalAt": 1792342686054,
+      "status": "OPEN",
+      "destinations": [
+        "-1004446412486"
+      ],
+      "alertType": "OPEN_BAND"
+    },
+    {
+      "key": "2026-10-18|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|AIXBT|LONG",
+      "coin": "AIXBT",
+      "side": "LONG",
+      "trader": "⭐ Trader 23 ⭐ — STRK short candidate — profitable open short",
+      "entry": 0.018038,
+      "tp": 0.01821838,
+      "sl": 0.017947809999999998,
+      "leverage": 3,
+      "observedLeverage": 3,
+      "signalLeverage": 3,
+      "notional": 253.306142,
+      "signalAt": 1792342686054,
       "status": "OPEN",
       "destinations": [
         "-1004446412486"
@@ -1399,6 +1423,44 @@
       "notional": 98949.165875,
       "signalAt": 1792333957417,
       "resolvedAt": 1792340866606,
+      "destinations": [
+        "-1004446412486"
+      ],
+      "alertType": "OPEN_BAND"
+    },
+    {
+      "key": "2026-10-18|0x936cf4fb95c30ce83f658b5bbb247e4bb381bb0f|XPL|SHORT",
+      "coin": "XPL",
+      "side": "SHORT",
+      "status": "TP_HIT",
+      "entry": 0.076757,
+      "tp": 0.07598943000000001,
+      "sl": 0.077140785,
+      "exitPrice": 0.07598943000000001,
+      "leverage": 3,
+      "notional": 336.945472,
+      "signalAt": 1792333957417,
+      "resolvedAt": 1792342686054,
+      "destinations": [
+        "-1004446412486"
+      ],
+      "alertType": "OPEN_BAND"
+    },
+    {
+      "key": "2026-10-18|0x19f5c3bc2e0978d9a1da389d7d4cfe33cd770fe9|PUMP|LONG",
+      "coin": "PUMP",
+      "side": "LONG",
+      "status": "SL_HIT",
+      "entry": 0.004149,
+      "tp": 0.00419049,
+      "sl": 0.004128255,
+      "exitPrice": 0.004128255,
+      "leverage": 10,
+      "observedLeverage": 10,
+      "signalLeverage": 10,
+      "notional": 874061.51814,
+      "signalAt": 1792340866606,
+      "resolvedAt": 1792342686054,
       "destinations": [
         "-1004446412486"
       ],
