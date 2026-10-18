@@ -152,24 +152,6 @@
         "@NovaraSignalsHQ"
       ],
       "alertType": "NEW_ENTRY"
-    },
-    {
-      "key": "2026-10-18|0xd4c1f7e8d876c4749228d515473d36f919583d1d|SUI|SHORT",
-      "coin": "SUI",
-      "side": "SHORT",
-      "trader": "⭐ Trader 21 ⭐ — PONS short candidate — profitable open short",
-      "entry": 0.98902,
-      "tp": 0.9791298,
-      "sl": 0.9939651,
-      "leverage": 10,
-      "notional": 24524.800272,
-      "signalAt": 1792285341386,
-      "status": "OPEN",
-      "destinations": [
-        "-1004446412486",
-        "@NovaraSignalsHQ"
-      ],
-      "alertType": "OPEN_BAND"
     }
   ],
   "pendingOutcomes": [],
@@ -613,6 +595,17 @@
       "leverage": 5,
       "notional": 80872.166001,
       "resolvedAt": 1792285963254
+    },
+    {
+      "key": "2026-10-18|0xd4c1f7e8d876c4749228d515473d36f919583d1d|SUI|SHORT",
+      "coin": "SUI",
+      "side": "SHORT",
+      "status": "TP_HIT",
+      "entry": 0.98902,
+      "exitPrice": 0.9791298,
+      "leverage": 10,
+      "notional": 24524.800272,
+      "resolvedAt": 1792286894418
     }
   ]
 }
