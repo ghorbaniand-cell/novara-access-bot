@@ -1,7 +1,7 @@
 {
   "date": "2026-10-19",
   "freeSent": 5,
-  "vipSent": 57,
+  "vipSent": 58,
   "sentKeys": [
     "2026-10-19|0x909eb3d5ff0ac0df12c81f8495860cfccf1e7ea9|SOL|LONG",
     "2026-10-19|0x909eb3d5ff0ac0df12c81f8495860cfccf1e7ea9|XRP|LONG",
@@ -59,7 +59,8 @@
     "2026-10-19|0xde0e9b1a35322a809165d09f0490cca3fa7562e5|fill|983103748686265",
     "2026-10-19|0xe31501c472d557bfa145ce105d325fb2dd4cb867|fill|437946688286047",
     "2026-10-19|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|ZEN|LONG",
-    "2026-10-19|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|FARTCOIN|LONG"
+    "2026-10-19|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|FARTCOIN|LONG",
+    "2026-10-19|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|SYRUP|LONG"
   ],
   "openTrades": [
     {
@@ -651,25 +652,6 @@
       "alertType": "OPEN_BAND"
     },
     {
-      "key": "2026-10-19|0x936cf4fb95c30ce83f658b5bbb247e4bb381bb0f|ZRO|SHORT",
-      "coin": "ZRO",
-      "side": "SHORT",
-      "trader": "⭐ Trader 20 ⭐ — PONS short candidate — large open short; reported PONS realized PnL",
-      "entry": 1.88221,
-      "tp": 1.8633879,
-      "sl": 1.89162105,
-      "leverage": 3,
-      "observedLeverage": 3,
-      "signalLeverage": 3,
-      "notional": 74596.61,
-      "signalAt": 1792377053240,
-      "status": "OPEN",
-      "destinations": [
-        "-1004446412486"
-      ],
-      "alertType": "OPEN_BAND"
-    },
-    {
       "key": "2026-10-19|0xd4c1f7e8d876c4749228d515473d36f919583d1d|ZEC|SHORT",
       "coin": "ZEC",
       "side": "SHORT",
@@ -784,25 +766,6 @@
       "alertType": "NEW_ENTRY"
     },
     {
-      "key": "2026-10-19|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|ZEN|LONG",
-      "coin": "ZEN",
-      "side": "LONG",
-      "trader": "⭐ Trader 23 ⭐ — STRK short candidate — profitable open short",
-      "entry": 6.0077,
-      "tp": 6.0677769999999995,
-      "sl": 5.9776615,
-      "leverage": 5,
-      "observedLeverage": 5,
-      "signalLeverage": 5,
-      "notional": 72708.698464,
-      "signalAt": 1792379161048,
-      "status": "OPEN",
-      "destinations": [
-        "-1004446412486"
-      ],
-      "alertType": "OPEN_BAND"
-    },
-    {
       "key": "2026-10-19|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|FARTCOIN|LONG",
       "coin": "FARTCOIN",
       "side": "LONG",
@@ -815,6 +778,25 @@
       "signalLeverage": 10,
       "notional": 508030.87086,
       "signalAt": 1792379161048,
+      "status": "OPEN",
+      "destinations": [
+        "-1004446412486"
+      ],
+      "alertType": "OPEN_BAND"
+    },
+    {
+      "key": "2026-10-19|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|SYRUP|LONG",
+      "coin": "SYRUP",
+      "side": "LONG",
+      "trader": "⭐ Trader 23 ⭐ — STRK short candidate — profitable open short",
+      "entry": 0.188549,
+      "tp": 0.19043448999999998,
+      "sl": 0.187606255,
+      "leverage": 3,
+      "observedLeverage": 3,
+      "signalLeverage": 3,
+      "notional": 22427.98,
+      "signalAt": 1792381251251,
       "status": "OPEN",
       "destinations": [
         "-1004446412486"
@@ -3130,6 +3112,46 @@
       "notional": 40620.73765,
       "signalAt": 1792370455116,
       "resolvedAt": 1792379161048,
+      "destinations": [
+        "-1004446412486"
+      ],
+      "alertType": "OPEN_BAND"
+    },
+    {
+      "key": "2026-10-19|0x936cf4fb95c30ce83f658b5bbb247e4bb381bb0f|ZRO|SHORT",
+      "coin": "ZRO",
+      "side": "SHORT",
+      "status": "SL_HIT",
+      "entry": 1.88221,
+      "tp": 1.8633879,
+      "sl": 1.89162105,
+      "exitPrice": 1.89162105,
+      "leverage": 3,
+      "observedLeverage": 3,
+      "signalLeverage": 3,
+      "notional": 74596.61,
+      "signalAt": 1792377053240,
+      "resolvedAt": 1792381251251,
+      "destinations": [
+        "-1004446412486"
+      ],
+      "alertType": "OPEN_BAND"
+    },
+    {
+      "key": "2026-10-19|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|ZEN|LONG",
+      "coin": "ZEN",
+      "side": "LONG",
+      "status": "SL_HIT",
+      "entry": 6.0077,
+      "tp": 6.0677769999999995,
+      "sl": 5.9776615,
+      "exitPrice": 5.9776615,
+      "leverage": 5,
+      "observedLeverage": 5,
+      "signalLeverage": 5,
+      "notional": 72708.698464,
+      "signalAt": 1792379161048,
+      "resolvedAt": 1792381251251,
       "destinations": [
         "-1004446412486"
       ],
