@@ -369,25 +369,6 @@
       "alertType": "NEW_ENTRY"
     },
     {
-      "key": "2026-10-19|0xde0e9b1a35322a809165d09f0490cca3fa7562e5|PAXG|LONG",
-      "coin": "PAXG",
-      "side": "LONG",
-      "trader": "Trader 28",
-      "entry": 4159.783,
-      "tp": 4201.38083,
-      "sl": 4138.984085,
-      "leverage": 10,
-      "observedLeverage": 10,
-      "signalLeverage": 10,
-      "notional": 94826.9322,
-      "signalAt": 1792370455116,
-      "status": "OPEN",
-      "destinations": [
-        "-1004446412486"
-      ],
-      "alertType": "OPEN_BAND"
-    },
-    {
       "key": "2026-10-19|0xf9faba57a81d1575d3e506dd3eafe7db6f2a3275|fill|620309854712684",
       "coin": "xyz:SMSN",
       "side": "LONG",
@@ -4038,11 +4019,160 @@
         "-1004446412486"
       ],
       "alertType": "OPEN_BAND"
+    },
+    {
+      "key": "2026-10-19|0xde0e9b1a35322a809165d09f0490cca3fa7562e5|PAXG|LONG",
+      "coin": "PAXG",
+      "side": "LONG",
+      "status": "SL_HIT",
+      "entry": 4159.783,
+      "tp": 4201.38083,
+      "sl": 4138.984085,
+      "exitPrice": 4138.984085,
+      "leverage": 10,
+      "observedLeverage": 10,
+      "signalLeverage": 10,
+      "notional": 94826.9322,
+      "signalAt": 1792370455116,
+      "resolvedAt": 1792428641505,
+      "destinations": [
+        "-1004446412486"
+      ],
+      "alertType": "OPEN_BAND"
     }
   ],
   "dailyReportLastSentAt": {
     "@NovaraSignalsHQ": 1792423165380,
     "-1004446412486": 1792423165380
   },
-  "dailyReportProgress": {}
+  "dailyReportProgress": {},
+  "sentDestinations": {},
+  "pendingVipAlerts": [
+    {
+      "novaraKey": "2026-10-19|0x3dd462347e7b42b5a3ea15132b677a4978af7a81|WLFI|LONG",
+      "alert": {
+        "alertType": "OPEN_BAND",
+        "trader": "⭐ Trader 10 ⭐",
+        "address": "0x3dd462347e7b42b5a3ea15132b677a4978af7a81",
+        "coin": "WLFI",
+        "side": "LONG",
+        "entry": 0.054843,
+        "current": 0.055135,
+        "leverage": 5,
+        "distancePct": 0.532428933501086,
+        "notional": 198280.240299,
+        "fillTime": null,
+        "fillKey": "0x3dd462347e7b42b5a3ea15132b677a4978af7a81|WLFI|LONG"
+      },
+      "signalAt": 1792428641505
+    },
+    {
+      "novaraKey": "2026-10-19|0x936cf4fb95c30ce83f658b5bbb247e4bb381bb0f|W|SHORT",
+      "alert": {
+        "alertType": "OPEN_BAND",
+        "trader": "⭐ Trader 20 ⭐ — PONS short candidate — large open short; reported PONS realized PnL",
+        "address": "0x936cf4fb95c30ce83f658b5bbb247e4bb381bb0f",
+        "coin": "W",
+        "side": "SHORT",
+        "entry": 0.01307,
+        "current": 0.01305,
+        "leverage": 5,
+        "distancePct": 0.15302218821728528,
+        "notional": 651.45339,
+        "fillTime": null,
+        "fillKey": "0x936cf4fb95c30ce83f658b5bbb247e4bb381bb0f|W|SHORT"
+      },
+      "signalAt": 1792428641505
+    },
+    {
+      "novaraKey": "2026-10-19|0xd4c1f7e8d876c4749228d515473d36f919583d1d|LIT|LONG",
+      "alert": {
+        "alertType": "OPEN_BAND",
+        "trader": "⭐ Trader 21 ⭐ — PONS short candidate — profitable open short",
+        "address": "0xd4c1f7e8d876c4749228d515473d36f919583d1d",
+        "coin": "LIT",
+        "side": "LONG",
+        "entry": 3.057497,
+        "current": 3.0566,
+        "leverage": 5,
+        "distancePct": 0.02933772298059974,
+        "notional": 3197.099,
+        "fillTime": null,
+        "fillKey": "0xd4c1f7e8d876c4749228d515473d36f919583d1d|LIT|LONG"
+      },
+      "signalAt": 1792428641505
+    },
+    {
+      "novaraKey": "2026-10-19|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|ATOM|LONG",
+      "alert": {
+        "alertType": "OPEN_BAND",
+        "trader": "⭐ Trader 23 ⭐ — STRK short candidate — profitable open short",
+        "address": "0x7717a7a245d9f950e586822b8c9b46863ed7bd7e",
+        "coin": "ATOM",
+        "side": "LONG",
+        "entry": 1.7776,
+        "current": 1.7635,
+        "leverage": 5,
+        "distancePct": 0.7932043204320431,
+        "notional": 685136.415075,
+        "fillTime": null,
+        "fillKey": "0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|ATOM|LONG"
+      },
+      "signalAt": 1792428641505
+    },
+    {
+      "novaraKey": "2026-10-19|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|WLD|SHORT",
+      "alert": {
+        "alertType": "OPEN_BAND",
+        "trader": "⭐ Trader 23 ⭐ — STRK short candidate — profitable open short",
+        "address": "0x7717a7a245d9f950e586822b8c9b46863ed7bd7e",
+        "coin": "WLD",
+        "side": "SHORT",
+        "entry": 0.51356,
+        "current": 0.51134,
+        "leverage": 10,
+        "distancePct": 0.43227665706051865,
+        "notional": 49657.215258,
+        "fillTime": null,
+        "fillKey": "0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|WLD|SHORT"
+      },
+      "signalAt": 1792428641505
+    },
+    {
+      "novaraKey": "2026-10-19|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|VIRTUAL|SHORT",
+      "alert": {
+        "alertType": "OPEN_BAND",
+        "trader": "⭐ Trader 23 ⭐ — STRK short candidate — profitable open short",
+        "address": "0x7717a7a245d9f950e586822b8c9b46863ed7bd7e",
+        "coin": "VIRTUAL",
+        "side": "SHORT",
+        "entry": 0.65557,
+        "current": 0.65803,
+        "leverage": 5,
+        "distancePct": 0.3752459691566145,
+        "notional": 6336.40494,
+        "fillTime": null,
+        "fillKey": "0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|VIRTUAL|SHORT"
+      },
+      "signalAt": 1792428641505
+    },
+    {
+      "novaraKey": "2026-10-19|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|AIXBT|LONG",
+      "alert": {
+        "alertType": "OPEN_BAND",
+        "trader": "⭐ Trader 23 ⭐ — STRK short candidate — profitable open short",
+        "address": "0x7717a7a245d9f950e586822b8c9b46863ed7bd7e",
+        "coin": "AIXBT",
+        "side": "LONG",
+        "entry": 0.018709,
+        "current": 0.018705,
+        "leverage": 3,
+        "distancePct": 0.02138008445133642,
+        "notional": 313.017338,
+        "fillTime": null,
+        "fillKey": "0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|AIXBT|LONG"
+      },
+      "signalAt": 1792428641505
+    }
+  ]
 }
