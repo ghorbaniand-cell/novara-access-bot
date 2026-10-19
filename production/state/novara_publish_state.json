@@ -1,7 +1,7 @@
 {
   "date": "2026-10-19",
   "freeSent": 5,
-  "vipSent": 82,
+  "vipSent": 84,
   "sentKeys": [
     "2026-10-19|0x909eb3d5ff0ac0df12c81f8495860cfccf1e7ea9|SOL|LONG",
     "2026-10-19|0x909eb3d5ff0ac0df12c81f8495860cfccf1e7ea9|XRP|LONG",
@@ -84,7 +84,9 @@
     "2026-10-19|0xd4c1f7e8d876c4749228d515473d36f919583d1d|ETH|SHORT",
     "2026-10-19|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|SUSHI|LONG",
     "2026-10-19|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|SKY|LONG",
-    "2026-10-19|0xde0e9b1a35322a809165d09f0490cca3fa7562e5|fill|1087011831025197"
+    "2026-10-19|0xde0e9b1a35322a809165d09f0490cca3fa7562e5|fill|1087011831025197",
+    "2026-10-19|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|WLD|SHORT",
+    "2026-10-19|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|ETHFI|SHORT"
   ],
   "openTrades": [
     {
@@ -903,25 +905,6 @@
       "alertType": "OPEN_BAND"
     },
     {
-      "key": "2026-10-19|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|SUSHI|LONG",
-      "coin": "SUSHI",
-      "side": "LONG",
-      "trader": "⭐ Trader 23 ⭐ — STRK short candidate — profitable open short",
-      "entry": 0.22109,
-      "tp": 0.2233009,
-      "sl": 0.21998455,
-      "leverage": 3,
-      "observedLeverage": 3,
-      "signalLeverage": 3,
-      "notional": 15434.476401,
-      "signalAt": 1792396300816,
-      "status": "OPEN",
-      "destinations": [
-        "-1004446412486"
-      ],
-      "alertType": "OPEN_BAND"
-    },
-    {
       "key": "2026-10-19|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|SKY|LONG",
       "coin": "SKY",
       "side": "LONG",
@@ -958,6 +941,44 @@
         "-1004446412486"
       ],
       "alertType": "NEW_ENTRY"
+    },
+    {
+      "key": "2026-10-19|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|WLD|SHORT",
+      "coin": "WLD",
+      "side": "SHORT",
+      "trader": "⭐ Trader 23 ⭐ — STRK short candidate — profitable open short",
+      "entry": 0.50675,
+      "tp": 0.5016825,
+      "sl": 0.50928375,
+      "leverage": 10,
+      "observedLeverage": 10,
+      "signalLeverage": 10,
+      "notional": 83625.961974,
+      "signalAt": 1792398633558,
+      "status": "OPEN",
+      "destinations": [
+        "-1004446412486"
+      ],
+      "alertType": "OPEN_BAND"
+    },
+    {
+      "key": "2026-10-19|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|ETHFI|SHORT",
+      "coin": "ETHFI",
+      "side": "SHORT",
+      "trader": "⭐ Trader 23 ⭐ — STRK short candidate — profitable open short",
+      "entry": 0.71284,
+      "tp": 0.7057116,
+      "sl": 0.7164042,
+      "leverage": 5,
+      "observedLeverage": 5,
+      "signalLeverage": 5,
+      "notional": 70361.50755,
+      "signalAt": 1792398633558,
+      "status": "OPEN",
+      "destinations": [
+        "-1004446412486"
+      ],
+      "alertType": "OPEN_BAND"
     }
   ],
   "pendingOutcomes": [],
@@ -3649,6 +3670,26 @@
       "notional": 37788.967555,
       "signalAt": 1792393282453,
       "resolvedAt": 1792396300816,
+      "destinations": [
+        "-1004446412486"
+      ],
+      "alertType": "OPEN_BAND"
+    },
+    {
+      "key": "2026-10-19|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|SUSHI|LONG",
+      "coin": "SUSHI",
+      "side": "LONG",
+      "status": "SL_HIT",
+      "entry": 0.22109,
+      "tp": 0.2233009,
+      "sl": 0.21998455,
+      "exitPrice": 0.21998455,
+      "leverage": 3,
+      "observedLeverage": 3,
+      "signalLeverage": 3,
+      "notional": 15434.476401,
+      "signalAt": 1792396300816,
+      "resolvedAt": 1792398633558,
       "destinations": [
         "-1004446412486"
       ],
