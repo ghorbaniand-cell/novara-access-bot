@@ -1,7 +1,7 @@
 {
   "date": "2026-10-19",
   "freeSent": 5,
-  "vipSent": 93,
+  "vipSent": 94,
   "sentKeys": [
     "2026-10-19|0x909eb3d5ff0ac0df12c81f8495860cfccf1e7ea9|SOL|LONG",
     "2026-10-19|0x909eb3d5ff0ac0df12c81f8495860cfccf1e7ea9|XRP|LONG",
@@ -95,7 +95,8 @@
     "2026-10-19|0x936cf4fb95c30ce83f658b5bbb247e4bb381bb0f|XMR|LONG",
     "2026-10-19|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|ZEC|LONG",
     "2026-10-19|0x936cf4fb95c30ce83f658b5bbb247e4bb381bb0f|VVV|LONG",
-    "2026-10-19|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|MON|SHORT"
+    "2026-10-19|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|MON|SHORT",
+    "2026-10-19|0x0c1f6941fdcde9488dfd36ca16fed6b3bc49672b|fill|125171409369407"
   ],
   "openTrades": [
     {
@@ -780,23 +781,23 @@
       "alertType": "NEW_ENTRY"
     },
     {
-      "key": "2026-10-19|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|MON|SHORT",
-      "coin": "MON",
-      "side": "SHORT",
-      "trader": "⭐ Trader 23 ⭐ — STRK short candidate — profitable open short",
-      "entry": 0.020581,
-      "tp": 0.020375189999999998,
-      "sl": 0.020683905,
+      "key": "2026-10-19|0x0c1f6941fdcde9488dfd36ca16fed6b3bc49672b|fill|125171409369407",
+      "coin": "STRK",
+      "side": "LONG",
+      "trader": "⭐ Trader 12 ⭐",
+      "entry": 0.05848,
+      "tp": 0.0590648,
+      "sl": 0.0581876,
       "leverage": 5,
       "observedLeverage": 5,
       "signalLeverage": 5,
-      "notional": 215825.807005,
-      "signalAt": 1792410261405,
+      "notional": 749.9943039999999,
+      "signalAt": 1792412249623,
       "status": "OPEN",
       "destinations": [
         "-1004446412486"
       ],
-      "alertType": "OPEN_BAND"
+      "alertType": "NEW_ENTRY"
     }
   ],
   "pendingOutcomes": [],
@@ -3889,6 +3890,26 @@
       "notional": 11733.85935,
       "signalAt": 1792408091164,
       "resolvedAt": 1792410261405,
+      "destinations": [
+        "-1004446412486"
+      ],
+      "alertType": "OPEN_BAND"
+    },
+    {
+      "key": "2026-10-19|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|MON|SHORT",
+      "coin": "MON",
+      "side": "SHORT",
+      "status": "SL_HIT",
+      "entry": 0.020581,
+      "tp": 0.020375189999999998,
+      "sl": 0.020683905,
+      "exitPrice": 0.020683905,
+      "leverage": 5,
+      "observedLeverage": 5,
+      "signalLeverage": 5,
+      "notional": 215825.807005,
+      "signalAt": 1792410261405,
+      "resolvedAt": 1792412249623,
       "destinations": [
         "-1004446412486"
       ],
