@@ -18,19 +18,21 @@ import path from 'node:path';
  * not endorsements or automated-copy targets.
  */
 
-const VERSION = 'GFTSH-28W-LIVE-OBSERVER-V3.29.0-VIP-24H-RESOLVED-ONLY-REPORT';
+const VERSION = 'GFTSH-28W-LIVE-OBSERVER-V3.31.0-VIP-RETRY-FRESHNESS-GUARD';
 const API = process.env.HYPERLIQUID_API_URL || 'https://api.hyperliquid.xyz/info';
 const TG_TOKEN = process.env.TELEGRAM_TOKEN || process.env.TELEGRAM_BOT_TOKEN || '';
 const TG_CHAT = process.env.TELEGRAM_CHAT_ID || '';
 // Optional NOVARA destinations; legacy Telegram destination remains unchanged.
-const NOVARA_FREE_CHAT = process.env.NOVARA_FREE_CHAT_ID || '';
-const NOVARA_VIP_CHAT = process.env.NOVARA_VIP_CHAT_ID || '';
+const NOVARA_FREE_CHAT = process.env.NOVARA_FREE_CHAT_ID || process.env.FREE_CHAT_ID || '';
+const NOVARA_VIP_CHAT = process.env.NOVARA_VIP_CHAT_ID || process.env.VIP_CHAT_ID || process.env.NOVARA_PREMIUM_CHAT_ID || ''; 
 const NOVARA_FREE_DAILY_LIMIT = Math.max(0, Number(process.env.NOVARA_FREE_DAILY_LIMIT || 5));
 const NOVARA_VIP_DAILY_LIMIT = Math.max(0, Number(process.env.NOVARA_VIP_DAILY_LIMIT || 100));
 const NOVARA_STATE_FILE = process.env.NOVARA_PUBLISH_STATE_FILE || 'production/state/novara_publish_state.json';
 const MODEL_SL_PCT = Math.max(0.01, Number(process.env.GFTSH_MODEL_SL_PCT || 0.5));
 const MODEL_TP_R = Math.max(0.1, Number(process.env.GFTSH_MODEL_TP_R || 2));
 const TELEGRAM_MIN_GAP_MS = Math.max(1000, Number(process.env.NOVARA_TELEGRAM_MIN_GAP_MS || 3200));
+// Failed VIP sends are retried only briefly and only while price remains near entry.
+const NOVARA_VIP_RETRY_MAX_AGE_MIN = Math.max(1, Number(process.env.NOVARA_VIP_RETRY_MAX_AGE_MIN || 5));
 
 const SCAN_INTERVAL_MIN = Math.max(1, Number(process.env.GFTSH_SCAN_INTERVAL_MIN || 5));
 const LOOKBACK_MIN = Math.max(5, Number(process.env.GFTSH_LOOKBACK_MIN || 20));
@@ -701,6 +703,9 @@ async function main() {
     novaraState.sentKeys = [];
   }
   if (!Array.isArray(novaraState.sentKeys)) novaraState.sentKeys = [];
+  if (!novaraState.sentDestinations || typeof novaraState.sentDestinations !== 'object' || Array.isArray(novaraState.sentDestinations)) novaraState.sentDestinations = {};
+  if (!Array.isArray(novaraState.pendingVipAlerts)) novaraState.pendingVipAlerts = [];
+  console.log(`[NOVARA][CONFIG] token=${TG_TOKEN ? 'SET' : 'MISSING'} vipChat=${NOVARA_VIP_CHAT ? 'SET' : 'MISSING'} freeChat=${NOVARA_FREE_CHAT ? 'SET' : 'MISSING'} vipSentToday=${num(novaraState.vipSent)} vipDailyLimit=${NOVARA_VIP_DAILY_LIMIT}`);
   if (!Array.isArray(novaraState.openTrades)) novaraState.openTrades = [];
   if (!Array.isArray(novaraState.pendingOutcomes)) novaraState.pendingOutcomes = [];
   if (!Array.isArray(novaraState.completedOutcomes)) novaraState.completedOutcomes = [];
@@ -876,6 +881,63 @@ async function main() {
     }
   }
 
+  // Retry VIP deliveries that failed in earlier cycles, even though the observer
+  // has already deduplicated the original fill/position and won't regenerate it.
+  if (NOVARA_VIP_CHAT && novaraState.pendingVipAlerts.length) {
+    const stillPendingVip = [];
+    for (const pending of novaraState.pendingVipAlerts) {
+      const pendingKey = String(pending.novaraKey || '');
+      const sentTo = new Set(Array.isArray(novaraState.sentDestinations[pendingKey]) ? novaraState.sentDestinations[pendingKey].map(String) : []);
+      if (!pendingKey || sentTo.has(NOVARA_VIP_CHAT)) continue;
+      // Never deliver a stale retry: expire after a short window and re-check the live mark.
+      const signalAt = num(pending.signalAt);
+      const ageMs = now - signalAt;
+      const retryAlert = pending.alert || {};
+      const retryEntry = num(retryAlert.entry);
+      const retryMark = num(mids?.[retryAlert.coin]);
+      if (!signalAt || ageMs < 0 || ageMs > NOVARA_VIP_RETRY_MAX_AGE_MIN * 60_000) {
+        console.warn(`[NOVARA][VIP-RETRY-EXPIRED] ${retryAlert.coin || 'unknown'} ageMin=${signalAt ? Math.round(ageMs / 60000) : 'unknown'}; stale signal discarded.`);
+        continue;
+      }
+      if (!(retryEntry > 0 && retryMark > 0)) {
+        console.warn(`[NOVARA][VIP-RETRY-DROPPED] ${retryAlert.coin || 'unknown'} live mark/entry unavailable; stale retry discarded.`);
+        continue;
+      }
+      const retryDistancePct = Math.abs((retryMark - retryEntry) / retryEntry) * 100;
+      if (retryDistancePct >= ENTRY_BAND_PCT) {
+        console.warn(`[NOVARA][VIP-RETRY-DROPPED] ${retryAlert.coin} price moved ${retryDistancePct.toFixed(2)}% from entry; band=${ENTRY_BAND_PCT.toFixed(2)}%.`);
+        continue;
+      }
+      // Refresh displayed mark/distance so a valid retry contains current information.
+      retryAlert.current = retryMark;
+      retryAlert.distancePct = retryDistancePct;
+      if (novaraState.vipSent >= NOVARA_VIP_DAILY_LIMIT) { stillPendingVip.push(pending); continue; }
+      try {
+        const result = await sendTelegram(formatNovaraAlert(retryAlert, 'VIP'), NOVARA_VIP_CHAT);
+        if (result.sent) {
+          novaraState.vipSent++;
+          sentTo.add(NOVARA_VIP_CHAT);
+          novaraState.sentDestinations[pendingKey] = [...sentTo];
+          novaraState.sentKeys.push(pendingKey);
+          if (!novaraState.openTrades.some(t => t.key === pendingKey) && num(pending.alert.entry) > 0) {
+            const levels = modelLevels(pending.alert.entry, pending.alert.side);
+            novaraState.openTrades.push({ key: pendingKey, coin: pending.alert.coin, side: pending.alert.side, trader: pending.alert.trader, entry: num(pending.alert.entry), tp: levels.tp, sl: levels.sl, leverage: num(pending.alert.leverage), observedLeverage: num(pending.alert.leverage), signalLeverage: num(pending.alert.leverage), notional: num(pending.alert.notional), signalAt: pending.signalAt || now, status: 'OPEN', destinations: [NOVARA_VIP_CHAT], alertType: pending.alert.alertType });
+          }
+          console.log(`[NOVARA][VIP-RETRY-SENT] ${pending.alert.coin} ${pending.alert.side}`);
+        } else {
+          stillPendingVip.push(pending);
+          console.warn(`[NOVARA][VIP-RETRY-SKIPPED] ${pending.alert.coin}: ${result.reason}`);
+        }
+      } catch (error) {
+        stillPendingVip.push(pending);
+        console.error(`[NOVARA][VIP-RETRY-ERROR] ${pending.alert.coin}: ${error?.message || error}`);
+      }
+      await writeJson(NOVARA_STATE_FILE, novaraState);
+    }
+    novaraState.pendingVipAlerts = stillPendingVip;
+    await writeJson(NOVARA_STATE_FILE, novaraState);
+  }
+
   // Publish independently to the legacy observer chat, NOVARA VIP, and NOVARA Free.
   // A missing/failed legacy destination must never block customer-channel publication.
   for (const alert of alerts) {
@@ -892,39 +954,55 @@ async function main() {
     }
 
     const novaraKey = `${todayUtc}|${alert.fillKey}`;
-    if (!novaraState.sentKeys.includes(novaraKey)) {
-      let novaraDelivered = false;
-      const deliveredDestinations = [];
+    const alreadySentTo = new Set(Array.isArray(novaraState.sentDestinations[novaraKey])
+      ? novaraState.sentDestinations[novaraKey].map(String) : []);
+    let novaraDelivered = false;
+    const deliveredDestinations = [];
 
-      if (NOVARA_VIP_CHAT && novaraState.vipSent < NOVARA_VIP_DAILY_LIMIT && !disabledDestinations.has(NOVARA_VIP_CHAT)) {
+    // Each destination has independent delivery state. A successful legacy or Free send
+    // must never suppress a failed VIP send; failed customer sends remain retryable.
+    if (NOVARA_VIP_CHAT && !alreadySentTo.has(NOVARA_VIP_CHAT)) {
+      if (novaraState.vipSent >= NOVARA_VIP_DAILY_LIMIT) {
+        console.warn(`[NOVARA][VIP-SKIPPED] ${alert.coin}: daily limit reached (${novaraState.vipSent}/${NOVARA_VIP_DAILY_LIMIT}).`);
+        if (!novaraState.pendingVipAlerts.some(p => p.novaraKey === novaraKey)) novaraState.pendingVipAlerts.push({ novaraKey, alert, signalAt: now });
+      } else if (!disabledDestinations.has(NOVARA_VIP_CHAT)) {
         try {
-          const vipMessage = formatNovaraAlert(alert, 'VIP');
-          const result = await sendTelegram(vipMessage, NOVARA_VIP_CHAT);
+          const result = await sendTelegram(formatNovaraAlert(alert, 'VIP'), NOVARA_VIP_CHAT);
           if (result.sent) {
             novaraState.vipSent++;
             novaraDelivered = true;
             deliveredAnywhere = true;
             deliveredDestinations.push(NOVARA_VIP_CHAT);
+            alreadySentTo.add(NOVARA_VIP_CHAT);
+            novaraState.pendingVipAlerts = novaraState.pendingVipAlerts.filter(p => p.novaraKey !== novaraKey);
+            console.log(`[NOVARA][VIP-SENT] ${alert.coin} ${alert.side} trader=${alert.trader}`);
           } else {
             console.warn(`[NOVARA][VIP-SKIPPED] ${alert.coin}: ${result.reason}`);
+            if (!novaraState.pendingVipAlerts.some(p => p.novaraKey === novaraKey)) novaraState.pendingVipAlerts.push({ novaraKey, alert, signalAt: now });
           }
         } catch (error) {
           if (String(error?.message || error).includes('HTTP 403') && String(error?.message || error).toLowerCase().includes('not a member')) disabledDestinations.add(NOVARA_VIP_CHAT);
           console.error(`[NOVARA][VIP-ERROR] ${alert.coin}: ${error?.message || error}`);
+          if (!novaraState.pendingVipAlerts.some(p => p.novaraKey === novaraKey)) novaraState.pendingVipAlerts.push({ novaraKey, alert, signalAt: now });
         }
-      } else if (!NOVARA_VIP_CHAT) {
-        console.warn('[NOVARA][VIP-SKIPPED] NOVARA_VIP_CHAT_ID is not configured.');
       }
+    } else if (!NOVARA_VIP_CHAT) {
+      console.error('[NOVARA][VIP-SKIPPED] NOVARA_VIP_CHAT_ID/VIP_CHAT_ID is not configured.');
+    }
 
-      if (NOVARA_FREE_CHAT && novaraState.freeSent < NOVARA_FREE_DAILY_LIMIT && !disabledDestinations.has(NOVARA_FREE_CHAT)) {
+    if (NOVARA_FREE_CHAT && !alreadySentTo.has(NOVARA_FREE_CHAT)) {
+      if (novaraState.freeSent >= NOVARA_FREE_DAILY_LIMIT) {
+        console.warn(`[NOVARA][FREE-SKIPPED] ${alert.coin}: daily limit reached (${novaraState.freeSent}/${NOVARA_FREE_DAILY_LIMIT}).`);
+      } else if (!disabledDestinations.has(NOVARA_FREE_CHAT)) {
         try {
-          const freeMessage = formatNovaraAlert(alert, 'FREE');
-          const result = await sendTelegram(freeMessage, NOVARA_FREE_CHAT);
+          const result = await sendTelegram(formatNovaraAlert(alert, 'FREE'), NOVARA_FREE_CHAT);
           if (result.sent) {
             novaraState.freeSent++;
             novaraDelivered = true;
             deliveredAnywhere = true;
             deliveredDestinations.push(NOVARA_FREE_CHAT);
+            alreadySentTo.add(NOVARA_FREE_CHAT);
+            console.log(`[NOVARA][FREE-SENT] ${alert.coin} ${alert.side} trader=${alert.trader}`);
           } else {
             console.warn(`[NOVARA][FREE-SKIPPED] ${alert.coin}: ${result.reason}`);
           }
@@ -932,32 +1010,27 @@ async function main() {
           if (String(error?.message || error).includes('HTTP 403') && String(error?.message || error).toLowerCase().includes('not a member')) disabledDestinations.add(NOVARA_FREE_CHAT);
           console.error(`[NOVARA][FREE-ERROR] ${alert.coin}: ${error?.message || error}`);
         }
-      } else if (!NOVARA_FREE_CHAT) {
-        console.warn('[NOVARA][FREE-SKIPPED] NOVARA_FREE_CHAT_ID is not configured.');
       }
-
-      // Only mark the NOVARA event published after at least one customer destination confirms it.
-      // If both sends fail, leave it eligible for retry on a later scan.
-      if (novaraDelivered) {
-        novaraState.sentKeys.push(novaraKey);
-        novaraState.sentKeys = novaraState.sentKeys.slice(-5000);
-        if (!novaraState.openTrades.some(t => t.key === novaraKey) && num(alert.entry) > 0) {
-          const levels = modelLevels(alert.entry, alert.side);
-          novaraState.openTrades.push({
-            key: novaraKey, coin: alert.coin, side: alert.side, trader: alert.trader,
-            entry: num(alert.entry), tp: levels.tp, sl: levels.sl,
-            leverage: num(alert.leverage), observedLeverage: num(alert.leverage), signalLeverage: num(alert.leverage), notional: num(alert.notional),
-            signalAt: now, status: 'OPEN', destinations: [...new Set(deliveredDestinations)],
-            alertType: alert.alertType
-          });
-        }
-      }
-      await writeJson(NOVARA_STATE_FILE, novaraState);
-    } else {
-      // Already published to at least one NOVARA destination earlier today.
-      // The observer's legacy alert can still be delivered independently.
-      if (TG_CHAT && TG_TOKEN) deliveredAnywhere = true;
+    } else if (!NOVARA_FREE_CHAT) {
+      console.warn('[NOVARA][FREE-SKIPPED] NOVARA_FREE_CHAT_ID/FREE_CHAT_ID is not configured.');
     }
+
+    if (alreadySentTo.size) {
+      novaraState.sentDestinations[novaraKey] = [...alreadySentTo];
+      novaraState.sentKeys.push(novaraKey); // retained for backwards compatibility/reporting
+      novaraState.sentKeys = [...new Set(novaraState.sentKeys)].slice(-5000);
+    }
+    if (novaraDelivered && !novaraState.openTrades.some(t => t.key === novaraKey) && num(alert.entry) > 0) {
+      const levels = modelLevels(alert.entry, alert.side);
+      novaraState.openTrades.push({
+        key: novaraKey, coin: alert.coin, side: alert.side, trader: alert.trader,
+        entry: num(alert.entry), tp: levels.tp, sl: levels.sl,
+        leverage: num(alert.leverage), observedLeverage: num(alert.leverage), signalLeverage: num(alert.leverage), notional: num(alert.notional),
+        signalAt: now, status: 'OPEN', destinations: [...new Set(deliveredDestinations)],
+        alertType: alert.alertType
+      });
+    }
+    await writeJson(NOVARA_STATE_FILE, novaraState);
 
     if (!deliveredAnywhere) {
       alertSendErrors++;
