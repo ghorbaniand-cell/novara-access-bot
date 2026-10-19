@@ -4049,24 +4049,6 @@
   "sentDestinations": {},
   "pendingVipAlerts": [
     {
-      "novaraKey": "2026-10-19|0x3dd462347e7b42b5a3ea15132b677a4978af7a81|WLFI|LONG",
-      "alert": {
-        "alertType": "OPEN_BAND",
-        "trader": "⭐ Trader 10 ⭐",
-        "address": "0x3dd462347e7b42b5a3ea15132b677a4978af7a81",
-        "coin": "WLFI",
-        "side": "LONG",
-        "entry": 0.054843,
-        "current": 0.054566,
-        "leverage": 5,
-        "distancePct": 0.5050781321226036,
-        "notional": 196280.570175,
-        "fillTime": null,
-        "fillKey": "0x3dd462347e7b42b5a3ea15132b677a4978af7a81|WLFI|LONG"
-      },
-      "signalAt": 1792429732895
-    },
-    {
       "novaraKey": "2026-10-19|0x0c1f6941fdcde9488dfd36ca16fed6b3bc49672b|PUMP|LONG",
       "alert": {
         "alertType": "OPEN_BAND",
@@ -4075,14 +4057,14 @@
         "coin": "PUMP",
         "side": "LONG",
         "entry": 0.004393,
-        "current": 0.004417,
+        "current": 0.004421,
         "leverage": 10,
-        "distancePct": 0.5463236967903418,
-        "notional": 269643.768604,
+        "distancePct": 0.6373776462553922,
+        "notional": 269949.002664,
         "fillTime": null,
         "fillKey": "0x0c1f6941fdcde9488dfd36ca16fed6b3bc49672b|PUMP|LONG"
       },
-      "signalAt": 1792429732895
+      "signalAt": 1792431614668
     },
     {
       "novaraKey": "2026-10-19|0x936cf4fb95c30ce83f658b5bbb247e4bb381bb0f|W|SHORT",
@@ -4093,14 +4075,14 @@
         "coin": "W",
         "side": "SHORT",
         "entry": 0.01307,
-        "current": 0.01299,
+        "current": 0.01294,
         "leverage": 5,
-        "distancePct": 0.6120887528691676,
-        "notional": 647.959004,
+        "distancePct": 0.994644223412394,
+        "notional": 646.46141,
         "fillTime": null,
         "fillKey": "0x936cf4fb95c30ce83f658b5bbb247e4bb381bb0f|W|SHORT"
       },
-      "signalAt": 1792429732895
+      "signalAt": 1792431614668
     },
     {
       "novaraKey": "2026-10-19|0xd4c1f7e8d876c4749228d515473d36f919583d1d|LIT|LONG",
@@ -4111,14 +4093,14 @@
         "coin": "LIT",
         "side": "LONG",
         "entry": 3.057497,
-        "current": 3.05315,
+        "current": 3.0539,
         "leverage": 5,
-        "distancePct": 0.1421751190598094,
-        "notional": 3192.8104,
+        "distancePct": 0.11764525034693646,
+        "notional": 3194.484,
         "fillTime": null,
         "fillKey": "0xd4c1f7e8d876c4749228d515473d36f919583d1d|LIT|LONG"
       },
-      "signalAt": 1792429732895
+      "signalAt": 1792431614668
     },
     {
       "novaraKey": "2026-10-19|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|WLD|SHORT",
@@ -4128,15 +4110,15 @@
         "address": "0x7717a7a245d9f950e586822b8c9b46863ed7bd7e",
         "coin": "WLD",
         "side": "SHORT",
-        "entry": 0.51302,
-        "current": 0.50986,
+        "entry": 0.51286,
+        "current": 0.51125,
         "leverage": 10,
-        "distancePct": 0.6159603914077524,
-        "notional": 66465.235116,
+        "distancePct": 0.3139258277112663,
+        "notional": 71215.190361,
         "fillTime": null,
         "fillKey": "0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|WLD|SHORT"
       },
-      "signalAt": 1792429732895
+      "signalAt": 1792431614668
     },
     {
       "novaraKey": "2026-10-19|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|VIRTUAL|SHORT",
@@ -4147,14 +4129,14 @@
         "coin": "VIRTUAL",
         "side": "SHORT",
         "entry": 0.65557,
-        "current": 0.65623,
+        "current": 0.65586,
         "leverage": 5,
-        "distancePct": 0.10067574782250469,
-        "notional": 6314.550288,
+        "distancePct": 0.04423631343716346,
+        "notional": 6317.63112,
         "fillTime": null,
         "fillKey": "0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|VIRTUAL|SHORT"
       },
-      "signalAt": 1792429732895
+      "signalAt": 1792431614668
     },
     {
       "novaraKey": "2026-10-19|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|AIXBT|LONG",
@@ -4164,15 +4146,15 @@
         "address": "0x7717a7a245d9f950e586822b8c9b46863ed7bd7e",
         "coin": "AIXBT",
         "side": "LONG",
-        "entry": 0.018709,
-        "current": 0.018652,
+        "entry": 0.018519,
+        "current": 0.018493,
         "leverage": 3,
-        "distancePct": 0.3046662034315115,
-        "notional": 242.329065,
+        "distancePct": 0.14039634969491718,
+        "notional": 400.167234,
         "fillTime": null,
         "fillKey": "0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|AIXBT|LONG"
       },
-      "signalAt": 1792429732895
+      "signalAt": 1792431614668
     },
     {
       "novaraKey": "2026-10-19|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|CHIP|LONG",
@@ -4182,15 +4164,15 @@
         "address": "0x7717a7a245d9f950e586822b8c9b46863ed7bd7e",
         "coin": "CHIP",
         "side": "LONG",
-        "entry": 0.041443,
-        "current": 0.04168,
+        "entry": 0.041492,
+        "current": 0.041831,
         "leverage": 3,
-        "distancePct": 0.5718697970706781,
-        "notional": 3020.36834,
+        "distancePct": 0.8170249686686566,
+        "notional": 3168.9616,
         "fillTime": null,
         "fillKey": "0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|CHIP|LONG"
       },
-      "signalAt": 1792429732895
+      "signalAt": 1792431614668
     }
   ]
 }
