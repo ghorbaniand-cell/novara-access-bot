@@ -1,7 +1,7 @@
 {
   "date": "2026-10-19",
   "freeSent": 5,
-  "vipSent": 92,
+  "vipSent": 93,
   "sentKeys": [
     "2026-10-19|0x909eb3d5ff0ac0df12c81f8495860cfccf1e7ea9|SOL|LONG",
     "2026-10-19|0x909eb3d5ff0ac0df12c81f8495860cfccf1e7ea9|XRP|LONG",
@@ -94,7 +94,8 @@
     "2026-10-19|0x936cf4fb95c30ce83f658b5bbb247e4bb381bb0f|JTO|SHORT",
     "2026-10-19|0x936cf4fb95c30ce83f658b5bbb247e4bb381bb0f|XMR|LONG",
     "2026-10-19|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|ZEC|LONG",
-    "2026-10-19|0x936cf4fb95c30ce83f658b5bbb247e4bb381bb0f|VVV|LONG"
+    "2026-10-19|0x936cf4fb95c30ce83f658b5bbb247e4bb381bb0f|VVV|LONG",
+    "2026-10-19|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|MON|SHORT"
   ],
   "openTrades": [
     {
@@ -779,18 +780,18 @@
       "alertType": "NEW_ENTRY"
     },
     {
-      "key": "2026-10-19|0x936cf4fb95c30ce83f658b5bbb247e4bb381bb0f|VVV|LONG",
-      "coin": "VVV",
-      "side": "LONG",
-      "trader": "⭐ Trader 20 ⭐ — PONS short candidate — large open short; reported PONS realized PnL",
-      "entry": 23.4133,
-      "tp": 23.647433,
-      "sl": 23.2962335,
-      "leverage": 2,
-      "observedLeverage": 2,
-      "signalLeverage": 2,
-      "notional": 11733.85935,
-      "signalAt": 1792408091164,
+      "key": "2026-10-19|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|MON|SHORT",
+      "coin": "MON",
+      "side": "SHORT",
+      "trader": "⭐ Trader 23 ⭐ — STRK short candidate — profitable open short",
+      "entry": 0.020581,
+      "tp": 0.020375189999999998,
+      "sl": 0.020683905,
+      "leverage": 5,
+      "observedLeverage": 5,
+      "signalLeverage": 5,
+      "notional": 215825.807005,
+      "signalAt": 1792410261405,
       "status": "OPEN",
       "destinations": [
         "-1004446412486"
@@ -3868,6 +3869,26 @@
       "notional": 136631.04,
       "signalAt": 1792405994553,
       "resolvedAt": 1792408091164,
+      "destinations": [
+        "-1004446412486"
+      ],
+      "alertType": "OPEN_BAND"
+    },
+    {
+      "key": "2026-10-19|0x936cf4fb95c30ce83f658b5bbb247e4bb381bb0f|VVV|LONG",
+      "coin": "VVV",
+      "side": "LONG",
+      "status": "TP_HIT",
+      "entry": 23.4133,
+      "tp": 23.647433,
+      "sl": 23.2962335,
+      "exitPrice": 23.647433,
+      "leverage": 2,
+      "observedLeverage": 2,
+      "signalLeverage": 2,
+      "notional": 11733.85935,
+      "signalAt": 1792408091164,
+      "resolvedAt": 1792410261405,
       "destinations": [
         "-1004446412486"
       ],
