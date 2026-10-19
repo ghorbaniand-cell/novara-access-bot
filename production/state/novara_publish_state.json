@@ -4057,14 +4057,32 @@
         "coin": "WLFI",
         "side": "LONG",
         "entry": 0.054843,
-        "current": 0.055135,
+        "current": 0.054566,
         "leverage": 5,
-        "distancePct": 0.532428933501086,
-        "notional": 198280.240299,
+        "distancePct": 0.5050781321226036,
+        "notional": 196280.570175,
         "fillTime": null,
         "fillKey": "0x3dd462347e7b42b5a3ea15132b677a4978af7a81|WLFI|LONG"
       },
-      "signalAt": 1792428641505
+      "signalAt": 1792429732895
+    },
+    {
+      "novaraKey": "2026-10-19|0x0c1f6941fdcde9488dfd36ca16fed6b3bc49672b|PUMP|LONG",
+      "alert": {
+        "alertType": "OPEN_BAND",
+        "trader": "⭐ Trader 12 ⭐",
+        "address": "0x0c1f6941fdcde9488dfd36ca16fed6b3bc49672b",
+        "coin": "PUMP",
+        "side": "LONG",
+        "entry": 0.004393,
+        "current": 0.004417,
+        "leverage": 10,
+        "distancePct": 0.5463236967903418,
+        "notional": 269643.768604,
+        "fillTime": null,
+        "fillKey": "0x0c1f6941fdcde9488dfd36ca16fed6b3bc49672b|PUMP|LONG"
+      },
+      "signalAt": 1792429732895
     },
     {
       "novaraKey": "2026-10-19|0x936cf4fb95c30ce83f658b5bbb247e4bb381bb0f|W|SHORT",
@@ -4075,14 +4093,14 @@
         "coin": "W",
         "side": "SHORT",
         "entry": 0.01307,
-        "current": 0.01305,
+        "current": 0.01299,
         "leverage": 5,
-        "distancePct": 0.15302218821728528,
-        "notional": 651.45339,
+        "distancePct": 0.6120887528691676,
+        "notional": 647.959004,
         "fillTime": null,
         "fillKey": "0x936cf4fb95c30ce83f658b5bbb247e4bb381bb0f|W|SHORT"
       },
-      "signalAt": 1792428641505
+      "signalAt": 1792429732895
     },
     {
       "novaraKey": "2026-10-19|0xd4c1f7e8d876c4749228d515473d36f919583d1d|LIT|LONG",
@@ -4093,32 +4111,14 @@
         "coin": "LIT",
         "side": "LONG",
         "entry": 3.057497,
-        "current": 3.0566,
+        "current": 3.05315,
         "leverage": 5,
-        "distancePct": 0.02933772298059974,
-        "notional": 3197.099,
+        "distancePct": 0.1421751190598094,
+        "notional": 3192.8104,
         "fillTime": null,
         "fillKey": "0xd4c1f7e8d876c4749228d515473d36f919583d1d|LIT|LONG"
       },
-      "signalAt": 1792428641505
-    },
-    {
-      "novaraKey": "2026-10-19|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|ATOM|LONG",
-      "alert": {
-        "alertType": "OPEN_BAND",
-        "trader": "⭐ Trader 23 ⭐ — STRK short candidate — profitable open short",
-        "address": "0x7717a7a245d9f950e586822b8c9b46863ed7bd7e",
-        "coin": "ATOM",
-        "side": "LONG",
-        "entry": 1.7776,
-        "current": 1.7635,
-        "leverage": 5,
-        "distancePct": 0.7932043204320431,
-        "notional": 685136.415075,
-        "fillTime": null,
-        "fillKey": "0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|ATOM|LONG"
-      },
-      "signalAt": 1792428641505
+      "signalAt": 1792429732895
     },
     {
       "novaraKey": "2026-10-19|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|WLD|SHORT",
@@ -4128,15 +4128,15 @@
         "address": "0x7717a7a245d9f950e586822b8c9b46863ed7bd7e",
         "coin": "WLD",
         "side": "SHORT",
-        "entry": 0.51356,
-        "current": 0.51134,
+        "entry": 0.51302,
+        "current": 0.50986,
         "leverage": 10,
-        "distancePct": 0.43227665706051865,
-        "notional": 49657.215258,
+        "distancePct": 0.6159603914077524,
+        "notional": 66465.235116,
         "fillTime": null,
         "fillKey": "0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|WLD|SHORT"
       },
-      "signalAt": 1792428641505
+      "signalAt": 1792429732895
     },
     {
       "novaraKey": "2026-10-19|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|VIRTUAL|SHORT",
@@ -4147,14 +4147,14 @@
         "coin": "VIRTUAL",
         "side": "SHORT",
         "entry": 0.65557,
-        "current": 0.65803,
+        "current": 0.65623,
         "leverage": 5,
-        "distancePct": 0.3752459691566145,
-        "notional": 6336.40494,
+        "distancePct": 0.10067574782250469,
+        "notional": 6314.550288,
         "fillTime": null,
         "fillKey": "0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|VIRTUAL|SHORT"
       },
-      "signalAt": 1792428641505
+      "signalAt": 1792429732895
     },
     {
       "novaraKey": "2026-10-19|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|AIXBT|LONG",
@@ -4165,14 +4165,32 @@
         "coin": "AIXBT",
         "side": "LONG",
         "entry": 0.018709,
-        "current": 0.018705,
+        "current": 0.018652,
         "leverage": 3,
-        "distancePct": 0.02138008445133642,
-        "notional": 313.017338,
+        "distancePct": 0.3046662034315115,
+        "notional": 242.329065,
         "fillTime": null,
         "fillKey": "0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|AIXBT|LONG"
       },
-      "signalAt": 1792428641505
+      "signalAt": 1792429732895
+    },
+    {
+      "novaraKey": "2026-10-19|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|CHIP|LONG",
+      "alert": {
+        "alertType": "OPEN_BAND",
+        "trader": "⭐ Trader 23 ⭐ — STRK short candidate — profitable open short",
+        "address": "0x7717a7a245d9f950e586822b8c9b46863ed7bd7e",
+        "coin": "CHIP",
+        "side": "LONG",
+        "entry": 0.041443,
+        "current": 0.04168,
+        "leverage": 3,
+        "distancePct": 0.5718697970706781,
+        "notional": 3020.36834,
+        "fillTime": null,
+        "fillKey": "0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|CHIP|LONG"
+      },
+      "signalAt": 1792429732895
     }
   ]
 }
