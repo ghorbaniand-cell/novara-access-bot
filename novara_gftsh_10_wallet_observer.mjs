@@ -18,7 +18,7 @@ import path from 'node:path';
  * not endorsements or automated-copy targets.
  */
 
-const VERSION = 'GFTSH-28W-LIVE-OBSERVER-V3.31.0-VIP-RETRY-FRESHNESS-GUARD';
+const VERSION = 'GFTSH-28W-LIVE-OBSERVER-V3.32.0-UNLIMITED-VIP-ALL-SIGNALS';
 const API = process.env.HYPERLIQUID_API_URL || 'https://api.hyperliquid.xyz/info';
 const TG_TOKEN = process.env.TELEGRAM_TOKEN || process.env.TELEGRAM_BOT_TOKEN || '';
 const TG_CHAT = process.env.TELEGRAM_CHAT_ID || '';
@@ -26,13 +26,12 @@ const TG_CHAT = process.env.TELEGRAM_CHAT_ID || '';
 const NOVARA_FREE_CHAT = process.env.NOVARA_FREE_CHAT_ID || process.env.FREE_CHAT_ID || '';
 const NOVARA_VIP_CHAT = process.env.NOVARA_VIP_CHAT_ID || process.env.VIP_CHAT_ID || process.env.NOVARA_PREMIUM_CHAT_ID || ''; 
 const NOVARA_FREE_DAILY_LIMIT = Math.max(0, Number(process.env.NOVARA_FREE_DAILY_LIMIT || 5));
-const NOVARA_VIP_DAILY_LIMIT = Math.max(0, Number(process.env.NOVARA_VIP_DAILY_LIMIT || 100));
+// VIP has NO daily signal cap. Keep the old env var ignored for backward compatibility.
+const VIP_RETRY_MAX_AGE_MS = Math.max(60_000, Number(process.env.NOVARA_VIP_RETRY_MAX_AGE_MS || 5 * 60_000));
 const NOVARA_STATE_FILE = process.env.NOVARA_PUBLISH_STATE_FILE || 'production/state/novara_publish_state.json';
 const MODEL_SL_PCT = Math.max(0.01, Number(process.env.GFTSH_MODEL_SL_PCT || 0.5));
 const MODEL_TP_R = Math.max(0.1, Number(process.env.GFTSH_MODEL_TP_R || 2));
 const TELEGRAM_MIN_GAP_MS = Math.max(1000, Number(process.env.NOVARA_TELEGRAM_MIN_GAP_MS || 3200));
-// Failed VIP sends are retried only briefly and only while price remains near entry.
-const NOVARA_VIP_RETRY_MAX_AGE_MIN = Math.max(1, Number(process.env.NOVARA_VIP_RETRY_MAX_AGE_MIN || 5));
 
 const SCAN_INTERVAL_MIN = Math.max(1, Number(process.env.GFTSH_SCAN_INTERVAL_MIN || 5));
 const LOOKBACK_MIN = Math.max(5, Number(process.env.GFTSH_LOOKBACK_MIN || 20));
@@ -705,7 +704,7 @@ async function main() {
   if (!Array.isArray(novaraState.sentKeys)) novaraState.sentKeys = [];
   if (!novaraState.sentDestinations || typeof novaraState.sentDestinations !== 'object' || Array.isArray(novaraState.sentDestinations)) novaraState.sentDestinations = {};
   if (!Array.isArray(novaraState.pendingVipAlerts)) novaraState.pendingVipAlerts = [];
-  console.log(`[NOVARA][CONFIG] token=${TG_TOKEN ? 'SET' : 'MISSING'} vipChat=${NOVARA_VIP_CHAT ? 'SET' : 'MISSING'} freeChat=${NOVARA_FREE_CHAT ? 'SET' : 'MISSING'} vipSentToday=${num(novaraState.vipSent)} vipDailyLimit=${NOVARA_VIP_DAILY_LIMIT}`);
+  console.log(`[NOVARA][CONFIG] token=${TG_TOKEN ? 'SET' : 'MISSING'} vipChat=${NOVARA_VIP_CHAT ? 'SET' : 'MISSING'} freeChat=${NOVARA_FREE_CHAT ? 'SET' : 'MISSING'} vipSentToday=${num(novaraState.vipSent)} vipDailyLimit=UNLIMITED retryMaxAgeMin=${(VIP_RETRY_MAX_AGE_MS / 60000).toFixed(1)}`);
   if (!Array.isArray(novaraState.openTrades)) novaraState.openTrades = [];
   if (!Array.isArray(novaraState.pendingOutcomes)) novaraState.pendingOutcomes = [];
   if (!Array.isArray(novaraState.completedOutcomes)) novaraState.completedOutcomes = [];
@@ -889,31 +888,13 @@ async function main() {
       const pendingKey = String(pending.novaraKey || '');
       const sentTo = new Set(Array.isArray(novaraState.sentDestinations[pendingKey]) ? novaraState.sentDestinations[pendingKey].map(String) : []);
       if (!pendingKey || sentTo.has(NOVARA_VIP_CHAT)) continue;
-      // Never deliver a stale retry: expire after a short window and re-check the live mark.
-      const signalAt = num(pending.signalAt);
-      const ageMs = now - signalAt;
-      const retryAlert = pending.alert || {};
-      const retryEntry = num(retryAlert.entry);
-      const retryMark = num(mids?.[retryAlert.coin]);
-      if (!signalAt || ageMs < 0 || ageMs > NOVARA_VIP_RETRY_MAX_AGE_MIN * 60_000) {
-        console.warn(`[NOVARA][VIP-RETRY-EXPIRED] ${retryAlert.coin || 'unknown'} ageMin=${signalAt ? Math.round(ageMs / 60000) : 'unknown'}; stale signal discarded.`);
+      const pendingAgeMs = Math.max(0, now - num(pending.signalAt));
+      if (pendingAgeMs > VIP_RETRY_MAX_AGE_MS) {
+        console.warn(`[NOVARA][VIP-RETRY-EXPIRED] ${pending.alert?.coin || 'UNKNOWN'} ageMin=${Math.round(pendingAgeMs / 60000)}; stale signal discarded.`);
         continue;
       }
-      if (!(retryEntry > 0 && retryMark > 0)) {
-        console.warn(`[NOVARA][VIP-RETRY-DROPPED] ${retryAlert.coin || 'unknown'} live mark/entry unavailable; stale retry discarded.`);
-        continue;
-      }
-      const retryDistancePct = Math.abs((retryMark - retryEntry) / retryEntry) * 100;
-      if (retryDistancePct >= ENTRY_BAND_PCT) {
-        console.warn(`[NOVARA][VIP-RETRY-DROPPED] ${retryAlert.coin} price moved ${retryDistancePct.toFixed(2)}% from entry; band=${ENTRY_BAND_PCT.toFixed(2)}%.`);
-        continue;
-      }
-      // Refresh displayed mark/distance so a valid retry contains current information.
-      retryAlert.current = retryMark;
-      retryAlert.distancePct = retryDistancePct;
-      if (novaraState.vipSent >= NOVARA_VIP_DAILY_LIMIT) { stillPendingVip.push(pending); continue; }
       try {
-        const result = await sendTelegram(formatNovaraAlert(retryAlert, 'VIP'), NOVARA_VIP_CHAT);
+        const result = await sendTelegram(formatNovaraAlert(pending.alert, 'VIP'), NOVARA_VIP_CHAT);
         if (result.sent) {
           novaraState.vipSent++;
           sentTo.add(NOVARA_VIP_CHAT);
@@ -962,10 +943,7 @@ async function main() {
     // Each destination has independent delivery state. A successful legacy or Free send
     // must never suppress a failed VIP send; failed customer sends remain retryable.
     if (NOVARA_VIP_CHAT && !alreadySentTo.has(NOVARA_VIP_CHAT)) {
-      if (novaraState.vipSent >= NOVARA_VIP_DAILY_LIMIT) {
-        console.warn(`[NOVARA][VIP-SKIPPED] ${alert.coin}: daily limit reached (${novaraState.vipSent}/${NOVARA_VIP_DAILY_LIMIT}).`);
-        if (!novaraState.pendingVipAlerts.some(p => p.novaraKey === novaraKey)) novaraState.pendingVipAlerts.push({ novaraKey, alert, signalAt: now });
-      } else if (!disabledDestinations.has(NOVARA_VIP_CHAT)) {
+      if (!disabledDestinations.has(NOVARA_VIP_CHAT)) {
         try {
           const result = await sendTelegram(formatNovaraAlert(alert, 'VIP'), NOVARA_VIP_CHAT);
           if (result.sent) {
