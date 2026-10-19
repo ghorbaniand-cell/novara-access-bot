@@ -1,7 +1,7 @@
 {
   "date": "2026-10-19",
   "freeSent": 5,
-  "vipSent": 94,
+  "vipSent": 96,
   "sentKeys": [
     "2026-10-19|0x909eb3d5ff0ac0df12c81f8495860cfccf1e7ea9|SOL|LONG",
     "2026-10-19|0x909eb3d5ff0ac0df12c81f8495860cfccf1e7ea9|XRP|LONG",
@@ -96,7 +96,9 @@
     "2026-10-19|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|ZEC|LONG",
     "2026-10-19|0x936cf4fb95c30ce83f658b5bbb247e4bb381bb0f|VVV|LONG",
     "2026-10-19|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|MON|SHORT",
-    "2026-10-19|0x0c1f6941fdcde9488dfd36ca16fed6b3bc49672b|fill|125171409369407"
+    "2026-10-19|0x0c1f6941fdcde9488dfd36ca16fed6b3bc49672b|fill|125171409369407",
+    "2026-10-19|0x0c1f6941fdcde9488dfd36ca16fed6b3bc49672b|STRK|LONG",
+    "2026-10-19|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|PENGU|SHORT"
   ],
   "openTrades": [
     {
@@ -798,6 +800,44 @@
         "-1004446412486"
       ],
       "alertType": "NEW_ENTRY"
+    },
+    {
+      "key": "2026-10-19|0x0c1f6941fdcde9488dfd36ca16fed6b3bc49672b|STRK|LONG",
+      "coin": "STRK",
+      "side": "LONG",
+      "trader": "⭐ Trader 12 ⭐",
+      "entry": 0.05855,
+      "tp": 0.0591355,
+      "sl": 0.05825725,
+      "leverage": 5,
+      "observedLeverage": 5,
+      "signalLeverage": 5,
+      "notional": 57366.71625,
+      "signalAt": 1792415402454,
+      "status": "OPEN",
+      "destinations": [
+        "-1004446412486"
+      ],
+      "alertType": "OPEN_BAND"
+    },
+    {
+      "key": "2026-10-19|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|PENGU|SHORT",
+      "coin": "PENGU",
+      "side": "SHORT",
+      "trader": "⭐ Trader 23 ⭐ — STRK short candidate — profitable open short",
+      "entry": 0.007727,
+      "tp": 0.00764973,
+      "sl": 0.007765635000000001,
+      "leverage": 5,
+      "observedLeverage": 5,
+      "signalLeverage": 5,
+      "notional": 76778.936028,
+      "signalAt": 1792415402454,
+      "status": "OPEN",
+      "destinations": [
+        "-1004446412486"
+      ],
+      "alertType": "OPEN_BAND"
     }
   ],
   "pendingOutcomes": [],
