@@ -1,7 +1,7 @@
 {
   "date": "2026-10-20",
   "freeSent": 5,
-  "vipSent": 64,
+  "vipSent": 65,
   "sentKeys": [
     "2026-10-20|0xe31501c472d557bfa145ce105d325fb2dd4cb867|fill|880573003257365",
     "2026-10-20|0x936cf4fb95c30ce83f658b5bbb247e4bb381bb0f|NIL|LONG",
@@ -66,7 +66,8 @@
     "2026-10-20|0x767f6dcea7e1d520a3b7ac251b30178a79eb2ab0|fill|950250599952092",
     "2026-10-20|0x767f6dcea7e1d520a3b7ac251b30178a79eb2ab0|fill|457490406645133",
     "2026-10-20|0xd4c1f7e8d876c4749228d515473d36f919583d1d|NEAR|LONG",
-    "2026-10-20|0xde0e9b1a35322a809165d09f0490cca3fa7562e5|fill|676404213106779"
+    "2026-10-20|0xde0e9b1a35322a809165d09f0490cca3fa7562e5|fill|676404213106779",
+    "2026-10-20|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|WIF|LONG"
   ],
   "openTrades": [
     {
@@ -1605,6 +1606,25 @@
         "-1004446412486"
       ],
       "alertType": "NEW_ENTRY"
+    },
+    {
+      "key": "2026-10-20|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|WIF|LONG",
+      "coin": "WIF",
+      "side": "LONG",
+      "trader": "⭐ Trader 23 ⭐ — STRK short candidate — profitable open short",
+      "entry": 0.199303,
+      "tp": 0.20129603000000001,
+      "sl": 0.198306485,
+      "leverage": 5,
+      "observedLeverage": 5,
+      "signalLeverage": 5,
+      "notional": 3403.69536,
+      "signalAt": 1792497608240,
+      "status": "OPEN",
+      "destinations": [
+        "-1004446412486"
+      ],
+      "alertType": "OPEN_BAND"
     }
   ],
   "pendingOutcomes": [],
@@ -6506,6 +6526,9 @@
       "-1004446412486"
     ],
     "2026-10-20|0xde0e9b1a35322a809165d09f0490cca3fa7562e5|fill|676404213106779": [
+      "-1004446412486"
+    ],
+    "2026-10-20|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|WIF|LONG": [
       "-1004446412486"
     ]
   },
