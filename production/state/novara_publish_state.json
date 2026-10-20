@@ -1,7 +1,7 @@
 {
   "date": "2026-10-20",
   "freeSent": 5,
-  "vipSent": 43,
+  "vipSent": 45,
   "sentKeys": [
     "2026-10-20|0xe31501c472d557bfa145ce105d325fb2dd4cb867|fill|880573003257365",
     "2026-10-20|0x936cf4fb95c30ce83f658b5bbb247e4bb381bb0f|NIL|LONG",
@@ -45,7 +45,9 @@
     "2026-10-20|0xe31501c472d557bfa145ce105d325fb2dd4cb867|fill|65274484283524",
     "2026-10-20|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|ZEC|SHORT",
     "2026-10-20|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|LIT|SHORT",
-    "2026-10-20|0xde0e9b1a35322a809165d09f0490cca3fa7562e5|fill|690292819455447"
+    "2026-10-20|0xde0e9b1a35322a809165d09f0490cca3fa7562e5|fill|690292819455447",
+    "2026-10-20|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|FOGO|SHORT",
+    "2026-10-20|0xde0e9b1a35322a809165d09f0490cca3fa7562e5|fill|843429146926416"
   ],
   "openTrades": [
     {
@@ -1465,6 +1467,44 @@
       "signalLeverage": 0,
       "notional": 582.6963999999999,
       "signalAt": 1792473279199,
+      "status": "OPEN",
+      "destinations": [
+        "-1004446412486"
+      ],
+      "alertType": "NEW_ENTRY"
+    },
+    {
+      "key": "2026-10-20|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|FOGO|SHORT",
+      "coin": "FOGO",
+      "side": "SHORT",
+      "trader": "⭐ Trader 23 ⭐ — STRK short candidate — profitable open short",
+      "entry": 0.003917,
+      "tp": 0.0038778300000000005,
+      "sl": 0.003936585,
+      "leverage": 3,
+      "observedLeverage": 3,
+      "signalLeverage": 3,
+      "notional": 2218.033181,
+      "signalAt": 1792475536132,
+      "status": "OPEN",
+      "destinations": [
+        "-1004446412486"
+      ],
+      "alertType": "OPEN_BAND"
+    },
+    {
+      "key": "2026-10-20|0xde0e9b1a35322a809165d09f0490cca3fa7562e5|fill|843429146926416",
+      "coin": "xyz:SMSN",
+      "side": "SHORT",
+      "trader": "Trader 28",
+      "entry": 159.6,
+      "tp": 158.004,
+      "sl": 160.398,
+      "leverage": 0,
+      "observedLeverage": 0,
+      "signalLeverage": 0,
+      "notional": 83.4708,
+      "signalAt": 1792475536132,
       "status": "OPEN",
       "destinations": [
         "-1004446412486"
@@ -6008,6 +6048,12 @@
       "-1004446412486"
     ],
     "2026-10-20|0xde0e9b1a35322a809165d09f0490cca3fa7562e5|fill|690292819455447": [
+      "-1004446412486"
+    ],
+    "2026-10-20|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|FOGO|SHORT": [
+      "-1004446412486"
+    ],
+    "2026-10-20|0xde0e9b1a35322a809165d09f0490cca3fa7562e5|fill|843429146926416": [
       "-1004446412486"
     ]
   },
