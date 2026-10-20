@@ -1,7 +1,7 @@
 {
   "date": "2026-10-20",
   "freeSent": 5,
-  "vipSent": 10,
+  "vipSent": 15,
   "sentKeys": [
     "2026-10-20|0xe31501c472d557bfa145ce105d325fb2dd4cb867|fill|880573003257365",
     "2026-10-20|0x936cf4fb95c30ce83f658b5bbb247e4bb381bb0f|NIL|LONG",
@@ -12,7 +12,12 @@
     "2026-10-20|0xde0e9b1a35322a809165d09f0490cca3fa7562e5|fill|430154444042178",
     "2026-10-20|0xde0e9b1a35322a809165d09f0490cca3fa7562e5|fill|854043801757202",
     "2026-10-20|0xde0e9b1a35322a809165d09f0490cca3fa7562e5|fill|716057816910937",
-    "2026-10-20|0xde0e9b1a35322a809165d09f0490cca3fa7562e5|fill|504595641367039"
+    "2026-10-20|0xde0e9b1a35322a809165d09f0490cca3fa7562e5|fill|504595641367039",
+    "2026-10-20|0x936cf4fb95c30ce83f658b5bbb247e4bb381bb0f|PUMP|LONG",
+    "2026-10-20|0x936cf4fb95c30ce83f658b5bbb247e4bb381bb0f|ZEC|LONG",
+    "2026-10-20|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|ATOM|LONG",
+    "2026-10-20|0xde0e9b1a35322a809165d09f0490cca3fa7562e5|fill|778286636365470",
+    "2026-10-20|0xde0e9b1a35322a809165d09f0490cca3fa7562e5|fill|797632065927858"
   ],
   "openTrades": [
     {
@@ -1080,65 +1085,6 @@
       "alertType": "OPEN_BAND"
     },
     {
-      "key": "2026-10-20|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|POPCAT|LONG",
-      "coin": "POPCAT",
-      "side": "LONG",
-      "trader": "⭐ Trader 23 ⭐ — STRK short candidate — profitable open short",
-      "entry": 0.043042,
-      "tp": 0.04347242,
-      "sl": 0.042826789999999997,
-      "leverage": 3,
-      "observedLeverage": 3,
-      "signalLeverage": 3,
-      "notional": 68448.91305,
-      "signalAt": 1792458889333,
-      "status": "OPEN",
-      "destinations": [
-        "-1004446412486",
-        "@NovaraSignalsHQ"
-      ],
-      "alertType": "OPEN_BAND"
-    },
-    {
-      "key": "2026-10-20|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|PUMP|LONG",
-      "coin": "PUMP",
-      "side": "LONG",
-      "trader": "⭐ Trader 23 ⭐ — STRK short candidate — profitable open short",
-      "entry": 0.00434,
-      "tp": 0.0043834,
-      "sl": 0.0043183,
-      "leverage": 10,
-      "observedLeverage": 10,
-      "signalLeverage": 10,
-      "notional": 46645.13994,
-      "signalAt": 1792458889333,
-      "status": "OPEN",
-      "destinations": [
-        "-1004446412486",
-        "@NovaraSignalsHQ"
-      ],
-      "alertType": "OPEN_BAND"
-    },
-    {
-      "key": "2026-10-20|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|ZEC|LONG",
-      "coin": "ZEC",
-      "side": "LONG",
-      "trader": "⭐ Trader 23 ⭐ — STRK short candidate — profitable open short",
-      "entry": 1125.6726,
-      "tp": 1136.9293260000002,
-      "sl": 1120.044237,
-      "leverage": 10,
-      "observedLeverage": 10,
-      "signalLeverage": 10,
-      "notional": 161190.036,
-      "signalAt": 1792458889333,
-      "status": "OPEN",
-      "destinations": [
-        "-1004446412486"
-      ],
-      "alertType": "OPEN_BAND"
-    },
-    {
       "key": "2026-10-20|0xde0e9b1a35322a809165d09f0490cca3fa7562e5|fill|430154444042178",
       "coin": "xyz:SKHX",
       "side": "SHORT",
@@ -1208,6 +1154,101 @@
       "signalLeverage": 0,
       "notional": 810.0846,
       "signalAt": 1792458889333,
+      "status": "OPEN",
+      "destinations": [
+        "-1004446412486"
+      ],
+      "alertType": "NEW_ENTRY"
+    },
+    {
+      "key": "2026-10-20|0x936cf4fb95c30ce83f658b5bbb247e4bb381bb0f|PUMP|LONG",
+      "coin": "PUMP",
+      "side": "LONG",
+      "trader": "⭐ Trader 20 ⭐ — PONS short candidate — large open short; reported PONS realized PnL",
+      "entry": 0.004387,
+      "tp": 0.00443087,
+      "sl": 0.0043650650000000004,
+      "leverage": 2,
+      "observedLeverage": 2,
+      "signalLeverage": 2,
+      "notional": 67277.875609,
+      "signalAt": 1792461129747,
+      "status": "OPEN",
+      "destinations": [
+        "-1004446412486"
+      ],
+      "alertType": "OPEN_BAND"
+    },
+    {
+      "key": "2026-10-20|0x936cf4fb95c30ce83f658b5bbb247e4bb381bb0f|ZEC|LONG",
+      "coin": "ZEC",
+      "side": "LONG",
+      "trader": "⭐ Trader 20 ⭐ — PONS short candidate — large open short; reported PONS realized PnL",
+      "entry": 1142.5169,
+      "tp": 1153.9420690000002,
+      "sl": 1136.8043155,
+      "leverage": 3,
+      "observedLeverage": 3,
+      "signalLeverage": 3,
+      "notional": 3506.121378,
+      "signalAt": 1792461129747,
+      "status": "OPEN",
+      "destinations": [
+        "-1004446412486"
+      ],
+      "alertType": "OPEN_BAND"
+    },
+    {
+      "key": "2026-10-20|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|ATOM|LONG",
+      "coin": "ATOM",
+      "side": "LONG",
+      "trader": "⭐ Trader 23 ⭐ — STRK short candidate — profitable open short",
+      "entry": 1.7772,
+      "tp": 1.7949719999999998,
+      "sl": 1.768314,
+      "leverage": 5,
+      "observedLeverage": 5,
+      "signalLeverage": 5,
+      "notional": 671886.307932,
+      "signalAt": 1792461129747,
+      "status": "OPEN",
+      "destinations": [
+        "-1004446412486"
+      ],
+      "alertType": "OPEN_BAND"
+    },
+    {
+      "key": "2026-10-20|0xde0e9b1a35322a809165d09f0490cca3fa7562e5|fill|778286636365470",
+      "coin": "xyz:SKHX",
+      "side": "SHORT",
+      "trader": "Trader 28",
+      "entry": 921.4,
+      "tp": 912.1859999999999,
+      "sl": 926.007,
+      "leverage": 0,
+      "observedLeverage": 0,
+      "signalLeverage": 0,
+      "notional": 202.708,
+      "signalAt": 1792461129747,
+      "status": "OPEN",
+      "destinations": [
+        "-1004446412486"
+      ],
+      "alertType": "NEW_ENTRY"
+    },
+    {
+      "key": "2026-10-20|0xde0e9b1a35322a809165d09f0490cca3fa7562e5|fill|797632065927858",
+      "coin": "xyz:SMSN",
+      "side": "SHORT",
+      "trader": "Trader 28",
+      "entry": 161.99,
+      "tp": 160.3701,
+      "sl": 162.79995,
+      "leverage": 0,
+      "observedLeverage": 0,
+      "signalLeverage": 0,
+      "notional": 309.4009,
+      "signalAt": 1792461129747,
       "status": "OPEN",
       "destinations": [
         "-1004446412486"
@@ -5049,6 +5090,68 @@
         "-1004446412486"
       ],
       "alertType": "OPEN_BAND"
+    },
+    {
+      "key": "2026-10-20|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|POPCAT|LONG",
+      "coin": "POPCAT",
+      "side": "LONG",
+      "status": "TP_HIT",
+      "entry": 0.043042,
+      "tp": 0.04347242,
+      "sl": 0.042826789999999997,
+      "exitPrice": 0.04347242,
+      "leverage": 3,
+      "observedLeverage": 3,
+      "signalLeverage": 3,
+      "notional": 68448.91305,
+      "signalAt": 1792458889333,
+      "resolvedAt": 1792461129747,
+      "destinations": [
+        "-1004446412486",
+        "@NovaraSignalsHQ"
+      ],
+      "alertType": "OPEN_BAND"
+    },
+    {
+      "key": "2026-10-20|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|PUMP|LONG",
+      "coin": "PUMP",
+      "side": "LONG",
+      "status": "TP_HIT",
+      "entry": 0.00434,
+      "tp": 0.0043834,
+      "sl": 0.0043183,
+      "exitPrice": 0.0043834,
+      "leverage": 10,
+      "observedLeverage": 10,
+      "signalLeverage": 10,
+      "notional": 46645.13994,
+      "signalAt": 1792458889333,
+      "resolvedAt": 1792461129747,
+      "destinations": [
+        "-1004446412486",
+        "@NovaraSignalsHQ"
+      ],
+      "alertType": "OPEN_BAND"
+    },
+    {
+      "key": "2026-10-20|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|ZEC|LONG",
+      "coin": "ZEC",
+      "side": "LONG",
+      "status": "TP_HIT",
+      "entry": 1125.6726,
+      "tp": 1136.9293260000002,
+      "sl": 1120.044237,
+      "exitPrice": 1136.9293260000002,
+      "leverage": 10,
+      "observedLeverage": 10,
+      "signalLeverage": 10,
+      "notional": 161190.036,
+      "signalAt": 1792458889333,
+      "resolvedAt": 1792461129747,
+      "destinations": [
+        "-1004446412486"
+      ],
+      "alertType": "OPEN_BAND"
     }
   ],
   "dailyReportLastSentAt": {
@@ -5228,6 +5331,21 @@
       "-1004446412486"
     ],
     "2026-10-20|0xde0e9b1a35322a809165d09f0490cca3fa7562e5|fill|504595641367039": [
+      "-1004446412486"
+    ],
+    "2026-10-20|0x936cf4fb95c30ce83f658b5bbb247e4bb381bb0f|PUMP|LONG": [
+      "-1004446412486"
+    ],
+    "2026-10-20|0x936cf4fb95c30ce83f658b5bbb247e4bb381bb0f|ZEC|LONG": [
+      "-1004446412486"
+    ],
+    "2026-10-20|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|ATOM|LONG": [
+      "-1004446412486"
+    ],
+    "2026-10-20|0xde0e9b1a35322a809165d09f0490cca3fa7562e5|fill|778286636365470": [
+      "-1004446412486"
+    ],
+    "2026-10-20|0xde0e9b1a35322a809165d09f0490cca3fa7562e5|fill|797632065927858": [
       "-1004446412486"
     ]
   },
