@@ -1942,25 +1942,6 @@
       "alertType": "OPEN_BAND"
     },
     {
-      "key": "2026-10-20|0x936cf4fb95c30ce83f658b5bbb247e4bb381bb0f|ZEC|SHORT",
-      "coin": "ZEC",
-      "side": "SHORT",
-      "trader": "⭐ Trader 20 ⭐ — PONS short candidate — large open short; reported PONS realized PnL",
-      "entry": 1190.2467,
-      "tp": 1178.344233,
-      "sl": 1196.1979334999999,
-      "leverage": 3,
-      "observedLeverage": 3,
-      "signalLeverage": 3,
-      "notional": 10794.99,
-      "signalAt": 1792509828393,
-      "status": "OPEN",
-      "destinations": [
-        "-1004446412486"
-      ],
-      "alertType": "OPEN_BAND"
-    },
-    {
       "key": "2026-10-20|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|INJ|SHORT",
       "coin": "INJ",
       "side": "SHORT",
@@ -2054,44 +2035,6 @@
         "-1004446412486"
       ],
       "alertType": "NEW_ENTRY"
-    },
-    {
-      "key": "2026-10-20|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|PYTH|SHORT",
-      "coin": "PYTH",
-      "side": "SHORT",
-      "trader": "⭐ Trader 23 ⭐ — STRK short candidate — profitable open short",
-      "entry": 0.075456,
-      "tp": 0.07470144,
-      "sl": 0.07583327999999999,
-      "leverage": 5,
-      "observedLeverage": 5,
-      "signalLeverage": 5,
-      "notional": 3425.573448,
-      "signalAt": 1792512194134,
-      "status": "OPEN",
-      "destinations": [
-        "-1004446412486"
-      ],
-      "alertType": "OPEN_BAND"
-    },
-    {
-      "key": "2026-10-20|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|MANTA|SHORT",
-      "coin": "MANTA",
-      "side": "SHORT",
-      "trader": "⭐ Trader 23 ⭐ — STRK short candidate — profitable open short",
-      "entry": 0.06531,
-      "tp": 0.0646569,
-      "sl": 0.06563655,
-      "leverage": 3,
-      "observedLeverage": 3,
-      "signalLeverage": 3,
-      "notional": 191.848338,
-      "signalAt": 1792512194134,
-      "status": "OPEN",
-      "destinations": [
-        "-1004446412486"
-      ],
-      "alertType": "OPEN_BAND"
     }
   ],
   "pendingOutcomes": [],
@@ -7188,6 +7131,66 @@
       "notional": 270246.576,
       "signalAt": 1792509828393,
       "resolvedAt": 1792512194134,
+      "destinations": [
+        "-1004446412486"
+      ],
+      "alertType": "OPEN_BAND"
+    },
+    {
+      "key": "2026-10-20|0x936cf4fb95c30ce83f658b5bbb247e4bb381bb0f|ZEC|SHORT",
+      "coin": "ZEC",
+      "side": "SHORT",
+      "status": "SL_HIT",
+      "entry": 1190.2467,
+      "tp": 1178.344233,
+      "sl": 1196.1979334999999,
+      "exitPrice": 1196.1979334999999,
+      "leverage": 3,
+      "observedLeverage": 3,
+      "signalLeverage": 3,
+      "notional": 10794.99,
+      "signalAt": 1792509828393,
+      "resolvedAt": 1792512484555,
+      "destinations": [
+        "-1004446412486"
+      ],
+      "alertType": "OPEN_BAND"
+    },
+    {
+      "key": "2026-10-20|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|PYTH|SHORT",
+      "coin": "PYTH",
+      "side": "SHORT",
+      "status": "SL_HIT",
+      "entry": 0.075456,
+      "tp": 0.07470144,
+      "sl": 0.07583327999999999,
+      "exitPrice": 0.07583327999999999,
+      "leverage": 5,
+      "observedLeverage": 5,
+      "signalLeverage": 5,
+      "notional": 3425.573448,
+      "signalAt": 1792512194134,
+      "resolvedAt": 1792512484555,
+      "destinations": [
+        "-1004446412486"
+      ],
+      "alertType": "OPEN_BAND"
+    },
+    {
+      "key": "2026-10-20|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|MANTA|SHORT",
+      "coin": "MANTA",
+      "side": "SHORT",
+      "status": "SL_HIT",
+      "entry": 0.06531,
+      "tp": 0.0646569,
+      "sl": 0.06563655,
+      "exitPrice": 0.06563655,
+      "leverage": 3,
+      "observedLeverage": 3,
+      "signalLeverage": 3,
+      "notional": 191.848338,
+      "signalAt": 1792512194134,
+      "resolvedAt": 1792512484555,
       "destinations": [
         "-1004446412486"
       ],
