@@ -1,7 +1,7 @@
 {
   "date": "2026-10-20",
   "freeSent": 5,
-  "vipSent": 60,
+  "vipSent": 63,
   "sentKeys": [
     "2026-10-20|0xe31501c472d557bfa145ce105d325fb2dd4cb867|fill|880573003257365",
     "2026-10-20|0x936cf4fb95c30ce83f658b5bbb247e4bb381bb0f|NIL|LONG",
@@ -62,7 +62,10 @@
     "2026-10-20|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|NIL|SHORT",
     "2026-10-20|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|PONS|LONG",
     "2026-10-20|0xd4c1f7e8d876c4749228d515473d36f919583d1d|WLFI|LONG",
-    "2026-10-20|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|VVV|LONG"
+    "2026-10-20|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|VVV|LONG",
+    "2026-10-20|0x767f6dcea7e1d520a3b7ac251b30178a79eb2ab0|fill|950250599952092",
+    "2026-10-20|0x767f6dcea7e1d520a3b7ac251b30178a79eb2ab0|fill|457490406645133",
+    "2026-10-20|0xd4c1f7e8d876c4749228d515473d36f919583d1d|NEAR|LONG"
   ],
   "openTrades": [
     {
@@ -1527,18 +1530,56 @@
       "alertType": "OPEN_BAND"
     },
     {
-      "key": "2026-10-20|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|VVV|LONG",
-      "coin": "VVV",
+      "key": "2026-10-20|0x767f6dcea7e1d520a3b7ac251b30178a79eb2ab0|fill|950250599952092",
+      "coin": "xyz:SHEIN",
       "side": "LONG",
-      "trader": "⭐ Trader 23 ⭐ — STRK short candidate — profitable open short",
-      "entry": 24.315,
-      "tp": 24.55815,
-      "sl": 24.193425,
-      "leverage": 3,
-      "observedLeverage": 3,
-      "signalLeverage": 3,
-      "notional": 6985.95392,
-      "signalAt": 1792491465100,
+      "trader": "⭐ Trader 18 ⭐",
+      "entry": 4.6721,
+      "tp": 4.718821,
+      "sl": 4.6487395000000005,
+      "leverage": 0,
+      "observedLeverage": 0,
+      "signalLeverage": 0,
+      "notional": 109.79435000000001,
+      "signalAt": 1792493634554,
+      "status": "OPEN",
+      "destinations": [
+        "-1004446412486"
+      ],
+      "alertType": "NEW_ENTRY"
+    },
+    {
+      "key": "2026-10-20|0x767f6dcea7e1d520a3b7ac251b30178a79eb2ab0|fill|457490406645133",
+      "coin": "xyz:SHEIN",
+      "side": "LONG",
+      "trader": "⭐ Trader 18 ⭐",
+      "entry": 4.6713,
+      "tp": 4.718012999999999,
+      "sl": 4.647943499999999,
+      "leverage": 0,
+      "observedLeverage": 0,
+      "signalLeverage": 0,
+      "notional": 85.48478999999999,
+      "signalAt": 1792493634554,
+      "status": "OPEN",
+      "destinations": [
+        "-1004446412486"
+      ],
+      "alertType": "NEW_ENTRY"
+    },
+    {
+      "key": "2026-10-20|0xd4c1f7e8d876c4749228d515473d36f919583d1d|NEAR|LONG",
+      "coin": "NEAR",
+      "side": "LONG",
+      "trader": "⭐ Trader 21 ⭐ — PONS short candidate — profitable open short",
+      "entry": 4.66168,
+      "tp": 4.708296799999999,
+      "sl": 4.638371599999999,
+      "leverage": 10,
+      "observedLeverage": 10,
+      "signalLeverage": 10,
+      "notional": 13492.64475,
+      "signalAt": 1792493634554,
       "status": "OPEN",
       "destinations": [
         "-1004446412486"
@@ -6084,6 +6125,26 @@
         "-1004446412486"
       ],
       "alertType": "OPEN_BAND"
+    },
+    {
+      "key": "2026-10-20|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|VVV|LONG",
+      "coin": "VVV",
+      "side": "LONG",
+      "status": "SL_HIT",
+      "entry": 24.315,
+      "tp": 24.55815,
+      "sl": 24.193425,
+      "exitPrice": 24.193425,
+      "leverage": 3,
+      "observedLeverage": 3,
+      "signalLeverage": 3,
+      "notional": 6985.95392,
+      "signalAt": 1792491465100,
+      "resolvedAt": 1792493634554,
+      "destinations": [
+        "-1004446412486"
+      ],
+      "alertType": "OPEN_BAND"
     }
   ],
   "dailyReportLastSentAt": {
@@ -6413,6 +6474,15 @@
       "-1004446412486"
     ],
     "2026-10-20|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|VVV|LONG": [
+      "-1004446412486"
+    ],
+    "2026-10-20|0x767f6dcea7e1d520a3b7ac251b30178a79eb2ab0|fill|950250599952092": [
+      "-1004446412486"
+    ],
+    "2026-10-20|0x767f6dcea7e1d520a3b7ac251b30178a79eb2ab0|fill|457490406645133": [
+      "-1004446412486"
+    ],
+    "2026-10-20|0xd4c1f7e8d876c4749228d515473d36f919583d1d|NEAR|LONG": [
       "-1004446412486"
     ]
   },
