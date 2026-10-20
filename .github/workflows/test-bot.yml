@@ -6,6 +6,10 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: novara-telegram-bot-polling
+  cancel-in-progress: false
+
 jobs:
   test:
     runs-on: ubuntu-latest
@@ -29,15 +33,18 @@ jobs:
           VIP_CHANNEL_ID: ${{ secrets.VIP_CHANNEL_ID }}
           ADMIN_TELEGRAM_ID: ${{ secrets.ADMIN_TELEGRAM_ID }}
         run: |
-          timeout --signal=TERM 4m python -u bot.py || {
-            result=$?
-            if [ "$result" -ne 124 ] && [ "$result" -ne 143 ]; then
-              exit "$result"
-            fi
-          }
-          timeout --signal=TERM 4m python -u bot.py || {
-            result=$?
-            if [ "$result" -ne 124 ] && [ "$result" -ne 143 ]; then
-              exit "$result"
-            fi
-          }
+          set +e
+          timeout --signal=TERM --kill-after=10s 4m python -u bot.py
+          result=$?
+
+          if [ "$result" -eq 124 ] || [ "$result" -eq 143 ]; then
+            echo "NOVARA bot stopped after the planned test interval."
+            exit 0
+          fi
+
+          if [ "$result" -ne 0 ]; then
+            echo "NOVARA bot exited with error code: $result"
+            exit "$result"
+          fi
+
+          echo "NOVARA bot exited normally."
