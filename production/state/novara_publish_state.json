@@ -1,7 +1,7 @@
 {
   "date": "2026-10-21",
   "freeSent": 5,
-  "vipSent": 51,
+  "vipSent": 54,
   "sentKeys": [
     "2026-10-21|0xce508465b243216fcf372d3146fd62e8f7a7b8e2|BTC|LONG",
     "2026-10-21|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|NEAR|SHORT",
@@ -53,7 +53,10 @@
     "2026-10-21|0x0c1f6941fdcde9488dfd36ca16fed6b3bc49672b|HYPE|LONG",
     "2026-10-21|0x0c1f6941fdcde9488dfd36ca16fed6b3bc49672b|PUMP|SHORT",
     "2026-10-21|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|GRIFFAIN|LONG",
-    "2026-10-21|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|XMR|SHORT"
+    "2026-10-21|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|XMR|SHORT",
+    "2026-10-21|0x0c1f6941fdcde9488dfd36ca16fed6b3bc49672b|fill|982901920865387",
+    "2026-10-21|0xd4c1f7e8d876c4749228d515473d36f919583d1d|XPL|SHORT",
+    "2026-10-21|0xde0e9b1a35322a809165d09f0490cca3fa7562e5|fill|590598101491180"
   ],
   "openTrades": [
     {
@@ -2678,25 +2681,6 @@
       "alertType": "OPEN_BAND"
     },
     {
-      "key": "2026-10-21|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|GRIFFAIN|LONG",
-      "coin": "GRIFFAIN",
-      "side": "LONG",
-      "trader": "⭐ Trader 23 ⭐ — STRK short candidate — profitable open short",
-      "entry": 0.01524,
-      "tp": 0.0153924,
-      "sl": 0.0151638,
-      "leverage": 3,
-      "observedLeverage": 3,
-      "signalLeverage": 3,
-      "notional": 75596.171463,
-      "signalAt": 1792579837388,
-      "status": "OPEN",
-      "destinations": [
-        "-1004446412486"
-      ],
-      "alertType": "OPEN_BAND"
-    },
-    {
       "key": "2026-10-21|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|XMR|SHORT",
       "coin": "XMR",
       "side": "SHORT",
@@ -2714,6 +2698,63 @@
         "-1004446412486"
       ],
       "alertType": "OPEN_BAND"
+    },
+    {
+      "key": "2026-10-21|0x0c1f6941fdcde9488dfd36ca16fed6b3bc49672b|fill|982901920865387",
+      "coin": "xyz:RKLB",
+      "side": "LONG",
+      "trader": "⭐ Trader 12 ⭐",
+      "entry": 52.193,
+      "tp": 52.714929999999995,
+      "sl": 51.932035,
+      "leverage": 0,
+      "observedLeverage": 0,
+      "signalLeverage": 0,
+      "notional": 449.38172999999995,
+      "signalAt": 1792581641372,
+      "status": "OPEN",
+      "destinations": [
+        "-1004446412486"
+      ],
+      "alertType": "NEW_ENTRY"
+    },
+    {
+      "key": "2026-10-21|0xd4c1f7e8d876c4749228d515473d36f919583d1d|XPL|SHORT",
+      "coin": "XPL",
+      "side": "SHORT",
+      "trader": "⭐ Trader 21 ⭐ — PONS short candidate — profitable open short",
+      "entry": 0.081502,
+      "tp": 0.08068698,
+      "sl": 0.08190951,
+      "leverage": 10,
+      "observedLeverage": 10,
+      "signalLeverage": 10,
+      "notional": 439749.12271,
+      "signalAt": 1792581641372,
+      "status": "OPEN",
+      "destinations": [
+        "-1004446412486"
+      ],
+      "alertType": "OPEN_BAND"
+    },
+    {
+      "key": "2026-10-21|0xde0e9b1a35322a809165d09f0490cca3fa7562e5|fill|590598101491180",
+      "coin": "xyz:GBP",
+      "side": "SHORT",
+      "trader": "Trader 28",
+      "entry": 1.3399,
+      "tp": 1.3265010000000002,
+      "sl": 1.3465995000000002,
+      "leverage": 0,
+      "observedLeverage": 0,
+      "signalLeverage": 0,
+      "notional": 54407.979400000004,
+      "signalAt": 1792581641372,
+      "status": "OPEN",
+      "destinations": [
+        "-1004446412486"
+      ],
+      "alertType": "NEW_ENTRY"
     }
   ],
   "pendingOutcomes": [],
@@ -9018,6 +9059,26 @@
         "-1004446412486"
       ],
       "alertType": "OPEN_BAND"
+    },
+    {
+      "key": "2026-10-21|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|GRIFFAIN|LONG",
+      "coin": "GRIFFAIN",
+      "side": "LONG",
+      "status": "SL_HIT",
+      "entry": 0.01524,
+      "tp": 0.0153924,
+      "sl": 0.0151638,
+      "exitPrice": 0.0151638,
+      "leverage": 3,
+      "observedLeverage": 3,
+      "signalLeverage": 3,
+      "notional": 75596.171463,
+      "signalAt": 1792579837388,
+      "resolvedAt": 1792581641372,
+      "destinations": [
+        "-1004446412486"
+      ],
+      "alertType": "OPEN_BAND"
     }
   ],
   "dailyReportLastSentAt": {
@@ -9802,6 +9863,15 @@
       "-1004446412486"
     ],
     "2026-10-21|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|XMR|SHORT": [
+      "-1004446412486"
+    ],
+    "2026-10-21|0x0c1f6941fdcde9488dfd36ca16fed6b3bc49672b|fill|982901920865387": [
+      "-1004446412486"
+    ],
+    "2026-10-21|0xd4c1f7e8d876c4749228d515473d36f919583d1d|XPL|SHORT": [
+      "-1004446412486"
+    ],
+    "2026-10-21|0xde0e9b1a35322a809165d09f0490cca3fa7562e5|fill|590598101491180": [
       "-1004446412486"
     ]
   },
