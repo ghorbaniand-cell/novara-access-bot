@@ -2382,25 +2382,6 @@
       "alertType": "OPEN_BAND"
     },
     {
-      "key": "2026-10-21|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|VVV|SHORT",
-      "coin": "VVV",
-      "side": "SHORT",
-      "trader": "⭐ Trader 23 ⭐ — STRK short candidate — profitable open short",
-      "entry": 26.0485,
-      "tp": 25.788015,
-      "sl": 26.178742500000002,
-      "leverage": 3,
-      "observedLeverage": 3,
-      "signalLeverage": 3,
-      "notional": 84741.8196,
-      "signalAt": 1792543253891,
-      "status": "OPEN",
-      "destinations": [
-        "-1004446412486"
-      ],
-      "alertType": "OPEN_BAND"
-    },
-    {
       "key": "2026-10-21|0xe31501c472d557bfa145ce105d325fb2dd4cb867|fill|541694497282040",
       "coin": "xyz:IREN",
       "side": "LONG",
@@ -2507,44 +2488,6 @@
       "observedLeverage": 3,
       "signalLeverage": 3,
       "notional": 1183.91319,
-      "signalAt": 1792548018444,
-      "status": "OPEN",
-      "destinations": [
-        "-1004446412486"
-      ],
-      "alertType": "OPEN_BAND"
-    },
-    {
-      "key": "2026-10-21|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|ENA|SHORT",
-      "coin": "ENA",
-      "side": "SHORT",
-      "trader": "⭐ Trader 23 ⭐ — STRK short candidate — profitable open short",
-      "entry": 0.200493,
-      "tp": 0.19848807000000002,
-      "sl": 0.201495465,
-      "leverage": 10,
-      "observedLeverage": 10,
-      "signalLeverage": 10,
-      "notional": 16915.68776,
-      "signalAt": 1792548018444,
-      "status": "OPEN",
-      "destinations": [
-        "-1004446412486"
-      ],
-      "alertType": "OPEN_BAND"
-    },
-    {
-      "key": "2026-10-21|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|AIXBT|LONG",
-      "coin": "AIXBT",
-      "side": "LONG",
-      "trader": "⭐ Trader 23 ⭐ — STRK short candidate — profitable open short",
-      "entry": 0.019969,
-      "tp": 0.02016869,
-      "sl": 0.019869155,
-      "leverage": 3,
-      "observedLeverage": 3,
-      "signalLeverage": 3,
-      "notional": 554.0748,
       "signalAt": 1792548018444,
       "status": "OPEN",
       "destinations": [
@@ -8369,6 +8312,66 @@
       "notional": 625598.402,
       "signalAt": 1792545677908,
       "resolvedAt": 1792548018444,
+      "destinations": [
+        "-1004446412486"
+      ],
+      "alertType": "OPEN_BAND"
+    },
+    {
+      "key": "2026-10-21|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|VVV|SHORT",
+      "coin": "VVV",
+      "side": "SHORT",
+      "status": "TP_HIT",
+      "entry": 26.0485,
+      "tp": 25.788015,
+      "sl": 26.178742500000002,
+      "exitPrice": 25.788015,
+      "leverage": 3,
+      "observedLeverage": 3,
+      "signalLeverage": 3,
+      "notional": 84741.8196,
+      "signalAt": 1792543253891,
+      "resolvedAt": 1792549998449,
+      "destinations": [
+        "-1004446412486"
+      ],
+      "alertType": "OPEN_BAND"
+    },
+    {
+      "key": "2026-10-21|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|ENA|SHORT",
+      "coin": "ENA",
+      "side": "SHORT",
+      "status": "TP_HIT",
+      "entry": 0.200493,
+      "tp": 0.19848807000000002,
+      "sl": 0.201495465,
+      "exitPrice": 0.19848807000000002,
+      "leverage": 10,
+      "observedLeverage": 10,
+      "signalLeverage": 10,
+      "notional": 16915.68776,
+      "signalAt": 1792548018444,
+      "resolvedAt": 1792549998449,
+      "destinations": [
+        "-1004446412486"
+      ],
+      "alertType": "OPEN_BAND"
+    },
+    {
+      "key": "2026-10-21|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|AIXBT|LONG",
+      "coin": "AIXBT",
+      "side": "LONG",
+      "status": "SL_HIT",
+      "entry": 0.019969,
+      "tp": 0.02016869,
+      "sl": 0.019869155,
+      "exitPrice": 0.019869155,
+      "leverage": 3,
+      "observedLeverage": 3,
+      "signalLeverage": 3,
+      "notional": 554.0748,
+      "signalAt": 1792548018444,
+      "resolvedAt": 1792549998449,
       "destinations": [
         "-1004446412486"
       ],
