@@ -1,7 +1,7 @@
 {
   "date": "2026-10-21",
   "freeSent": 5,
-  "vipSent": 41,
+  "vipSent": 45,
   "sentKeys": [
     "2026-10-21|0xce508465b243216fcf372d3146fd62e8f7a7b8e2|BTC|LONG",
     "2026-10-21|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|NEAR|SHORT",
@@ -43,7 +43,11 @@
     "2026-10-21|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|INJ|LONG",
     "2026-10-21|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|STX|LONG",
     "2026-10-21|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|PNUT|SHORT",
-    "2026-10-21|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|ZORA|SHORT"
+    "2026-10-21|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|ZORA|SHORT",
+    "2026-10-21|0x0c1f6941fdcde9488dfd36ca16fed6b3bc49672b|fill|760348937127555",
+    "2026-10-21|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|JUP|SHORT",
+    "2026-10-21|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|KAITO|SHORT",
+    "2026-10-21|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|SKY|SHORT"
   ],
   "openTrades": [
     {
@@ -2440,25 +2444,6 @@
       "alertType": "NEW_ENTRY"
     },
     {
-      "key": "2026-10-21|0x0c1f6941fdcde9488dfd36ca16fed6b3bc49672b|BTC|SHORT",
-      "coin": "BTC",
-      "side": "SHORT",
-      "trader": "⭐ Trader 12 ⭐",
-      "entry": 82724,
-      "tp": 81896.76,
-      "sl": 83137.62,
-      "leverage": 40,
-      "observedLeverage": 40,
-      "signalLeverage": 40,
-      "notional": 203016.78144,
-      "signalAt": 1792554363382,
-      "status": "OPEN",
-      "destinations": [
-        "-1004446412486"
-      ],
-      "alertType": "OPEN_BAND"
-    },
-    {
       "key": "2026-10-21|0xde0e9b1a35322a809165d09f0490cca3fa7562e5|fill|386283994998523",
       "coin": "xyz:SKHX",
       "side": "SHORT",
@@ -2585,6 +2570,82 @@
       "signalLeverage": 3,
       "notional": 16650.6593,
       "signalAt": 1792567925489,
+      "status": "OPEN",
+      "destinations": [
+        "-1004446412486"
+      ],
+      "alertType": "OPEN_BAND"
+    },
+    {
+      "key": "2026-10-21|0x0c1f6941fdcde9488dfd36ca16fed6b3bc49672b|fill|760348937127555",
+      "coin": "HYPE",
+      "side": "LONG",
+      "trader": "⭐ Trader 12 ⭐",
+      "entry": 81.347,
+      "tp": 82.16046999999999,
+      "sl": 80.940265,
+      "leverage": 10,
+      "observedLeverage": 10,
+      "signalLeverage": 10,
+      "notional": 400.22723999999994,
+      "signalAt": 1792573095213,
+      "status": "OPEN",
+      "destinations": [
+        "-1004446412486"
+      ],
+      "alertType": "NEW_ENTRY"
+    },
+    {
+      "key": "2026-10-21|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|JUP|SHORT",
+      "coin": "JUP",
+      "side": "SHORT",
+      "trader": "⭐ Trader 23 ⭐ — STRK short candidate — profitable open short",
+      "entry": 0.320607,
+      "tp": 0.31740092999999997,
+      "sl": 0.32221003499999995,
+      "leverage": 10,
+      "observedLeverage": 10,
+      "signalLeverage": 10,
+      "notional": 38729.88126,
+      "signalAt": 1792573095213,
+      "status": "OPEN",
+      "destinations": [
+        "-1004446412486"
+      ],
+      "alertType": "OPEN_BAND"
+    },
+    {
+      "key": "2026-10-21|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|KAITO|SHORT",
+      "coin": "KAITO",
+      "side": "SHORT",
+      "trader": "⭐ Trader 23 ⭐ — STRK short candidate — profitable open short",
+      "entry": 0.281698,
+      "tp": 0.27888102,
+      "sl": 0.28310649,
+      "leverage": 5,
+      "observedLeverage": 5,
+      "signalLeverage": 5,
+      "notional": 11279.919,
+      "signalAt": 1792573095213,
+      "status": "OPEN",
+      "destinations": [
+        "-1004446412486"
+      ],
+      "alertType": "OPEN_BAND"
+    },
+    {
+      "key": "2026-10-21|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|SKY|SHORT",
+      "coin": "SKY",
+      "side": "SHORT",
+      "trader": "⭐ Trader 23 ⭐ — STRK short candidate — profitable open short",
+      "entry": 0.076417,
+      "tp": 0.07565283,
+      "sl": 0.076799085,
+      "leverage": 3,
+      "observedLeverage": 3,
+      "signalLeverage": 3,
+      "notional": 21240.479456,
+      "signalAt": 1792573095213,
       "status": "OPEN",
       "destinations": [
         "-1004446412486"
@@ -8814,6 +8875,26 @@
         "-1004446412486"
       ],
       "alertType": "OPEN_BAND"
+    },
+    {
+      "key": "2026-10-21|0x0c1f6941fdcde9488dfd36ca16fed6b3bc49672b|BTC|SHORT",
+      "coin": "BTC",
+      "side": "SHORT",
+      "status": "SL_HIT",
+      "entry": 82724,
+      "tp": 81896.76,
+      "sl": 83137.62,
+      "exitPrice": 83137.62,
+      "leverage": 40,
+      "observedLeverage": 40,
+      "signalLeverage": 40,
+      "notional": 203016.78144,
+      "signalAt": 1792554363382,
+      "resolvedAt": 1792573095213,
+      "destinations": [
+        "-1004446412486"
+      ],
+      "alertType": "OPEN_BAND"
     }
   ],
   "dailyReportLastSentAt": {
@@ -9568,6 +9649,18 @@
       "-1004446412486"
     ],
     "2026-10-21|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|ZORA|SHORT": [
+      "-1004446412486"
+    ],
+    "2026-10-21|0x0c1f6941fdcde9488dfd36ca16fed6b3bc49672b|fill|760348937127555": [
+      "-1004446412486"
+    ],
+    "2026-10-21|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|JUP|SHORT": [
+      "-1004446412486"
+    ],
+    "2026-10-21|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|KAITO|SHORT": [
+      "-1004446412486"
+    ],
+    "2026-10-21|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|SKY|SHORT": [
       "-1004446412486"
     ]
   },
