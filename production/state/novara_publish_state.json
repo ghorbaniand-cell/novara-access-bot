@@ -1,7 +1,7 @@
 {
   "date": "2026-10-21",
   "freeSent": 5,
-  "vipSent": 49,
+  "vipSent": 51,
   "sentKeys": [
     "2026-10-21|0xce508465b243216fcf372d3146fd62e8f7a7b8e2|BTC|LONG",
     "2026-10-21|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|NEAR|SHORT",
@@ -51,7 +51,9 @@
     "2026-10-21|0xf9faba57a81d1575d3e506dd3eafe7db6f2a3275|ETH|LONG",
     "2026-10-21|0xce508465b243216fcf372d3146fd62e8f7a7b8e2|XMR|LONG",
     "2026-10-21|0x0c1f6941fdcde9488dfd36ca16fed6b3bc49672b|HYPE|LONG",
-    "2026-10-21|0x0c1f6941fdcde9488dfd36ca16fed6b3bc49672b|PUMP|SHORT"
+    "2026-10-21|0x0c1f6941fdcde9488dfd36ca16fed6b3bc49672b|PUMP|SHORT",
+    "2026-10-21|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|GRIFFAIN|LONG",
+    "2026-10-21|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|XMR|SHORT"
   ],
   "openTrades": [
     {
@@ -2669,6 +2671,44 @@
       "signalLeverage": 10,
       "notional": 199854.81828,
       "signalAt": 1792575205951,
+      "status": "OPEN",
+      "destinations": [
+        "-1004446412486"
+      ],
+      "alertType": "OPEN_BAND"
+    },
+    {
+      "key": "2026-10-21|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|GRIFFAIN|LONG",
+      "coin": "GRIFFAIN",
+      "side": "LONG",
+      "trader": "⭐ Trader 23 ⭐ — STRK short candidate — profitable open short",
+      "entry": 0.01524,
+      "tp": 0.0153924,
+      "sl": 0.0151638,
+      "leverage": 3,
+      "observedLeverage": 3,
+      "signalLeverage": 3,
+      "notional": 75596.171463,
+      "signalAt": 1792579837388,
+      "status": "OPEN",
+      "destinations": [
+        "-1004446412486"
+      ],
+      "alertType": "OPEN_BAND"
+    },
+    {
+      "key": "2026-10-21|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|XMR|SHORT",
+      "coin": "XMR",
+      "side": "SHORT",
+      "trader": "⭐ Trader 23 ⭐ — STRK short candidate — profitable open short",
+      "entry": 597.313,
+      "tp": 591.33987,
+      "sl": 600.299565,
+      "leverage": 5,
+      "observedLeverage": 5,
+      "signalLeverage": 5,
+      "notional": 6883.484993,
+      "signalAt": 1792579837388,
       "status": "OPEN",
       "destinations": [
         "-1004446412486"
@@ -9756,6 +9796,12 @@
       "-1004446412486"
     ],
     "2026-10-21|0x0c1f6941fdcde9488dfd36ca16fed6b3bc49672b|PUMP|SHORT": [
+      "-1004446412486"
+    ],
+    "2026-10-21|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|GRIFFAIN|LONG": [
+      "-1004446412486"
+    ],
+    "2026-10-21|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|XMR|SHORT": [
       "-1004446412486"
     ]
   },
