@@ -1,7 +1,7 @@
 {
   "date": "2026-10-21",
   "freeSent": 5,
-  "vipSent": 96,
+  "vipSent": 101,
   "sentKeys": [
     "2026-10-21|0xce508465b243216fcf372d3146fd62e8f7a7b8e2|BTC|LONG",
     "2026-10-21|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|NEAR|SHORT",
@@ -98,7 +98,12 @@
     "2026-10-21|0x0c1f6941fdcde9488dfd36ca16fed6b3bc49672b|ZEC|SHORT",
     "2026-10-21|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|GRAM|SHORT",
     "2026-10-21|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|ASTER|SHORT",
-    "2026-10-21|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|ZEC|LONG"
+    "2026-10-21|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|ZEC|LONG",
+    "2026-10-21|0x0c1f6941fdcde9488dfd36ca16fed6b3bc49672b|fill|251587995541263",
+    "2026-10-21|0x936cf4fb95c30ce83f658b5bbb247e4bb381bb0f|FARTCOIN|LONG",
+    "2026-10-21|0x936cf4fb95c30ce83f658b5bbb247e4bb381bb0f|LIT|SHORT",
+    "2026-10-21|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|AVAX|LONG",
+    "2026-10-21|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|AVNT|LONG"
   ],
   "openTrades": [
     {
@@ -2874,25 +2879,6 @@
       "alertType": "NEW_ENTRY"
     },
     {
-      "key": "2026-10-21|0xd4c1f7e8d876c4749228d515473d36f919583d1d|DOGE|SHORT",
-      "coin": "DOGE",
-      "side": "SHORT",
-      "trader": "⭐ Trader 21 ⭐ — PONS short candidate — profitable open short",
-      "entry": 0.083154,
-      "tp": 0.08232246,
-      "sl": 0.08356977,
-      "leverage": 10,
-      "observedLeverage": 10,
-      "signalLeverage": 10,
-      "notional": 19411.231635,
-      "signalAt": 1792596015500,
-      "status": "OPEN",
-      "destinations": [
-        "-1004446412486"
-      ],
-      "alertType": "OPEN_BAND"
-    },
-    {
       "key": "2026-10-21|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|DYDX|SHORT",
       "coin": "DYDX",
       "side": "SHORT",
@@ -3000,6 +2986,101 @@
       "signalLeverage": 10,
       "notional": 46504.65,
       "signalAt": 1792605074399,
+      "status": "OPEN",
+      "destinations": [
+        "-1004446412486"
+      ],
+      "alertType": "OPEN_BAND"
+    },
+    {
+      "key": "2026-10-21|0x0c1f6941fdcde9488dfd36ca16fed6b3bc49672b|fill|251587995541263",
+      "coin": "xyz:HOOD",
+      "side": "LONG",
+      "trader": "⭐ Trader 12 ⭐",
+      "entry": 102.69,
+      "tp": 103.7169,
+      "sl": 102.17654999999999,
+      "leverage": 0,
+      "observedLeverage": 0,
+      "signalLeverage": 0,
+      "notional": 1560.68262,
+      "signalAt": 1792606893802,
+      "status": "OPEN",
+      "destinations": [
+        "-1004446412486"
+      ],
+      "alertType": "NEW_ENTRY"
+    },
+    {
+      "key": "2026-10-21|0x936cf4fb95c30ce83f658b5bbb247e4bb381bb0f|FARTCOIN|LONG",
+      "coin": "FARTCOIN",
+      "side": "LONG",
+      "trader": "⭐ Trader 20 ⭐ — PONS short candidate — large open short; reported PONS realized PnL",
+      "entry": 0.15773,
+      "tp": 0.1593073,
+      "sl": 0.15694135,
+      "leverage": 3,
+      "observedLeverage": 3,
+      "signalLeverage": 3,
+      "notional": 681848.235218,
+      "signalAt": 1792606893802,
+      "status": "OPEN",
+      "destinations": [
+        "-1004446412486"
+      ],
+      "alertType": "OPEN_BAND"
+    },
+    {
+      "key": "2026-10-21|0x936cf4fb95c30ce83f658b5bbb247e4bb381bb0f|LIT|SHORT",
+      "coin": "LIT",
+      "side": "SHORT",
+      "trader": "⭐ Trader 20 ⭐ — PONS short candidate — large open short; reported PONS realized PnL",
+      "entry": 3.786861,
+      "tp": 3.74899239,
+      "sl": 3.805795305,
+      "leverage": 2,
+      "observedLeverage": 2,
+      "signalLeverage": 2,
+      "notional": 35133.5232,
+      "signalAt": 1792606893802,
+      "status": "OPEN",
+      "destinations": [
+        "-1004446412486"
+      ],
+      "alertType": "OPEN_BAND"
+    },
+    {
+      "key": "2026-10-21|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|AVAX|LONG",
+      "coin": "AVAX",
+      "side": "LONG",
+      "trader": "⭐ Trader 23 ⭐ — STRK short candidate — profitable open short",
+      "entry": 10.0953,
+      "tp": 10.196253,
+      "sl": 10.0448235,
+      "leverage": 10,
+      "observedLeverage": 10,
+      "signalLeverage": 10,
+      "notional": 336049.28988,
+      "signalAt": 1792606893802,
+      "status": "OPEN",
+      "destinations": [
+        "-1004446412486"
+      ],
+      "alertType": "OPEN_BAND"
+    },
+    {
+      "key": "2026-10-21|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|AVNT|LONG",
+      "coin": "AVNT",
+      "side": "LONG",
+      "trader": "⭐ Trader 23 ⭐ — STRK short candidate — profitable open short",
+      "entry": 0.118868,
+      "tp": 0.12005668,
+      "sl": 0.11827366,
+      "leverage": 5,
+      "observedLeverage": 5,
+      "signalLeverage": 5,
+      "notional": 651.70823,
+      "signalAt": 1792606893802,
       "status": "OPEN",
       "destinations": [
         "-1004446412486"
@@ -9950,6 +10031,26 @@
         "-1004446412486"
       ],
       "alertType": "OPEN_BAND"
+    },
+    {
+      "key": "2026-10-21|0xd4c1f7e8d876c4749228d515473d36f919583d1d|DOGE|SHORT",
+      "coin": "DOGE",
+      "side": "SHORT",
+      "status": "SL_HIT",
+      "entry": 0.083154,
+      "tp": 0.08232246,
+      "sl": 0.08356977,
+      "exitPrice": 0.08356977,
+      "leverage": 10,
+      "observedLeverage": 10,
+      "signalLeverage": 10,
+      "notional": 19411.231635,
+      "signalAt": 1792596015500,
+      "resolvedAt": 1792606893802,
+      "destinations": [
+        "-1004446412486"
+      ],
+      "alertType": "OPEN_BAND"
     }
   ],
   "dailyReportLastSentAt": {
@@ -10869,6 +10970,21 @@
       "-1004446412486"
     ],
     "2026-10-21|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|ZEC|LONG": [
+      "-1004446412486"
+    ],
+    "2026-10-21|0x0c1f6941fdcde9488dfd36ca16fed6b3bc49672b|fill|251587995541263": [
+      "-1004446412486"
+    ],
+    "2026-10-21|0x936cf4fb95c30ce83f658b5bbb247e4bb381bb0f|FARTCOIN|LONG": [
+      "-1004446412486"
+    ],
+    "2026-10-21|0x936cf4fb95c30ce83f658b5bbb247e4bb381bb0f|LIT|SHORT": [
+      "-1004446412486"
+    ],
+    "2026-10-21|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|AVAX|LONG": [
+      "-1004446412486"
+    ],
+    "2026-10-21|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|AVNT|LONG": [
       "-1004446412486"
     ]
   },
