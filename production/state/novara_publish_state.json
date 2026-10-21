@@ -1,7 +1,7 @@
 {
   "date": "2026-10-21",
   "freeSent": 5,
-  "vipSent": 31,
+  "vipSent": 33,
   "sentKeys": [
     "2026-10-21|0xce508465b243216fcf372d3146fd62e8f7a7b8e2|BTC|LONG",
     "2026-10-21|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|NEAR|SHORT",
@@ -33,7 +33,9 @@
     "2026-10-21|0xf9faba57a81d1575d3e506dd3eafe7db6f2a3275|fill|741286495787013",
     "2026-10-21|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|PUMP|SHORT",
     "2026-10-21|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|AZTEC|LONG",
-    "2026-10-21|0xde0e9b1a35322a809165d09f0490cca3fa7562e5|fill|110509830997142"
+    "2026-10-21|0xde0e9b1a35322a809165d09f0490cca3fa7562e5|fill|110509830997142",
+    "2026-10-21|0xf9faba57a81d1575d3e506dd3eafe7db6f2a3275|BTC|LONG",
+    "2026-10-21|0xde0e9b1a35322a809165d09f0490cca3fa7562e5|fill|876015135216629"
   ],
   "openTrades": [
     {
@@ -2374,25 +2376,6 @@
       "alertType": "OPEN_BAND"
     },
     {
-      "key": "2026-10-21|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|AIXBT|SHORT",
-      "coin": "AIXBT",
-      "side": "SHORT",
-      "trader": "⭐ Trader 23 ⭐ — STRK short candidate — profitable open short",
-      "entry": 0.019955,
-      "tp": 0.01975545,
-      "sl": 0.020054775,
-      "leverage": 3,
-      "observedLeverage": 3,
-      "signalLeverage": 3,
-      "notional": 248.305203,
-      "signalAt": 1792543253891,
-      "status": "OPEN",
-      "destinations": [
-        "-1004446412486"
-      ],
-      "alertType": "OPEN_BAND"
-    },
-    {
       "key": "2026-10-21|0xe31501c472d557bfa145ce105d325fb2dd4cb867|fill|541694497282040",
       "coin": "xyz:IREN",
       "side": "LONG",
@@ -2621,25 +2604,6 @@
       "alertType": "OPEN_BAND"
     },
     {
-      "key": "2026-10-21|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|AZTEC|LONG",
-      "coin": "AZTEC",
-      "side": "LONG",
-      "trader": "⭐ Trader 23 ⭐ — STRK short candidate — profitable open short",
-      "entry": 0.019391,
-      "tp": 0.019584909999999997,
-      "sl": 0.019294045,
-      "leverage": 3,
-      "observedLeverage": 3,
-      "signalLeverage": 3,
-      "notional": 113221.3849,
-      "signalAt": 1792556310089,
-      "status": "OPEN",
-      "destinations": [
-        "-1004446412486"
-      ],
-      "alertType": "OPEN_BAND"
-    },
-    {
       "key": "2026-10-21|0xde0e9b1a35322a809165d09f0490cca3fa7562e5|fill|110509830997142",
       "coin": "xyz:JP225",
       "side": "LONG",
@@ -2652,6 +2616,44 @@
       "signalLeverage": 0,
       "notional": 6471.5,
       "signalAt": 1792556310089,
+      "status": "OPEN",
+      "destinations": [
+        "-1004446412486"
+      ],
+      "alertType": "NEW_ENTRY"
+    },
+    {
+      "key": "2026-10-21|0xf9faba57a81d1575d3e506dd3eafe7db6f2a3275|BTC|LONG",
+      "coin": "BTC",
+      "side": "LONG",
+      "trader": "⭐ Trader 6 ⭐",
+      "entry": 82785,
+      "tp": 83612.85,
+      "sl": 82371.075,
+      "leverage": 40,
+      "observedLeverage": 40,
+      "signalLeverage": 40,
+      "notional": 1655.66,
+      "signalAt": 1792558600251,
+      "status": "OPEN",
+      "destinations": [
+        "-1004446412486"
+      ],
+      "alertType": "OPEN_BAND"
+    },
+    {
+      "key": "2026-10-21|0xde0e9b1a35322a809165d09f0490cca3fa7562e5|fill|876015135216629",
+      "coin": "xyz:SKHX",
+      "side": "SHORT",
+      "trader": "Trader 28",
+      "entry": 963,
+      "tp": 953.37,
+      "sl": 967.815,
+      "leverage": 0,
+      "observedLeverage": 0,
+      "signalLeverage": 0,
+      "notional": 4815,
+      "signalAt": 1792558600251,
       "status": "OPEN",
       "destinations": [
         "-1004446412486"
@@ -8600,6 +8602,46 @@
         "-1004446412486"
       ],
       "alertType": "OPEN_BAND"
+    },
+    {
+      "key": "2026-10-21|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|AIXBT|SHORT",
+      "coin": "AIXBT",
+      "side": "SHORT",
+      "status": "TP_HIT",
+      "entry": 0.019955,
+      "tp": 0.01975545,
+      "sl": 0.020054775,
+      "exitPrice": 0.01975545,
+      "leverage": 3,
+      "observedLeverage": 3,
+      "signalLeverage": 3,
+      "notional": 248.305203,
+      "signalAt": 1792543253891,
+      "resolvedAt": 1792558600251,
+      "destinations": [
+        "-1004446412486"
+      ],
+      "alertType": "OPEN_BAND"
+    },
+    {
+      "key": "2026-10-21|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|AZTEC|LONG",
+      "coin": "AZTEC",
+      "side": "LONG",
+      "status": "SL_HIT",
+      "entry": 0.019391,
+      "tp": 0.019584909999999997,
+      "sl": 0.019294045,
+      "exitPrice": 0.019294045,
+      "leverage": 3,
+      "observedLeverage": 3,
+      "signalLeverage": 3,
+      "notional": 113221.3849,
+      "signalAt": 1792556310089,
+      "resolvedAt": 1792558600251,
+      "destinations": [
+        "-1004446412486"
+      ],
+      "alertType": "OPEN_BAND"
     }
   ],
   "dailyReportLastSentAt": {
@@ -9324,6 +9366,12 @@
       "-1004446412486"
     ],
     "2026-10-21|0xde0e9b1a35322a809165d09f0490cca3fa7562e5|fill|110509830997142": [
+      "-1004446412486"
+    ],
+    "2026-10-21|0xf9faba57a81d1575d3e506dd3eafe7db6f2a3275|BTC|LONG": [
+      "-1004446412486"
+    ],
+    "2026-10-21|0xde0e9b1a35322a809165d09f0490cca3fa7562e5|fill|876015135216629": [
       "-1004446412486"
     ]
   },
