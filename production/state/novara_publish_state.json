@@ -2638,25 +2638,6 @@
       "alertType": "OPEN_BAND"
     },
     {
-      "key": "2026-10-21|0xf9faba57a81d1575d3e506dd3eafe7db6f2a3275|ETH|LONG",
-      "coin": "ETH",
-      "side": "LONG",
-      "trader": "⭐ Trader 6 ⭐",
-      "entry": 2486,
-      "tp": 2510.86,
-      "sl": 2473.57,
-      "leverage": 25,
-      "observedLeverage": 25,
-      "signalLeverage": 25,
-      "notional": 2465.25,
-      "signalAt": 1792575205951,
-      "status": "OPEN",
-      "destinations": [
-        "-1004446412486"
-      ],
-      "alertType": "OPEN_BAND"
-    },
-    {
       "key": "2026-10-21|0xce508465b243216fcf372d3146fd62e8f7a7b8e2|XMR|LONG",
       "coin": "XMR",
       "side": "LONG",
@@ -2668,25 +2649,6 @@
       "observedLeverage": 5,
       "signalLeverage": 5,
       "notional": 82833.05686,
-      "signalAt": 1792575205951,
-      "status": "OPEN",
-      "destinations": [
-        "-1004446412486"
-      ],
-      "alertType": "OPEN_BAND"
-    },
-    {
-      "key": "2026-10-21|0x0c1f6941fdcde9488dfd36ca16fed6b3bc49672b|HYPE|LONG",
-      "coin": "HYPE",
-      "side": "LONG",
-      "trader": "⭐ Trader 12 ⭐",
-      "entry": 81.515,
-      "tp": 82.33015,
-      "sl": 81.107425,
-      "leverage": 10,
-      "observedLeverage": 10,
-      "signalLeverage": 10,
-      "notional": 397213.717674,
       "signalAt": 1792575205951,
       "status": "OPEN",
       "destinations": [
@@ -8972,6 +8934,46 @@
       "notional": 38729.88126,
       "signalAt": 1792573095213,
       "resolvedAt": 1792575205951,
+      "destinations": [
+        "-1004446412486"
+      ],
+      "alertType": "OPEN_BAND"
+    },
+    {
+      "key": "2026-10-21|0xf9faba57a81d1575d3e506dd3eafe7db6f2a3275|ETH|LONG",
+      "coin": "ETH",
+      "side": "LONG",
+      "status": "SL_HIT",
+      "entry": 2486,
+      "tp": 2510.86,
+      "sl": 2473.57,
+      "exitPrice": 2473.57,
+      "leverage": 25,
+      "observedLeverage": 25,
+      "signalLeverage": 25,
+      "notional": 2465.25,
+      "signalAt": 1792575205951,
+      "resolvedAt": 1792577501890,
+      "destinations": [
+        "-1004446412486"
+      ],
+      "alertType": "OPEN_BAND"
+    },
+    {
+      "key": "2026-10-21|0x0c1f6941fdcde9488dfd36ca16fed6b3bc49672b|HYPE|LONG",
+      "coin": "HYPE",
+      "side": "LONG",
+      "status": "SL_HIT",
+      "entry": 81.515,
+      "tp": 82.33015,
+      "sl": 81.107425,
+      "exitPrice": 81.107425,
+      "leverage": 10,
+      "observedLeverage": 10,
+      "signalLeverage": 10,
+      "notional": 397213.717674,
+      "signalAt": 1792575205951,
+      "resolvedAt": 1792577501890,
       "destinations": [
         "-1004446412486"
       ],
