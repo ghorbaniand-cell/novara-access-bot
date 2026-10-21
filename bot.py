@@ -318,52 +318,73 @@ def get_trial(user_id: int):
     return dict(row) if row else None
 
 
-async def revoke_vip_access(user_id: int):
-    """Remove expired trial users from the private VIP channel."""
+async def revoke_vip_access(user_id: int) -> bool:
+    """Remove VIP access and return True only when Telegram confirms success."""
     try:
-        # Ban then unban removes current access while allowing later paid re-entry.
+        # Ban then unban removes current access while permitting later paid re-entry.
         await bot.ban_chat_member(chat_id=VIP_CHANNEL_ID, user_id=user_id)
         await bot.unban_chat_member(
-            chat_id=VIP_CHANNEL_ID, user_id=user_id, only_if_banned=True
+            chat_id=VIP_CHANNEL_ID,
+            user_id=user_id,
+            only_if_banned=True,
         )
-        logging.info("NOVARA_TRIAL_EXPIRED_ACCESS_REVOKED | user_id=%s", user_id)
+        logging.info("NOVARA_TRIAL_ACCESS_REVOKED | user_id=%s", user_id)
+        return True
     except TelegramAPIError:
-        logging.exception("Failed to revoke VIP access for user_id=%s", user_id)
-
+        logging.exception("NOVARA_TRIAL_ACCESS_REVOKE_FAILED | user_id=%s", user_id)
+        return False
 
 async def trial_expiry_worker():
-    """Persistent expiry check; runs while this bot process is alive."""
+    """Retry expiry checks every minute; never mark EXPIRED before revocation succeeds."""
     while True:
         try:
             now = datetime.now(timezone.utc).isoformat()
-            with sqlite3.connect(DATABASE_PATH) as conn:
+            with sqlite3.connect(DATABASE_PATH, timeout=30) as conn:
                 expired = conn.execute(
                     """SELECT user_id FROM trial_users
-                       WHERE status = 'ACTIVE' AND expires_at <= ?""",
+                       WHERE status = 'ACTIVE'
+                         AND expires_at IS NOT NULL
+                         AND expires_at <= ?""",
                     (now,),
                 ).fetchall()
+
             for (user_id,) in expired:
-                if has_active_paid_subscription(user_id):
-                    with sqlite3.connect(DATABASE_PATH) as conn:
+                try:
+                    if has_active_paid_subscription(user_id):
+                        with sqlite3.connect(DATABASE_PATH, timeout=30) as conn:
+                            conn.execute(
+                                """UPDATE trial_users SET status='CONVERTED'
+                                   WHERE user_id=? AND status='ACTIVE'""",
+                                (user_id,),
+                            )
+                            conn.commit()
+                        logging.info("NOVARA_TRIAL_CONVERTED | user_id=%s", user_id)
+                        continue
+
+                    # If Telegram rejects the revocation, leave status ACTIVE so this
+                    # worker retries next cycle rather than recording a false success.
+                    if not await revoke_vip_access(user_id):
+                        continue
+
+                    checked_at = datetime.now(timezone.utc).isoformat()
+                    with sqlite3.connect(DATABASE_PATH, timeout=30) as conn:
                         conn.execute(
-                            "UPDATE trial_users SET status='CONVERTED' WHERE user_id=?",
-                            (user_id,),
+                            """UPDATE trial_users SET status='EXPIRED'
+                               WHERE user_id=? AND status='ACTIVE'
+                                 AND expires_at IS NOT NULL AND expires_at <= ?""",
+                            (user_id, checked_at),
                         )
                         conn.commit()
-                    continue
-                await revoke_vip_access(user_id)
-                with sqlite3.connect(DATABASE_PATH) as conn:
-                    conn.execute(
-                        "UPDATE trial_users SET status='EXPIRED' WHERE user_id=?",
-                        (user_id,),
-                    )
-                    conn.commit()
+                    logging.info("NOVARA_TRIAL_EXPIRED | user_id=%s", user_id)
+                except asyncio.CancelledError:
+                    raise
+                except Exception:
+                    logging.exception("NOVARA_TRIAL_EXPIRY_ERROR | user_id=%s", user_id)
         except asyncio.CancelledError:
             raise
         except Exception:
             logging.exception("NOVARA_TRIAL_EXPIRY_WORKER_ERROR")
         await asyncio.sleep(60)
-
 
 # =========================================================
 # KEYBOARDS
@@ -597,98 +618,147 @@ async def orders_handler(message: Message):
 
 @dp.callback_query(F.data == "trial")
 async def trial_handler(callback: CallbackQuery):
+    """Issue a single-use invitation; the 24-hour timer begins on actual join."""
     user = callback.from_user
-    existing = get_trial(user.id)
-    if existing:
-        if existing["status"] == "ACTIVE" and existing.get("expires_at"):
-            await callback.message.answer(
-                "🎁 Your 24-hour trial has already been used.\n"
-                f"Trial expiry (UTC): <code>{existing['expires_at']}</code>"
-            )
-        else:
-            await callback.message.answer(
-                "⛔ The free 24-hour VIP trial is available only once per Telegram account."
-            )
-        await callback.answer()
-        return
-
-    if has_active_paid_subscription(user.id):
-        await callback.message.answer("✅ You already have an active paid subscription.")
-        await callback.answer()
-        return
-
     try:
+        existing = get_trial(user.id)
+        if existing:
+            if existing.get("status") == "INVITED" and existing.get("invite_link"):
+                await callback.message.answer(
+                    "🎁 <b>Your NOVARA VIP trial invitation is ready.</b>\n\n"
+                    "Your 24 hours begin only when you join the VIP channel.\n\n"
+                    f"<a href=\"{existing['invite_link']}\">Join NOVARA VIP Trial</a>\n\n"
+                    "This invitation is reserved for your Telegram account."
+                )
+            elif existing.get("status") == "ACTIVE" and existing.get("expires_at"):
+                await callback.message.answer(
+                    "🎁 Your 24-hour trial is already active.\n"
+                    f"Expiry (UTC): <code>{existing['expires_at']}</code>"
+                )
+            else:
+                await callback.message.answer(
+                    "⛔ The free 24-hour VIP trial is available only once per Telegram account."
+                )
+            return
+
+        if has_active_paid_subscription(user.id):
+            await callback.message.answer(
+                "✅ You already have an active paid subscription. You do not need a trial."
+            )
+            return
+
+        # No expire_date: the trial timer starts on joining, not on link creation.
+        # member_limit=1 makes this invitation single-use.
         invite = await bot.create_chat_invite_link(
             chat_id=VIP_CHANNEL_ID,
             name=f"NOVARA-TRIAL-{user.id}",
-            expire_date=datetime.now(timezone.utc) + timedelta(hours=24),
             member_limit=1,
         )
-        with sqlite3.connect(DATABASE_PATH) as conn:
-            conn.execute(
-                """INSERT INTO trial_users
-                   (user_id, username, invite_link, status)
-                   VALUES (?, ?, ?, 'INVITED')""",
-                (user.id, user.username or "", invite.invite_link),
+        try:
+            with sqlite3.connect(DATABASE_PATH, timeout=30) as conn:
+                conn.execute(
+                    """INSERT INTO trial_users
+                       (user_id, username, invite_link, status)
+                       VALUES (?, ?, ?, 'INVITED')""",
+                    (user.id, user.username or "", invite.invite_link),
+                )
+                conn.commit()
+        except sqlite3.IntegrityError:
+            # A concurrent click may have created the reservation first.
+            existing = get_trial(user.id)
+            if existing and existing.get("status") == "INVITED" and existing.get("invite_link"):
+                await callback.message.answer(
+                    "🎁 Your trial invitation is ready.\n\n"
+                    f"<a href=\"{existing['invite_link']}\">Join NOVARA VIP Trial</a>"
+                )
+                return
+            await callback.message.answer(
+                "⛔ A trial has already been reserved or used for this Telegram account."
             )
-            conn.commit()
+            return
+
         await callback.message.answer(
             "🎁 <b>NOVARA VIP — 24-HOUR TRIAL</b>\n\n"
-            "Your one-time invite link is ready. The 24-hour trial starts when you join the VIP channel.\n\n"
+            "Your one-time invite link is ready. The 24-hour clock starts when you join the VIP channel.\n\n"
             f"<a href=\"{invite.invite_link}\">Join NOVARA VIP Trial</a>\n\n"
-            "⚠️ This trial can be used only once per Telegram account. Access is automatically revoked after 24 hours unless a paid subscription is active."
+            "🔒 Access is automatically removed after 24 hours unless you have an active paid subscription.\n"
+            "⚠️ This trial can be used only once per Telegram account."
         )
         logging.info("NOVARA_TRIAL_INVITE_CREATED | user_id=%s", user.id)
-    except sqlite3.IntegrityError:
-        await callback.message.answer(
-            "⛔ A trial has already been reserved or used for this Telegram account."
-        )
     except TelegramAPIError:
-        logging.exception("Failed to create trial invite for user_id=%s", user.id)
+        logging.exception("NOVARA_TRIAL_CREATE_FAILED | user_id=%s", user.id)
         await callback.message.answer(
-            "❌ Could not create the trial invite. Please contact support."
+            "❌ Could not create the trial invitation. Check the bot's VIP channel permissions or contact support."
         )
+    except Exception:
+        logging.exception("NOVARA_TRIAL_HANDLER_ERROR | user_id=%s", user.id)
+        await callback.message.answer("❌ The trial could not be processed. Please try again later.")
     finally:
         await callback.answer()
 
-
 @dp.chat_member()
 async def track_trial_join(event):
-    """Start the clock only when a user joins via their trial invite."""
+    """Start the trial only for its reserved user and only on the first successful join."""
     try:
+        if event.chat.id != VIP_CHANNEL_ID:
+            return
         old_status = event.old_chat_member.status
         new_status = event.new_chat_member.status
-        if event.chat.id != VIP_CHANNEL_ID or new_status not in ("member", "administrator"):
+        if new_status not in ("member", "administrator", "creator"):
             return
         if old_status in ("member", "administrator", "creator"):
             return
-        invite_link = event.invite_link.invite_link if event.invite_link else None
+
+        used = getattr(event, "invite_link", None)
+        invite_link = getattr(used, "invite_link", None) if used else None
         if not invite_link:
             return
+
+        user_id = event.new_chat_member.user.id
         now = datetime.now(timezone.utc)
         expiry = now + timedelta(hours=24)
-        with sqlite3.connect(DATABASE_PATH) as conn:
+
+        with sqlite3.connect(DATABASE_PATH, timeout=30) as conn:
+            conn.row_factory = sqlite3.Row
             row = conn.execute(
-                "SELECT user_id, status FROM trial_users WHERE invite_link = ?",
+                """SELECT user_id, status FROM trial_users
+                   WHERE invite_link = ?""",
                 (invite_link,),
             ).fetchone()
-            if not row or row[0] != event.new_chat_member.user.id or row[1] != "INVITED":
+            if not row or row["user_id"] != user_id or row["status"] != "INVITED":
                 return
-            conn.execute(
+
+            # A paid subscription obtained after the invite was issued takes precedence.
+            if has_active_paid_subscription(user_id):
+                conn.execute(
+                    """UPDATE trial_users SET status='CONVERTED'
+                       WHERE user_id=? AND status='INVITED'""",
+                    (user_id,),
+                )
+                conn.commit()
+                logging.info("NOVARA_TRIAL_SKIPPED_PAID_USER | user_id=%s", user_id)
+                return
+
+            cursor = conn.execute(
                 """UPDATE trial_users SET started_at=?, expires_at=?, status='ACTIVE'
                    WHERE user_id=? AND status='INVITED'""",
-                (now.isoformat(), expiry.isoformat(), row[0]),
+                (now.isoformat(), expiry.isoformat(), user_id),
             )
             conn.commit()
+            if cursor.rowcount != 1:
+                return
+
         await bot.send_message(
-            event.new_chat_member.user.id,
-            "✅ Your NOVARA VIP trial has started.\n"
-            f"It expires in 24 hours (UTC): <code>{expiry.isoformat()}</code>."
+            user_id,
+            "✅ <b>Your NOVARA VIP trial has started.</b>\n"
+            f"It expires in 24 hours (UTC): <code>{expiry.isoformat()}</code>.\n"
+            "If you purchase an active subscription before expiry, your paid access will be preserved."
         )
-        logging.info("NOVARA_TRIAL_STARTED | user_id=%s | expires_at=%s", row[0], expiry.isoformat())
+        logging.info("NOVARA_TRIAL_STARTED | user_id=%s | expires_at=%s", user_id, expiry.isoformat())
+    except asyncio.CancelledError:
+        raise
     except Exception:
         logging.exception("NOVARA_TRIAL_JOIN_TRACKING_ERROR")
-
 
 # =========================================================
 # VIP MEMBERSHIP
