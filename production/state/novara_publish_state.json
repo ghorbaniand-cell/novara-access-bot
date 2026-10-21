@@ -1,7 +1,7 @@
 {
   "date": "2026-10-21",
   "freeSent": 5,
-  "vipSent": 20,
+  "vipSent": 21,
   "sentKeys": [
     "2026-10-21|0xce508465b243216fcf372d3146fd62e8f7a7b8e2|BTC|LONG",
     "2026-10-21|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|NEAR|SHORT",
@@ -22,7 +22,8 @@
     "2026-10-21|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|MANTA|LONG",
     "2026-10-21|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|ENA|SHORT",
     "2026-10-21|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|AIXBT|LONG",
-    "2026-10-21|0xde0e9b1a35322a809165d09f0490cca3fa7562e5|fill|557484136640277"
+    "2026-10-21|0xde0e9b1a35322a809165d09f0490cca3fa7562e5|fill|557484136640277",
+    "2026-10-21|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|WIF|LONG"
   ],
   "openTrades": [
     {
@@ -2477,25 +2478,6 @@
       "alertType": "OPEN_BAND"
     },
     {
-      "key": "2026-10-21|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|MANTA|LONG",
-      "coin": "MANTA",
-      "side": "LONG",
-      "trader": "⭐ Trader 23 ⭐ — STRK short candidate — profitable open short",
-      "entry": 0.06709,
-      "tp": 0.0677609,
-      "sl": 0.06675455,
-      "leverage": 3,
-      "observedLeverage": 3,
-      "signalLeverage": 3,
-      "notional": 1183.91319,
-      "signalAt": 1792548018444,
-      "status": "OPEN",
-      "destinations": [
-        "-1004446412486"
-      ],
-      "alertType": "OPEN_BAND"
-    },
-    {
       "key": "2026-10-21|0xde0e9b1a35322a809165d09f0490cca3fa7562e5|fill|557484136640277",
       "coin": "xyz:JP225",
       "side": "LONG",
@@ -2513,6 +2495,25 @@
         "-1004446412486"
       ],
       "alertType": "NEW_ENTRY"
+    },
+    {
+      "key": "2026-10-21|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|WIF|LONG",
+      "coin": "WIF",
+      "side": "LONG",
+      "trader": "⭐ Trader 23 ⭐ — STRK short candidate — profitable open short",
+      "entry": 0.20555,
+      "tp": 0.2076055,
+      "sl": 0.20452225000000002,
+      "leverage": 5,
+      "observedLeverage": 5,
+      "signalLeverage": 5,
+      "notional": 228.67713,
+      "signalAt": 1792552150661,
+      "status": "OPEN",
+      "destinations": [
+        "-1004446412486"
+      ],
+      "alertType": "OPEN_BAND"
     }
   ],
   "pendingOutcomes": [],
@@ -8376,6 +8377,26 @@
         "-1004446412486"
       ],
       "alertType": "OPEN_BAND"
+    },
+    {
+      "key": "2026-10-21|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|MANTA|LONG",
+      "coin": "MANTA",
+      "side": "LONG",
+      "status": "SL_HIT",
+      "entry": 0.06709,
+      "tp": 0.0677609,
+      "sl": 0.06675455,
+      "exitPrice": 0.06675455,
+      "leverage": 3,
+      "observedLeverage": 3,
+      "signalLeverage": 3,
+      "notional": 1183.91319,
+      "signalAt": 1792548018444,
+      "resolvedAt": 1792552150661,
+      "destinations": [
+        "-1004446412486"
+      ],
+      "alertType": "OPEN_BAND"
     }
   ],
   "dailyReportLastSentAt": {
@@ -9067,6 +9088,9 @@
       "-1004446412486"
     ],
     "2026-10-21|0xde0e9b1a35322a809165d09f0490cca3fa7562e5|fill|557484136640277": [
+      "-1004446412486"
+    ],
+    "2026-10-21|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|WIF|LONG": [
       "-1004446412486"
     ]
   },
