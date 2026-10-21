@@ -1,7 +1,7 @@
 {
   "date": "2026-10-21",
   "freeSent": 5,
-  "vipSent": 54,
+  "vipSent": 55,
   "sentKeys": [
     "2026-10-21|0xce508465b243216fcf372d3146fd62e8f7a7b8e2|BTC|LONG",
     "2026-10-21|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|NEAR|SHORT",
@@ -56,7 +56,8 @@
     "2026-10-21|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|XMR|SHORT",
     "2026-10-21|0x0c1f6941fdcde9488dfd36ca16fed6b3bc49672b|fill|982901920865387",
     "2026-10-21|0xd4c1f7e8d876c4749228d515473d36f919583d1d|XPL|SHORT",
-    "2026-10-21|0xde0e9b1a35322a809165d09f0490cca3fa7562e5|fill|590598101491180"
+    "2026-10-21|0xde0e9b1a35322a809165d09f0490cca3fa7562e5|fill|590598101491180",
+    "2026-10-21|0xfdbaa5eee7cdf45eec3a71a672065a67191fda7a|ETH|SHORT"
   ],
   "openTrades": [
     {
@@ -2605,25 +2606,6 @@
       "alertType": "NEW_ENTRY"
     },
     {
-      "key": "2026-10-21|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|KAITO|SHORT",
-      "coin": "KAITO",
-      "side": "SHORT",
-      "trader": "⭐ Trader 23 ⭐ — STRK short candidate — profitable open short",
-      "entry": 0.281698,
-      "tp": 0.27888102,
-      "sl": 0.28310649,
-      "leverage": 5,
-      "observedLeverage": 5,
-      "signalLeverage": 5,
-      "notional": 11279.919,
-      "signalAt": 1792573095213,
-      "status": "OPEN",
-      "destinations": [
-        "-1004446412486"
-      ],
-      "alertType": "OPEN_BAND"
-    },
-    {
       "key": "2026-10-21|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|SKY|SHORT",
       "coin": "SKY",
       "side": "SHORT",
@@ -2674,25 +2656,6 @@
       "signalLeverage": 10,
       "notional": 199854.81828,
       "signalAt": 1792575205951,
-      "status": "OPEN",
-      "destinations": [
-        "-1004446412486"
-      ],
-      "alertType": "OPEN_BAND"
-    },
-    {
-      "key": "2026-10-21|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|XMR|SHORT",
-      "coin": "XMR",
-      "side": "SHORT",
-      "trader": "⭐ Trader 23 ⭐ — STRK short candidate — profitable open short",
-      "entry": 597.313,
-      "tp": 591.33987,
-      "sl": 600.299565,
-      "leverage": 5,
-      "observedLeverage": 5,
-      "signalLeverage": 5,
-      "notional": 6883.484993,
-      "signalAt": 1792579837388,
       "status": "OPEN",
       "destinations": [
         "-1004446412486"
@@ -2755,6 +2718,25 @@
         "-1004446412486"
       ],
       "alertType": "NEW_ENTRY"
+    },
+    {
+      "key": "2026-10-21|0xfdbaa5eee7cdf45eec3a71a672065a67191fda7a|ETH|SHORT",
+      "coin": "ETH",
+      "side": "SHORT",
+      "trader": "⭐ Trader 9 ⭐",
+      "entry": 2490.85,
+      "tp": 2465.9415,
+      "sl": 2503.3042499999997,
+      "leverage": 25,
+      "observedLeverage": 25,
+      "signalLeverage": 25,
+      "notional": 44026.95546,
+      "signalAt": 1792583918440,
+      "status": "OPEN",
+      "destinations": [
+        "-1004446412486"
+      ],
+      "alertType": "OPEN_BAND"
     }
   ],
   "pendingOutcomes": [],
@@ -9079,6 +9061,46 @@
         "-1004446412486"
       ],
       "alertType": "OPEN_BAND"
+    },
+    {
+      "key": "2026-10-21|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|KAITO|SHORT",
+      "coin": "KAITO",
+      "side": "SHORT",
+      "status": "SL_HIT",
+      "entry": 0.281698,
+      "tp": 0.27888102,
+      "sl": 0.28310649,
+      "exitPrice": 0.28310649,
+      "leverage": 5,
+      "observedLeverage": 5,
+      "signalLeverage": 5,
+      "notional": 11279.919,
+      "signalAt": 1792573095213,
+      "resolvedAt": 1792583918440,
+      "destinations": [
+        "-1004446412486"
+      ],
+      "alertType": "OPEN_BAND"
+    },
+    {
+      "key": "2026-10-21|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|XMR|SHORT",
+      "coin": "XMR",
+      "side": "SHORT",
+      "status": "SL_HIT",
+      "entry": 597.313,
+      "tp": 591.33987,
+      "sl": 600.299565,
+      "exitPrice": 600.299565,
+      "leverage": 5,
+      "observedLeverage": 5,
+      "signalLeverage": 5,
+      "notional": 6883.484993,
+      "signalAt": 1792579837388,
+      "resolvedAt": 1792583918440,
+      "destinations": [
+        "-1004446412486"
+      ],
+      "alertType": "OPEN_BAND"
     }
   ],
   "dailyReportLastSentAt": {
@@ -9872,6 +9894,9 @@
       "-1004446412486"
     ],
     "2026-10-21|0xde0e9b1a35322a809165d09f0490cca3fa7562e5|fill|590598101491180": [
+      "-1004446412486"
+    ],
+    "2026-10-21|0xfdbaa5eee7cdf45eec3a71a672065a67191fda7a|ETH|SHORT": [
       "-1004446412486"
     ]
   },
