@@ -1,7 +1,7 @@
 {
   "date": "2026-10-21",
   "freeSent": 5,
-  "vipSent": 21,
+  "vipSent": 27,
   "sentKeys": [
     "2026-10-21|0xce508465b243216fcf372d3146fd62e8f7a7b8e2|BTC|LONG",
     "2026-10-21|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|NEAR|SHORT",
@@ -23,7 +23,13 @@
     "2026-10-21|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|ENA|SHORT",
     "2026-10-21|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|AIXBT|LONG",
     "2026-10-21|0xde0e9b1a35322a809165d09f0490cca3fa7562e5|fill|557484136640277",
-    "2026-10-21|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|WIF|LONG"
+    "2026-10-21|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|WIF|LONG",
+    "2026-10-21|0x0c1f6941fdcde9488dfd36ca16fed6b3bc49672b|BTC|SHORT",
+    "2026-10-21|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|INJ|SHORT",
+    "2026-10-21|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|PYTH|LONG",
+    "2026-10-21|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|MANTA|SHORT",
+    "2026-10-21|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|PUMP|LONG",
+    "2026-10-21|0xde0e9b1a35322a809165d09f0490cca3fa7562e5|fill|386283994998523"
   ],
   "openTrades": [
     {
@@ -2514,6 +2520,120 @@
         "-1004446412486"
       ],
       "alertType": "OPEN_BAND"
+    },
+    {
+      "key": "2026-10-21|0x0c1f6941fdcde9488dfd36ca16fed6b3bc49672b|BTC|SHORT",
+      "coin": "BTC",
+      "side": "SHORT",
+      "trader": "⭐ Trader 12 ⭐",
+      "entry": 82724,
+      "tp": 81896.76,
+      "sl": 83137.62,
+      "leverage": 40,
+      "observedLeverage": 40,
+      "signalLeverage": 40,
+      "notional": 203016.78144,
+      "signalAt": 1792554363382,
+      "status": "OPEN",
+      "destinations": [
+        "-1004446412486"
+      ],
+      "alertType": "OPEN_BAND"
+    },
+    {
+      "key": "2026-10-21|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|INJ|SHORT",
+      "coin": "INJ",
+      "side": "SHORT",
+      "trader": "⭐ Trader 23 ⭐ — STRK short candidate — profitable open short",
+      "entry": 8.9234,
+      "tp": 8.834166000000002,
+      "sl": 8.968017000000001,
+      "leverage": 5,
+      "observedLeverage": 5,
+      "signalLeverage": 5,
+      "notional": 81606.38756,
+      "signalAt": 1792554363382,
+      "status": "OPEN",
+      "destinations": [
+        "-1004446412486"
+      ],
+      "alertType": "OPEN_BAND"
+    },
+    {
+      "key": "2026-10-21|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|PYTH|LONG",
+      "coin": "PYTH",
+      "side": "LONG",
+      "trader": "⭐ Trader 23 ⭐ — STRK short candidate — profitable open short",
+      "entry": 0.079156,
+      "tp": 0.07994756,
+      "sl": 0.07876022,
+      "leverage": 5,
+      "observedLeverage": 5,
+      "signalLeverage": 5,
+      "notional": 2855.992749,
+      "signalAt": 1792554363382,
+      "status": "OPEN",
+      "destinations": [
+        "-1004446412486"
+      ],
+      "alertType": "OPEN_BAND"
+    },
+    {
+      "key": "2026-10-21|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|MANTA|SHORT",
+      "coin": "MANTA",
+      "side": "SHORT",
+      "trader": "⭐ Trader 23 ⭐ — STRK short candidate — profitable open short",
+      "entry": 0.0664,
+      "tp": 0.065736,
+      "sl": 0.066732,
+      "leverage": 3,
+      "observedLeverage": 3,
+      "signalLeverage": 3,
+      "notional": 1510.227482,
+      "signalAt": 1792554363382,
+      "status": "OPEN",
+      "destinations": [
+        "-1004446412486"
+      ],
+      "alertType": "OPEN_BAND"
+    },
+    {
+      "key": "2026-10-21|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|PUMP|LONG",
+      "coin": "PUMP",
+      "side": "LONG",
+      "trader": "⭐ Trader 23 ⭐ — STRK short candidate — profitable open short",
+      "entry": 0.004715,
+      "tp": 0.00476215,
+      "sl": 0.004691425,
+      "leverage": 10,
+      "observedLeverage": 10,
+      "signalLeverage": 10,
+      "notional": 3144.06243,
+      "signalAt": 1792554363382,
+      "status": "OPEN",
+      "destinations": [
+        "-1004446412486"
+      ],
+      "alertType": "OPEN_BAND"
+    },
+    {
+      "key": "2026-10-21|0xde0e9b1a35322a809165d09f0490cca3fa7562e5|fill|386283994998523",
+      "coin": "xyz:SKHX",
+      "side": "SHORT",
+      "trader": "Trader 28",
+      "entry": 971.4,
+      "tp": 961.6859999999999,
+      "sl": 976.257,
+      "leverage": 0,
+      "observedLeverage": 0,
+      "signalLeverage": 0,
+      "notional": 1004.4276,
+      "signalAt": 1792554363382,
+      "status": "OPEN",
+      "destinations": [
+        "-1004446412486"
+      ],
+      "alertType": "NEW_ENTRY"
     }
   ],
   "pendingOutcomes": [],
@@ -9091,6 +9211,24 @@
       "-1004446412486"
     ],
     "2026-10-21|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|WIF|LONG": [
+      "-1004446412486"
+    ],
+    "2026-10-21|0x0c1f6941fdcde9488dfd36ca16fed6b3bc49672b|BTC|SHORT": [
+      "-1004446412486"
+    ],
+    "2026-10-21|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|INJ|SHORT": [
+      "-1004446412486"
+    ],
+    "2026-10-21|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|PYTH|LONG": [
+      "-1004446412486"
+    ],
+    "2026-10-21|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|MANTA|SHORT": [
+      "-1004446412486"
+    ],
+    "2026-10-21|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|PUMP|LONG": [
+      "-1004446412486"
+    ],
+    "2026-10-21|0xde0e9b1a35322a809165d09f0490cca3fa7562e5|fill|386283994998523": [
       "-1004446412486"
     ]
   },
