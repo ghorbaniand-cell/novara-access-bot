@@ -1,7 +1,7 @@
 {
   "date": "2026-10-21",
   "freeSent": 5,
-  "vipSent": 33,
+  "vipSent": 35,
   "sentKeys": [
     "2026-10-21|0xce508465b243216fcf372d3146fd62e8f7a7b8e2|BTC|LONG",
     "2026-10-21|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|NEAR|SHORT",
@@ -35,7 +35,9 @@
     "2026-10-21|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|AZTEC|LONG",
     "2026-10-21|0xde0e9b1a35322a809165d09f0490cca3fa7562e5|fill|110509830997142",
     "2026-10-21|0xf9faba57a81d1575d3e506dd3eafe7db6f2a3275|BTC|LONG",
-    "2026-10-21|0xde0e9b1a35322a809165d09f0490cca3fa7562e5|fill|876015135216629"
+    "2026-10-21|0xde0e9b1a35322a809165d09f0490cca3fa7562e5|fill|876015135216629",
+    "2026-10-21|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|WLD|SHORT",
+    "2026-10-21|0xde0e9b1a35322a809165d09f0490cca3fa7562e5|fill|975751970821082"
   ],
   "openTrades": [
     {
@@ -2654,6 +2656,44 @@
       "signalLeverage": 0,
       "notional": 4815,
       "signalAt": 1792558600251,
+      "status": "OPEN",
+      "destinations": [
+        "-1004446412486"
+      ],
+      "alertType": "NEW_ENTRY"
+    },
+    {
+      "key": "2026-10-21|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|WLD|SHORT",
+      "coin": "WLD",
+      "side": "SHORT",
+      "trader": "⭐ Trader 23 ⭐ — STRK short candidate — profitable open short",
+      "entry": 0.58014,
+      "tp": 0.5743386,
+      "sl": 0.5830407,
+      "leverage": 10,
+      "observedLeverage": 10,
+      "signalLeverage": 10,
+      "notional": 596702.524635,
+      "signalAt": 1792560646924,
+      "status": "OPEN",
+      "destinations": [
+        "-1004446412486"
+      ],
+      "alertType": "OPEN_BAND"
+    },
+    {
+      "key": "2026-10-21|0xde0e9b1a35322a809165d09f0490cca3fa7562e5|fill|975751970821082",
+      "coin": "xyz:HYUNDAI",
+      "side": "SHORT",
+      "trader": "Trader 28",
+      "entry": 234.88,
+      "tp": 232.53119999999998,
+      "sl": 236.0544,
+      "leverage": 0,
+      "observedLeverage": 0,
+      "signalLeverage": 0,
+      "notional": 2348.8,
+      "signalAt": 1792560646924,
       "status": "OPEN",
       "destinations": [
         "-1004446412486"
@@ -9372,6 +9412,12 @@
       "-1004446412486"
     ],
     "2026-10-21|0xde0e9b1a35322a809165d09f0490cca3fa7562e5|fill|876015135216629": [
+      "-1004446412486"
+    ],
+    "2026-10-21|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|WLD|SHORT": [
+      "-1004446412486"
+    ],
+    "2026-10-21|0xde0e9b1a35322a809165d09f0490cca3fa7562e5|fill|975751970821082": [
       "-1004446412486"
     ]
   },
