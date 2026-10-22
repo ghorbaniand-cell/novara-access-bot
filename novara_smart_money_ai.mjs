@@ -2,7 +2,7 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 
 /*
- * NOVARA SMART MONEY AI V1.0.4
+ * NOVARA SMART MONEY AI V1.0.5
  * READ-ONLY | NO ORDERS | NO AUTO-COPY | PAPER OUTCOME TRACKING
  *
  * Combines three entry families:
@@ -14,7 +14,7 @@ import path from 'node:path';
  * All eligible liquid perp markets are considered; the worker does not depend on wallet lists.
  */
 
-const VERSION = 'NOVARA-SMART-MONEY-AI-V1.0.4-SCORE-ROUTING';
+const VERSION = 'NOVARA-SMART-MONEY-AI-V1.0.5-STRUCTURE-RISK-FIX';
 const API = (process.env.HYPERLIQUID_API_URL || 'https://api.hyperliquid.xyz/info').trim();
 const TOKEN = process.env.TELEGRAM_TOKEN || process.env.TELEGRAM_BOT_TOKEN || '';
 const LEGACY_CHAT = process.env.TELEGRAM_CHAT_ID || '';
@@ -268,16 +268,53 @@ function detectPatterns({ coin, c15, c1h, ctx, prevCtx, mid, spread, imbalance, 
 
 function buildRisk(candidate) {
   const entry = n(candidate.entry);
-  const atrValue = n(candidate.atr, entry * 0.006);
-  const structural = candidate.side === 'LONG'
-    ? (n(candidate.support) > 0 && candidate.support < entry ? entry - candidate.support : 0)
-    : (n(candidate.resistance) > entry ? candidate.resistance - entry : 0);
-  const rawRisk = Math.max(atrValue * 1.15, structural * 0.65, entry * 0.0045);
-  const riskDist = clamp(rawRisk, entry * 0.0045, entry * 0.025);
-  const sl = candidate.side === 'LONG' ? entry - riskDist : entry + riskDist;
-  const targetDist = riskDist * 1.9;
-  const tp = candidate.side === 'LONG' ? entry + targetDist : entry - targetDist;
-  return { entry, sl, tp, riskPct: riskDist / entry * 100, rewardPct: targetDist / entry * 100, rr: targetDist / riskDist };
+  const atrValue = Math.max(n(candidate.atr, entry * 0.006), entry * 0.001);
+  if (!(entry > 0) || !['LONG', 'SHORT'].includes(candidate.side)) {
+    return { entry, sl: 0, tp: 0, riskPct: 0, rewardPct: 0, rr: 0, valid: false, reason: 'invalid entry/side' };
+  }
+
+  // Stops sit beyond the invalidation swing; targets sit before opposing structure.
+  const buffer = Math.max(atrValue * 0.20, entry * 0.0010);
+  const minRisk = entry * 0.0045;
+  const maxRisk = entry * 0.025;
+  const support = n(candidate.support);
+  const resistance = n(candidate.resistance);
+  let sl, tp, riskDist, targetDist;
+  let targetUsesStructure = false;
+
+  if (candidate.side === 'LONG') {
+    const structuralStop = support > 0 && support < entry ? support - buffer : 0;
+    sl = structuralStop > 0 ? Math.min(entry - minRisk, structuralStop) : entry - Math.max(atrValue * 1.15, minRisk);
+    riskDist = entry - sl;
+    if (!(sl < entry) || riskDist > maxRisk) {
+      return { entry, sl, tp: 0, riskPct: riskDist / entry * 100, rewardPct: 0, rr: 0, valid: false, reason: 'long structural stop invalid or too wide' };
+    }
+    const structuralTarget = resistance > entry ? resistance - buffer : 0;
+    if (structuralTarget > entry) {
+      targetDist = structuralTarget - entry;
+      targetUsesStructure = true;
+    } else targetDist = riskDist * 1.9;
+    tp = entry + targetDist;
+  } else {
+    const structuralStop = resistance > entry ? resistance + buffer : 0;
+    sl = structuralStop > entry ? Math.max(entry + minRisk, structuralStop) : entry + Math.max(atrValue * 1.15, minRisk);
+    riskDist = sl - entry;
+    if (!(sl > entry) || riskDist > maxRisk) {
+      return { entry, sl, tp: 0, riskPct: riskDist / entry * 100, rewardPct: 0, rr: 0, valid: false, reason: 'short structural stop invalid or too wide' };
+    }
+    const structuralTarget = support > 0 && support < entry ? support + buffer : 0;
+    if (structuralTarget > 0 && structuralTarget < entry) {
+      targetDist = entry - structuralTarget;
+      targetUsesStructure = true;
+    } else targetDist = riskDist * 1.9;
+    tp = entry - targetDist;
+  }
+
+  const rr = targetDist / riskDist;
+  if (!(tp > 0) || !(targetDist > 0) || (targetUsesStructure && rr < MIN_RR)) {
+    return { entry, sl, tp, riskPct: riskDist / entry * 100, rewardPct: targetDist / entry * 100, rr, valid: false, reason: 'insufficient room before opposing structure' };
+  }
+  return { entry, sl, tp, riskPct: riskDist / entry * 100, rewardPct: targetDist / entry * 100, rr, valid: true, targetUsesStructure };
 }
 function signalKey(s) { return `${s.coin}|${s.side}|${s.pattern}`; }
 function isCooldown(state, s) {
@@ -605,7 +642,7 @@ async function main() {
         if (s.score < MIN_SCORE) continue;
         if (isCooldown(state, s)) continue;
         const risk = buildRisk(s);
-        if (risk.rr < MIN_RR || !(risk.sl > 0) || !(risk.tp > 0)) continue;
+        if (!risk.valid || risk.rr < MIN_RR || !(risk.sl > 0) || !(risk.tp > 0)) continue;
         // Avoid chasing a move that has already travelled too far from its 15m mean.
         const distanceToVwap = Math.abs((s.entry - s.vwap) / s.entry) * 100;
         if (distanceToVwap > Math.max(2.2, s.atr / s.entry * 100 * 2.8)) continue;
