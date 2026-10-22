@@ -1,144 +1,17 @@
 {
-  "date": "2026-10-21",
+  "date": "2026-10-22",
   "freeSent": 5,
-  "vipSent": 136,
+  "vipSent": 9,
   "sentKeys": [
-    "2026-10-21|0xce508465b243216fcf372d3146fd62e8f7a7b8e2|BTC|LONG",
-    "2026-10-21|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|NEAR|SHORT",
-    "2026-10-21|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|ACE|LONG",
-    "2026-10-21|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|WIF|SHORT",
-    "2026-10-21|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|PENGU|SHORT",
-    "2026-10-21|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|AIXBT|SHORT",
-    "2026-10-21|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|VVV|SHORT",
-    "2026-10-21|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|AVNT|SHORT",
-    "2026-10-21|0xe31501c472d557bfa145ce105d325fb2dd4cb867|fill|541694497282040",
-    "2026-10-21|0xd4c1f7e8d876c4749228d515473d36f919583d1d|XRP|SHORT",
-    "2026-10-21|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|fill|819126801379252",
-    "2026-10-21|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|PENDLE|SHORT",
-    "2026-10-21|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|XLM|SHORT",
-    "2026-10-21|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|ZEC|SHORT",
-    "2026-10-21|0xde0e9b1a35322a809165d09f0490cca3fa7562e5|fill|34870549868523",
-    "2026-10-21|0xd4c1f7e8d876c4749228d515473d36f919583d1d|UNI|SHORT",
-    "2026-10-21|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|MANTA|LONG",
-    "2026-10-21|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|ENA|SHORT",
-    "2026-10-21|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|AIXBT|LONG",
-    "2026-10-21|0xde0e9b1a35322a809165d09f0490cca3fa7562e5|fill|557484136640277",
-    "2026-10-21|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|WIF|LONG",
-    "2026-10-21|0x0c1f6941fdcde9488dfd36ca16fed6b3bc49672b|BTC|SHORT",
-    "2026-10-21|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|INJ|SHORT",
-    "2026-10-21|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|PYTH|LONG",
-    "2026-10-21|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|MANTA|SHORT",
-    "2026-10-21|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|PUMP|LONG",
-    "2026-10-21|0xde0e9b1a35322a809165d09f0490cca3fa7562e5|fill|386283994998523",
-    "2026-10-21|0xf9faba57a81d1575d3e506dd3eafe7db6f2a3275|fill|741286495787013",
-    "2026-10-21|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|PUMP|SHORT",
-    "2026-10-21|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|AZTEC|LONG",
-    "2026-10-21|0xde0e9b1a35322a809165d09f0490cca3fa7562e5|fill|110509830997142",
-    "2026-10-21|0xf9faba57a81d1575d3e506dd3eafe7db6f2a3275|BTC|LONG",
-    "2026-10-21|0xde0e9b1a35322a809165d09f0490cca3fa7562e5|fill|876015135216629",
-    "2026-10-21|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|WLD|SHORT",
-    "2026-10-21|0xde0e9b1a35322a809165d09f0490cca3fa7562e5|fill|975751970821082",
-    "2026-10-21|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|PENGU|LONG",
-    "2026-10-21|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|XMR|LONG",
-    "2026-10-21|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|INJ|LONG",
-    "2026-10-21|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|STX|LONG",
-    "2026-10-21|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|PNUT|SHORT",
-    "2026-10-21|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|ZORA|SHORT",
-    "2026-10-21|0x0c1f6941fdcde9488dfd36ca16fed6b3bc49672b|fill|760348937127555",
-    "2026-10-21|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|JUP|SHORT",
-    "2026-10-21|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|KAITO|SHORT",
-    "2026-10-21|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|SKY|SHORT",
-    "2026-10-21|0xf9faba57a81d1575d3e506dd3eafe7db6f2a3275|ETH|LONG",
-    "2026-10-21|0xce508465b243216fcf372d3146fd62e8f7a7b8e2|XMR|LONG",
-    "2026-10-21|0x0c1f6941fdcde9488dfd36ca16fed6b3bc49672b|HYPE|LONG",
-    "2026-10-21|0x0c1f6941fdcde9488dfd36ca16fed6b3bc49672b|PUMP|SHORT",
-    "2026-10-21|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|GRIFFAIN|LONG",
-    "2026-10-21|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|XMR|SHORT",
-    "2026-10-21|0x0c1f6941fdcde9488dfd36ca16fed6b3bc49672b|fill|982901920865387",
-    "2026-10-21|0xd4c1f7e8d876c4749228d515473d36f919583d1d|XPL|SHORT",
-    "2026-10-21|0xde0e9b1a35322a809165d09f0490cca3fa7562e5|fill|590598101491180",
-    "2026-10-21|0xfdbaa5eee7cdf45eec3a71a672065a67191fda7a|ETH|SHORT",
-    "2026-10-21|0x0c1f6941fdcde9488dfd36ca16fed6b3bc49672b|fill|105165551165165",
-    "2026-10-21|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|MINA|LONG",
-    "2026-10-21|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|GAS|LONG",
-    "2026-10-21|0xde0e9b1a35322a809165d09f0490cca3fa7562e5|fill|229280123943596",
-    "2026-10-21|0x0c1f6941fdcde9488dfd36ca16fed6b3bc49672b|STRK|LONG",
-    "2026-10-21|0xe31501c472d557bfa145ce105d325fb2dd4cb867|fill|1062732315187903",
-    "2026-10-21|0xe31501c472d557bfa145ce105d325fb2dd4cb867|fill|1063245199490735",
-    "2026-10-21|0xe31501c472d557bfa145ce105d325fb2dd4cb867|fill|453022073836576",
-    "2026-10-21|0xe31501c472d557bfa145ce105d325fb2dd4cb867|fill|986905976802396",
-    "2026-10-21|0xe31501c472d557bfa145ce105d325fb2dd4cb867|fill|490782743308458",
-    "2026-10-21|0xe31501c472d557bfa145ce105d325fb2dd4cb867|fill|1015457307411106",
-    "2026-10-21|0x936cf4fb95c30ce83f658b5bbb247e4bb381bb0f|W|LONG",
-    "2026-10-21|0xde0e9b1a35322a809165d09f0490cca3fa7562e5|fill|339475434207104",
-    "2026-10-21|0xde0e9b1a35322a809165d09f0490cca3fa7562e5|fill|1096437487020646",
-    "2026-10-21|0xe31501c472d557bfa145ce105d325fb2dd4cb867|fill|1028153024558390",
-    "2026-10-21|0xe31501c472d557bfa145ce105d325fb2dd4cb867|fill|47357450762347",
-    "2026-10-21|0xd4c1f7e8d876c4749228d515473d36f919583d1d|WLFI|LONG",
-    "2026-10-21|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|USUAL|SHORT",
-    "2026-10-21|0x1081e214bd6f0137234b92432d9b6033b88965b7|fill|780365650955815",
-    "2026-10-21|0xde0e9b1a35322a809165d09f0490cca3fa7562e5|fill|674359194355128",
-    "2026-10-21|0x0c1f6941fdcde9488dfd36ca16fed6b3bc49672b|fill|818771380370637",
-    "2026-10-21|0xe31501c472d557bfa145ce105d325fb2dd4cb867|fill|662929433632455",
-    "2026-10-21|0xe31501c472d557bfa145ce105d325fb2dd4cb867|fill|983724242412583",
-    "2026-10-21|0x936cf4fb95c30ce83f658b5bbb247e4bb381bb0f|W|SHORT",
-    "2026-10-21|0xd4c1f7e8d876c4749228d515473d36f919583d1d|DOGE|SHORT",
-    "2026-10-21|0xd4c1f7e8d876c4749228d515473d36f919583d1d|FARTCOIN|SHORT",
-    "2026-10-21|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|kPEPE|SHORT",
-    "2026-10-21|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|LIT|LONG",
-    "2026-10-21|0xfdbaa5eee7cdf45eec3a71a672065a67191fda7a|NEAR|SHORT",
-    "2026-10-21|0x0c1f6941fdcde9488dfd36ca16fed6b3bc49672b|fill|202141279570126",
-    "2026-10-21|0x0c1f6941fdcde9488dfd36ca16fed6b3bc49672b|fill|44136274245103",
-    "2026-10-21|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|DYDX|SHORT",
-    "2026-10-21|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|ARB|SHORT",
-    "2026-10-21|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|LINEA|SHORT",
-    "2026-10-21|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|0G|SHORT",
-    "2026-10-21|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|ICP|SHORT",
-    "2026-10-21|0x0c1f6941fdcde9488dfd36ca16fed6b3bc49672b|XPL|LONG",
-    "2026-10-21|0x0c1f6941fdcde9488dfd36ca16fed6b3bc49672b|ZEC|SHORT",
-    "2026-10-21|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|GRAM|SHORT",
-    "2026-10-21|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|ASTER|SHORT",
-    "2026-10-21|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|ZEC|LONG",
-    "2026-10-21|0x0c1f6941fdcde9488dfd36ca16fed6b3bc49672b|fill|251587995541263",
-    "2026-10-21|0x936cf4fb95c30ce83f658b5bbb247e4bb381bb0f|FARTCOIN|LONG",
-    "2026-10-21|0x936cf4fb95c30ce83f658b5bbb247e4bb381bb0f|LIT|SHORT",
-    "2026-10-21|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|AVAX|LONG",
-    "2026-10-21|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|AVNT|LONG",
-    "2026-10-21|0x0c1f6941fdcde9488dfd36ca16fed6b3bc49672b|fill|802450200142786",
-    "2026-10-21|0x0c1f6941fdcde9488dfd36ca16fed6b3bc49672b|fill|253507793469999",
-    "2026-10-21|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|LIT|SHORT",
-    "2026-10-21|0xe31501c472d557bfa145ce105d325fb2dd4cb867|fill|38723791887452",
-    "2026-10-21|0xd4c1f7e8d876c4749228d515473d36f919583d1d|TAO|SHORT",
-    "2026-10-21|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|TAO|SHORT",
-    "2026-10-21|0xde0e9b1a35322a809165d09f0490cca3fa7562e5|fill|455161633057516",
-    "2026-10-21|0x0c1f6941fdcde9488dfd36ca16fed6b3bc49672b|fill|718991628144121",
-    "2026-10-21|0x0c1f6941fdcde9488dfd36ca16fed6b3bc49672b|fill|591707473265658",
-    "2026-10-21|0x0c1f6941fdcde9488dfd36ca16fed6b3bc49672b|fill|446295449420849",
-    "2026-10-21|0x0c1f6941fdcde9488dfd36ca16fed6b3bc49672b|fill|870275464554323",
-    "2026-10-21|0xe31501c472d557bfa145ce105d325fb2dd4cb867|fill|221452122285679",
-    "2026-10-21|0xe31501c472d557bfa145ce105d325fb2dd4cb867|fill|969159092718360",
-    "2026-10-21|0xe31501c472d557bfa145ce105d325fb2dd4cb867|fill|1116332893124736",
-    "2026-10-21|0xe31501c472d557bfa145ce105d325fb2dd4cb867|fill|772253714179742",
-    "2026-10-21|0x936cf4fb95c30ce83f658b5bbb247e4bb381bb0f|CC|LONG",
-    "2026-10-21|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|FET|SHORT",
-    "2026-10-21|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|SPX|SHORT",
-    "2026-10-21|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|NXPC|LONG",
-    "2026-10-21|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|LDO|SHORT",
-    "2026-10-21|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|USELESS|SHORT",
-    "2026-10-21|0xde0e9b1a35322a809165d09f0490cca3fa7562e5|fill|449991694049628",
-    "2026-10-21|0xe31501c472d557bfa145ce105d325fb2dd4cb867|fill|442446328154338",
-    "2026-10-21|0xe31501c472d557bfa145ce105d325fb2dd4cb867|fill|152986210552303",
-    "2026-10-21|0x936cf4fb95c30ce83f658b5bbb247e4bb381bb0f|LIT|LONG",
-    "2026-10-21|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|LDO|LONG",
-    "2026-10-21|0xe31501c472d557bfa145ce105d325fb2dd4cb867|fill|1109052362937140",
-    "2026-10-21|0xe31501c472d557bfa145ce105d325fb2dd4cb867|fill|55013374032165",
-    "2026-10-21|0xd4c1f7e8d876c4749228d515473d36f919583d1d|LIT|SHORT",
-    "2026-10-21|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|DYDX|LONG",
-    "2026-10-21|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|MOODENG|LONG",
-    "2026-10-21|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|USELESS|LONG",
-    "2026-10-21|0x4bafc8eca50fc3208fb2520a2a49980768ec60f6|fill|921906706202033",
-    "2026-10-21|0x4bafc8eca50fc3208fb2520a2a49980768ec60f6|fill|836278604143315",
-    "2026-10-21|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|kPEPE|LONG"
+    "2026-10-22|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|INJ|LONG",
+    "2026-10-22|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|JUP|LONG",
+    "2026-10-22|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|WIF|SHORT",
+    "2026-10-22|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|PENGU|LONG",
+    "2026-10-22|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|AIXBT|SHORT",
+    "2026-10-22|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|SPX|LONG",
+    "2026-10-22|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|ZEC|LONG",
+    "2026-10-22|0xde0e9b1a35322a809165d09f0490cca3fa7562e5|fill|509155024774239",
+    "2026-10-22|0xde0e9b1a35322a809165d09f0490cca3fa7562e5|fill|216156614292184"
   ],
   "openTrades": [
     {
@@ -3256,25 +3129,6 @@
       "alertType": "NEW_ENTRY"
     },
     {
-      "key": "2026-10-21|0xd4c1f7e8d876c4749228d515473d36f919583d1d|LIT|SHORT",
-      "coin": "LIT",
-      "side": "SHORT",
-      "trader": "⭐ Trader 21 ⭐ — PONS short candidate — profitable open short",
-      "entry": 3.866636,
-      "tp": 3.82796964,
-      "sl": 3.88596918,
-      "leverage": 5,
-      "observedLeverage": 5,
-      "signalLeverage": 5,
-      "notional": 2142.0676,
-      "signalAt": 1792623790628,
-      "status": "OPEN",
-      "destinations": [
-        "-1004446412486"
-      ],
-      "alertType": "OPEN_BAND"
-    },
-    {
       "key": "2026-10-21|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|DYDX|LONG",
       "coin": "DYDX",
       "side": "LONG",
@@ -3349,6 +3203,182 @@
         "-1004446412486"
       ],
       "alertType": "OPEN_BAND"
+    },
+    {
+      "key": "2026-10-22|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|INJ|LONG",
+      "coin": "INJ",
+      "side": "LONG",
+      "trader": "⭐ Trader 23 ⭐ — STRK short candidate — profitable open short",
+      "entry": 8.60417,
+      "tp": 8.690211699999999,
+      "sl": 8.56114915,
+      "leverage": 5,
+      "observedLeverage": 5,
+      "signalLeverage": 5,
+      "notional": 12751.5465,
+      "signalAt": 1792627365259,
+      "status": "OPEN",
+      "destinations": [
+        "-1004446412486",
+        "@NovaraSignalsHQ"
+      ],
+      "alertType": "OPEN_BAND"
+    },
+    {
+      "key": "2026-10-22|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|JUP|LONG",
+      "coin": "JUP",
+      "side": "LONG",
+      "trader": "⭐ Trader 23 ⭐ — STRK short candidate — profitable open short",
+      "entry": 0.325965,
+      "tp": 0.32922465,
+      "sl": 0.32433517500000003,
+      "leverage": 10,
+      "observedLeverage": 10,
+      "signalLeverage": 10,
+      "notional": 7889.095089,
+      "signalAt": 1792627365259,
+      "status": "OPEN",
+      "destinations": [
+        "-1004446412486",
+        "@NovaraSignalsHQ"
+      ],
+      "alertType": "OPEN_BAND"
+    },
+    {
+      "key": "2026-10-22|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|WIF|SHORT",
+      "coin": "WIF",
+      "side": "SHORT",
+      "trader": "⭐ Trader 23 ⭐ — STRK short candidate — profitable open short",
+      "entry": 0.212199,
+      "tp": 0.21007701,
+      "sl": 0.213259995,
+      "leverage": 5,
+      "observedLeverage": 5,
+      "signalLeverage": 5,
+      "notional": 59170.864672,
+      "signalAt": 1792627365259,
+      "status": "OPEN",
+      "destinations": [
+        "-1004446412486",
+        "@NovaraSignalsHQ"
+      ],
+      "alertType": "OPEN_BAND"
+    },
+    {
+      "key": "2026-10-22|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|PENGU|LONG",
+      "coin": "PENGU",
+      "side": "LONG",
+      "trader": "⭐ Trader 23 ⭐ — STRK short candidate — profitable open short",
+      "entry": 0.008167,
+      "tp": 0.008248670000000001,
+      "sl": 0.008126165000000001,
+      "leverage": 5,
+      "observedLeverage": 5,
+      "signalLeverage": 5,
+      "notional": 14609.8092,
+      "signalAt": 1792627365259,
+      "status": "OPEN",
+      "destinations": [
+        "-1004446412486",
+        "@NovaraSignalsHQ"
+      ],
+      "alertType": "OPEN_BAND"
+    },
+    {
+      "key": "2026-10-22|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|AIXBT|SHORT",
+      "coin": "AIXBT",
+      "side": "SHORT",
+      "trader": "⭐ Trader 23 ⭐ — STRK short candidate — profitable open short",
+      "entry": 0.019979,
+      "tp": 0.019779210000000002,
+      "sl": 0.020078895,
+      "leverage": 3,
+      "observedLeverage": 3,
+      "signalLeverage": 3,
+      "notional": 1916.078528,
+      "signalAt": 1792627365259,
+      "status": "OPEN",
+      "destinations": [
+        "-1004446412486",
+        "@NovaraSignalsHQ"
+      ],
+      "alertType": "OPEN_BAND"
+    },
+    {
+      "key": "2026-10-22|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|SPX|LONG",
+      "coin": "SPX",
+      "side": "LONG",
+      "trader": "⭐ Trader 23 ⭐ — STRK short candidate — profitable open short",
+      "entry": 0.37834,
+      "tp": 0.3821234,
+      "sl": 0.3764483,
+      "leverage": 5,
+      "observedLeverage": 5,
+      "signalLeverage": 5,
+      "notional": 37043.601966,
+      "signalAt": 1792627365259,
+      "status": "OPEN",
+      "destinations": [
+        "-1004446412486"
+      ],
+      "alertType": "OPEN_BAND"
+    },
+    {
+      "key": "2026-10-22|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|ZEC|LONG",
+      "coin": "ZEC",
+      "side": "LONG",
+      "trader": "⭐ Trader 23 ⭐ — STRK short candidate — profitable open short",
+      "entry": 1318.9151,
+      "tp": 1332.104251,
+      "sl": 1312.3205245,
+      "leverage": 10,
+      "observedLeverage": 10,
+      "signalLeverage": 10,
+      "notional": 550664.568,
+      "signalAt": 1792627365259,
+      "status": "OPEN",
+      "destinations": [
+        "-1004446412486"
+      ],
+      "alertType": "OPEN_BAND"
+    },
+    {
+      "key": "2026-10-22|0xde0e9b1a35322a809165d09f0490cca3fa7562e5|fill|509155024774239",
+      "coin": "xyz:KR200",
+      "side": "SHORT",
+      "trader": "Trader 28",
+      "entry": 878.9,
+      "tp": 870.111,
+      "sl": 883.2945,
+      "leverage": 0,
+      "observedLeverage": 0,
+      "signalLeverage": 0,
+      "notional": 200.03763999999998,
+      "signalAt": 1792627365259,
+      "status": "OPEN",
+      "destinations": [
+        "-1004446412486"
+      ],
+      "alertType": "NEW_ENTRY"
+    },
+    {
+      "key": "2026-10-22|0xde0e9b1a35322a809165d09f0490cca3fa7562e5|fill|216156614292184",
+      "coin": "xyz:JP225",
+      "side": "SHORT",
+      "trader": "Trader 28",
+      "entry": 64479,
+      "tp": 63834.21,
+      "sl": 64801.395,
+      "leverage": 0,
+      "observedLeverage": 0,
+      "signalLeverage": 0,
+      "notional": 285.64197,
+      "signalAt": 1792627365259,
+      "status": "OPEN",
+      "destinations": [
+        "-1004446412486"
+      ],
+      "alertType": "NEW_ENTRY"
     }
   ],
   "pendingOutcomes": [],
@@ -10774,6 +10804,26 @@
         "-1004446412486"
       ],
       "alertType": "OPEN_BAND"
+    },
+    {
+      "key": "2026-10-21|0xd4c1f7e8d876c4749228d515473d36f919583d1d|LIT|SHORT",
+      "coin": "LIT",
+      "side": "SHORT",
+      "status": "TP_HIT",
+      "entry": 3.866636,
+      "tp": 3.82796964,
+      "sl": 3.88596918,
+      "exitPrice": 3.82796964,
+      "leverage": 5,
+      "observedLeverage": 5,
+      "signalLeverage": 5,
+      "notional": 2142.0676,
+      "signalAt": 1792623790628,
+      "resolvedAt": 1792627365259,
+      "destinations": [
+        "-1004446412486"
+      ],
+      "alertType": "OPEN_BAND"
     }
   ],
   "dailyReportLastSentAt": {
@@ -11813,6 +11863,38 @@
       "-1004446412486"
     ],
     "2026-10-21|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|kPEPE|LONG": [
+      "-1004446412486"
+    ],
+    "2026-10-22|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|INJ|LONG": [
+      "-1004446412486",
+      "@NovaraSignalsHQ"
+    ],
+    "2026-10-22|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|JUP|LONG": [
+      "-1004446412486",
+      "@NovaraSignalsHQ"
+    ],
+    "2026-10-22|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|WIF|SHORT": [
+      "-1004446412486",
+      "@NovaraSignalsHQ"
+    ],
+    "2026-10-22|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|PENGU|LONG": [
+      "-1004446412486",
+      "@NovaraSignalsHQ"
+    ],
+    "2026-10-22|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|AIXBT|SHORT": [
+      "-1004446412486",
+      "@NovaraSignalsHQ"
+    ],
+    "2026-10-22|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|SPX|LONG": [
+      "-1004446412486"
+    ],
+    "2026-10-22|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|ZEC|LONG": [
+      "-1004446412486"
+    ],
+    "2026-10-22|0xde0e9b1a35322a809165d09f0490cca3fa7562e5|fill|509155024774239": [
+      "-1004446412486"
+    ],
+    "2026-10-22|0xde0e9b1a35322a809165d09f0490cca3fa7562e5|fill|216156614292184": [
       "-1004446412486"
     ]
   },
