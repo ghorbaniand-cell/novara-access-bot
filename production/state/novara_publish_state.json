@@ -1,7 +1,7 @@
 {
   "date": "2026-10-22",
   "freeSent": 5,
-  "vipSent": 9,
+  "vipSent": 12,
   "sentKeys": [
     "2026-10-22|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|INJ|LONG",
     "2026-10-22|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|JUP|LONG",
@@ -11,7 +11,10 @@
     "2026-10-22|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|SPX|LONG",
     "2026-10-22|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|ZEC|LONG",
     "2026-10-22|0xde0e9b1a35322a809165d09f0490cca3fa7562e5|fill|509155024774239",
-    "2026-10-22|0xde0e9b1a35322a809165d09f0490cca3fa7562e5|fill|216156614292184"
+    "2026-10-22|0xde0e9b1a35322a809165d09f0490cca3fa7562e5|fill|216156614292184",
+    "2026-10-22|0xfdbaa5eee7cdf45eec3a71a672065a67191fda7a|XMR|SHORT",
+    "2026-10-22|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|LIT|LONG",
+    "2026-10-22|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|XMR|SHORT"
   ],
   "openTrades": [
     {
@@ -3225,26 +3228,6 @@
       "alertType": "OPEN_BAND"
     },
     {
-      "key": "2026-10-22|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|JUP|LONG",
-      "coin": "JUP",
-      "side": "LONG",
-      "trader": "⭐ Trader 23 ⭐ — STRK short candidate — profitable open short",
-      "entry": 0.325965,
-      "tp": 0.32922465,
-      "sl": 0.32433517500000003,
-      "leverage": 10,
-      "observedLeverage": 10,
-      "signalLeverage": 10,
-      "notional": 7889.095089,
-      "signalAt": 1792627365259,
-      "status": "OPEN",
-      "destinations": [
-        "-1004446412486",
-        "@NovaraSignalsHQ"
-      ],
-      "alertType": "OPEN_BAND"
-    },
-    {
       "key": "2026-10-22|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|WIF|SHORT",
       "coin": "WIF",
       "side": "SHORT",
@@ -3379,6 +3362,63 @@
         "-1004446412486"
       ],
       "alertType": "NEW_ENTRY"
+    },
+    {
+      "key": "2026-10-22|0xfdbaa5eee7cdf45eec3a71a672065a67191fda7a|XMR|SHORT",
+      "coin": "XMR",
+      "side": "SHORT",
+      "trader": "⭐ Trader 9 ⭐",
+      "entry": 624.942,
+      "tp": 618.69258,
+      "sl": 628.0667100000001,
+      "leverage": 5,
+      "observedLeverage": 5,
+      "signalLeverage": 5,
+      "notional": 13910.6712,
+      "signalAt": 1792629999948,
+      "status": "OPEN",
+      "destinations": [
+        "-1004446412486"
+      ],
+      "alertType": "OPEN_BAND"
+    },
+    {
+      "key": "2026-10-22|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|LIT|LONG",
+      "coin": "LIT",
+      "side": "LONG",
+      "trader": "⭐ Trader 23 ⭐ — STRK short candidate — profitable open short",
+      "entry": 3.871833,
+      "tp": 3.91055133,
+      "sl": 3.852473835,
+      "leverage": 5,
+      "observedLeverage": 5,
+      "signalLeverage": 5,
+      "notional": 235283.4958,
+      "signalAt": 1792629999948,
+      "status": "OPEN",
+      "destinations": [
+        "-1004446412486"
+      ],
+      "alertType": "OPEN_BAND"
+    },
+    {
+      "key": "2026-10-22|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|XMR|SHORT",
+      "coin": "XMR",
+      "side": "SHORT",
+      "trader": "⭐ Trader 23 ⭐ — STRK short candidate — profitable open short",
+      "entry": 625.696,
+      "tp": 619.43904,
+      "sl": 628.82448,
+      "leverage": 5,
+      "observedLeverage": 5,
+      "signalLeverage": 5,
+      "notional": 375344.00688,
+      "signalAt": 1792629999948,
+      "status": "OPEN",
+      "destinations": [
+        "-1004446412486"
+      ],
+      "alertType": "OPEN_BAND"
     }
   ],
   "pendingOutcomes": [],
@@ -10824,6 +10864,27 @@
         "-1004446412486"
       ],
       "alertType": "OPEN_BAND"
+    },
+    {
+      "key": "2026-10-22|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|JUP|LONG",
+      "coin": "JUP",
+      "side": "LONG",
+      "status": "TP_HIT",
+      "entry": 0.325965,
+      "tp": 0.32922465,
+      "sl": 0.32433517500000003,
+      "exitPrice": 0.32922465,
+      "leverage": 10,
+      "observedLeverage": 10,
+      "signalLeverage": 10,
+      "notional": 7889.095089,
+      "signalAt": 1792627365259,
+      "resolvedAt": 1792629999948,
+      "destinations": [
+        "-1004446412486",
+        "@NovaraSignalsHQ"
+      ],
+      "alertType": "OPEN_BAND"
     }
   ],
   "dailyReportLastSentAt": {
@@ -11895,6 +11956,15 @@
       "-1004446412486"
     ],
     "2026-10-22|0xde0e9b1a35322a809165d09f0490cca3fa7562e5|fill|216156614292184": [
+      "-1004446412486"
+    ],
+    "2026-10-22|0xfdbaa5eee7cdf45eec3a71a672065a67191fda7a|XMR|SHORT": [
+      "-1004446412486"
+    ],
+    "2026-10-22|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|LIT|LONG": [
+      "-1004446412486"
+    ],
+    "2026-10-22|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|XMR|SHORT": [
       "-1004446412486"
     ]
   },
