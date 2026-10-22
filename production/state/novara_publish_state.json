@@ -1,7 +1,7 @@
 {
   "date": "2026-10-22",
   "freeSent": 5,
-  "vipSent": 24,
+  "vipSent": 26,
   "sentKeys": [
     "2026-10-22|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|INJ|LONG",
     "2026-10-22|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|JUP|LONG",
@@ -26,7 +26,9 @@
     "2026-10-22|0xf179326c91d7233ae833d668c5d44c6a7d472161|fill|237566561214112",
     "2026-10-22|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|WLD|LONG",
     "2026-10-22|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|PUMP|LONG",
-    "2026-10-22|0x0c1f6941fdcde9488dfd36ca16fed6b3bc49672b|BTC|LONG"
+    "2026-10-22|0x0c1f6941fdcde9488dfd36ca16fed6b3bc49672b|BTC|LONG",
+    "2026-10-22|0xe31501c472d557bfa145ce105d325fb2dd4cb867|fill|1080880068959666",
+    "2026-10-22|0xde0e9b1a35322a809165d09f0490cca3fa7562e5|PAXG|SHORT"
   ],
   "openTrades": [
     {
@@ -3251,6 +3253,44 @@
       "signalLeverage": 40,
       "notional": 395074.32284,
       "signalAt": 1792638692887,
+      "status": "OPEN",
+      "destinations": [
+        "-1004446412486"
+      ],
+      "alertType": "OPEN_BAND"
+    },
+    {
+      "key": "2026-10-22|0xe31501c472d557bfa145ce105d325fb2dd4cb867|fill|1080880068959666",
+      "coin": "xyz:HO",
+      "side": "LONG",
+      "trader": "⭐ Trader 19 ⭐",
+      "entry": 4.6259,
+      "tp": 4.672159,
+      "sl": 4.6027705,
+      "leverage": 0,
+      "observedLeverage": 0,
+      "signalLeverage": 0,
+      "notional": 3117.8565999999996,
+      "signalAt": 1792641078167,
+      "status": "OPEN",
+      "destinations": [
+        "-1004446412486"
+      ],
+      "alertType": "NEW_ENTRY"
+    },
+    {
+      "key": "2026-10-22|0xde0e9b1a35322a809165d09f0490cca3fa7562e5|PAXG|SHORT",
+      "coin": "PAXG",
+      "side": "SHORT",
+      "trader": "Trader 28",
+      "entry": 4109.1,
+      "tp": 4068.0090000000005,
+      "sl": 4129.6455000000005,
+      "leverage": 10,
+      "observedLeverage": 10,
+      "signalLeverage": 10,
+      "notional": 40966,
+      "signalAt": 1792641078167,
       "status": "OPEN",
       "destinations": [
         "-1004446412486"
@@ -12262,6 +12302,12 @@
       "-1004446412486"
     ],
     "2026-10-22|0x0c1f6941fdcde9488dfd36ca16fed6b3bc49672b|BTC|LONG": [
+      "-1004446412486"
+    ],
+    "2026-10-22|0xe31501c472d557bfa145ce105d325fb2dd4cb867|fill|1080880068959666": [
+      "-1004446412486"
+    ],
+    "2026-10-22|0xde0e9b1a35322a809165d09f0490cca3fa7562e5|PAXG|SHORT": [
       "-1004446412486"
     ]
   },
