@@ -3222,25 +3222,6 @@
       "alertType": "NEW_ENTRY"
     },
     {
-      "key": "2026-10-22|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|WLD|LONG",
-      "coin": "WLD",
-      "side": "LONG",
-      "trader": "⭐ Trader 23 ⭐ — STRK short candidate — profitable open short",
-      "entry": 0.56839,
-      "tp": 0.5740738999999999,
-      "sl": 0.56554805,
-      "leverage": 10,
-      "observedLeverage": 10,
-      "signalLeverage": 10,
-      "notional": 62164.33614,
-      "signalAt": 1792636555048,
-      "status": "OPEN",
-      "destinations": [
-        "-1004446412486"
-      ],
-      "alertType": "OPEN_BAND"
-    },
-    {
       "key": "2026-10-22|0x0c1f6941fdcde9488dfd36ca16fed6b3bc49672b|BTC|LONG",
       "coin": "BTC",
       "side": "LONG",
@@ -11182,6 +11163,26 @@
       "notional": 240642.234588,
       "signalAt": 1792636555048,
       "resolvedAt": 1792638692887,
+      "destinations": [
+        "-1004446412486"
+      ],
+      "alertType": "OPEN_BAND"
+    },
+    {
+      "key": "2026-10-22|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|WLD|LONG",
+      "coin": "WLD",
+      "side": "LONG",
+      "status": "SL_HIT",
+      "entry": 0.56839,
+      "tp": 0.5740738999999999,
+      "sl": 0.56554805,
+      "exitPrice": 0.56554805,
+      "leverage": 10,
+      "observedLeverage": 10,
+      "signalLeverage": 10,
+      "notional": 62164.33614,
+      "signalAt": 1792636555048,
+      "resolvedAt": 1792642991494,
       "destinations": [
         "-1004446412486"
       ],
