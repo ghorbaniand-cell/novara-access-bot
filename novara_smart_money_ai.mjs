@@ -1,0 +1,505 @@
+import fs from 'node:fs/promises';
+import path from 'node:path';
+
+/*
+ * NOVARA SMART MONEY AI V1.0.0
+ * READ-ONLY | NO ORDERS | NO AUTO-COPY | PAPER OUTCOME TRACKING
+ *
+ * Combines three entry families:
+ *  1) Liquidity sweep + reclaim
+ *  2) Breakout + retest
+ *  3) Trend pullback + continuation
+ *
+ * Data: Hyperliquid public Info API (no paid data API required).
+ * All eligible liquid perp markets are considered; the worker does not depend on wallet lists.
+ */
+
+const VERSION = 'NOVARA-SMART-MONEY-AI-V1.0.0';
+const API = (process.env.HYPERLIQUID_API_URL || 'https://api.hyperliquid.xyz/info').trim();
+const TOKEN = process.env.TELEGRAM_TOKEN || process.env.TELEGRAM_BOT_TOKEN || '';
+const LEGACY_CHAT = process.env.TELEGRAM_CHAT_ID || '';
+const FREE_CHAT = process.env.NOVARA_FREE_CHAT_ID || process.env.FREE_CHAT_ID || '';
+const VIP_CHAT = process.env.NOVARA_VIP_CHAT_ID || process.env.VIP_CHAT_ID || process.env.NOVARA_PREMIUM_CHAT_ID || '';
+const STATE_FILE = process.env.NOVARA_SMART_MONEY_STATE_FILE || 'production/state/novara_smart_money_state.json';
+const SCAN_GAP_MS = Math.max(35, Number(process.env.NOVARA_SMART_REQUEST_GAP_MS || 90));
+const TIMEOUT_MS = Math.max(3000, Number(process.env.NOVARA_SMART_TIMEOUT_MS || 12000));
+const MIN_VOLUME_USD = Math.max(250000, Number(process.env.NOVARA_SMART_MIN_24H_VOLUME_USD || 2_000_000));
+const MAX_MARKETS = Math.max(25, Math.min(500, Number(process.env.NOVARA_SMART_MAX_MARKETS || 300)));
+const MIN_SCORE = Math.max(4.5, Math.min(8.5, Number(process.env.NOVARA_SMART_MIN_SCORE || 5.8)));
+const MIN_RR = Math.max(1.2, Number(process.env.NOVARA_SMART_MIN_RR || 1.65));
+const MAX_SPREAD_PCT = Math.max(0.03, Number(process.env.NOVARA_SMART_MAX_SPREAD_PCT || 0.25));
+const MAX_SIGNALS_PER_CYCLE = Math.max(1, Number(process.env.NOVARA_SMART_MAX_SIGNALS_PER_CYCLE || 8));
+const FREE_DAILY_LIMIT = Math.max(0, Number(process.env.NOVARA_FREE_DAILY_LIMIT || 5));
+const TELEGRAM_GAP_MS = Math.max(1000, Number(process.env.NOVARA_TELEGRAM_MIN_GAP_MS || 3200));
+const STATE_SCHEMA = 1;
+const now = () => Date.now();
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+const n = (v, d = 0) => { const x = Number(v); return Number.isFinite(x) ? x : d; };
+const clamp = (x, lo, hi) => Math.max(lo, Math.min(hi, x));
+const pct = (x, digits = 2) => `${n(x).toFixed(digits)}%`;
+const fmtPrice = x => {
+  const v = n(x);
+  if (!(v > 0)) return '—';
+  if (v >= 1000) return v.toLocaleString('en-US', { maximumFractionDigits: 2 });
+  if (v >= 1) return v.toFixed(4);
+  if (v >= 0.01) return v.toFixed(6);
+  if (v >= 0.0001) return v.toFixed(8);
+  return v.toExponential(5);
+};
+
+let nextRequestAt = 0;
+let requestGate = Promise.resolve();
+async function paceRequest() {
+  const slot = requestGate.then(async () => {
+    const wait = Math.max(0, nextRequestAt - now());
+    if (wait) await sleep(wait);
+    nextRequestAt = now() + SCAN_GAP_MS;
+  });
+  requestGate = slot.catch(() => {});
+  await slot;
+}
+async function request(body, label = 'info') {
+  await paceRequest();
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
+  try {
+    const res = await fetch(API, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify(body),
+      signal: controller.signal,
+    });
+    const text = await res.text();
+    if (!res.ok) throw new Error(`${label}: HTTP ${res.status} ${text.slice(0, 160)}`);
+    try { return JSON.parse(text); } catch { throw new Error(`${label}: invalid JSON`); }
+  } finally { clearTimeout(timer); }
+}
+
+async function readState() {
+  try {
+    const parsed = JSON.parse(await fs.readFile(STATE_FILE, 'utf8'));
+    if (parsed?.schema === STATE_SCHEMA) return parsed;
+  } catch {}
+  return {
+    schema: STATE_SCHEMA,
+    version: VERSION,
+    lastRunAt: 0,
+    previousMarketContext: {},
+    alertHistory: {},
+    dailyFreeCount: {},
+    paperTrades: [],
+    dailyStats: {},
+    lastStatusAt: 0,
+    lastDailyReportAt: 0,
+  };
+}
+async function writeState(state) {
+  await fs.mkdir(path.dirname(STATE_FILE), { recursive: true });
+  const tmp = `${STATE_FILE}.tmp`;
+  await fs.writeFile(tmp, JSON.stringify(state, null, 2) + '\n');
+  await fs.rename(tmp, STATE_FILE);
+}
+
+function ema(values, period) {
+  if (!values.length) return 0;
+  const k = 2 / (period + 1);
+  let out = values[0];
+  for (let i = 1; i < values.length; i++) out = values[i] * k + out * (1 - k);
+  return out;
+}
+function mean(values) { return values.length ? values.reduce((a, b) => a + b, 0) / values.length : 0; }
+function median(values) {
+  if (!values.length) return 0;
+  const s = [...values].sort((a, b) => a - b);
+  const m = Math.floor(s.length / 2);
+  return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2;
+}
+function parseCandle(c) {
+  return { t: n(c.t), T: n(c.T), o: n(c.o), h: n(c.h), l: n(c.l), c: n(c.c), v: n(c.v), n: n(c.n) };
+}
+function completedCandles(raw, intervalMs) {
+  const cutoff = now() - intervalMs;
+  return (Array.isArray(raw) ? raw : []).map(parseCandle).filter(c => c.t > 0 && c.c > 0 && (c.T ? c.T < now() : c.t + intervalMs <= cutoff));
+}
+function atr(candles, period = 14) {
+  if (candles.length < 2) return 0;
+  const trs = [];
+  for (let i = 1; i < candles.length; i++) {
+    const c = candles[i], p = candles[i - 1];
+    trs.push(Math.max(c.h - c.l, Math.abs(c.h - p.c), Math.abs(c.l - p.c)));
+  }
+  return mean(trs.slice(-period));
+}
+function pivots(candles, left = 2, right = 2) {
+  const highs = [], lows = [];
+  for (let i = left; i < candles.length - right; i++) {
+    const c = candles[i];
+    if (candles.slice(i - left, i).every(x => c.h > x.h) && candles.slice(i + 1, i + right + 1).every(x => c.h >= x.h)) highs.push({ price: c.h, index: i });
+    if (candles.slice(i - left, i).every(x => c.l < x.l) && candles.slice(i + 1, i + right + 1).every(x => c.l <= x.l)) lows.push({ price: c.l, index: i });
+  }
+  return { highs, lows };
+}
+function nearestBelow(levels, price) { return levels.filter(x => x.price < price).sort((a, b) => b.price - a.price)[0]?.price || 0; }
+function nearestAbove(levels, price) { return levels.filter(x => x.price > price).sort((a, b) => a.price - b.price)[0]?.price || 0; }
+function volumeRatio(candles) {
+  const recent = candles.at(-1)?.v || 0;
+  const base = mean(candles.slice(-21, -1).map(c => c.v));
+  return base > 0 ? recent / base : 1;
+}
+function vwap(candles) {
+  const rows = candles.slice(-32);
+  const denom = rows.reduce((s, c) => s + c.v, 0);
+  return denom > 0 ? rows.reduce((s, c) => s + ((c.h + c.l + c.c) / 3) * c.v, 0) / denom : rows.at(-1)?.c || 0;
+}
+function trendBias(candles) {
+  const closes = candles.map(c => c.c);
+  const fast = ema(closes.slice(-60), 20);
+  const slow = ema(closes.slice(-100), 50);
+  const last = closes.at(-1) || 0;
+  const prev = closes.at(-5) || last;
+  if (last > fast && fast > slow && last >= prev) return 'LONG';
+  if (last < fast && fast < slow && last <= prev) return 'SHORT';
+  return 'NEUTRAL';
+}
+function spreadPct(book, mid) {
+  const bids = book?.levels?.[0] || [], asks = book?.levels?.[1] || [];
+  if (!bids.length || !asks.length || !(mid > 0)) return null;
+  return ((n(asks[0].px) - n(bids[0].px)) / mid) * 100;
+}
+function bookImbalance(book) {
+  const bids = (book?.levels?.[0] || []).slice(0, 10).reduce((s, x) => s + n(x.sz) * n(x.px), 0);
+  const asks = (book?.levels?.[1] || []).slice(0, 10).reduce((s, x) => s + n(x.sz) * n(x.px), 0);
+  const total = bids + asks;
+  return total > 0 ? (bids - asks) / total : 0;
+}
+function tradeDelta(trades) {
+  let buy = 0, sell = 0;
+  for (const t of Array.isArray(trades) ? trades : []) {
+    const usd = Math.abs(n(t.sz) * n(t.px));
+    if (String(t.side).toUpperCase() === 'B') buy += usd;
+    else if (String(t.side).toUpperCase() === 'A') sell += usd;
+  }
+  const total = buy + sell;
+  return { buy, sell, delta: total ? (buy - sell) / total : 0, total };
+}
+
+function detectPatterns({ coin, c15, c1h, ctx, prevCtx, mid, spread, imbalance, flow }) {
+  const last = c15.at(-1), prev = c15.at(-2), older = c15.slice(-15, -2);
+  if (!last || !prev || c15.length < 35 || c1h.length < 30) return [];
+  const atr15 = atr(c15, 14) || mid * 0.006;
+  const atrPct = atr15 / mid * 100;
+  const levels = pivots(c15.slice(-55));
+  const support = nearestBelow(levels.lows, mid);
+  const resistance = nearestAbove(levels.highs, mid);
+  const closes1h = c1h.map(c => c.c);
+  const ema20 = ema(closes1h.slice(-60), 20);
+  const ema50 = ema(closes1h.slice(-100), 50);
+  const trend = trendBias(c1h);
+  const volRatio = volumeRatio(c15);
+  const vwap15 = vwap(c15);
+  const oiNow = n(ctx?.openInterest);
+  const oiPrev = n(prevCtx?.openInterest);
+  const oiChange = oiPrev > 0 ? (oiNow - oiPrev) / oiPrev * 100 : 0;
+  const funding = n(ctx?.funding);
+  const fundingPct = funding * 100;
+  const bullishFlow = flow.delta > 0.08 || imbalance > 0.12;
+  const bearishFlow = flow.delta < -0.08 || imbalance < -0.12;
+  const oiConfirmsLong = oiChange > 0.25 && mid >= last.o;
+  const oiConfirmsShort = oiChange > 0.25 && mid <= last.o;
+  const results = [];
+
+  // Pattern 1: sweep a recent swing level, then reclaim it on a completed candle.
+  const priorLow = Math.min(...c15.slice(-10, -1).map(c => c.l));
+  const priorHigh = Math.max(...c15.slice(-10, -1).map(c => c.h));
+  const sweepLong = last.l < priorLow && last.c > priorLow && last.c > last.o;
+  const sweepShort = last.h > priorHigh && last.c < priorHigh && last.c < last.o;
+  if (sweepLong || sweepShort) {
+    const side = sweepLong ? 'LONG' : 'SHORT';
+    let score = 5.0;
+    const reasons = ['Liquidity sweep + reclaim'];
+    if (side === 'LONG' && bullishFlow || side === 'SHORT' && bearishFlow) { score += 0.9; reasons.push('order-flow supports reversal'); }
+    if (volRatio >= 1.15) { score += 0.45; reasons.push('relative volume expansion'); }
+    if (side === 'LONG' && trend === 'LONG' || side === 'SHORT' && trend === 'SHORT') { score += 0.4; reasons.push('aligned 1H trend'); }
+    if (side === 'LONG' && oiConfirmsLong || side === 'SHORT' && oiConfirmsShort) { score += 0.25; reasons.push('OI rising with directional move'); }
+    if (side === 'LONG' && fundingPct < 0.035 || side === 'SHORT' && fundingPct > -0.035) score += 0.15;
+    if (spread !== null && spread > MAX_SPREAD_PCT) score -= 1.5;
+    results.push({ coin, side, pattern: 'SWEEP_RECLAIM', score: clamp(score, 0, 9.5), reasons, entry: mid, atr: atr15, support, resistance, trend, volRatio, oiChange, fundingPct, flowDelta: flow.delta, imbalance, vwap: vwap15 });
+  }
+
+  // Pattern 2: close beyond a recent structure level, then retest within tolerance.
+  const breakoutHigh = Math.max(...c15.slice(-14, -2).map(c => c.h));
+  const breakoutLow = Math.min(...c15.slice(-14, -2).map(c => c.l));
+  const tolerance = Math.max(atr15 * 0.25, mid * 0.0015);
+  const retestLong = prev.c > breakoutHigh && last.l <= breakoutHigh + tolerance && last.c >= breakoutHigh && last.c > last.o;
+  const retestShort = prev.c < breakoutLow && last.h >= breakoutLow - tolerance && last.c <= breakoutLow && last.c < last.o;
+  if (retestLong || retestShort) {
+    const side = retestLong ? 'LONG' : 'SHORT';
+    let score = 5.05;
+    const reasons = ['Breakout + retest'];
+    if (side === 'LONG' && bullishFlow || side === 'SHORT' && bearishFlow) { score += 0.7; reasons.push('order-flow confirms continuation'); }
+    if (volRatio >= 1.1) { score += 0.45; reasons.push('volume supports level break'); }
+    if (side === 'LONG' && trend === 'LONG' || side === 'SHORT' && trend === 'SHORT') { score += 0.65; reasons.push('aligned 1H trend'); }
+    if (side === 'LONG' && mid >= vwap15 || side === 'SHORT' && mid <= vwap15) { score += 0.25; reasons.push('VWAP alignment'); }
+    if (side === 'LONG' && oiConfirmsLong || side === 'SHORT' && oiConfirmsShort) { score += 0.3; reasons.push('OI confirms participation'); }
+    if (spread !== null && spread > MAX_SPREAD_PCT) score -= 1.5;
+    results.push({ coin, side, pattern: 'BREAKOUT_RETEST', score: clamp(score, 0, 9.5), reasons, entry: mid, atr: atr15, support, resistance, trend, volRatio, oiChange, fundingPct, flowDelta: flow.delta, imbalance, vwap: vwap15 });
+  }
+
+  // Pattern 3: 1H trend with a 15m pullback into fast mean and a directional recovery candle.
+  const ema20_15 = ema(c15.slice(-60).map(c => c.c), 20);
+  const pullbackLong = trend === 'LONG' && last.l <= ema20_15 + atr15 * 0.25 && last.c > ema20_15 && last.c > last.o && last.c > prev.c;
+  const pullbackShort = trend === 'SHORT' && last.h >= ema20_15 - atr15 * 0.25 && last.c < ema20_15 && last.c < last.o && last.c < prev.c;
+  if (pullbackLong || pullbackShort) {
+    const side = pullbackLong ? 'LONG' : 'SHORT';
+    let score = 4.95;
+    const reasons = ['Trend pullback + continuation'];
+    if (side === 'LONG' && bullishFlow || side === 'SHORT' && bearishFlow) { score += 0.75; reasons.push('order-flow resumes with trend'); }
+    if (volRatio >= 0.9) { score += 0.25; reasons.push('participation present'); }
+    if (side === 'LONG' && mid >= vwap15 || side === 'SHORT' && mid <= vwap15) { score += 0.4; reasons.push('VWAP alignment'); }
+    if (side === 'LONG' && oiConfirmsLong || side === 'SHORT' && oiConfirmsShort) { score += 0.3; reasons.push('OI rising with trend'); }
+    if (side === 'LONG' && fundingPct > 0.08 || side === 'SHORT' && fundingPct < -0.08) { score -= 0.25; reasons.push('crowded funding slightly penalized'); }
+    if (spread !== null && spread > MAX_SPREAD_PCT) score -= 1.5;
+    results.push({ coin, side, pattern: 'TREND_PULLBACK', score: clamp(score, 0, 9.5), reasons, entry: mid, atr: atr15, support, resistance, trend, volRatio, oiChange, fundingPct, flowDelta: flow.delta, imbalance, vwap: vwap15 });
+  }
+
+  return results;
+}
+
+function buildRisk(candidate) {
+  const entry = n(candidate.entry);
+  const atrValue = n(candidate.atr, entry * 0.006);
+  const structural = candidate.side === 'LONG'
+    ? (n(candidate.support) > 0 && candidate.support < entry ? entry - candidate.support : 0)
+    : (n(candidate.resistance) > entry ? candidate.resistance - entry : 0);
+  const rawRisk = Math.max(atrValue * 1.15, structural * 0.65, entry * 0.0045);
+  const riskDist = clamp(rawRisk, entry * 0.0045, entry * 0.025);
+  const sl = candidate.side === 'LONG' ? entry - riskDist : entry + riskDist;
+  const targetDist = riskDist * 1.9;
+  const tp = candidate.side === 'LONG' ? entry + targetDist : entry - targetDist;
+  return { entry, sl, tp, riskPct: riskDist / entry * 100, rewardPct: targetDist / entry * 100, rr: targetDist / riskDist };
+}
+function signalKey(s) { return `${s.coin}|${s.side}|${s.pattern}`; }
+function isCooldown(state, s) {
+  const last = n(state.alertHistory[signalKey(s)]);
+  // 90-minute per coin/side/pattern cooldown; opposite sides and other patterns remain independent.
+  return last > 0 && now() - last < 90 * 60_000;
+}
+function dayKey(ts = now()) { return new Date(ts).toISOString().slice(0, 10); }
+function escapeHtml(s) { return String(s).replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;'); }
+function formatSignal(s, risk) {
+  const emoji = s.side === 'LONG' ? '🟢' : '🔴';
+  const reasons = s.reasons.slice(0, 4).map(x => `• ${escapeHtml(x)}`).join('\n');
+  return `${emoji} <b>NOVARA SMART MONEY AI</b>\n━━━━━━━━━━━━━━━━━━\n<b>${s.side} ${escapeHtml(s.coin)} PERP</b>\n🧭 Setup: ${escapeHtml(s.pattern.replaceAll('_', ' '))}\n📍 Entry (reference): <code>${fmtPrice(risk.entry)}</code>\n🛑 Stop Loss: <code>${fmtPrice(risk.sl)}</code> (${pct(risk.riskPct)})\n🎯 Take Profit: <code>${fmtPrice(risk.tp)}</code> (${pct(risk.rewardPct)})\n⚖️ Planned R:R: 1:${risk.rr.toFixed(2)}\n🧠 Setup score: ${s.score.toFixed(1)}/10 (not a win-probability estimate)\n📊 1H trend: ${s.trend} | 15m volume: ${s.volRatio.toFixed(2)}x\n🌊 Trade delta: ${(s.flowDelta * 100).toFixed(1)}% | Book imbalance: ${(s.imbalance * 100).toFixed(1)}%\n📈 OI change since prior scan: ${s.oiChange >= 0 ? '+' : ''}${s.oiChange.toFixed(2)}% | Funding: ${s.fundingPct.toFixed(4)}%\n🧩 Evidence:\n${reasons}\n\n⚠️ Research signal only — paper-tracked, not financial advice. Verify price/slippage before any manual trade.`;
+}
+
+let telegramNextAt = 0;
+async function sendTelegram(chatId, message) {
+  if (!TOKEN || !chatId) return { sent: false, reason: !TOKEN ? 'telegram_token_not_configured' : 'telegram_chat_not_configured' };
+  const wait = Math.max(0, telegramNextAt - now());
+  if (wait) await sleep(wait);
+  telegramNextAt = now() + TELEGRAM_GAP_MS;
+  const response = await fetch(`https://api.telegram.org/bot${TOKEN}/sendMessage`, {
+    method: 'POST', headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ chat_id: chatId, text: message, parse_mode: 'HTML', disable_web_page_preview: true }),
+  });
+  const raw = await response.text();
+  let data = {}; try { data = JSON.parse(raw); } catch {}
+  if (!response.ok || !data.ok) throw new Error(`Telegram ${response.status}: ${raw.slice(0, 180)}`);
+  return { sent: true };
+}
+async function sendToDestinations(state, message) {
+  const outcomes = [];
+  const destinations = [];
+  if (VIP_CHAT) destinations.push({ name: 'VIP', id: VIP_CHAT });
+  if (FREE_CHAT) destinations.push({ name: 'FREE', id: FREE_CHAT });
+  if (!destinations.length && LEGACY_CHAT) destinations.push({ name: 'LEGACY', id: LEGACY_CHAT });
+  for (const d of destinations) {
+    if (d.name === 'FREE' && FREE_DAILY_LIMIT > 0) {
+      const key = dayKey();
+      const count = n(state.dailyFreeCount[key]);
+      if (count >= FREE_DAILY_LIMIT) { outcomes.push({ name: d.name, sent: false, reason: 'free_daily_limit' }); continue; }
+      try { const r = await sendTelegram(d.id, message); if (r.sent) state.dailyFreeCount[key] = count + 1; outcomes.push({ name: d.name, ...r }); }
+      catch (e) { outcomes.push({ name: d.name, sent: false, reason: e.message }); }
+    } else {
+      try { outcomes.push({ name: d.name, ...(await sendTelegram(d.id, message)) }); }
+      catch (e) { outcomes.push({ name: d.name, sent: false, reason: e.message }); }
+    }
+  }
+  return outcomes;
+}
+
+function updatePaperTrades(state, contexts) {
+  const closed = [];
+  for (const trade of state.paperTrades) {
+    if (trade.status !== 'OPEN') continue;
+    const mark = n(contexts[trade.coin]?.markPx);
+    if (!(mark > 0)) continue;
+    let result = null;
+    if (trade.side === 'LONG') {
+      if (mark <= trade.sl) result = 'SL';
+      else if (mark >= trade.tp) result = 'TP';
+    } else {
+      if (mark >= trade.sl) result = 'SL';
+      else if (mark <= trade.tp) result = 'TP';
+    }
+    if (result) {
+      trade.status = result;
+      trade.closedAt = now();
+      trade.exitMark = mark;
+      trade.pnlR = result === 'TP' ? trade.rr : -1;
+      closed.push(trade);
+      const dk = dayKey();
+      state.dailyStats[dk] ||= { tp: 0, sl: 0, closed: 0, realizedR: 0 };
+      state.dailyStats[dk][result === 'TP' ? 'tp' : 'sl']++;
+      state.dailyStats[dk].closed++;
+      state.dailyStats[dk].realizedR += trade.pnlR;
+    }
+  }
+  state.paperTrades = state.paperTrades.filter(t => t.status === 'OPEN' || now() - n(t.closedAt) < 14 * 86400_000);
+  return closed;
+}
+function dailySummary(state) {
+  const all = state.paperTrades.filter(t => t.status === 'TP' || t.status === 'SL');
+  const tp = all.filter(t => t.status === 'TP').length;
+  const sl = all.filter(t => t.status === 'SL').length;
+  const closed = tp + sl;
+  const r = all.reduce((sum, t) => sum + n(t.pnlR), 0);
+  const avgR = closed ? r / closed : 0;
+  return { closed, tp, sl, winRate: closed ? tp / closed * 100 : 0, realizedR: r, avgR, open: state.paperTrades.filter(t => t.status === 'OPEN').length };
+}
+
+async function getMarketSnapshot() {
+  const result = await request({ type: 'metaAndAssetCtxs' }, 'metaAndAssetCtxs');
+  const meta = result?.[0];
+  const contexts = result?.[1];
+  if (!meta?.universe || !Array.isArray(contexts)) throw new Error('Hyperliquid metaAndAssetCtxs returned an unexpected schema');
+  const ctxByCoin = {};
+  const assets = [];
+  for (let i = 0; i < meta.universe.length; i++) {
+    const u = meta.universe[i], c = contexts[i] || {};
+    const coin = String(u.name || '');
+    const volume = n(c.dayNtlVlm);
+    const markPx = n(c.markPx || c.midPx);
+    if (!coin || !(markPx > 0) || volume < MIN_VOLUME_USD || u.isDelisted) continue;
+    const ctx = { coin, markPx, dayVolume: volume, funding: n(c.funding), openInterest: n(c.openInterest), premium: n(c.premium), oraclePx: n(c.oraclePx), maxLeverage: n(u.maxLeverage) };
+    ctxByCoin[coin] = ctx;
+    assets.push(ctx);
+  }
+  assets.sort((a, b) => b.dayVolume - a.dayVolume);
+  return { ctxByCoin, assets: assets.slice(0, MAX_MARKETS), totalEligible: assets.length };
+}
+async function candles(coin, interval, hours) {
+  const endTime = now();
+  const startTime = endTime - hours * 3600_000;
+  const raw = await request({ type: 'candleSnapshot', req: { coin, interval, startTime, endTime } }, `candles ${coin} ${interval}`);
+  const ms = interval === '1h' ? 3600_000 : 15 * 60_000;
+  return completedCandles(raw, ms);
+}
+async function analyzeAsset(asset, previous) {
+  const [c15, c1h] = await Promise.all([
+    candles(asset.coin, '15m', 30),
+    candles(asset.coin, '1h', 90),
+  ]);
+  if (c15.length < 35 || c1h.length < 30) return [];
+  const [book, trades] = await Promise.all([
+    request({ type: 'l2Book', coin: asset.coin }, `book ${asset.coin}`).catch(() => null),
+    request({ type: 'recentTrades', coin: asset.coin }, `trades ${asset.coin}`).catch(() => []),
+  ]);
+  const spread = spreadPct(book, asset.markPx);
+  const imbalance = bookImbalance(book);
+  const flow = tradeDelta(trades);
+  return detectPatterns({ coin: asset.coin, c15, c1h, ctx: asset, prevCtx: previous, mid: asset.markPx, spread, imbalance, flow });
+}
+
+async function main() {
+  const started = now();
+  const state = await readState();
+  state.version = VERSION;
+  console.log(`\n${VERSION} — START`);
+  console.log(`Mode: READ-ONLY / NO ORDERS / PAPER TRACKING`);
+  console.log(`Time: ${new Date().toISOString()}`);
+  console.log(`Signal threshold: ${MIN_SCORE}/10 | min 24h volume: $${MIN_VOLUME_USD.toLocaleString()} | market cap: ${MAX_MARKETS}`);
+
+  const snapshot = await getMarketSnapshot();
+  const contexts = snapshot.ctxByCoin;
+  const eligible = snapshot.assets;
+  const closed = updatePaperTrades(state, contexts);
+  for (const t of closed) console.log(`[PAPER][${t.status}] ${t.coin} ${t.side} entry=${fmtPrice(t.entry)} mark=${fmtPrice(t.exitMark)} R=${t.pnlR}`);
+
+  const candidates = [];
+  let checked = 0, failed = 0;
+  for (const asset of eligible) {
+    try {
+      const found = await analyzeAsset(asset, state.previousMarketContext[asset.coin]);
+      checked++;
+      for (const s of found) {
+        if (s.score < MIN_SCORE) continue;
+        if (isCooldown(state, s)) continue;
+        const risk = buildRisk(s);
+        if (risk.rr < MIN_RR || !(risk.sl > 0) || !(risk.tp > 0)) continue;
+        // Avoid chasing a move that has already travelled too far from its 15m mean.
+        const distanceToVwap = Math.abs((s.entry - s.vwap) / s.entry) * 100;
+        if (distanceToVwap > Math.max(2.2, s.atr / s.entry * 100 * 2.8)) continue;
+        s.risk = risk;
+        candidates.push(s);
+      }
+    } catch (e) {
+      failed++;
+      console.warn(`[SCAN][WARN] ${asset.coin}: ${e?.message || e}`);
+    }
+  }
+
+  // If several patterns fire on one market/side, keep the highest-quality setup only for this cycle.
+  candidates.sort((a, b) => b.score - a.score);
+  const chosen = [];
+  const seenMarketSide = new Set();
+  for (const c of candidates) {
+    const k = `${c.coin}|${c.side}`;
+    if (seenMarketSide.has(k)) continue;
+    seenMarketSide.add(k);
+    chosen.push(c);
+    if (chosen.length >= MAX_SIGNALS_PER_CYCLE) break;
+  }
+
+  let sentSignals = 0, sendErrors = 0;
+  for (const s of chosen) {
+    const message = formatSignal(s, s.risk);
+    const destinations = await sendToDestinations(state, message);
+    const anySent = destinations.some(x => x.sent);
+    console.log(`[SIGNAL] ${s.coin} ${s.side} pattern=${s.pattern} score=${s.score.toFixed(2)} entry=${fmtPrice(s.risk.entry)} SL=${fmtPrice(s.risk.sl)} TP=${fmtPrice(s.risk.tp)} deliveries=${JSON.stringify(destinations)}`);
+    if (anySent) {
+      sentSignals++;
+      state.alertHistory[signalKey(s)] = now();
+      state.paperTrades.push({ id: `${s.coin}|${s.side}|${s.pattern}|${now()}`, coin: s.coin, side: s.side, pattern: s.pattern, score: Number(s.score.toFixed(2)), entry: s.risk.entry, sl: s.risk.sl, tp: s.risk.tp, rr: s.risk.rr, openedAt: now(), status: 'OPEN', pnlR: null, reasons: s.reasons });
+    } else {
+      sendErrors++;
+      console.warn(`[DELIVERY][FAIL] ${s.coin} ${s.side}: no destination confirmed delivery`);
+    }
+  }
+
+  // Persist a compact market context for OI change measurement on the next run.
+  const nextCtx = {};
+  for (const a of eligible) nextCtx[a.coin] = { markPx: a.markPx, openInterest: a.openInterest, funding: a.funding, at: now() };
+  state.previousMarketContext = nextCtx;
+  state.lastRunAt = now();
+  state.lastCycle = { at: state.lastRunAt, eligible: eligible.length, totalEligible: snapshot.totalEligible, checked, failed, rawCandidates: candidates.length, signalsSelected: chosen.length, sentSignals, sendErrors, openPaperTrades: state.paperTrades.filter(t => t.status === 'OPEN').length };
+
+  const stats = dailySummary(state);
+  console.log(`[CYCLE] markets=${eligible.length}/${snapshot.totalEligible} checked=${checked} dataErrors=${failed} candidates=${candidates.length} selected=${chosen.length} sent=${sentSignals} deliveryErrors=${sendErrors} paperOpen=${stats.open} paperClosed=${stats.closed} paperWinRate=${stats.winRate.toFixed(1)}% paperNetR=${stats.realizedR.toFixed(2)} runtime=${((now() - started) / 1000).toFixed(1)}s`);
+
+  // Startup/cycle status once per 24h to avoid Telegram noise; logs remain available every run.
+  if (TOKEN && (now() - n(state.lastStatusAt) > 24 * 3600_000 || process.env.NOVARA_SMART_SEND_STATUS === 'true')) {
+    const status = `👁️ <b>NOVARA SMART MONEY AI</b>\n━━━━━━━━━━━━━━━━━━\n📡 Status: WATCHING\n🧭 Version: ${VERSION}\n📚 Eligible liquid perp markets: ${eligible.length}/${snapshot.totalEligible}\n🔎 Markets analyzed: ${checked} | Data errors: ${failed}\n🧩 Patterns: Sweep/Reclaim + Breakout/Retest + Trend Pullback\n🎚️ Threshold: ${MIN_SCORE}/10 (balanced)\n🔔 Signals sent this cycle: ${sentSignals}\n📈 Paper trades: ${stats.open} open / ${stats.closed} closed\n🏁 Paper win rate: ${stats.closed ? stats.winRate.toFixed(1) + '%' : 'pending'} | Net: ${stats.realizedR.toFixed(2)}R\n⚠️ Read-only research mode; no orders.`;
+    const dests = [VIP_CHAT, FREE_CHAT, (!VIP_CHAT && !FREE_CHAT ? LEGACY_CHAT : '')].filter(Boolean);
+    let ok = false;
+    for (const id of [...new Set(dests)]) { try { const r = await sendTelegram(id, status); ok ||= r.sent; } catch (e) { console.warn(`[STATUS][WARN] ${e.message}`); } }
+    if (ok) state.lastStatusAt = now();
+  }
+
+  await writeState(state);
+}
+
+main().catch(async error => {
+  console.error(`[FATAL] ${error?.stack || error}`);
+  process.exitCode = 1;
+});
