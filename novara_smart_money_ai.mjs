@@ -2,7 +2,7 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 
 /*
- * NOVARA SMART MONEY AI V1.0.0
+ * NOVARA SMART MONEY AI V1.0.2
  * READ-ONLY | NO ORDERS | NO AUTO-COPY | PAPER OUTCOME TRACKING
  *
  * Combines three entry families:
@@ -14,7 +14,7 @@ import path from 'node:path';
  * All eligible liquid perp markets are considered; the worker does not depend on wallet lists.
  */
 
-const VERSION = 'NOVARA-SMART-MONEY-AI-V1.0.0';
+const VERSION = 'NOVARA-SMART-MONEY-AI-V1.0.2-DYNAMIC-LEVERAGE';
 const API = (process.env.HYPERLIQUID_API_URL || 'https://api.hyperliquid.xyz/info').trim();
 const TOKEN = process.env.TELEGRAM_TOKEN || process.env.TELEGRAM_BOT_TOKEN || '';
 const LEGACY_CHAT = process.env.TELEGRAM_CHAT_ID || '';
@@ -223,7 +223,7 @@ function detectPatterns({ coin, c15, c1h, ctx, prevCtx, mid, spread, imbalance, 
     if (side === 'LONG' && oiConfirmsLong || side === 'SHORT' && oiConfirmsShort) { score += 0.25; reasons.push('OI rising with directional move'); }
     if (side === 'LONG' && fundingPct < 0.035 || side === 'SHORT' && fundingPct > -0.035) score += 0.15;
     if (spread !== null && spread > MAX_SPREAD_PCT) score -= 1.5;
-    results.push({ coin, side, pattern: 'SWEEP_RECLAIM', score: clamp(score, 0, 9.5), reasons, entry: mid, atr: atr15, support, resistance, trend, volRatio, oiChange, fundingPct, flowDelta: flow.delta, imbalance, vwap: vwap15 });
+    results.push({ coin, side, pattern: 'SWEEP_RECLAIM', score: clamp(score, 0, 9.5), reasons, entry: mid, atr: atr15, support, resistance, trend, volRatio, oiChange, fundingPct, flowDelta: flow.delta, imbalance, vwap: vwap15, spreadPct: spread, atrPct, dayVolume: n(ctx?.dayVolume), maxLeverage: n(ctx?.maxLeverage) });
   }
 
   // Pattern 2: close beyond a recent structure level, then retest within tolerance.
@@ -242,7 +242,7 @@ function detectPatterns({ coin, c15, c1h, ctx, prevCtx, mid, spread, imbalance, 
     if (side === 'LONG' && mid >= vwap15 || side === 'SHORT' && mid <= vwap15) { score += 0.25; reasons.push('VWAP alignment'); }
     if (side === 'LONG' && oiConfirmsLong || side === 'SHORT' && oiConfirmsShort) { score += 0.3; reasons.push('OI confirms participation'); }
     if (spread !== null && spread > MAX_SPREAD_PCT) score -= 1.5;
-    results.push({ coin, side, pattern: 'BREAKOUT_RETEST', score: clamp(score, 0, 9.5), reasons, entry: mid, atr: atr15, support, resistance, trend, volRatio, oiChange, fundingPct, flowDelta: flow.delta, imbalance, vwap: vwap15 });
+    results.push({ coin, side, pattern: 'BREAKOUT_RETEST', score: clamp(score, 0, 9.5), reasons, entry: mid, atr: atr15, support, resistance, trend, volRatio, oiChange, fundingPct, flowDelta: flow.delta, imbalance, vwap: vwap15, spreadPct: spread, atrPct, dayVolume: n(ctx?.dayVolume), maxLeverage: n(ctx?.maxLeverage) });
   }
 
   // Pattern 3: 1H trend with a 15m pullback into fast mean and a directional recovery candle.
@@ -259,7 +259,7 @@ function detectPatterns({ coin, c15, c1h, ctx, prevCtx, mid, spread, imbalance, 
     if (side === 'LONG' && oiConfirmsLong || side === 'SHORT' && oiConfirmsShort) { score += 0.3; reasons.push('OI rising with trend'); }
     if (side === 'LONG' && fundingPct > 0.08 || side === 'SHORT' && fundingPct < -0.08) { score -= 0.25; reasons.push('crowded funding slightly penalized'); }
     if (spread !== null && spread > MAX_SPREAD_PCT) score -= 1.5;
-    results.push({ coin, side, pattern: 'TREND_PULLBACK', score: clamp(score, 0, 9.5), reasons, entry: mid, atr: atr15, support, resistance, trend, volRatio, oiChange, fundingPct, flowDelta: flow.delta, imbalance, vwap: vwap15 });
+    results.push({ coin, side, pattern: 'TREND_PULLBACK', score: clamp(score, 0, 9.5), reasons, entry: mid, atr: atr15, support, resistance, trend, volRatio, oiChange, fundingPct, flowDelta: flow.delta, imbalance, vwap: vwap15, spreadPct: spread, atrPct, dayVolume: n(ctx?.dayVolume), maxLeverage: n(ctx?.maxLeverage) });
   }
 
   return results;
@@ -286,10 +286,40 @@ function isCooldown(state, s) {
 }
 function dayKey(ts = now()) { return new Date(ts).toISOString().slice(0, 10); }
 function escapeHtml(s) { return String(s).replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;'); }
+function suggestLeverage(s) {
+  // This is a signal annotation only: no orders or account settings are changed.
+  // Blend setup quality, coin liquidity and current market confirmation; penalize volatility/crowding.
+  const signalStrength = clamp((n(s.score, 5.8) - MIN_SCORE) / Math.max(0.1, 9.5 - MIN_SCORE), 0, 1);
+  const vol = Math.max(0, n(s.dayVolume));
+  const coinStrength = clamp(Math.log10(Math.max(1, vol / 2_000_000)) / Math.log10(50), 0, 1);
+  const alignedTrend = s.trend === s.side ? 1 : 0;
+  const alignedFlow = (s.side === 'LONG' && n(s.flowDelta) > 0.08) || (s.side === 'SHORT' && n(s.flowDelta) < -0.08) ? 1 : 0;
+  const alignedBook = (s.side === 'LONG' && n(s.imbalance) > 0.12) || (s.side === 'SHORT' && n(s.imbalance) < -0.12) ? 1 : 0;
+  const oiConfirm = n(s.oiChange) > 0.25 ? 1 : 0;
+  const volumeConfirm = n(s.volRatio) >= 1.1 ? 1 : 0;
+  const spread = s.spreadPct == null ? 0.5 : clamp(1 - n(s.spreadPct) / Math.max(0.01, MAX_SPREAD_PCT), 0, 1);
+  const atrPct = n(s.atrPct, n(s.atr) / Math.max(0.00000001, n(s.entry)) * 100);
+  const volatilitySuitability = atrPct <= 0.9 ? 1 : atrPct <= 1.5 ? 0.75 : atrPct <= 2.0 ? 0.45 : 0.15;
+  const fundingCrowded = (s.side === 'LONG' && n(s.fundingPct) > 0.08) || (s.side === 'SHORT' && n(s.fundingPct) < -0.08);
+  const marketStrength = clamp(
+    alignedTrend * 0.24 + alignedFlow * 0.18 + alignedBook * 0.10 + oiConfirm * 0.12 +
+    volumeConfirm * 0.12 + spread * 0.12 + volatilitySuitability * 0.12 - (fundingCrowded ? 0.10 : 0),
+    0, 1
+  );
+  const combined = signalStrength * 0.40 + coinStrength * 0.25 + marketStrength * 0.35;
+  let leverage = Math.round(5 + combined * 10);
+  const exchangeMax = n(s.maxLeverage);
+  if (exchangeMax > 0) leverage = Math.min(leverage, Math.floor(exchangeMax));
+  leverage = Math.max(1, leverage);
+  const cappedBelowRequestedRange = exchangeMax > 0 && exchangeMax < 5;
+  return { leverage, signalStrength, coinStrength, marketStrength, exchangeMax, cappedBelowRequestedRange };
+}
+
 function formatSignal(s, risk) {
+  const lev = s.leverageInfo || suggestLeverage(s);
   const emoji = s.side === 'LONG' ? '🟢' : '🔴';
   const reasons = s.reasons.slice(0, 4).map(x => `• ${escapeHtml(x)}`).join('\n');
-  return `${emoji} <b>NOVARA SMART MONEY AI</b>\n━━━━━━━━━━━━━━━━━━\n<b>${s.side} ${escapeHtml(s.coin)} PERP</b>\n🧭 Setup: ${escapeHtml(s.pattern.replaceAll('_', ' '))}\n📍 Entry (reference): <code>${fmtPrice(risk.entry)}</code>\n🛑 Stop Loss: <code>${fmtPrice(risk.sl)}</code> (${pct(risk.riskPct)})\n🎯 Take Profit: <code>${fmtPrice(risk.tp)}</code> (${pct(risk.rewardPct)})\n⚖️ Planned R:R: 1:${risk.rr.toFixed(2)}\n🧠 Setup score: ${s.score.toFixed(1)}/10 (not a win-probability estimate)\n📊 1H trend: ${s.trend} | 15m volume: ${s.volRatio.toFixed(2)}x\n🌊 Trade delta: ${(s.flowDelta * 100).toFixed(1)}% | Book imbalance: ${(s.imbalance * 100).toFixed(1)}%\n📈 OI change since prior scan: ${s.oiChange >= 0 ? '+' : ''}${s.oiChange.toFixed(2)}% | Funding: ${s.fundingPct.toFixed(4)}%\n🧩 Evidence:\n${reasons}\n\n⚠️ Research signal only — paper-tracked, not financial advice. Verify price/slippage before any manual trade.`;
+  return `${emoji} <b>NOVARA SMART MONEY AI</b>\n━━━━━━━━━━━━━━━━━━\n<b>${s.side} ${escapeHtml(s.coin)} PERP</b>\n🧭 Setup: ${escapeHtml(s.pattern.replaceAll('_', ' '))}\n📍 Entry (reference): <code>${fmtPrice(risk.entry)}</code>\n🛑 Stop Loss: <code>${fmtPrice(risk.sl)}</code> (${pct(risk.riskPct)})\n🎯 Take Profit: <code>${fmtPrice(risk.tp)}</code> (${pct(risk.rewardPct)})\n⚖️ Planned R:R: 1:${risk.rr.toFixed(2)}\n⚡ Suggested Leverage: ${lev.leverage}x${lev.cappedBelowRequestedRange ? ` (exchange max: ${Math.floor(lev.exchangeMax)}x)` : ''}\n🧠 Setup score: ${s.score.toFixed(1)}/10 (not a win-probability estimate)\n📊 1H trend: ${s.trend} | 15m volume: ${s.volRatio.toFixed(2)}x\n🌊 Trade delta: ${(s.flowDelta * 100).toFixed(1)}% | Book imbalance: ${(s.imbalance * 100).toFixed(1)}%\n📈 OI change since prior scan: ${s.oiChange >= 0 ? '+' : ''}${s.oiChange.toFixed(2)}% | Funding: ${s.fundingPct.toFixed(4)}%\n🧩 Evidence:\n${reasons}\n\n⚠️ Research signal only — paper-tracked, not financial advice. Verify price/slippage before any manual trade.`;
 }
 
 let telegramNextAt = 0;
@@ -441,6 +471,7 @@ async function main() {
         const distanceToVwap = Math.abs((s.entry - s.vwap) / s.entry) * 100;
         if (distanceToVwap > Math.max(2.2, s.atr / s.entry * 100 * 2.8)) continue;
         s.risk = risk;
+        s.leverageInfo = suggestLeverage(s);
         candidates.push(s);
       }
     } catch (e) {
@@ -466,11 +497,11 @@ async function main() {
     const message = formatSignal(s, s.risk);
     const destinations = await sendToDestinations(state, message);
     const anySent = destinations.some(x => x.sent);
-    console.log(`[SIGNAL] ${s.coin} ${s.side} pattern=${s.pattern} score=${s.score.toFixed(2)} entry=${fmtPrice(s.risk.entry)} SL=${fmtPrice(s.risk.sl)} TP=${fmtPrice(s.risk.tp)} deliveries=${JSON.stringify(destinations)}`);
+    console.log(`[SIGNAL] ${s.coin} ${s.side} pattern=${s.pattern} score=${s.score.toFixed(2)} leverage=${s.leverageInfo?.leverage ?? suggestLeverage(s).leverage}x entry=${fmtPrice(s.risk.entry)} SL=${fmtPrice(s.risk.sl)} TP=${fmtPrice(s.risk.tp)} deliveries=${JSON.stringify(destinations)}`);
     if (anySent) {
       sentSignals++;
       state.alertHistory[signalKey(s)] = now();
-      state.paperTrades.push({ id: `${s.coin}|${s.side}|${s.pattern}|${now()}`, coin: s.coin, side: s.side, pattern: s.pattern, score: Number(s.score.toFixed(2)), entry: s.risk.entry, sl: s.risk.sl, tp: s.risk.tp, rr: s.risk.rr, openedAt: now(), status: 'OPEN', pnlR: null, reasons: s.reasons });
+      state.paperTrades.push({ id: `${s.coin}|${s.side}|${s.pattern}|${now()}`, coin: s.coin, side: s.side, pattern: s.pattern, score: Number(s.score.toFixed(2)), entry: s.risk.entry, sl: s.risk.sl, tp: s.risk.tp, rr: s.risk.rr, suggestedLeverage: s.leverageInfo?.leverage ?? null, openedAt: now(), status: 'OPEN', pnlR: null, reasons: s.reasons });
     } else {
       sendErrors++;
       console.warn(`[DELIVERY][FAIL] ${s.coin} ${s.side}: no destination confirmed delivery`);
