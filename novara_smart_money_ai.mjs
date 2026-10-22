@@ -2,7 +2,7 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 
 /*
- * NOVARA SMART MONEY AI V1.0.2
+ * NOVARA SMART MONEY AI V1.0.3
  * READ-ONLY | NO ORDERS | NO AUTO-COPY | PAPER OUTCOME TRACKING
  *
  * Combines three entry families:
@@ -14,7 +14,7 @@ import path from 'node:path';
  * All eligible liquid perp markets are considered; the worker does not depend on wallet lists.
  */
 
-const VERSION = 'NOVARA-SMART-MONEY-AI-V1.0.2-DYNAMIC-LEVERAGE';
+const VERSION = 'NOVARA-SMART-MONEY-AI-V1.0.3-OUTCOME-ALERTS-24H-REPORT';
 const API = (process.env.HYPERLIQUID_API_URL || 'https://api.hyperliquid.xyz/info').trim();
 const TOKEN = process.env.TELEGRAM_TOKEN || process.env.TELEGRAM_BOT_TOKEN || '';
 const LEGACY_CHAT = process.env.TELEGRAM_CHAT_ID || '';
@@ -358,27 +358,85 @@ async function sendToDestinations(state, message) {
   return outcomes;
 }
 
-function updatePaperTrades(state, contexts) {
+// Outcome alerts and scheduled performance reports bypass the FREE channel's daily *new-signal* cap.
+async function sendUpdateToDestinations(message, alreadySent = []) {
+  const outcomes = [];
+  const destinations = [];
+  if (VIP_CHAT) destinations.push({ name: 'VIP', id: VIP_CHAT });
+  if (FREE_CHAT) destinations.push({ name: 'FREE', id: FREE_CHAT });
+  if (!destinations.length && LEGACY_CHAT) destinations.push({ name: 'LEGACY', id: LEGACY_CHAT });
+  for (const d of destinations) {
+    if (alreadySent.includes(d.name)) continue;
+    try { outcomes.push({ name: d.name, ...(await sendTelegram(d.id, message)) }); }
+    catch (e) { outcomes.push({ name: d.name, sent: false, reason: e.message }); }
+  }
+  return outcomes;
+}
+
+function candleHit(trade, candle) {
+  const hitSL = trade.side === 'LONG' ? candle.l <= trade.sl : candle.h >= trade.sl;
+  const hitTP = trade.side === 'LONG' ? candle.h >= trade.tp : candle.l <= trade.tp;
+  if (hitSL && hitTP) return 'AMBIGUOUS';
+  if (hitSL) return 'SL';
+  if (hitTP) return 'TP';
+  return null;
+}
+
+async function updatePaperTrades(state, contexts) {
   const closed = [];
-  for (const trade of state.paperTrades) {
-    if (trade.status !== 'OPEN') continue;
-    const mark = n(contexts[trade.coin]?.markPx);
-    if (!(mark > 0)) continue;
-    let result = null;
-    if (trade.side === 'LONG') {
-      if (mark <= trade.sl) result = 'SL';
-      else if (mark >= trade.tp) result = 'TP';
-    } else {
-      if (mark >= trade.sl) result = 'SL';
-      else if (mark <= trade.tp) result = 'TP';
+  const openTrades = state.paperTrades.filter(t => t.status === 'OPEN');
+  const byCoin = new Map();
+  for (const trade of openTrades) {
+    if (!byCoin.has(trade.coin)) byCoin.set(trade.coin, []);
+    byCoin.get(trade.coin).push(trade);
+  }
+
+  // Check completed 1-minute candles for touches between five-minute scans. Current mark is a fallback.
+  const candlesByCoin = new Map();
+  for (const [coin, trades] of byCoin) {
+    const oldest = Math.min(...trades.map(t => n(t.lastCheckedAt, n(t.openedAt))));
+    const startTime = Math.max(now() - 6 * 3600_000, Math.floor(oldest / 60_000) * 60_000);
+    try {
+      const raw = await request({ type: 'candleSnapshot', req: { coin, interval: '1m', startTime, endTime: now() } }, `exit candles ${coin}`);
+      const bars = (Array.isArray(raw) ? raw : []).map(parseCandle).filter(c => c.t > 0 && c.c > 0 && c.T < now()).sort((a,b) => a.t-b.t);
+      candlesByCoin.set(coin, { bars, ok: true });
+    } catch (e) {
+      console.warn(`[OUTCOME][WARN] ${coin}: ${e?.message || e}`);
+      candlesByCoin.set(coin, { bars: [], ok: false });
     }
-    if (result) {
-      trade.status = result;
-      trade.closedAt = now();
-      trade.exitMark = mark;
-      trade.pnlR = result === 'TP' ? trade.rr : -1;
-      closed.push(trade);
-      const dk = dayKey();
+  }
+
+  for (const trade of openTrades) {
+    const mark = n(contexts[trade.coin]?.markPx);
+    const candleSet = candlesByCoin.get(trade.coin) || { bars: [], ok: false };
+    let result = null, exitMark = 0, hitAt = 0;
+    const lastCheckedAt = n(trade.lastCheckedAt, n(trade.openedAt));
+    const firstWholeMinute = Math.ceil(Math.max(lastCheckedAt, n(trade.openedAt)) / 60_000) * 60_000;
+    for (const bar of candleSet.bars) {
+      // Only use fully post-entry, post-check minute bars to avoid counting price action from before the signal/check.
+      if (bar.t < firstWholeMinute) continue;
+      const hit = candleHit(trade, bar);
+      if (hit) { result = hit; exitMark = bar.c; hitAt = bar.T || bar.t + 60_000; break; }
+    }
+    if (!result && mark > 0) {
+      if (trade.side === 'LONG') {
+        if (mark <= trade.sl) result = 'SL'; else if (mark >= trade.tp) result = 'TP';
+      } else {
+        if (mark >= trade.sl) result = 'SL'; else if (mark <= trade.tp) result = 'TP';
+      }
+      if (result) { exitMark = mark; hitAt = now(); }
+    }
+    if (candleSet.ok) trade.lastCheckedAt = now();
+    if (!result) continue;
+
+    trade.status = result;
+    trade.closedAt = hitAt || now();
+    trade.exitMark = exitMark || mark;
+    trade.pnlR = result === 'TP' ? n(trade.rr) : result === 'SL' ? -1 : null;
+    trade.exitDetection = result === 'AMBIGUOUS' ? 'same_1m_candle_both_levels' : (exitMark && exitMark !== mark ? '1m_candle_ohlc' : 'mark_price');
+    closed.push(trade);
+    if (result === 'TP' || result === 'SL') {
+      const dk = dayKey(trade.closedAt);
       state.dailyStats[dk] ||= { tp: 0, sl: 0, closed: 0, realizedR: 0 };
       state.dailyStats[dk][result === 'TP' ? 'tp' : 'sl']++;
       state.dailyStats[dk].closed++;
@@ -388,6 +446,58 @@ function updatePaperTrades(state, contexts) {
   state.paperTrades = state.paperTrades.filter(t => t.status === 'OPEN' || now() - n(t.closedAt) < 14 * 86400_000);
   return closed;
 }
+
+function formatOutcome(trade) {
+  const result = trade.status === 'TP' ? '🎯 TAKE PROFIT TOUCHED' : trade.status === 'SL' ? '🛑 STOP LOSS TOUCHED' : '⚠️ BOTH LEVELS IN SAME 1M CANDLE';
+  const durationMin = Math.max(0, Math.round((n(trade.closedAt) - n(trade.openedAt)) / 60_000));
+  const outcomeR = trade.status === 'AMBIGUOUS' ? 'undetermined' : `${trade.pnlR >= 0 ? '+' : ''}${n(trade.pnlR).toFixed(2)}R`;
+  return `${result}
+━━━━━━━━━━━━━━━━━━
+<b>${trade.side} ${escapeHtml(trade.coin)} PERP</b>
+🧭 Setup: ${escapeHtml(String(trade.pattern || '').replaceAll('_', ' '))}
+📍 Entry: <code>${fmtPrice(trade.entry)}</code>
+🛑 SL: <code>${fmtPrice(trade.sl)}</code>
+🎯 TP: <code>${fmtPrice(trade.tp)}</code>
+💹 Exit/reference: <code>${fmtPrice(trade.exitMark)}</code>
+⚡ Suggested leverage: ${n(trade.suggestedLeverage) || '—'}x
+📊 Result: <b>${outcomeR}</b>
+⏱ Duration: ${durationMin} min
+🧪 Paper tracking only — no real order was placed.`;
+}
+
+function report24h(state) {
+  const cutoff = now() - 24 * 3600_000;
+  const cohort = state.paperTrades.filter(t => n(t.openedAt) >= cutoff && n(t.openedAt) <= now());
+  const tp = cohort.filter(t => t.status === 'TP').length;
+  const sl = cohort.filter(t => t.status === 'SL').length;
+  const ambiguous = cohort.filter(t => t.status === 'AMBIGUOUS').length;
+  const open = cohort.filter(t => t.status === 'OPEN').length;
+  const resolved = tp + sl;
+  const winRate = resolved ? tp / resolved * 100 : 0;
+  const successOfAll = cohort.length ? tp / cohort.length * 100 : 0;
+  const lossOfAll = cohort.length ? sl / cohort.length * 100 : 0;
+  const netR = cohort.filter(t => t.status === 'TP' || t.status === 'SL').reduce((sum,t) => sum + n(t.pnlR), 0);
+  const details = [...cohort].sort((a,b) => n(b.openedAt)-n(a.openedAt)).slice(0, 12).map(t => {
+    const status = t.status === 'OPEN' ? 'OPEN' : t.status === 'TP' ? 'TP ✅' : t.status === 'SL' ? 'SL ❌' : 'AMBIGUOUS ⚠️';
+    return `• ${escapeHtml(t.coin)} ${t.side} | ${status} | ${n(t.suggestedLeverage) || '—'}x | ${t.status === 'TP' || t.status === 'SL' ? `${n(t.pnlR) > 0 ? '+' : ''}${n(t.pnlR).toFixed(2)}R` : 'pending'}`;
+  });
+  return `📊 <b>NOVARA — 24H SIGNAL PERFORMANCE</b>
+━━━━━━━━━━━━━━━━━━
+🕒 Window: last 24 hours (UTC)
+🔔 Signals sent/tracked: <b>${cohort.length}</b>
+🎯 TP reached: <b>${tp}</b> (${successOfAll.toFixed(1)}% of all signals)
+🛑 SL reached: <b>${sl}</b> (${lossOfAll.toFixed(1)}% of all signals)
+📈 Win rate of resolved signals: <b>${resolved ? `${winRate.toFixed(1)}%` : 'N/A — no resolved signals'}</b> (${tp}/${resolved})
+⏳ Still open/pending: <b>${open}</b>
+⚠️ Ambiguous 1m candles: <b>${ambiguous}</b> (excluded from win rate)
+🧮 Net realized result: <b>${netR >= 0 ? '+' : ''}${netR.toFixed(2)}R</b> (paper estimate, before fees/slippage)
+
+<b>Signal details (up to 12 most recent):</b>
+${details.length ? details.join('\n') : 'No tracked signals were opened in this 24-hour window.'}
+
+ℹ️ Win rate = TP ÷ (TP + SL). TP% of all signals also includes open/ambiguous signals in its denominator. Paper tracking only; no real orders.`;
+}
+
 function dailySummary(state) {
   const all = state.paperTrades.filter(t => t.status === 'TP' || t.status === 'SL');
   const tp = all.filter(t => t.status === 'TP').length;
@@ -453,8 +563,20 @@ async function main() {
   const snapshot = await getMarketSnapshot();
   const contexts = snapshot.ctxByCoin;
   const eligible = snapshot.assets;
-  const closed = updatePaperTrades(state, contexts);
-  for (const t of closed) console.log(`[PAPER][${t.status}] ${t.coin} ${t.side} entry=${fmtPrice(t.entry)} mark=${fmtPrice(t.exitMark)} R=${t.pnlR}`);
+  if (!n(state.lastDailyReportAt)) state.lastDailyReportAt = now(); // first report is sent after one full 24-hour observation window
+  const closed = await updatePaperTrades(state, contexts);
+  for (const t of closed) {
+    console.log(`[PAPER][${t.status}] ${t.coin} ${t.side} entry=${fmtPrice(t.entry)} mark=${fmtPrice(t.exitMark)} R=${t.pnlR ?? 'undetermined'}`);
+  }
+  // Retry undelivered outcome notifications without duplicating messages already delivered to a destination.
+  for (const t of state.paperTrades.filter(x => x.status !== 'OPEN' && !x.outcomeNotifiedAt)) {
+    t.outcomeDelivered ||= [];
+    const updateResults = await sendUpdateToDestinations(formatOutcome(t), t.outcomeDelivered);
+    for (const r of updateResults) if (r.sent && !t.outcomeDelivered.includes(r.name)) t.outcomeDelivered.push(r.name);
+    const configuredCount = [VIP_CHAT, FREE_CHAT].filter(Boolean).length || (LEGACY_CHAT ? 1 : 0);
+    if (configuredCount > 0 && t.outcomeDelivered.length >= configuredCount) t.outcomeNotifiedAt = now();
+    console.log(`[OUTCOME][DELIVERY] ${t.coin} ${t.status} ${JSON.stringify(updateResults)} delivered=${t.outcomeDelivered.join(',')}`);
+  }
 
   const candidates = [];
   let checked = 0, failed = 0;
@@ -518,8 +640,25 @@ async function main() {
   const stats = dailySummary(state);
   console.log(`[CYCLE] markets=${eligible.length}/${snapshot.totalEligible} checked=${checked} dataErrors=${failed} candidates=${candidates.length} selected=${chosen.length} sent=${sentSignals} deliveryErrors=${sendErrors} paperOpen=${stats.open} paperClosed=${stats.closed} paperWinRate=${stats.winRate.toFixed(1)}% paperNetR=${stats.realizedR.toFixed(2)} runtime=${((now() - started) / 1000).toFixed(1)}s`);
 
-  // Telegram is signal-only: cycle/status reports stay in GitHub Actions logs.
-  // This intentionally sends no WATCHING/status message to public or VIP channels.
+  // No WATCHING/status spam. Only signal messages, TP/SL outcome alerts, and one 24h performance report.
+  if (!state.pendingDailyReportText && now() - n(state.lastDailyReportAt) >= 24 * 3600_000) {
+    state.pendingDailyReportText = report24h(state);
+    state.pendingDailyReportDelivered = [];
+    state.pendingDailyReportCreatedAt = now();
+  }
+  if (state.pendingDailyReportText) {
+    const reportResults = await sendUpdateToDestinations(state.pendingDailyReportText, state.pendingDailyReportDelivered || []);
+    state.pendingDailyReportDelivered ||= [];
+    for (const r of reportResults) if (r.sent && !state.pendingDailyReportDelivered.includes(r.name)) state.pendingDailyReportDelivered.push(r.name);
+    const configuredCount = [VIP_CHAT, FREE_CHAT].filter(Boolean).length || (LEGACY_CHAT ? 1 : 0);
+    console.log(`[REPORT][24H] ${JSON.stringify(reportResults)} delivered=${state.pendingDailyReportDelivered.join(',')}`);
+    if (configuredCount > 0 && state.pendingDailyReportDelivered.length >= configuredCount) {
+      state.lastDailyReportAt = n(state.pendingDailyReportCreatedAt, now());
+      delete state.pendingDailyReportText;
+      delete state.pendingDailyReportDelivered;
+      delete state.pendingDailyReportCreatedAt;
+    }
+  }
 
   await writeState(state);
 }
