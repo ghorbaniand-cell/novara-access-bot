@@ -487,14 +487,8 @@ async function main() {
   const stats = dailySummary(state);
   console.log(`[CYCLE] markets=${eligible.length}/${snapshot.totalEligible} checked=${checked} dataErrors=${failed} candidates=${candidates.length} selected=${chosen.length} sent=${sentSignals} deliveryErrors=${sendErrors} paperOpen=${stats.open} paperClosed=${stats.closed} paperWinRate=${stats.winRate.toFixed(1)}% paperNetR=${stats.realizedR.toFixed(2)} runtime=${((now() - started) / 1000).toFixed(1)}s`);
 
-  // Startup/cycle status once per 24h to avoid Telegram noise; logs remain available every run.
-  if (TOKEN && (now() - n(state.lastStatusAt) > 24 * 3600_000 || process.env.NOVARA_SMART_SEND_STATUS === 'true')) {
-    const status = `👁️ <b>NOVARA SMART MONEY AI</b>\n━━━━━━━━━━━━━━━━━━\n📡 Status: WATCHING\n🧭 Version: ${VERSION}\n📚 Eligible liquid perp markets: ${eligible.length}/${snapshot.totalEligible}\n🔎 Markets analyzed: ${checked} | Data errors: ${failed}\n🧩 Patterns: Sweep/Reclaim + Breakout/Retest + Trend Pullback\n🎚️ Threshold: ${MIN_SCORE}/10 (balanced)\n🔔 Signals sent this cycle: ${sentSignals}\n📈 Paper trades: ${stats.open} open / ${stats.closed} closed\n🏁 Paper win rate: ${stats.closed ? stats.winRate.toFixed(1) + '%' : 'pending'} | Net: ${stats.realizedR.toFixed(2)}R\n⚠️ Read-only research mode; no orders.`;
-    const dests = [VIP_CHAT, FREE_CHAT, (!VIP_CHAT && !FREE_CHAT ? LEGACY_CHAT : '')].filter(Boolean);
-    let ok = false;
-    for (const id of [...new Set(dests)]) { try { const r = await sendTelegram(id, status); ok ||= r.sent; } catch (e) { console.warn(`[STATUS][WARN] ${e.message}`); } }
-    if (ok) state.lastStatusAt = now();
-  }
+  // Telegram is signal-only: cycle/status reports stay in GitHub Actions logs.
+  // This intentionally sends no WATCHING/status message to public or VIP channels.
 
   await writeState(state);
 }

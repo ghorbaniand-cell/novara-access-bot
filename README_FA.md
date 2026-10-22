@@ -42,3 +42,8 @@
 ## بررسی پس از چند روز
 در لاگ Actions برای هر چرخه این‌ها را بررسی کن: `markets`, `checked`, `dataErrors`, `candidates`, `selected`, `sent`, `deliveryErrors`, `paperOpen`, `paperClosed`, `paperWinRate`, `paperNetR`.
 اول از همه خطاهای ارسال تلگرام را بررسی کن؛ اگر token/chat ID تنظیم نشده باشد، هیچ سیگنالی به کانال نمی‌رسد.
+
+
+### تنظیم ارسال تلگرام
+
+این نسخه فقط پیام‌های سیگنال را به کانال‌ها ارسال می‌کند. پیام وضعیت `NOVARA SMART MONEY AI / WATCHING` به تلگرام ارسال نمی‌شود؛ گزارش چرخه و خطاها همچنان در لاگ GitHub Actions قابل مشاهده‌اند.
