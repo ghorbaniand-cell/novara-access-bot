@@ -1,7 +1,7 @@
 {
   "date": "2026-10-22",
   "freeSent": 5,
-  "vipSent": 12,
+  "vipSent": 14,
   "sentKeys": [
     "2026-10-22|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|INJ|LONG",
     "2026-10-22|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|JUP|LONG",
@@ -14,7 +14,9 @@
     "2026-10-22|0xde0e9b1a35322a809165d09f0490cca3fa7562e5|fill|216156614292184",
     "2026-10-22|0xfdbaa5eee7cdf45eec3a71a672065a67191fda7a|XMR|SHORT",
     "2026-10-22|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|LIT|LONG",
-    "2026-10-22|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|XMR|SHORT"
+    "2026-10-22|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|XMR|SHORT",
+    "2026-10-22|0x0c1f6941fdcde9488dfd36ca16fed6b3bc49672b|PUMP|SHORT",
+    "2026-10-22|0xde0e9b1a35322a809165d09f0490cca3fa7562e5|fill|654338575565366"
   ],
   "openTrades": [
     {
@@ -3189,25 +3191,6 @@
       "alertType": "NEW_ENTRY"
     },
     {
-      "key": "2026-10-21|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|kPEPE|LONG",
-      "coin": "kPEPE",
-      "side": "LONG",
-      "trader": "⭐ Trader 23 ⭐ — STRK short candidate — profitable open short",
-      "entry": 0.004645,
-      "tp": 0.00469145,
-      "sl": 0.004621775,
-      "leverage": 10,
-      "observedLeverage": 10,
-      "signalLeverage": 10,
-      "notional": 44292.255488,
-      "signalAt": 1792625735501,
-      "status": "OPEN",
-      "destinations": [
-        "-1004446412486"
-      ],
-      "alertType": "OPEN_BAND"
-    },
-    {
       "key": "2026-10-22|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|INJ|LONG",
       "coin": "INJ",
       "side": "LONG",
@@ -3284,25 +3267,6 @@
       "destinations": [
         "-1004446412486",
         "@NovaraSignalsHQ"
-      ],
-      "alertType": "OPEN_BAND"
-    },
-    {
-      "key": "2026-10-22|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|SPX|LONG",
-      "coin": "SPX",
-      "side": "LONG",
-      "trader": "⭐ Trader 23 ⭐ — STRK short candidate — profitable open short",
-      "entry": 0.37834,
-      "tp": 0.3821234,
-      "sl": 0.3764483,
-      "leverage": 5,
-      "observedLeverage": 5,
-      "signalLeverage": 5,
-      "notional": 37043.601966,
-      "signalAt": 1792627365259,
-      "status": "OPEN",
-      "destinations": [
-        "-1004446412486"
       ],
       "alertType": "OPEN_BAND"
     },
@@ -3419,6 +3383,44 @@
         "-1004446412486"
       ],
       "alertType": "OPEN_BAND"
+    },
+    {
+      "key": "2026-10-22|0x0c1f6941fdcde9488dfd36ca16fed6b3bc49672b|PUMP|SHORT",
+      "coin": "PUMP",
+      "side": "SHORT",
+      "trader": "⭐ Trader 12 ⭐",
+      "entry": 0.005145,
+      "tp": 0.0050935500000000005,
+      "sl": 0.005170725,
+      "leverage": 10,
+      "observedLeverage": 10,
+      "signalLeverage": 10,
+      "notional": 201106.0653,
+      "signalAt": 1792632185287,
+      "status": "OPEN",
+      "destinations": [
+        "-1004446412486"
+      ],
+      "alertType": "OPEN_BAND"
+    },
+    {
+      "key": "2026-10-22|0xde0e9b1a35322a809165d09f0490cca3fa7562e5|fill|654338575565366",
+      "coin": "xyz:HYUNDAI",
+      "side": "SHORT",
+      "trader": "Trader 28",
+      "entry": 229.77,
+      "tp": 227.47230000000002,
+      "sl": 230.91885000000002,
+      "leverage": 0,
+      "observedLeverage": 0,
+      "signalLeverage": 0,
+      "notional": 2297.7000000000003,
+      "signalAt": 1792632185287,
+      "status": "OPEN",
+      "destinations": [
+        "-1004446412486"
+      ],
+      "alertType": "NEW_ENTRY"
     }
   ],
   "pendingOutcomes": [],
@@ -10885,6 +10887,46 @@
         "@NovaraSignalsHQ"
       ],
       "alertType": "OPEN_BAND"
+    },
+    {
+      "key": "2026-10-21|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|kPEPE|LONG",
+      "coin": "kPEPE",
+      "side": "LONG",
+      "status": "SL_HIT",
+      "entry": 0.004645,
+      "tp": 0.00469145,
+      "sl": 0.004621775,
+      "exitPrice": 0.004621775,
+      "leverage": 10,
+      "observedLeverage": 10,
+      "signalLeverage": 10,
+      "notional": 44292.255488,
+      "signalAt": 1792625735501,
+      "resolvedAt": 1792632185287,
+      "destinations": [
+        "-1004446412486"
+      ],
+      "alertType": "OPEN_BAND"
+    },
+    {
+      "key": "2026-10-22|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|SPX|LONG",
+      "coin": "SPX",
+      "side": "LONG",
+      "status": "SL_HIT",
+      "entry": 0.37834,
+      "tp": 0.3821234,
+      "sl": 0.3764483,
+      "exitPrice": 0.3764483,
+      "leverage": 5,
+      "observedLeverage": 5,
+      "signalLeverage": 5,
+      "notional": 37043.601966,
+      "signalAt": 1792627365259,
+      "resolvedAt": 1792632185287,
+      "destinations": [
+        "-1004446412486"
+      ],
+      "alertType": "OPEN_BAND"
     }
   ],
   "dailyReportLastSentAt": {
@@ -11965,6 +12007,12 @@
       "-1004446412486"
     ],
     "2026-10-22|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|XMR|SHORT": [
+      "-1004446412486"
+    ],
+    "2026-10-22|0x0c1f6941fdcde9488dfd36ca16fed6b3bc49672b|PUMP|SHORT": [
+      "-1004446412486"
+    ],
+    "2026-10-22|0xde0e9b1a35322a809165d09f0490cca3fa7562e5|fill|654338575565366": [
       "-1004446412486"
     ]
   },
