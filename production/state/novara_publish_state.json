@@ -1,7 +1,7 @@
 {
   "date": "2026-10-22",
   "freeSent": 5,
-  "vipSent": 27,
+  "vipSent": 29,
   "sentKeys": [
     "2026-10-22|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|INJ|LONG",
     "2026-10-22|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|JUP|LONG",
@@ -29,7 +29,9 @@
     "2026-10-22|0x0c1f6941fdcde9488dfd36ca16fed6b3bc49672b|BTC|LONG",
     "2026-10-22|0xe31501c472d557bfa145ce105d325fb2dd4cb867|fill|1080880068959666",
     "2026-10-22|0xde0e9b1a35322a809165d09f0490cca3fa7562e5|PAXG|SHORT",
-    "2026-10-22|0xe31501c472d557bfa145ce105d325fb2dd4cb867|fill|342311022540371"
+    "2026-10-22|0xe31501c472d557bfa145ce105d325fb2dd4cb867|fill|342311022540371",
+    "2026-10-22|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|LDO|LONG",
+    "2026-10-22|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|XMR|LONG"
   ],
   "openTrades": [
     {
@@ -3297,6 +3299,44 @@
         "-1004446412486"
       ],
       "alertType": "NEW_ENTRY"
+    },
+    {
+      "key": "2026-10-22|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|LDO|LONG",
+      "coin": "LDO",
+      "side": "LONG",
+      "trader": "⭐ Trader 23 ⭐ — STRK short candidate — profitable open short",
+      "entry": 0.4009,
+      "tp": 0.40490899999999996,
+      "sl": 0.39889549999999996,
+      "leverage": 5,
+      "observedLeverage": 5,
+      "signalLeverage": 5,
+      "notional": 9573.284861,
+      "signalAt": 1792647385560,
+      "status": "OPEN",
+      "destinations": [
+        "-1004446412486"
+      ],
+      "alertType": "OPEN_BAND"
+    },
+    {
+      "key": "2026-10-22|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|XMR|LONG",
+      "coin": "XMR",
+      "side": "LONG",
+      "trader": "⭐ Trader 23 ⭐ — STRK short candidate — profitable open short",
+      "entry": 627.447,
+      "tp": 633.72147,
+      "sl": 624.309765,
+      "leverage": 5,
+      "observedLeverage": 5,
+      "signalLeverage": 5,
+      "notional": 40722.66,
+      "signalAt": 1792647385560,
+      "status": "OPEN",
+      "destinations": [
+        "-1004446412486"
+      ],
+      "alertType": "OPEN_BAND"
     }
   ],
   "pendingOutcomes": [],
@@ -12332,6 +12372,12 @@
       "-1004446412486"
     ],
     "2026-10-22|0xe31501c472d557bfa145ce105d325fb2dd4cb867|fill|342311022540371": [
+      "-1004446412486"
+    ],
+    "2026-10-22|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|LDO|LONG": [
+      "-1004446412486"
+    ],
+    "2026-10-22|0x7717a7a245d9f950e586822b8c9b46863ed7bd7e|XMR|LONG": [
       "-1004446412486"
     ]
   },
