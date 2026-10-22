@@ -2,7 +2,7 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 
 /*
- * NOVARA SMART MONEY AI V1.0.3
+ * NOVARA SMART MONEY AI V1.0.4
  * READ-ONLY | NO ORDERS | NO AUTO-COPY | PAPER OUTCOME TRACKING
  *
  * Combines three entry families:
@@ -14,7 +14,7 @@ import path from 'node:path';
  * All eligible liquid perp markets are considered; the worker does not depend on wallet lists.
  */
 
-const VERSION = 'NOVARA-SMART-MONEY-AI-V1.0.3-OUTCOME-ALERTS-24H-REPORT';
+const VERSION = 'NOVARA-SMART-MONEY-AI-V1.0.4-SCORE-ROUTING';
 const API = (process.env.HYPERLIQUID_API_URL || 'https://api.hyperliquid.xyz/info').trim();
 const TOKEN = process.env.TELEGRAM_TOKEN || process.env.TELEGRAM_BOT_TOKEN || '';
 const LEGACY_CHAT = process.env.TELEGRAM_CHAT_ID || '';
@@ -26,6 +26,7 @@ const TIMEOUT_MS = Math.max(3000, Number(process.env.NOVARA_SMART_TIMEOUT_MS || 
 const MIN_VOLUME_USD = Math.max(250000, Number(process.env.NOVARA_SMART_MIN_24H_VOLUME_USD || 2_000_000));
 const MAX_MARKETS = Math.max(25, Math.min(500, Number(process.env.NOVARA_SMART_MAX_MARKETS || 300)));
 const MIN_SCORE = Math.max(4.5, Math.min(8.5, Number(process.env.NOVARA_SMART_MIN_SCORE || 5.8)));
+const VIP_MIN_SCORE = Math.max(4.5, Math.min(9.5, Number(process.env.NOVARA_VIP_MIN_SCORE || 6.0))); // score <= 6.0 goes FREE; score > 6.0 goes VIP
 const MIN_RR = Math.max(1.2, Number(process.env.NOVARA_SMART_MIN_RR || 1.65));
 const MAX_SPREAD_PCT = Math.max(0.03, Number(process.env.NOVARA_SMART_MAX_SPREAD_PCT || 0.25));
 const MAX_SIGNALS_PER_CYCLE = Math.max(1, Number(process.env.NOVARA_SMART_MAX_SIGNALS_PER_CYCLE || 8));
@@ -337,40 +338,54 @@ async function sendTelegram(chatId, message) {
   if (!response.ok || !data.ok) throw new Error(`Telegram ${response.status}: ${raw.slice(0, 180)}`);
   return { sent: true };
 }
-async function sendToDestinations(state, message) {
-  const outcomes = [];
-  const destinations = [];
-  if (VIP_CHAT) destinations.push({ name: 'VIP', id: VIP_CHAT });
-  if (FREE_CHAT) destinations.push({ name: 'FREE', id: FREE_CHAT });
-  if (!destinations.length && LEGACY_CHAT) destinations.push({ name: 'LEGACY', id: LEGACY_CHAT });
-  for (const d of destinations) {
-    if (d.name === 'FREE' && FREE_DAILY_LIMIT > 0) {
-      const key = dayKey();
-      const count = n(state.dailyFreeCount[key]);
-      if (count >= FREE_DAILY_LIMIT) { outcomes.push({ name: d.name, sent: false, reason: 'free_daily_limit' }); continue; }
-      try { const r = await sendTelegram(d.id, message); if (r.sent) state.dailyFreeCount[key] = count + 1; outcomes.push({ name: d.name, ...r }); }
-      catch (e) { outcomes.push({ name: d.name, sent: false, reason: e.message }); }
-    } else {
-      try { outcomes.push({ name: d.name, ...(await sendTelegram(d.id, message)) }); }
-      catch (e) { outcomes.push({ name: d.name, sent: false, reason: e.message }); }
-    }
+function audienceForScore(score) {
+  return n(score) <= VIP_MIN_SCORE ? 'FREE' : 'VIP';
+}
+function audienceForTrade(trade) {
+  if (trade.audience === 'FREE' || trade.audience === 'VIP' || trade.audience === 'LEGACY') return trade.audience;
+  // Backward compatibility for paper trades recorded before score-based routing existed.
+  return audienceForScore(trade.score);
+}
+function configuredAudience(name) {
+  if (name === 'VIP' && VIP_CHAT) return { name: 'VIP', id: VIP_CHAT };
+  if (name === 'FREE' && FREE_CHAT) return { name: 'FREE', id: FREE_CHAT };
+  if (name === 'LEGACY' && !VIP_CHAT && !FREE_CHAT && LEGACY_CHAT) return { name: 'LEGACY', id: LEGACY_CHAT };
+  if (name === 'LEGACY' && !VIP_CHAT && !FREE_CHAT && !LEGACY_CHAT) return null;
+  return null;
+}
+async function sendSignalToAudience(state, message, audience) {
+  // Never downgrade a VIP signal to the public channel if VIP is misconfigured.
+  let destination = configuredAudience(audience);
+  if (!VIP_CHAT && !FREE_CHAT && LEGACY_CHAT) destination = { name: 'LEGACY', id: LEGACY_CHAT };
+  if (!destination) return [{ name: audience, sent: false, reason: `${audience.toLowerCase()}_chat_not_configured` }];
+  if (destination.name === 'FREE' && FREE_DAILY_LIMIT > 0) {
+    const key = dayKey();
+    const count = n(state.dailyFreeCount[key]);
+    if (count >= FREE_DAILY_LIMIT) return [{ name: destination.name, sent: false, reason: 'free_daily_limit' }];
+    try {
+      const result = await sendTelegram(destination.id, message);
+      if (result.sent) state.dailyFreeCount[key] = count + 1;
+      return [{ name: destination.name, ...result }];
+    } catch (e) { return [{ name: destination.name, sent: false, reason: e.message }]; }
   }
-  return outcomes;
+  try { return [{ name: destination.name, ...(await sendTelegram(destination.id, message)) }]; }
+  catch (e) { return [{ name: destination.name, sent: false, reason: e.message }]; }
 }
 
-// Outcome alerts and scheduled performance reports bypass the FREE channel's daily *new-signal* cap.
-async function sendUpdateToDestinations(message, alreadySent = []) {
-  const outcomes = [];
-  const destinations = [];
-  if (VIP_CHAT) destinations.push({ name: 'VIP', id: VIP_CHAT });
-  if (FREE_CHAT) destinations.push({ name: 'FREE', id: FREE_CHAT });
-  if (!destinations.length && LEGACY_CHAT) destinations.push({ name: 'LEGACY', id: LEGACY_CHAT });
-  for (const d of destinations) {
-    if (alreadySent.includes(d.name)) continue;
-    try { outcomes.push({ name: d.name, ...(await sendTelegram(d.id, message)) }); }
-    catch (e) { outcomes.push({ name: d.name, sent: false, reason: e.message }); }
-  }
-  return outcomes;
+// Outcome alerts are sent only to the same audience that received the original signal.
+async function sendUpdateToAudience(message, audience, alreadySent = []) {
+  const destination = configuredAudience(audience);
+  if (!destination || alreadySent.includes(destination.name)) return [];
+  try { return [{ name: destination.name, ...(await sendTelegram(destination.id, message)) }]; }
+  catch (e) { return [{ name: destination.name, sent: false, reason: e.message }]; }
+}
+
+function reportAudiences() {
+  const names = [];
+  if (FREE_CHAT) names.push('FREE');
+  if (VIP_CHAT) names.push('VIP');
+  if (!names.length && LEGACY_CHAT) names.push('LEGACY');
+  return names;
 }
 
 function candleHit(trade, candle) {
@@ -465,9 +480,9 @@ function formatOutcome(trade) {
 🧪 Paper tracking only — no real order was placed.`;
 }
 
-function report24h(state) {
+function report24h(state, audience) {
   const cutoff = now() - 24 * 3600_000;
-  const cohort = state.paperTrades.filter(t => n(t.openedAt) >= cutoff && n(t.openedAt) <= now());
+  const cohort = state.paperTrades.filter(t => n(t.openedAt) >= cutoff && n(t.openedAt) <= now() && (audience === 'LEGACY' || audienceForTrade(t) === audience));
   const tp = cohort.filter(t => t.status === 'TP').length;
   const sl = cohort.filter(t => t.status === 'SL').length;
   const ambiguous = cohort.filter(t => t.status === 'AMBIGUOUS').length;
@@ -479,10 +494,11 @@ function report24h(state) {
   const netR = cohort.filter(t => t.status === 'TP' || t.status === 'SL').reduce((sum,t) => sum + n(t.pnlR), 0);
   const details = [...cohort].sort((a,b) => n(b.openedAt)-n(a.openedAt)).slice(0, 12).map(t => {
     const status = t.status === 'OPEN' ? 'OPEN' : t.status === 'TP' ? 'TP ✅' : t.status === 'SL' ? 'SL ❌' : 'AMBIGUOUS ⚠️';
-    return `• ${escapeHtml(t.coin)} ${t.side} | ${status} | ${n(t.suggestedLeverage) || '—'}x | ${t.status === 'TP' || t.status === 'SL' ? `${n(t.pnlR) > 0 ? '+' : ''}${n(t.pnlR).toFixed(2)}R` : 'pending'}`;
+    return `• ${escapeHtml(t.coin)} ${t.side} | ${status} | score ${n(t.score).toFixed(1)}/10 | ${n(t.suggestedLeverage) || '—'}x | ${t.status === 'TP' || t.status === 'SL' ? `${n(t.pnlR) > 0 ? '+' : ''}${n(t.pnlR).toFixed(2)}R` : 'pending'}`;
   });
-  return `📊 <b>NOVARA — 24H SIGNAL PERFORMANCE</b>
+  return `📊 <b>NOVARA — 24H ${audience} SIGNAL PERFORMANCE</b>
 ━━━━━━━━━━━━━━━━━━
+🔐 Audience: ${audience === 'FREE' ? `Public signals (score ≤ ${VIP_MIN_SCORE.toFixed(1)})` : audience === 'VIP' ? `VIP signals (score > ${VIP_MIN_SCORE.toFixed(1)})` : 'Legacy destination'}
 🕒 Window: last 24 hours (UTC)
 🔔 Signals sent/tracked: <b>${cohort.length}</b>
 🎯 TP reached: <b>${tp}</b> (${successOfAll.toFixed(1)}% of all signals)
@@ -568,14 +584,15 @@ async function main() {
   for (const t of closed) {
     console.log(`[PAPER][${t.status}] ${t.coin} ${t.side} entry=${fmtPrice(t.entry)} mark=${fmtPrice(t.exitMark)} R=${t.pnlR ?? 'undetermined'}`);
   }
-  // Retry undelivered outcome notifications without duplicating messages already delivered to a destination.
+  // Retry undelivered outcome notifications only to the audience that received the signal.
   for (const t of state.paperTrades.filter(x => x.status !== 'OPEN' && !x.outcomeNotifiedAt)) {
+    t.audience ||= audienceForTrade(t);
     t.outcomeDelivered ||= [];
-    const updateResults = await sendUpdateToDestinations(formatOutcome(t), t.outcomeDelivered);
+    const updateResults = await sendUpdateToAudience(formatOutcome(t), t.audience, t.outcomeDelivered);
     for (const r of updateResults) if (r.sent && !t.outcomeDelivered.includes(r.name)) t.outcomeDelivered.push(r.name);
-    const configuredCount = [VIP_CHAT, FREE_CHAT].filter(Boolean).length || (LEGACY_CHAT ? 1 : 0);
-    if (configuredCount > 0 && t.outcomeDelivered.length >= configuredCount) t.outcomeNotifiedAt = now();
-    console.log(`[OUTCOME][DELIVERY] ${t.coin} ${t.status} ${JSON.stringify(updateResults)} delivered=${t.outcomeDelivered.join(',')}`);
+    const destination = configuredAudience(t.audience) || (!VIP_CHAT && !FREE_CHAT && LEGACY_CHAT ? { name: 'LEGACY' } : null);
+    if (destination && t.outcomeDelivered.includes(destination.name)) t.outcomeNotifiedAt = now();
+    console.log(`[OUTCOME][DELIVERY] ${t.coin} ${t.status} audience=${t.audience} ${JSON.stringify(updateResults)} delivered=${t.outcomeDelivered.join(',')}`);
   }
 
   const candidates = [];
@@ -617,16 +634,17 @@ async function main() {
   let sentSignals = 0, sendErrors = 0;
   for (const s of chosen) {
     const message = formatSignal(s, s.risk);
-    const destinations = await sendToDestinations(state, message);
+    const audience = audienceForScore(s.score);
+    const destinations = await sendSignalToAudience(state, message, audience);
     const anySent = destinations.some(x => x.sent);
-    console.log(`[SIGNAL] ${s.coin} ${s.side} pattern=${s.pattern} score=${s.score.toFixed(2)} leverage=${s.leverageInfo?.leverage ?? suggestLeverage(s).leverage}x entry=${fmtPrice(s.risk.entry)} SL=${fmtPrice(s.risk.sl)} TP=${fmtPrice(s.risk.tp)} deliveries=${JSON.stringify(destinations)}`);
+    console.log(`[SIGNAL] ${s.coin} ${s.side} pattern=${s.pattern} score=${s.score.toFixed(2)} audience=${audience} leverage=${s.leverageInfo?.leverage ?? suggestLeverage(s).leverage}x entry=${fmtPrice(s.risk.entry)} SL=${fmtPrice(s.risk.sl)} TP=${fmtPrice(s.risk.tp)} deliveries=${JSON.stringify(destinations)}`);
     if (anySent) {
       sentSignals++;
       state.alertHistory[signalKey(s)] = now();
-      state.paperTrades.push({ id: `${s.coin}|${s.side}|${s.pattern}|${now()}`, coin: s.coin, side: s.side, pattern: s.pattern, score: Number(s.score.toFixed(2)), entry: s.risk.entry, sl: s.risk.sl, tp: s.risk.tp, rr: s.risk.rr, suggestedLeverage: s.leverageInfo?.leverage ?? null, openedAt: now(), status: 'OPEN', pnlR: null, reasons: s.reasons });
+      state.paperTrades.push({ id: `${s.coin}|${s.side}|${s.pattern}|${now()}`, coin: s.coin, side: s.side, pattern: s.pattern, score: Number(s.score.toFixed(2)), audience: destinations[0].name, entry: s.risk.entry, sl: s.risk.sl, tp: s.risk.tp, rr: s.risk.rr, suggestedLeverage: s.leverageInfo?.leverage ?? null, openedAt: now(), status: 'OPEN', pnlR: null, reasons: s.reasons });
     } else {
       sendErrors++;
-      console.warn(`[DELIVERY][FAIL] ${s.coin} ${s.side}: no destination confirmed delivery`);
+      console.warn(`[DELIVERY][FAIL] ${s.coin} ${s.side} audience=${audience}: no destination confirmed delivery`);
     }
   }
 
@@ -640,23 +658,35 @@ async function main() {
   const stats = dailySummary(state);
   console.log(`[CYCLE] markets=${eligible.length}/${snapshot.totalEligible} checked=${checked} dataErrors=${failed} candidates=${candidates.length} selected=${chosen.length} sent=${sentSignals} deliveryErrors=${sendErrors} paperOpen=${stats.open} paperClosed=${stats.closed} paperWinRate=${stats.winRate.toFixed(1)}% paperNetR=${stats.realizedR.toFixed(2)} runtime=${((now() - started) / 1000).toFixed(1)}s`);
 
-  // No WATCHING/status spam. Only signal messages, TP/SL outcome alerts, and one 24h performance report.
-  if (!state.pendingDailyReportText && now() - n(state.lastDailyReportAt) >= 24 * 3600_000) {
-    state.pendingDailyReportText = report24h(state);
-    state.pendingDailyReportDelivered = [];
+  // No WATCHING/status spam. Send separate audience-specific reports so VIP signal details never leak to FREE.
+  if (!state.pendingDailyReports && now() - n(state.lastDailyReportAt) >= 24 * 3600_000) {
+    state.pendingDailyReports = {};
     state.pendingDailyReportCreatedAt = now();
+    for (const audience of reportAudiences()) {
+      state.pendingDailyReports[audience] = { text: report24h(state, audience), delivered: false };
+    }
   }
-  if (state.pendingDailyReportText) {
-    const reportResults = await sendUpdateToDestinations(state.pendingDailyReportText, state.pendingDailyReportDelivered || []);
-    state.pendingDailyReportDelivered ||= [];
-    for (const r of reportResults) if (r.sent && !state.pendingDailyReportDelivered.includes(r.name)) state.pendingDailyReportDelivered.push(r.name);
-    const configuredCount = [VIP_CHAT, FREE_CHAT].filter(Boolean).length || (LEGACY_CHAT ? 1 : 0);
-    console.log(`[REPORT][24H] ${JSON.stringify(reportResults)} delivered=${state.pendingDailyReportDelivered.join(',')}`);
-    if (configuredCount > 0 && state.pendingDailyReportDelivered.length >= configuredCount) {
+  if (state.pendingDailyReports && typeof state.pendingDailyReports === 'object') {
+    for (const [audience, report] of Object.entries(state.pendingDailyReports)) {
+      if (report.delivered) continue;
+      const destination = configuredAudience(audience);
+      if (!destination) {
+        console.warn(`[REPORT][24H] audience=${audience} not configured; report retained`);
+        continue;
+      }
+      const reportResults = await sendUpdateToAudience(report.text, audience, []);
+      if (reportResults.some(r => r.sent)) report.delivered = true;
+      console.log(`[REPORT][24H] audience=${audience} ${JSON.stringify(reportResults)} delivered=${report.delivered}`);
+    }
+    const pending = Object.values(state.pendingDailyReports).some(r => !r.delivered);
+    if (!pending && Object.keys(state.pendingDailyReports).length > 0) {
       state.lastDailyReportAt = n(state.pendingDailyReportCreatedAt, now());
+      delete state.pendingDailyReports;
+      delete state.pendingDailyReportCreatedAt;
+      // Clear legacy single-report fields from previous versions without re-broadcasting them.
       delete state.pendingDailyReportText;
       delete state.pendingDailyReportDelivered;
-      delete state.pendingDailyReportCreatedAt;
+      delete state.pendingDailyReportCreatedAtLegacy;
     }
   }
 
