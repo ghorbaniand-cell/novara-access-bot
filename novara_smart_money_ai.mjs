@@ -2,7 +2,7 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 
 /*
- * NOVARA SMART MONEY AI V2.4.0
+ * NOVARA SMART MONEY AI V2.4.2
  * READ-ONLY | NO ORDERS | NO AUTO-COPY | PAPER OUTCOME TRACKING
  *
  * Combines three entry families:
@@ -14,7 +14,7 @@ import path from 'node:path';
  * All eligible liquid perp markets are considered; the worker does not depend on wallet lists.
  */
 
-const VERSION = 'NOVARA-SMART-MONEY-AI-V2.4.0-CONFIRMATION-STRUCTURE-RISK';
+const VERSION = 'NOVARA-SMART-MONEY-AI-V2.4.2-RISK-CALIBRATION-DIAGNOSTICS';
 const API = (process.env.HYPERLIQUID_API_URL || 'https://api.hyperliquid.xyz/info').trim();
 const TOKEN = process.env.TELEGRAM_TOKEN || process.env.TELEGRAM_BOT_TOKEN || '';
 const LEGACY_CHAT = process.env.TELEGRAM_CHAT_ID || '';
@@ -26,8 +26,8 @@ const MAX_429_RETRIES = Math.max(0, Math.min(4, Number(process.env.NOVARA_SMART_
 const TIMEOUT_MS = Math.max(3000, Number(process.env.NOVARA_SMART_TIMEOUT_MS || 12000));
 const MIN_VOLUME_USD = Math.max(250000, Number(process.env.NOVARA_SMART_MIN_24H_VOLUME_USD || 2_000_000));
 const MAX_MARKETS = Math.max(25, Math.min(300, Number(process.env.NOVARA_SMART_MAX_MARKETS || 120)));
-const MIN_SCORE = Math.max(6.0, Math.min(8.5, Number(process.env.NOVARA_SMART_MIN_SCORE || 6.2)));
-const MIN_RR = Math.max(1.5, Number(process.env.NOVARA_SMART_MIN_RR || 1.8));
+const MIN_SCORE = Math.max(5.8, Math.min(8.5, Number(process.env.NOVARA_SMART_MIN_SCORE || 6.0)));
+const MIN_RR = Math.max(1.5, Number(process.env.NOVARA_SMART_MIN_RR || 1.5));
 const STRUCTURE_BUFFER_ATR = Math.max(0.1, Number(process.env.NOVARA_STRUCTURE_BUFFER_ATR || 0.25));
 const MAX_SPREAD_PCT = Math.max(0.03, Number(process.env.NOVARA_SMART_MAX_SPREAD_PCT || 0.25));
 const MAX_SIGNALS_PER_CYCLE = Math.max(1, Number(process.env.NOVARA_SMART_MAX_SIGNALS_PER_CYCLE || 8));
@@ -741,7 +741,7 @@ async function analyzeAsset(asset, previous, btcRegime) {
   const lastClosed15m = c15.at(-1);
   const atr15ForTiming = atr(c15, 14) || asset.markPx * 0.006;
   const entryDriftPct = Math.abs(asset.markPx - lastClosed15m.c) / asset.markPx * 100;
-  const maxEntryDriftPct = Math.max(0.25, (atr15ForTiming / asset.markPx) * 100 * 0.65);
+  const maxEntryDriftPct = Math.max(0.35, (atr15ForTiming / asset.markPx) * 100 * 0.80);
   if (entryDriftPct > maxEntryDriftPct) {
     console.log(`[ENTRY][STALE] ${asset.coin} mark/confirmed-close drift=${entryDriftPct.toFixed(3)}% > ${maxEntryDriftPct.toFixed(3)}%; skip chase`);
     const skipped = [];
