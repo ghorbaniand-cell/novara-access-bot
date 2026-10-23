@@ -14,7 +14,7 @@ import path from 'node:path';
  * All eligible liquid perp markets are considered; the worker does not depend on wallet lists.
  */
 
-const VERSION = 'NOVARA-SMART-MONEY-AI-V2.1.0-STRUCTURE-429-REPAIR';
+const VERSION = 'NOVARA-SMART-MONEY-AI-V2.2.0-STRUCTURE-SELECTOR-ROUTING-FIX';
 const API = (process.env.HYPERLIQUID_API_URL || 'https://api.hyperliquid.xyz/info').trim();
 const TOKEN = process.env.TELEGRAM_TOKEN || process.env.TELEGRAM_BOT_TOKEN || '';
 const LEGACY_CHAT = process.env.TELEGRAM_CHAT_ID || '';
@@ -282,16 +282,20 @@ function detectPatterns({ coin, c15, c1h, ctx, prevCtx, mid, spread, imbalance, 
   const allHighs = [...pivotHighs, ...rangeHighs];
   const supportCandidates = allLows.filter(x => x.price > 0 && x.price < mid && mid - x.price >= minLevelGap);
   const resistanceCandidates = allHighs.filter(x => x.price > mid && x.price - mid >= minLevelGap);
-  // Score levels using normalized distance, a modest 1H preference, and confluence.
+  // Select the nearest valid structure first. The previous weighted rank could
+  // choose a materially farther 1H/range level and push the SL outside the risk cap.
+  // Only use timeframe/confluence as a tie-breaker when levels are almost identical.
   const chooseLevel = levels => {
     if (!levels.length) return null;
-    return levels.map(level => {
-      const distancePct = Math.abs(level.price - mid) / mid;
-      const nearby = levels.filter(other => other !== level && Math.abs(other.price - level.price) / mid <= 0.0015).length;
-      const tfBonus = level.tf === '1h' ? 0.12 : 0;
-      const rangePenalty = String(level.source).includes('range') ? 0.00005 : 0;
-      return { ...level, rank: distancePct * (1 - tfBonus) - nearby * 0.00015 + rangePenalty };
-    }).sort((a, b) => a.rank - b.rank)[0];
+    const ranked = levels.map(level => ({
+      ...level,
+      distance: Math.abs(level.price - mid),
+      confluence: levels.filter(other => other !== level && Math.abs(other.price - level.price) / mid <= 0.0015).length,
+    })).sort((a, b) => a.distance - b.distance);
+    const nearest = ranked[0];
+    const nearTies = ranked.filter(x => x.distance <= nearest.distance + mid * 0.0010);
+    nearTies.sort((a, b) => (b.confluence - a.confluence) || ((a.tf === '1h' ? 0 : 1) - (b.tf === '1h' ? 0 : 1)) || a.distance - b.distance);
+    return nearTies[0];
   };
   const selectedSupport = chooseLevel(supportCandidates);
   const selectedResistance = chooseLevel(resistanceCandidates);
@@ -833,16 +837,19 @@ async function main() {
     const k = `${c.coin}|${c.side}`;
     if (seenMarketSide.has(k)) continue;
     seenMarketSide.add(k);
-    chosen.push(c); // no per-cycle cap: every eligible score >= MIN_SCORE is retained
+    chosen.push(c); // VIP receives all valid candidates at/above MIN_SCORE
   }
 
   let sentSignals = 0, sendErrors = 0;
-  const publicPick = chosen.length ? chosen[Math.floor(Math.random() * chosen.length)] : null;
+  // Public channel must not receive borderline 5.8–6.0 signals. Choose at most
+  // one random signal scoring strictly above 6.0 per run; no daily cap.
+  const publicPool = chosen.filter(s => n(s.score) > 6.0);
+  const publicPick = publicPool.length ? publicPool[Math.floor(Math.random() * publicPool.length)] : null;
   for (const s of chosen) {
     if (n(s.score) < MIN_SCORE) continue;
     const message = formatSignal(s, s.risk);
     const destinations = [];
-    // Every eligible signal goes to VIP. Exactly one random eligible signal per cycle may go public.
+    // Every eligible signal goes to VIP. At most one random signal scoring >6.0 goes public per cycle.
     const vip = configuredAudience('VIP');
     if (vip) {
       try { destinations.push({ name: 'VIP', ...(await sendTelegram(vip.id, message)) }); }
