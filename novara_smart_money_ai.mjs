@@ -2,7 +2,7 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 
 /*
- * NOVARA SMART MONEY AI V2.4.2
+ * NOVARA SMART MONEY AI V2.4.0
  * READ-ONLY | NO ORDERS | NO AUTO-COPY | PAPER OUTCOME TRACKING
  *
  * Combines three entry families:
@@ -14,7 +14,7 @@ import path from 'node:path';
  * All eligible liquid perp markets are considered; the worker does not depend on wallet lists.
  */
 
-const VERSION = 'NOVARA-SMART-MONEY-AI-V2.4.3-TELEGRAM-DELIVERY-FIX';
+const VERSION = 'NOVARA-SMART-MONEY-AI-V2.4.0-CONFIRMATION-STRUCTURE-RISK';
 const API = (process.env.HYPERLIQUID_API_URL || 'https://api.hyperliquid.xyz/info').trim();
 const TOKEN = process.env.TELEGRAM_TOKEN || process.env.TELEGRAM_BOT_TOKEN || '';
 const LEGACY_CHAT = process.env.TELEGRAM_CHAT_ID || '';
@@ -26,8 +26,8 @@ const MAX_429_RETRIES = Math.max(0, Math.min(4, Number(process.env.NOVARA_SMART_
 const TIMEOUT_MS = Math.max(3000, Number(process.env.NOVARA_SMART_TIMEOUT_MS || 12000));
 const MIN_VOLUME_USD = Math.max(250000, Number(process.env.NOVARA_SMART_MIN_24H_VOLUME_USD || 2_000_000));
 const MAX_MARKETS = Math.max(25, Math.min(300, Number(process.env.NOVARA_SMART_MAX_MARKETS || 120)));
-const MIN_SCORE = Math.max(5.8, Math.min(8.5, Number(process.env.NOVARA_SMART_MIN_SCORE || 6.0)));
-const MIN_RR = Math.max(1.5, Number(process.env.NOVARA_SMART_MIN_RR || 1.5));
+const MIN_SCORE = Math.max(6.0, Math.min(8.5, Number(process.env.NOVARA_SMART_MIN_SCORE || 6.2)));
+const MIN_RR = Math.max(1.5, Number(process.env.NOVARA_SMART_MIN_RR || 1.8));
 const STRUCTURE_BUFFER_ATR = Math.max(0.1, Number(process.env.NOVARA_STRUCTURE_BUFFER_ATR || 0.25));
 const MAX_SPREAD_PCT = Math.max(0.03, Number(process.env.NOVARA_SMART_MAX_SPREAD_PCT || 0.25));
 const MAX_SIGNALS_PER_CYCLE = Math.max(1, Number(process.env.NOVARA_SMART_MAX_SIGNALS_PER_CYCLE || 8));
@@ -519,15 +519,10 @@ function audienceForTrade(trade) {
   return audienceForScore(trade.score);
 }
 function configuredAudience(name) {
-  if (name === 'VIP') {
-    if (VIP_CHAT) return { name: 'VIP', id: VIP_CHAT, viaLegacy: false };
-    // Backward-compatible fallback: TELEGRAM_CHAT_ID remains a usable primary
-    // destination even when a FREE chat is also configured.
-    if (LEGACY_CHAT) return { name: 'VIP', id: LEGACY_CHAT, viaLegacy: true };
-    return null;
-  }
-  if (name === 'FREE' && FREE_CHAT) return { name: 'FREE', id: FREE_CHAT, viaLegacy: false };
-  if (name === 'LEGACY' && !VIP_CHAT && LEGACY_CHAT) return { name: 'LEGACY', id: LEGACY_CHAT, viaLegacy: true };
+  if (name === 'VIP' && VIP_CHAT) return { name: 'VIP', id: VIP_CHAT };
+  if (name === 'FREE' && FREE_CHAT) return { name: 'FREE', id: FREE_CHAT };
+  if (name === 'LEGACY' && !VIP_CHAT && !FREE_CHAT && LEGACY_CHAT) return { name: 'LEGACY', id: LEGACY_CHAT };
+  if (name === 'LEGACY' && !VIP_CHAT && !FREE_CHAT && !LEGACY_CHAT) return null;
   return null;
 }
 async function sendSignalToAudience(state, message, audience) {
@@ -561,7 +556,8 @@ async function sendUpdateToAudience(message, audience, alreadySent = []) {
 function reportAudiences() {
   const names = [];
   if (FREE_CHAT) names.push('FREE');
-  if (VIP_CHAT || LEGACY_CHAT) names.push('VIP');
+  if (VIP_CHAT) names.push('VIP');
+  if (!names.length && LEGACY_CHAT) names.push('LEGACY');
   return names;
 }
 
@@ -745,7 +741,7 @@ async function analyzeAsset(asset, previous, btcRegime) {
   const lastClosed15m = c15.at(-1);
   const atr15ForTiming = atr(c15, 14) || asset.markPx * 0.006;
   const entryDriftPct = Math.abs(asset.markPx - lastClosed15m.c) / asset.markPx * 100;
-  const maxEntryDriftPct = Math.max(0.35, (atr15ForTiming / asset.markPx) * 100 * 0.80);
+  const maxEntryDriftPct = Math.max(0.25, (atr15ForTiming / asset.markPx) * 100 * 0.65);
   if (entryDriftPct > maxEntryDriftPct) {
     console.log(`[ENTRY][STALE] ${asset.coin} mark/confirmed-close drift=${entryDriftPct.toFixed(3)}% > ${maxEntryDriftPct.toFixed(3)}%; skip chase`);
     const skipped = [];
@@ -769,11 +765,7 @@ async function main() {
   console.log(`\n${VERSION} — START`);
   console.log(`Mode: READ-ONLY / NO ORDERS / PAPER TRACKING`);
   console.log(`Time: ${new Date().toISOString()}`);
-  console.log(`Signal threshold: ${MIN_SCORE}/10 | min R:R: 1:${MIN_RR.toFixed(2)} | structure-first SL/TP | min 24h volume: $${MIN_VOLUME_USD.toLocaleString()} | max markets scanned: ${MAX_MARKETS}`);
-  console.log(`[TELEGRAM][CONFIG] token=${TOKEN ? 'configured' : 'MISSING'} vipChat=${VIP_CHAT ? 'configured' : (LEGACY_CHAT ? 'legacy-fallback' : 'MISSING')} freeChat=${FREE_CHAT ? 'configured' : 'MISSING'} legacyChat=${LEGACY_CHAT ? 'configured' : 'MISSING'}`);
-  if (!TOKEN || (!VIP_CHAT && !LEGACY_CHAT && !FREE_CHAT)) {
-    console.warn('[TELEGRAM][ACTION REQUIRED] Signals may be generated but cannot be delivered until TELEGRAM_TOKEN and at least one chat ID are configured in the production environment.');
-  }
+  console.log(`Signal threshold: ${MIN_SCORE}/10 | min R:R: 1:${MIN_RR.toFixed(2)} | structure-first SL/TP | min 24h volume: $${MIN_VOLUME_USD.toLocaleString()} | market cap: ${MAX_MARKETS}`);
 
   const snapshot = await getMarketSnapshot();
   const contexts = snapshot.ctxByCoin;
@@ -880,17 +872,19 @@ async function main() {
     // Every eligible signal goes to VIP. At most the top-scoring signal goes public per cycle.
     const vip = configuredAudience('VIP');
     if (vip) {
-      try {
-        const result = await sendTelegram(vip.id, message);
-        destinations.push({ name: 'VIP', ...(vip.viaLegacy ? { route: 'TELEGRAM_CHAT_ID fallback' } : {}), ...result });
-      } catch (e) { destinations.push({ name: 'VIP', sent: false, reason: e.message }); }
-    } else destinations.push({ name: 'VIP', sent: false, reason: 'vip_chat_not_configured_and_no_legacy_fallback' });
+      try { destinations.push({ name: 'VIP', ...(await sendTelegram(vip.id, message)) }); }
+      catch (e) { destinations.push({ name: 'VIP', sent: false, reason: e.message }); }
+    } else if (!FREE_CHAT && LEGACY_CHAT) {
+      const legacy = configuredAudience('LEGACY');
+      try { destinations.push({ name: 'LEGACY', ...(await sendTelegram(legacy.id, message)) }); }
+      catch (e) { destinations.push({ name: 'LEGACY', sent: false, reason: e.message }); }
+    } else destinations.push({ name: 'VIP', sent: false, reason: 'vip_chat_not_configured' });
     if (s === publicPick) {
       const pub = configuredAudience('FREE');
       if (pub) {
         try { destinations.push({ name: 'FREE', ...(await sendTelegram(pub.id, message)) }); }
         catch (e) { destinations.push({ name: 'FREE', sent: false, reason: e.message }); }
-      } else destinations.push({ name: 'FREE', sent: false, reason: 'free_chat_not_configured' });
+      }
     }
     const deliveredNames = destinations.filter(x => x.sent).map(x => x.name);
     const anySent = deliveredNames.length > 0;
