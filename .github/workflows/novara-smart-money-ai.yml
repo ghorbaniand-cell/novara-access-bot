@@ -41,10 +41,10 @@ jobs:
           NOVARA_FREE_CHAT_ID: ${{ secrets.NOVARA_FREE_CHAT_ID || secrets.FREE_CHAT_ID }}
           NOVARA_VIP_CHAT_ID: ${{ secrets.NOVARA_VIP_CHAT_ID || secrets.VIP_CHAT_ID || secrets.NOVARA_PREMIUM_CHAT_ID }}
           NOVARA_SMART_MAX_MARKETS: '120'
-          NOVARA_SMART_MIN_SCORE: '6.2'
-          NOVARA_SMART_MIN_RR: '1.8'
+          NOVARA_SMART_MIN_SCORE: '6.0'
+          NOVARA_SMART_MIN_RR: '1.5'
           NOVARA_SMART_MIN_24H_VOLUME_USD: '2000000'
-          NOVARA_SMART_STATE_FILE: production/state/novara_smart_money_state.json
+          NOVARA_SMART_MONEY_STATE_FILE: production/state/novara_smart_money_state.json
         run: node novara_smart_money_ai.mjs
 
       - name: Persist observer state
