@@ -1,11 +1,31 @@
-NOVARA SMART MONEY AI V2.4.1 — RUN-LOG DIAGNOSTIC PATCH
+NOVARA SMART MONEY AI V2.4.3 — TELEGRAM DELIVERY FIX
 
-Changes based on the supplied V2.4.0 run log:
-- Default/workflow score threshold reduced from 6.8 to 6.2. The observed sample candidates scored 5.45–6.25, so 6.8 was rejecting all sampled candidates before risk validation. This is a candidate-generation calibration, NOT evidence of profitability.
-- Entry-staleness tolerance changed from max(0.20%, 0.50 x 15m ATR%) to max(0.25%, 0.65 x 15m ATR%). It still rejects excessive drift to avoid chasing, but is less restrictive.
-- Stale-entry skips are now counted explicitly in [DIAGNOSTICS][REJECTS], instead of disappearing from rejection counts.
-- Public signal selection now uses >= the configured score threshold, consistent with the main candidate gate.
+Audit result from the 2026-10-23 run:
+- Market scan and signal logic were working: markets=49/49, dataErrors=0, candidates=1, selected=1.
+- A valid WLFI SHORT setup was created (score 6.95), so the workflow did not fail to generate a signal.
+- Delivery failed: deliveries=[{"name":"VIP","sent":false,"reason":"vip_chat_not_configured"}], followed by sent=0 / deliveryErrors=1. This is a Telegram destination/configuration problem, not a signal-generation failure.
+- Previous routing only used TELEGRAM_CHAT_ID as a fallback when no FREE chat was configured. If FREE_CHAT_ID existed but VIP_CHAT_ID did not, the legacy primary chat was ignored. V2.4.3 fixes that fallback.
+- If no bot token or chat IDs are present in the GitHub `production` Environment, the worker cannot deliver messages. The workflow now emits safe configuration warnings (never prints secret values).
 
-Important: Run remains READ-ONLY / NO ORDERS / PAPER TRACKING. Do not infer win rate from a single cycle. Validate multiple paper outcomes including fees, funding, and slippage before considering live use.
+Changes:
+- Worker version: NOVARA-SMART-MONEY-AI-V2.4.3-TELEGRAM-DELIVERY-FIX.
+- Primary/VIP route falls back to TELEGRAM_CHAT_ID when a VIP-specific chat ID is absent, even if a public chat is configured.
+- Public signal delivery now logs an explicit `free_chat_not_configured` reason instead of silently omitting the destination.
+- Startup logs show only whether Telegram token/chat destinations are configured; secret values are never printed.
+- Workflow schedule is every 5 minutes; `workflow_dispatch` remains available.
+- Corrected log label from `market cap` to `max markets scanned`.
+- Preserved READ-ONLY / NO ORDERS / NO AUTO-COPY / PAPER TRACKING.
+- State file path remains `production/state/novara_smart_money_state.json` and matches the worker's `NOVARA_SMART_MONEY_STATE_FILE` variable.
 
-Install: replace novara_smart_money_ai.mjs and .github/workflows/novara-smart-money-ai.yml at the repository paths. Keep the existing production Environment secrets.
+Required GitHub Environment secrets (`production`):
+- Required: `TELEGRAM_TOKEN` or `TELEGRAM_BOT_TOKEN`.
+- Required: at least one valid destination: `NOVARA_VIP_CHAT_ID`, `VIP_CHAT_ID`, `NOVARA_PREMIUM_CHAT_ID`, or fallback `TELEGRAM_CHAT_ID`; for public delivery optionally set `NOVARA_FREE_CHAT_ID` or `FREE_CHAT_ID`.
+- Chat IDs must be IDs the bot can message (the bot must have access to the channel/group, and must be an admin if the channel requires it).
+
+Validation performed:
+- `node --check novara_smart_money_ai.mjs` passed.
+- Workflow is set to run every 5 minutes, but actual Telegram delivery still depends on valid secrets and bot/channel permissions in the repository's `production` Environment.
+
+Install by replacing both repository files:
+- `novara_smart_money_ai.mjs`
+- `.github/workflows/novara-smart-money-ai.yml`
