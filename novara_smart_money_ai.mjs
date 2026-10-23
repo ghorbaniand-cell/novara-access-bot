@@ -2,7 +2,7 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 
 /*
- * NOVARA SMART MONEY AI V2.4.2
+ * NOVARA SMART MONEY AI V2.4.4
  * READ-ONLY | NO ORDERS | NO AUTO-COPY | PAPER OUTCOME TRACKING
  *
  * Combines three entry families:
@@ -14,7 +14,7 @@ import path from 'node:path';
  * All eligible liquid perp markets are considered; the worker does not depend on wallet lists.
  */
 
-const VERSION = 'NOVARA-SMART-MONEY-AI-V2.4.3-TELEGRAM-DELIVERY-FIX';
+const VERSION = 'NOVARA-SMART-MONEY-AI-V2.4.4-ADAPTIVE-REGIME-GATE';
 const API = (process.env.HYPERLIQUID_API_URL || 'https://api.hyperliquid.xyz/info').trim();
 const TOKEN = process.env.TELEGRAM_TOKEN || process.env.TELEGRAM_BOT_TOKEN || '';
 const LEGACY_CHAT = process.env.TELEGRAM_CHAT_ID || '';
@@ -28,6 +28,7 @@ const MIN_VOLUME_USD = Math.max(250000, Number(process.env.NOVARA_SMART_MIN_24H_
 const MAX_MARKETS = Math.max(25, Math.min(300, Number(process.env.NOVARA_SMART_MAX_MARKETS || 120)));
 const MIN_SCORE = Math.max(5.8, Math.min(8.5, Number(process.env.NOVARA_SMART_MIN_SCORE || 6.0)));
 const MIN_RR = Math.max(1.5, Number(process.env.NOVARA_SMART_MIN_RR || 1.5));
+const BTC_COUNTERTREND_HARD_MOVE_PCT = Math.max(1.0, Number(process.env.NOVARA_BTC_COUNTERTREND_HARD_MOVE_PCT || 1.5));
 const STRUCTURE_BUFFER_ATR = Math.max(0.1, Number(process.env.NOVARA_STRUCTURE_BUFFER_ATR || 0.25));
 const MAX_SPREAD_PCT = Math.max(0.03, Number(process.env.NOVARA_SMART_MAX_SPREAD_PCT || 0.25));
 const MAX_SIGNALS_PER_CYCLE = Math.max(1, Number(process.env.NOVARA_SMART_MAX_SIGNALS_PER_CYCLE || 8));
@@ -322,11 +323,14 @@ function detectPatterns({ coin, c15, c1h, ctx, prevCtx, mid, spread, imbalance, 
     const btcLabel = btcRegime?.label || 'NEUTRAL';
     const btcOpposes = side === 'LONG' && btcLabel === 'BEARISH' || side === 'SHORT' && btcLabel === 'BULLISH';
     const btcAligns = side === 'LONG' && btcLabel === 'BULLISH' || side === 'SHORT' && btcLabel === 'BEARISH';
-    if (btcOpposes) { score -= 0.65; reasons.push(`BTC 4H regime opposes ${side} (${btcLabel})`); }
-    else if (btcAligns) { score += 0.20; reasons.push(`BTC 4H regime aligns (${btcLabel})`); }
-    if (btcOpposes && Math.abs(n(btcRegime?.change24hPct)) >= 2.5) {
-      score -= 0.25; reasons.push(`BTC 24h impulse ${n(btcRegime.change24hPct).toFixed(2)}% adds caution`);
-    }
+    if (btcOpposes) {
+      // Adaptive context penalty: a weak/flat BTC regime should not veto a strong
+      // altcoin setup. Reserve the strongest penalty for an actual BTC impulse.
+      const btcMoveAbs = Math.abs(n(btcRegime?.change24hPct));
+      const btcPenalty = btcMoveAbs >= 2.5 ? 0.85 : btcMoveAbs >= BTC_COUNTERTREND_HARD_MOVE_PCT ? 0.45 : 0.15;
+      score -= btcPenalty;
+      reasons.push(`BTC 4H regime opposes ${side} (${btcLabel}; ${btcMoveAbs.toFixed(2)}%/24h, score penalty -${btcPenalty.toFixed(2)})`);
+    } else if (btcAligns) { score += 0.20; reasons.push(`BTC 4H regime aligns (${btcLabel})`); }
     return score;
   };
 
@@ -804,7 +808,7 @@ async function main() {
 
   const candidates = [];
   let checked = 0, failed = 0;
-  const rejects = { stale: 0, regime: 0, score: 0, cooldown: 0, risk: 0, vwap: 0, spread: 0, accepted: 0 };
+  const rejects = { stale: 0, regime: 0, regimeSoft: 0, score: 0, cooldown: 0, risk: 0, vwap: 0, spread: 0, accepted: 0 };
   const rejectionSamples = [];
   const noteReject = (kind, s, reason) => { rejects[kind]++; if (rejectionSamples.length < 18) rejectionSamples.push(`${s.coin} ${s.side} ${s.pattern}: ${reason}`); };
   for (const asset of eligible) {
@@ -818,14 +822,22 @@ async function main() {
           noteReject('spread', s, s.spreadPct == null ? 'order-book spread unavailable' : `spread ${s.spreadPct.toFixed(3)}% > ${MAX_SPREAD_PCT}%`);
           continue;
         }
-        // Directional regime gate: avoid counter-trend entries when both the asset trend and BTC regime oppose them.
+        // Adaptive regime gate: trend disagreement is a warning, not an automatic
+        // rejection. Hard-block only when BOTH the asset trend and BTC oppose the
+        // setup and BTC itself has a material 24h impulse. Structure/R:R gates below
+        // remain mandatory for every direction, including counter-trend setups.
         const assetOpposes = s.trend === (s.side === 'LONG' ? 'SHORT' : 'LONG');
         const btcLabel = s.btcRegime?.label || 'NEUTRAL';
         const btcOpposes = (s.side === 'LONG' && btcLabel === 'BEARISH') || (s.side === 'SHORT' && btcLabel === 'BULLISH');
-        if (assetOpposes && btcOpposes) {
-          console.log(`[FILTER][REGIME] ${s.coin} ${s.side} rejected: 1H trend=${s.trend} and BTC 4H=${btcLabel} oppose setup`);
-          noteReject('regime', s, `trend=${s.trend}, BTC=${btcLabel}`);
+        const btcMoveAbs = Math.abs(n(s.btcRegime?.change24hPct));
+        if (assetOpposes && btcOpposes && btcMoveAbs >= BTC_COUNTERTREND_HARD_MOVE_PCT) {
+          console.log(`[FILTER][REGIME] ${s.coin} ${s.side} hard-rejected: 1H trend=${s.trend} and BTC 4H=${btcLabel}, BTC impulse=${btcMoveAbs.toFixed(2)}% >= ${BTC_COUNTERTREND_HARD_MOVE_PCT.toFixed(2)}%`);
+          noteReject('regime', s, `trend=${s.trend}, BTC=${btcLabel}, impulse=${btcMoveAbs.toFixed(2)}%`);
           continue;
+        }
+        if (assetOpposes && btcOpposes) {
+          rejects.regimeSoft++;
+          console.log(`[FILTER][REGIME][SOFT] ${s.coin} ${s.side}: trend=${s.trend}, BTC=${btcLabel}, impulse=${btcMoveAbs.toFixed(2)}%; continue to score/structure/R:R checks`);
         }
         // V1.0.8 applied a second hard distance gate before structural risk validation.
         // That duplicate gate could reject setups even when the actual SL/TP structure

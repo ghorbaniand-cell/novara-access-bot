@@ -1,31 +1,20 @@
-NOVARA SMART MONEY AI V2.4.3 — TELEGRAM DELIVERY FIX
+# NOVARA SMART MONEY AI V2.4.4 — Adaptive Regime Gate
 
-Audit result from the 2026-10-23 run:
-- Market scan and signal logic were working: markets=49/49, dataErrors=0, candidates=1, selected=1.
-- A valid WLFI SHORT setup was created (score 6.95), so the workflow did not fail to generate a signal.
-- Delivery failed: deliveries=[{"name":"VIP","sent":false,"reason":"vip_chat_not_configured"}], followed by sent=0 / deliveryErrors=1. This is a Telegram destination/configuration problem, not a signal-generation failure.
-- Previous routing only used TELEGRAM_CHAT_ID as a fallback when no FREE chat was configured. If FREE_CHAT_ID existed but VIP_CHAT_ID did not, the legacy primary chat was ignored. V2.4.3 fixes that fallback.
-- If no bot token or chat IDs are present in the GitHub `production` Environment, the worker cannot deliver messages. The workflow now emits safe configuration warnings (never prints secret values).
+## What changed
+- Replaced the blanket dual-opposition regime veto with an adaptive rule: an opposing 1H asset trend plus opposing BTC 4H regime is a hard rejection only when BTC's absolute 24h move is at least 1.5%.
+- Below that impulse threshold, candidates continue to the existing score, structural stop/target, minimum 1:1.5 R:R, stale-entry, spread, VWAP, and cooldown checks.
+- BTC opposition now applies a graduated score penalty: 0.15 for a small move, 0.45 at/above 1.5%, and 0.85 at/above 2.5%. This avoids treating a nearly flat BTC day as a decisive veto while preserving caution during strong moves.
+- Added `regimeSoft` diagnostics and explicit logs for candidates allowed through to the mandatory risk checks.
+- Workflow reads VIP/Free Chat IDs from GitHub Variables (`vars.*`) and the bot token from Secrets.
 
-Changes:
-- Worker version: NOVARA-SMART-MONEY-AI-V2.4.3-TELEGRAM-DELIVERY-FIX.
-- Primary/VIP route falls back to TELEGRAM_CHAT_ID when a VIP-specific chat ID is absent, even if a public chat is configured.
-- Public signal delivery now logs an explicit `free_chat_not_configured` reason instead of silently omitting the destination.
-- Startup logs show only whether Telegram token/chat destinations are configured; secret values are never printed.
-- Workflow schedule is every 5 minutes; `workflow_dispatch` remains available.
-- Corrected log label from `market cap` to `max markets scanned`.
-- Preserved READ-ONLY / NO ORDERS / NO AUTO-COPY / PAPER TRACKING.
-- State file path remains `production/state/novara_smart_money_state.json` and matches the worker's `NOVARA_SMART_MONEY_STATE_FILE` variable.
+## Safety retained
+- Read-only signal generation; no orders or auto-copy.
+- Structural SL/TP remains mandatory; no ATR-only fabricated stop/target.
+- Minimum R:R remains 1:1.5.
+- Minimum score remains 6.0/10, minimum 24h volume remains $2,000,000, spread/stale-entry/VWAP/cooldown checks remain active.
+- This change may produce more candidates, but does not guarantee profitability. Review paper-tracked outcomes before using any signal for manual trading.
 
-Required GitHub Environment secrets (`production`):
-- Required: `TELEGRAM_TOKEN` or `TELEGRAM_BOT_TOKEN`.
-- Required: at least one valid destination: `NOVARA_VIP_CHAT_ID`, `VIP_CHAT_ID`, `NOVARA_PREMIUM_CHAT_ID`, or fallback `TELEGRAM_CHAT_ID`; for public delivery optionally set `NOVARA_FREE_CHAT_ID` or `FREE_CHAT_ID`.
-- Chat IDs must be IDs the bot can message (the bot must have access to the channel/group, and must be an admin if the channel requires it).
-
-Validation performed:
-- `node --check novara_smart_money_ai.mjs` passed.
-- Workflow is set to run every 5 minutes, but actual Telegram delivery still depends on valid secrets and bot/channel permissions in the repository's `production` Environment.
-
-Install by replacing both repository files:
-- `novara_smart_money_ai.mjs`
-- `.github/workflows/novara-smart-money-ai.yml`
+## GitHub configuration
+- Secret: `TELEGRAM_TOKEN` (or `TELEGRAM_BOT_TOKEN`).
+- Variables: `NOVARA_VIP_CHAT_ID` and `NOVARA_FREE_CHAT_ID` (or the documented fallback names in the workflow).
+- Environment: `production`.
