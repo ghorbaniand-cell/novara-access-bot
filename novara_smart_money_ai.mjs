@@ -2,7 +2,7 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 
 /*
- * NOVARA SMART MONEY AI V1.0.5
+ * NOVARA SMART MONEY AI V1.0.6
  * READ-ONLY | NO ORDERS | NO AUTO-COPY | PAPER OUTCOME TRACKING
  *
  * Combines three entry families:
@@ -14,7 +14,7 @@ import path from 'node:path';
  * All eligible liquid perp markets are considered; the worker does not depend on wallet lists.
  */
 
-const VERSION = 'NOVARA-SMART-MONEY-AI-V1.0.5-STRUCTURE-RISK-FIX';
+const VERSION = 'NOVARA-SMART-MONEY-AI-V1.0.6-MARKET-STRUCTURE-FILTERS';
 const API = (process.env.HYPERLIQUID_API_URL || 'https://api.hyperliquid.xyz/info').trim();
 const TOKEN = process.env.TELEGRAM_TOKEN || process.env.TELEGRAM_BOT_TOKEN || '';
 const LEGACY_CHAT = process.env.TELEGRAM_CHAT_ID || '';
@@ -32,7 +32,7 @@ const MAX_SPREAD_PCT = Math.max(0.03, Number(process.env.NOVARA_SMART_MAX_SPREAD
 const MAX_SIGNALS_PER_CYCLE = Math.max(1, Number(process.env.NOVARA_SMART_MAX_SIGNALS_PER_CYCLE || 8));
 const FREE_DAILY_LIMIT = Math.max(0, Number(process.env.NOVARA_FREE_DAILY_LIMIT || 5));
 const TELEGRAM_GAP_MS = Math.max(1000, Number(process.env.NOVARA_TELEGRAM_MIN_GAP_MS || 3200));
-const STATE_SCHEMA = 1;
+const STATE_SCHEMA = 1; // State schema remains compatible with V1.0.5 paper history
 const now = () => Date.now();
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 const n = (v, d = 0) => { const x = Number(v); return Number.isFinite(x) ? x : d; };
@@ -152,6 +152,49 @@ function vwap(candles) {
   const denom = rows.reduce((s, c) => s + c.v, 0);
   return denom > 0 ? rows.reduce((s, c) => s + ((c.h + c.l + c.c) / 3) * c.v, 0) / denom : rows.at(-1)?.c || 0;
 }
+function rsi(candles, period = 14) {
+  const closes = candles.map(c => c.c).filter(x => x > 0);
+  if (closes.length <= period) return 50;
+  let avgGain = 0, avgLoss = 0;
+  for (let i = 1; i <= period; i++) {
+    const change = closes[i] - closes[i - 1];
+    if (change > 0) avgGain += change; else avgLoss -= change;
+  }
+  avgGain /= period;
+  avgLoss /= period;
+  for (let i = period + 1; i < closes.length; i++) {
+    const change = closes[i] - closes[i - 1];
+    const gain = Math.max(0, change), loss = Math.max(0, -change);
+    avgGain = ((avgGain * (period - 1)) + gain) / period;
+    avgLoss = ((avgLoss * (period - 1)) + loss) / period;
+  }
+  if (avgLoss === 0) return avgGain === 0 ? 50 : 100;
+  const rs = avgGain / avgLoss;
+  return 100 - 100 / (1 + rs);
+}
+function fibonacciConfluence(candles, price, tolerancePct) {
+  const rows = candles.slice(-48);
+  if (rows.length < 20 || !(price > 0)) return { confluence: false, level: 0, distancePct: null };
+  const high = Math.max(...rows.map(c => c.h));
+  const low = Math.min(...rows.map(c => c.l));
+  const range = high - low;
+  if (!(range > 0)) return { confluence: false, level: 0, distancePct: null };
+  const levels = [0.382, 0.5, 0.618].flatMap(r => [high - range * r, low + range * r]);
+  const nearest = levels.map(level => ({ level, distancePct: Math.abs(price - level) / price * 100 }))
+    .sort((a, b) => a.distancePct - b.distancePct)[0];
+  return { confluence: nearest.distancePct <= tolerancePct, level: nearest.level, distancePct: nearest.distancePct };
+}
+function marketRegime(candles) {
+  if (!Array.isArray(candles) || candles.length < 60) return { trend: 'NEUTRAL', change24hPct: 0, label: 'NEUTRAL' };
+  const trend = trendBias(candles);
+  const last = candles.at(-1)?.c || 0;
+  const base = candles.at(-7)?.c || last; // six completed 4H bars, approximately 24 hours
+  const change24hPct = base > 0 ? (last - base) / base * 100 : 0;
+  let label = trend === 'LONG' ? 'BULLISH' : trend === 'SHORT' ? 'BEARISH' : 'NEUTRAL';
+  if (change24hPct <= -2.5) label = 'BEARISH';
+  else if (change24hPct >= 2.5) label = 'BULLISH';
+  return { trend, change24hPct, label };
+}
 function trendBias(candles) {
   const closes = candles.map(c => c.c);
   const fast = ema(closes.slice(-60), 20);
@@ -184,20 +227,21 @@ function tradeDelta(trades) {
   return { buy, sell, delta: total ? (buy - sell) / total : 0, total };
 }
 
-function detectPatterns({ coin, c15, c1h, ctx, prevCtx, mid, spread, imbalance, flow }) {
-  const last = c15.at(-1), prev = c15.at(-2), older = c15.slice(-15, -2);
+function detectPatterns({ coin, c15, c1h, ctx, prevCtx, mid, spread, imbalance, flow, btcRegime }) {
+  const last = c15.at(-1), prev = c15.at(-2);
   if (!last || !prev || c15.length < 35 || c1h.length < 30) return [];
   const atr15 = atr(c15, 14) || mid * 0.006;
   const atrPct = atr15 / mid * 100;
-  const levels = pivots(c15.slice(-55));
-  const support = nearestBelow(levels.lows, mid);
-  const resistance = nearestAbove(levels.highs, mid);
-  const closes1h = c1h.map(c => c.c);
-  const ema20 = ema(closes1h.slice(-60), 20);
-  const ema50 = ema(closes1h.slice(-100), 50);
+  const levels15 = pivots(c15.slice(-55));
+  const levels1h = pivots(c1h.slice(-90));
+  // Combine 15m and 1H pivots so risk levels are not limited to intraday micro-structure.
+  const support = nearestBelow([...levels15.lows, ...levels1h.lows], mid);
+  const resistance = nearestAbove([...levels15.highs, ...levels1h.highs], mid);
   const trend = trendBias(c1h);
   const volRatio = volumeRatio(c15);
   const vwap15 = vwap(c15);
+  const rsi15 = rsi(c15, 14);
+  const fib = fibonacciConfluence(c1h, mid, Math.max(0.35, atrPct * 0.35));
   const oiNow = n(ctx?.openInterest);
   const oiPrev = n(prevCtx?.openInterest);
   const oiChange = oiPrev > 0 ? (oiNow - oiPrev) / oiPrev * 100 : 0;
@@ -208,6 +252,23 @@ function detectPatterns({ coin, c15, c1h, ctx, prevCtx, mid, spread, imbalance, 
   const oiConfirmsLong = oiChange > 0.25 && mid >= last.o;
   const oiConfirmsShort = oiChange > 0.25 && mid <= last.o;
   const results = [];
+  const addContext = (side, score, reasons) => {
+    if (fib.confluence) { score += 0.25; reasons.push(`1H Fibonacci confluence (${fib.level.toPrecision(6)})`); }
+    if (side === 'LONG' && rsi15 >= 72 || side === 'SHORT' && rsi15 <= 28) {
+      score -= 0.45; reasons.push(`15m RSI stretched (${rsi15.toFixed(1)})`);
+    } else if (side === 'LONG' && rsi15 >= 45 && rsi15 <= 68 || side === 'SHORT' && rsi15 >= 32 && rsi15 <= 55) {
+      score += 0.15; reasons.push(`15m RSI supports entry (${rsi15.toFixed(1)})`);
+    }
+    const btcLabel = btcRegime?.label || 'NEUTRAL';
+    const btcOpposes = side === 'LONG' && btcLabel === 'BEARISH' || side === 'SHORT' && btcLabel === 'BULLISH';
+    const btcAligns = side === 'LONG' && btcLabel === 'BULLISH' || side === 'SHORT' && btcLabel === 'BEARISH';
+    if (btcOpposes) { score -= 0.65; reasons.push(`BTC 4H regime opposes ${side} (${btcLabel})`); }
+    else if (btcAligns) { score += 0.20; reasons.push(`BTC 4H regime aligns (${btcLabel})`); }
+    if (btcOpposes && Math.abs(n(btcRegime?.change24hPct)) >= 2.5) {
+      score -= 0.25; reasons.push(`BTC 24h impulse ${n(btcRegime.change24hPct).toFixed(2)}% adds caution`);
+    }
+    return score;
+  };
 
   // Pattern 1: sweep a recent swing level, then reclaim it on a completed candle.
   const priorLow = Math.min(...c15.slice(-10, -1).map(c => c.l));
@@ -224,7 +285,8 @@ function detectPatterns({ coin, c15, c1h, ctx, prevCtx, mid, spread, imbalance, 
     if (side === 'LONG' && oiConfirmsLong || side === 'SHORT' && oiConfirmsShort) { score += 0.25; reasons.push('OI rising with directional move'); }
     if (side === 'LONG' && fundingPct < 0.035 || side === 'SHORT' && fundingPct > -0.035) score += 0.15;
     if (spread !== null && spread > MAX_SPREAD_PCT) score -= 1.5;
-    results.push({ coin, side, pattern: 'SWEEP_RECLAIM', score: clamp(score, 0, 9.5), reasons, entry: mid, atr: atr15, support, resistance, trend, volRatio, oiChange, fundingPct, flowDelta: flow.delta, imbalance, vwap: vwap15, spreadPct: spread, atrPct, dayVolume: n(ctx?.dayVolume), maxLeverage: n(ctx?.maxLeverage) });
+    score = addContext(side, score, reasons);
+    results.push({ coin, side, pattern: 'SWEEP_RECLAIM', score: clamp(score, 0, 9.5), reasons, entry: mid, atr: atr15, support, resistance, trend, btcRegime: btcRegime || { label: 'NEUTRAL', change24hPct: 0 }, rsi15, fibConfluence: fib.confluence, volRatio, oiChange, fundingPct, flowDelta: flow.delta, imbalance, vwap: vwap15, spreadPct: spread, atrPct, dayVolume: n(ctx?.dayVolume), maxLeverage: n(ctx?.maxLeverage) });
   }
 
   // Pattern 2: close beyond a recent structure level, then retest within tolerance.
@@ -243,7 +305,8 @@ function detectPatterns({ coin, c15, c1h, ctx, prevCtx, mid, spread, imbalance, 
     if (side === 'LONG' && mid >= vwap15 || side === 'SHORT' && mid <= vwap15) { score += 0.25; reasons.push('VWAP alignment'); }
     if (side === 'LONG' && oiConfirmsLong || side === 'SHORT' && oiConfirmsShort) { score += 0.3; reasons.push('OI confirms participation'); }
     if (spread !== null && spread > MAX_SPREAD_PCT) score -= 1.5;
-    results.push({ coin, side, pattern: 'BREAKOUT_RETEST', score: clamp(score, 0, 9.5), reasons, entry: mid, atr: atr15, support, resistance, trend, volRatio, oiChange, fundingPct, flowDelta: flow.delta, imbalance, vwap: vwap15, spreadPct: spread, atrPct, dayVolume: n(ctx?.dayVolume), maxLeverage: n(ctx?.maxLeverage) });
+    score = addContext(side, score, reasons);
+    results.push({ coin, side, pattern: 'BREAKOUT_RETEST', score: clamp(score, 0, 9.5), reasons, entry: mid, atr: atr15, support, resistance, trend, btcRegime: btcRegime || { label: 'NEUTRAL', change24hPct: 0 }, rsi15, fibConfluence: fib.confluence, volRatio, oiChange, fundingPct, flowDelta: flow.delta, imbalance, vwap: vwap15, spreadPct: spread, atrPct, dayVolume: n(ctx?.dayVolume), maxLeverage: n(ctx?.maxLeverage) });
   }
 
   // Pattern 3: 1H trend with a 15m pullback into fast mean and a directional recovery candle.
@@ -260,7 +323,8 @@ function detectPatterns({ coin, c15, c1h, ctx, prevCtx, mid, spread, imbalance, 
     if (side === 'LONG' && oiConfirmsLong || side === 'SHORT' && oiConfirmsShort) { score += 0.3; reasons.push('OI rising with trend'); }
     if (side === 'LONG' && fundingPct > 0.08 || side === 'SHORT' && fundingPct < -0.08) { score -= 0.25; reasons.push('crowded funding slightly penalized'); }
     if (spread !== null && spread > MAX_SPREAD_PCT) score -= 1.5;
-    results.push({ coin, side, pattern: 'TREND_PULLBACK', score: clamp(score, 0, 9.5), reasons, entry: mid, atr: atr15, support, resistance, trend, volRatio, oiChange, fundingPct, flowDelta: flow.delta, imbalance, vwap: vwap15, spreadPct: spread, atrPct, dayVolume: n(ctx?.dayVolume), maxLeverage: n(ctx?.maxLeverage) });
+    score = addContext(side, score, reasons);
+    results.push({ coin, side, pattern: 'TREND_PULLBACK', score: clamp(score, 0, 9.5), reasons, entry: mid, atr: atr15, support, resistance, trend, btcRegime: btcRegime || { label: 'NEUTRAL', change24hPct: 0 }, rsi15, fibConfluence: fib.confluence, volRatio, oiChange, fundingPct, flowDelta: flow.delta, imbalance, vwap: vwap15, spreadPct: spread, atrPct, dayVolume: n(ctx?.dayVolume), maxLeverage: n(ctx?.maxLeverage) });
   }
 
   return results;
@@ -331,6 +395,9 @@ function suggestLeverage(s) {
   const vol = Math.max(0, n(s.dayVolume));
   const coinStrength = clamp(Math.log10(Math.max(1, vol / 2_000_000)) / Math.log10(50), 0, 1);
   const alignedTrend = s.trend === s.side ? 1 : 0;
+  const btcLabel = s.btcRegime?.label || 'NEUTRAL';
+  const btcAlignment = (s.side === 'LONG' && btcLabel === 'BULLISH') || (s.side === 'SHORT' && btcLabel === 'BEARISH') ? 1 :
+    ((s.side === 'LONG' && btcLabel === 'BEARISH') || (s.side === 'SHORT' && btcLabel === 'BULLISH') ? 0 : 0.5);
   const alignedFlow = (s.side === 'LONG' && n(s.flowDelta) > 0.08) || (s.side === 'SHORT' && n(s.flowDelta) < -0.08) ? 1 : 0;
   const alignedBook = (s.side === 'LONG' && n(s.imbalance) > 0.12) || (s.side === 'SHORT' && n(s.imbalance) < -0.12) ? 1 : 0;
   const oiConfirm = n(s.oiChange) > 0.25 ? 1 : 0;
@@ -340,8 +407,8 @@ function suggestLeverage(s) {
   const volatilitySuitability = atrPct <= 0.9 ? 1 : atrPct <= 1.5 ? 0.75 : atrPct <= 2.0 ? 0.45 : 0.15;
   const fundingCrowded = (s.side === 'LONG' && n(s.fundingPct) > 0.08) || (s.side === 'SHORT' && n(s.fundingPct) < -0.08);
   const marketStrength = clamp(
-    alignedTrend * 0.24 + alignedFlow * 0.18 + alignedBook * 0.10 + oiConfirm * 0.12 +
-    volumeConfirm * 0.12 + spread * 0.12 + volatilitySuitability * 0.12 - (fundingCrowded ? 0.10 : 0),
+    alignedTrend * 0.22 + alignedFlow * 0.16 + alignedBook * 0.09 + oiConfirm * 0.11 +
+    volumeConfirm * 0.11 + spread * 0.11 + volatilitySuitability * 0.11 + btcAlignment * 0.09 - (fundingCrowded ? 0.10 : 0),
     0, 1
   );
   const combined = signalStrength * 0.40 + coinStrength * 0.25 + marketStrength * 0.35;
@@ -357,7 +424,7 @@ function formatSignal(s, risk) {
   const lev = s.leverageInfo || suggestLeverage(s);
   const emoji = s.side === 'LONG' ? '🟢' : '🔴';
   const reasons = s.reasons.slice(0, 4).map(x => `• ${escapeHtml(x)}`).join('\n');
-  return `${emoji} <b>NOVARA SMART MONEY AI</b>\n━━━━━━━━━━━━━━━━━━\n<b>${s.side} ${escapeHtml(s.coin)} PERP</b>\n🧭 Setup: ${escapeHtml(s.pattern.replaceAll('_', ' '))}\n📍 Entry (reference): <code>${fmtPrice(risk.entry)}</code>\n🛑 Stop Loss: <code>${fmtPrice(risk.sl)}</code> (${pct(risk.riskPct)})\n🎯 Take Profit: <code>${fmtPrice(risk.tp)}</code> (${pct(risk.rewardPct)})\n⚖️ Planned R:R: 1:${risk.rr.toFixed(2)}\n⚡ Suggested Leverage: ${lev.leverage}x${lev.cappedBelowRequestedRange ? ` (exchange max: ${Math.floor(lev.exchangeMax)}x)` : ''}\n🧠 Setup score: ${s.score.toFixed(1)}/10 (not a win-probability estimate)\n📊 1H trend: ${s.trend} | 15m volume: ${s.volRatio.toFixed(2)}x\n🌊 Trade delta: ${(s.flowDelta * 100).toFixed(1)}% | Book imbalance: ${(s.imbalance * 100).toFixed(1)}%\n📈 OI change since prior scan: ${s.oiChange >= 0 ? '+' : ''}${s.oiChange.toFixed(2)}% | Funding: ${s.fundingPct.toFixed(4)}%\n🧩 Evidence:\n${reasons}\n\n⚠️ Research signal only — paper-tracked, not financial advice. Verify price/slippage before any manual trade.`;
+  return `${emoji} <b>NOVARA SMART MONEY AI</b>\n━━━━━━━━━━━━━━━━━━\n<b>${s.side} ${escapeHtml(s.coin)} PERP</b>\n🧭 Setup: ${escapeHtml(s.pattern.replaceAll('_', ' '))}\n📍 Entry (reference): <code>${fmtPrice(risk.entry)}</code>\n🛑 Stop Loss: <code>${fmtPrice(risk.sl)}</code> (${pct(risk.riskPct)})\n🎯 Take Profit: <code>${fmtPrice(risk.tp)}</code> (${pct(risk.rewardPct)})\n⚖️ Planned R:R: 1:${risk.rr.toFixed(2)}\n⚡ Suggested Leverage: ${lev.leverage}x${lev.cappedBelowRequestedRange ? ` (exchange max: ${Math.floor(lev.exchangeMax)}x)` : ''}\n🧠 Setup score: ${s.score.toFixed(2)}/10 (not a win-probability estimate)\n📊 1H trend: ${s.trend} | BTC 4H: ${s.btcRegime?.label || 'NEUTRAL'} (${n(s.btcRegime?.change24hPct).toFixed(2)}%/24h)\n📉 15m RSI: ${n(s.rsi15, 50).toFixed(1)} | Fib confluence: ${s.fibConfluence ? 'YES' : 'NO'} | Volume: ${s.volRatio.toFixed(2)}x\n🌊 Trade delta: ${(s.flowDelta * 100).toFixed(1)}% | Book imbalance: ${(s.imbalance * 100).toFixed(1)}%\n📈 OI change since prior scan: ${s.oiChange >= 0 ? '+' : ''}${s.oiChange.toFixed(2)}% | Funding: ${s.fundingPct.toFixed(4)}%\n🧩 Evidence:\n${reasons}\n\n⚠️ Research signal only — paper-tracked, not financial advice. Verify price/slippage before any manual trade.`;
 }
 
 let telegramNextAt = 0;
@@ -531,7 +598,7 @@ function report24h(state, audience) {
   const netR = cohort.filter(t => t.status === 'TP' || t.status === 'SL').reduce((sum,t) => sum + n(t.pnlR), 0);
   const details = [...cohort].sort((a,b) => n(b.openedAt)-n(a.openedAt)).slice(0, 12).map(t => {
     const status = t.status === 'OPEN' ? 'OPEN' : t.status === 'TP' ? 'TP ✅' : t.status === 'SL' ? 'SL ❌' : 'AMBIGUOUS ⚠️';
-    return `• ${escapeHtml(t.coin)} ${t.side} | ${status} | score ${n(t.score).toFixed(1)}/10 | ${n(t.suggestedLeverage) || '—'}x | ${t.status === 'TP' || t.status === 'SL' ? `${n(t.pnlR) > 0 ? '+' : ''}${n(t.pnlR).toFixed(2)}R` : 'pending'}`;
+    return `• ${escapeHtml(t.coin)} ${t.side} | ${status} | score ${n(t.score).toFixed(2)}/10 | ${n(t.suggestedLeverage) || '—'}x | ${t.status === 'TP' || t.status === 'SL' ? `${n(t.pnlR) > 0 ? '+' : ''}${n(t.pnlR).toFixed(2)}R` : 'pending'}`;
   });
   return `📊 <b>NOVARA — 24H ${audience} SIGNAL PERFORMANCE</b>
 ━━━━━━━━━━━━━━━━━━
@@ -585,10 +652,10 @@ async function candles(coin, interval, hours) {
   const endTime = now();
   const startTime = endTime - hours * 3600_000;
   const raw = await request({ type: 'candleSnapshot', req: { coin, interval, startTime, endTime } }, `candles ${coin} ${interval}`);
-  const ms = interval === '1h' ? 3600_000 : 15 * 60_000;
-  return completedCandles(raw, ms);
+  const intervalMs = { '1m': 60_000, '3m': 180_000, '5m': 300_000, '15m': 900_000, '30m': 1_800_000, '1h': 3_600_000, '2h': 7_200_000, '4h': 14_400_000, '8h': 28_800_000, '12h': 43_200_000, '1d': 86_400_000 };
+  return completedCandles(raw, intervalMs[interval] || 900_000);
 }
-async function analyzeAsset(asset, previous) {
+async function analyzeAsset(asset, previous, btcRegime) {
   const [c15, c1h] = await Promise.all([
     candles(asset.coin, '15m', 30),
     candles(asset.coin, '1h', 90),
@@ -601,7 +668,7 @@ async function analyzeAsset(asset, previous) {
   const spread = spreadPct(book, asset.markPx);
   const imbalance = bookImbalance(book);
   const flow = tradeDelta(trades);
-  return detectPatterns({ coin: asset.coin, c15, c1h, ctx: asset, prevCtx: previous, mid: asset.markPx, spread, imbalance, flow });
+  return detectPatterns({ coin: asset.coin, c15, c1h, ctx: asset, prevCtx: previous, mid: asset.markPx, spread, imbalance, flow, btcRegime });
 }
 
 async function main() {
@@ -616,6 +683,14 @@ async function main() {
   const snapshot = await getMarketSnapshot();
   const contexts = snapshot.ctxByCoin;
   const eligible = snapshot.assets;
+  let btcRegime = { trend: 'NEUTRAL', change24hPct: 0, label: 'NEUTRAL' };
+  try {
+    const btc4h = await candles('BTC', '4h', 30 * 24);
+    btcRegime = marketRegime(btc4h);
+  } catch (e) {
+    console.warn(`[BTC][WARN] 4H regime unavailable; neutral filter used: ${e?.message || e}`);
+  }
+  console.log(`[BTC][REGIME] 4H=${btcRegime.label} trend=${btcRegime.trend} approx24h=${btcRegime.change24hPct.toFixed(2)}%`);
   if (!n(state.lastDailyReportAt)) state.lastDailyReportAt = now(); // first report is sent after one full 24-hour observation window
   const closed = await updatePaperTrades(state, contexts);
   for (const t of closed) {
@@ -636,7 +711,7 @@ async function main() {
   let checked = 0, failed = 0;
   for (const asset of eligible) {
     try {
-      const found = await analyzeAsset(asset, state.previousMarketContext[asset.coin]);
+      const found = await analyzeAsset(asset, state.previousMarketContext[asset.coin], btcRegime);
       checked++;
       for (const s of found) {
         if (s.score < MIN_SCORE) continue;
@@ -678,7 +753,7 @@ async function main() {
     if (anySent) {
       sentSignals++;
       state.alertHistory[signalKey(s)] = now();
-      state.paperTrades.push({ id: `${s.coin}|${s.side}|${s.pattern}|${now()}`, coin: s.coin, side: s.side, pattern: s.pattern, score: Number(s.score.toFixed(2)), audience: destinations[0].name, entry: s.risk.entry, sl: s.risk.sl, tp: s.risk.tp, rr: s.risk.rr, suggestedLeverage: s.leverageInfo?.leverage ?? null, openedAt: now(), status: 'OPEN', pnlR: null, reasons: s.reasons });
+      state.paperTrades.push({ id: `${s.coin}|${s.side}|${s.pattern}|${now()}`, coin: s.coin, side: s.side, pattern: s.pattern, score: Number(s.score.toFixed(2)), audience: destinations[0].name, entry: s.risk.entry, sl: s.risk.sl, tp: s.risk.tp, rr: s.risk.rr, suggestedLeverage: s.leverageInfo?.leverage ?? null, btcRegime: s.btcRegime?.label || 'NEUTRAL', rsi15: s.rsi15, fibConfluence: Boolean(s.fibConfluence), openedAt: now(), status: 'OPEN', pnlR: null, reasons: s.reasons });
     } else {
       sendErrors++;
       console.warn(`[DELIVERY][FAIL] ${s.coin} ${s.side} audience=${audience}: no destination confirmed delivery`);
