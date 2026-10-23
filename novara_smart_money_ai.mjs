@@ -14,7 +14,7 @@ import path from 'node:path';
  * All eligible liquid perp markets are considered; the worker does not depend on wallet lists.
  */
 
-const VERSION = 'NOVARA-SMART-MONEY-AI-V1.0.7-STRUCTURE-FIRST-AUDIT';
+const VERSION = 'NOVARA-SMART-MONEY-AI-V1.0.8-DUAL-CHANNEL-ROUTING';
 const API = (process.env.HYPERLIQUID_API_URL || 'https://api.hyperliquid.xyz/info').trim();
 const TOKEN = process.env.TELEGRAM_TOKEN || process.env.TELEGRAM_BOT_TOKEN || '';
 const LEGACY_CHAT = process.env.TELEGRAM_CHAT_ID || '';
@@ -26,13 +26,13 @@ const TIMEOUT_MS = Math.max(3000, Number(process.env.NOVARA_SMART_TIMEOUT_MS || 
 const MIN_VOLUME_USD = Math.max(250000, Number(process.env.NOVARA_SMART_MIN_24H_VOLUME_USD || 2_000_000));
 const MAX_MARKETS = Math.max(25, Math.min(500, Number(process.env.NOVARA_SMART_MAX_MARKETS || 300)));
 const MIN_SCORE = Math.max(4.5, Math.min(8.5, Number(process.env.NOVARA_SMART_MIN_SCORE || 5.8)));
-const VIP_MIN_SCORE = Math.max(4.5, Math.min(9.5, Number(process.env.NOVARA_VIP_MIN_SCORE || 6.0))); // score <= 6.0 goes FREE; score > 6.0 goes VIP
+const VIP_MIN_SCORE = MIN_SCORE; // Every signal scoring 5.8+ is eligible for VIP
 const MIN_RR = Math.max(1.5, Number(process.env.NOVARA_SMART_MIN_RR || 1.8));
 const STRUCTURE_BUFFER_ATR = Math.max(0.1, Number(process.env.NOVARA_STRUCTURE_BUFFER_ATR || 0.25));
 const MAX_COUNTERTREND_ATR = Math.max(0.25, Number(process.env.NOVARA_MAX_COUNTERTREND_ATR || 0.75));
 const MAX_SPREAD_PCT = Math.max(0.03, Number(process.env.NOVARA_SMART_MAX_SPREAD_PCT || 0.25));
 const MAX_SIGNALS_PER_CYCLE = Math.max(1, Number(process.env.NOVARA_SMART_MAX_SIGNALS_PER_CYCLE || 8));
-const FREE_DAILY_LIMIT = Math.max(0, Number(process.env.NOVARA_FREE_DAILY_LIMIT || 5));
+const FREE_DAILY_LIMIT = 0; // Public channel is capped at one randomly selected signal per run, not per day
 const TELEGRAM_GAP_MS = Math.max(1000, Number(process.env.NOVARA_TELEGRAM_MIN_GAP_MS || 3200));
 const STATE_SCHEMA = 1; // State schema remains compatible with V1.0.5 paper history
 const now = () => Date.now();
@@ -451,10 +451,10 @@ async function sendTelegram(chatId, message) {
   return { sent: true };
 }
 function audienceForScore(score) {
-  return n(score) <= VIP_MIN_SCORE ? 'FREE' : 'VIP';
+  return n(score) >= MIN_SCORE ? 'BOTH' : 'NONE';
 }
 function audienceForTrade(trade) {
-  if (trade.audience === 'FREE' || trade.audience === 'VIP' || trade.audience === 'LEGACY') return trade.audience;
+  if (trade.audience === 'FREE' || trade.audience === 'VIP' || trade.audience === 'LEGACY' || trade.audience === 'BOTH') return trade.audience;
   // Backward compatibility for paper trades recorded before score-based routing existed.
   return audienceForScore(trade.score);
 }
@@ -466,30 +466,31 @@ function configuredAudience(name) {
   return null;
 }
 async function sendSignalToAudience(state, message, audience) {
-  // Never downgrade a VIP signal to the public channel if VIP is misconfigured.
-  let destination = configuredAudience(audience);
-  if (!VIP_CHAT && !FREE_CHAT && LEGACY_CHAT) destination = { name: 'LEGACY', id: LEGACY_CHAT };
-  if (!destination) return [{ name: audience, sent: false, reason: `${audience.toLowerCase()}_chat_not_configured` }];
-  if (destination.name === 'FREE' && FREE_DAILY_LIMIT > 0) {
-    const key = dayKey();
-    const count = n(state.dailyFreeCount[key]);
-    if (count >= FREE_DAILY_LIMIT) return [{ name: destination.name, sent: false, reason: 'free_daily_limit' }];
-    try {
-      const result = await sendTelegram(destination.id, message);
-      if (result.sent) state.dailyFreeCount[key] = count + 1;
-      return [{ name: destination.name, ...result }];
-    } catch (e) { return [{ name: destination.name, sent: false, reason: e.message }]; }
+  const results = [];
+  const names = audience === 'BOTH' ? ['VIP', 'FREE'] : [audience];
+  for (const name of names) {
+    const destination = configuredAudience(name);
+    if (!destination) {
+      results.push({ name, sent: false, reason: `${name.toLowerCase()}_chat_not_configured` });
+      continue;
+    }
+    try { results.push({ name, ...(await sendTelegram(destination.id, message)) }); }
+    catch (e) { results.push({ name, sent: false, reason: e.message }); }
   }
-  try { return [{ name: destination.name, ...(await sendTelegram(destination.id, message)) }]; }
-  catch (e) { return [{ name: destination.name, sent: false, reason: e.message }]; }
+  return results;
 }
 
-// Outcome alerts are sent only to the same audience that received the original signal.
+// Outcome updates and 24-hour performance reports are broadcast to both configured channels.
 async function sendUpdateToAudience(message, audience, alreadySent = []) {
-  const destination = configuredAudience(audience);
-  if (!destination || alreadySent.includes(destination.name)) return [];
-  try { return [{ name: destination.name, ...(await sendTelegram(destination.id, message)) }]; }
-  catch (e) { return [{ name: destination.name, sent: false, reason: e.message }]; }
+  const names = audience === 'BOTH' ? ['VIP', 'FREE'] : [audience];
+  const results = [];
+  for (const name of names) {
+    const destination = configuredAudience(name);
+    if (!destination || alreadySent.includes(name)) continue;
+    try { results.push({ name, ...(await sendTelegram(destination.id, message)) }); }
+    catch (e) { results.push({ name, sent: false, reason: e.message }); }
+  }
+  return results;
 }
 
 function reportAudiences() {
@@ -594,7 +595,7 @@ function formatOutcome(trade) {
 
 function report24h(state, audience) {
   const cutoff = now() - 24 * 3600_000;
-  const cohort = state.paperTrades.filter(t => n(t.openedAt) >= cutoff && n(t.openedAt) <= now() && (audience === 'LEGACY' || audienceForTrade(t) === audience));
+  const cohort = state.paperTrades.filter(t => n(t.openedAt) >= cutoff && n(t.openedAt) <= now());
   const tp = cohort.filter(t => t.status === 'TP').length;
   const sl = cohort.filter(t => t.status === 'SL').length;
   const ambiguous = cohort.filter(t => t.status === 'AMBIGUOUS').length;
@@ -608,9 +609,9 @@ function report24h(state, audience) {
     const status = t.status === 'OPEN' ? 'OPEN' : t.status === 'TP' ? 'TP ✅' : t.status === 'SL' ? 'SL ❌' : 'AMBIGUOUS ⚠️';
     return `• ${escapeHtml(t.coin)} ${t.side} | ${status} | score ${n(t.score).toFixed(2)}/10 | ${n(t.suggestedLeverage) || '—'}x | ${t.status === 'TP' || t.status === 'SL' ? `${n(t.pnlR) > 0 ? '+' : ''}${n(t.pnlR).toFixed(2)}R` : 'pending'}`;
   });
-  return `📊 <b>NOVARA — 24H ${audience} SIGNAL PERFORMANCE</b>
+  return `📊 <b>NOVARA — 24H ${audience === 'FREE' ? 'PUBLIC' : audience === 'VIP' ? 'VIP' : 'CHANNEL'} SIGNAL PERFORMANCE</b>
 ━━━━━━━━━━━━━━━━━━
-🔐 Audience: ${audience === 'FREE' ? `Public signals (score ≤ ${VIP_MIN_SCORE.toFixed(1)})` : audience === 'VIP' ? `VIP signals (score > ${VIP_MIN_SCORE.toFixed(1)})` : 'Legacy destination'}
+🔐 Coverage: all NOVARA signals tracked in the last 24 hours
 🕒 Window: last 24 hours (UTC)
 🔔 Signals sent/tracked: <b>${cohort.length}</b>
 🎯 TP reached: <b>${tp}</b> (${successOfAll.toFixed(1)}% of all signals)
@@ -706,13 +707,13 @@ async function main() {
   }
   // Retry undelivered outcome notifications only to the audience that received the signal.
   for (const t of state.paperTrades.filter(x => x.status !== 'OPEN' && !x.outcomeNotifiedAt)) {
-    t.audience ||= audienceForTrade(t);
+    t.audience = 'BOTH';
     t.outcomeDelivered ||= [];
     const updateResults = await sendUpdateToAudience(formatOutcome(t), t.audience, t.outcomeDelivered);
     for (const r of updateResults) if (r.sent && !t.outcomeDelivered.includes(r.name)) t.outcomeDelivered.push(r.name);
-    const destination = configuredAudience(t.audience) || (!VIP_CHAT && !FREE_CHAT && LEGACY_CHAT ? { name: 'LEGACY' } : null);
-    if (destination && t.outcomeDelivered.includes(destination.name)) t.outcomeNotifiedAt = now();
-    console.log(`[OUTCOME][DELIVERY] ${t.coin} ${t.status} audience=${t.audience} ${JSON.stringify(updateResults)} delivered=${t.outcomeDelivered.join(',')}`);
+    const required = reportAudiences();
+    if (required.length && required.every(name => t.outcomeDelivered.includes(name))) t.outcomeNotifiedAt = now();
+    console.log(`[OUTCOME][DELIVERY] ${t.coin} ${t.status} audience=BOTH ${JSON.stringify(updateResults)} delivered=${t.outcomeDelivered.join(',')}`);
   }
 
   const candidates = [];
@@ -765,24 +766,37 @@ async function main() {
     const k = `${c.coin}|${c.side}`;
     if (seenMarketSide.has(k)) continue;
     seenMarketSide.add(k);
-    chosen.push(c);
-    if (chosen.length >= MAX_SIGNALS_PER_CYCLE) break;
+    chosen.push(c); // no per-cycle cap: every eligible score >= MIN_SCORE is retained
   }
 
   let sentSignals = 0, sendErrors = 0;
+  const publicPick = chosen.length ? chosen[Math.floor(Math.random() * chosen.length)] : null;
   for (const s of chosen) {
+    if (n(s.score) < MIN_SCORE) continue;
     const message = formatSignal(s, s.risk);
-    const audience = audienceForScore(s.score);
-    const destinations = await sendSignalToAudience(state, message, audience);
+    const destinations = [];
+    // Every eligible signal goes to VIP. Exactly one random eligible signal per cycle may go public.
+    const vip = configuredAudience('VIP');
+    if (vip) {
+      try { destinations.push({ name: 'VIP', ...(await sendTelegram(vip.id, message)) }); }
+      catch (e) { destinations.push({ name: 'VIP', sent: false, reason: e.message }); }
+    } else destinations.push({ name: 'VIP', sent: false, reason: 'vip_chat_not_configured' });
+    if (s === publicPick) {
+      const pub = configuredAudience('FREE');
+      if (pub) {
+        try { destinations.push({ name: 'FREE', ...(await sendTelegram(pub.id, message)) }); }
+        catch (e) { destinations.push({ name: 'FREE', sent: false, reason: e.message }); }
+      } else destinations.push({ name: 'FREE', sent: false, reason: 'free_chat_not_configured' });
+    }
     const anySent = destinations.some(x => x.sent);
-    console.log(`[SIGNAL] ${s.coin} ${s.side} pattern=${s.pattern} score=${s.score.toFixed(2)} audience=${audience} leverage=${s.leverageInfo?.leverage ?? suggestLeverage(s).leverage}x entry=${fmtPrice(s.risk.entry)} SL=${fmtPrice(s.risk.sl)} TP=${fmtPrice(s.risk.tp)} deliveries=${JSON.stringify(destinations)}`);
+    console.log(`[SIGNAL] ${s.coin} ${s.side} pattern=${s.pattern} score=${s.score.toFixed(2)} audience=${s === publicPick ? 'VIP+PUBLIC' : 'VIP'} leverage=${s.leverageInfo?.leverage ?? suggestLeverage(s).leverage}x entry=${fmtPrice(s.risk.entry)} SL=${fmtPrice(s.risk.sl)} TP=${fmtPrice(s.risk.tp)} deliveries=${JSON.stringify(destinations)}`);
     if (anySent) {
       sentSignals++;
       state.alertHistory[signalKey(s)] = now();
-      state.paperTrades.push({ id: `${s.coin}|${s.side}|${s.pattern}|${now()}`, coin: s.coin, side: s.side, pattern: s.pattern, score: Number(s.score.toFixed(2)), audience: destinations[0].name, entry: s.risk.entry, sl: s.risk.sl, tp: s.risk.tp, rr: s.risk.rr, suggestedLeverage: s.leverageInfo?.leverage ?? null, btcRegime: s.btcRegime?.label || 'NEUTRAL', rsi15: s.rsi15, fibConfluence: Boolean(s.fibConfluence), openedAt: now(), status: 'OPEN', pnlR: null, reasons: s.reasons });
+      state.paperTrades.push({ id: `${s.coin}|${s.side}|${s.pattern}|${now()}`, coin: s.coin, side: s.side, pattern: s.pattern, score: Number(s.score.toFixed(2)), audience: 'BOTH', outcomeDelivered: [], entry: s.risk.entry, sl: s.risk.sl, tp: s.risk.tp, rr: s.risk.rr, suggestedLeverage: s.leverageInfo?.leverage ?? null, btcRegime: s.btcRegime?.label || 'NEUTRAL', rsi15: s.rsi15, fibConfluence: Boolean(s.fibConfluence), openedAt: now(), status: 'OPEN', pnlR: null, reasons: s.reasons });
     } else {
       sendErrors++;
-      console.warn(`[DELIVERY][FAIL] ${s.coin} ${s.side} audience=${audience}: no destination confirmed delivery`);
+      console.warn(`[DELIVERY][FAIL] ${s.coin} ${s.side}: no destination confirmed delivery`);
     }
   }
 
