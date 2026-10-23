@@ -26,7 +26,7 @@ const MAX_429_RETRIES = Math.max(0, Math.min(4, Number(process.env.NOVARA_SMART_
 const TIMEOUT_MS = Math.max(3000, Number(process.env.NOVARA_SMART_TIMEOUT_MS || 12000));
 const MIN_VOLUME_USD = Math.max(250000, Number(process.env.NOVARA_SMART_MIN_24H_VOLUME_USD || 2_000_000));
 const MAX_MARKETS = Math.max(25, Math.min(300, Number(process.env.NOVARA_SMART_MAX_MARKETS || 120)));
-const MIN_SCORE = Math.max(6.0, Math.min(8.5, Number(process.env.NOVARA_SMART_MIN_SCORE || 6.8)));
+const MIN_SCORE = Math.max(6.0, Math.min(8.5, Number(process.env.NOVARA_SMART_MIN_SCORE || 6.2)));
 const MIN_RR = Math.max(1.5, Number(process.env.NOVARA_SMART_MIN_RR || 1.8));
 const STRUCTURE_BUFFER_ATR = Math.max(0.1, Number(process.env.NOVARA_STRUCTURE_BUFFER_ATR || 0.25));
 const MAX_SPREAD_PCT = Math.max(0.03, Number(process.env.NOVARA_SMART_MAX_SPREAD_PCT || 0.25));
@@ -741,10 +741,12 @@ async function analyzeAsset(asset, previous, btcRegime) {
   const lastClosed15m = c15.at(-1);
   const atr15ForTiming = atr(c15, 14) || asset.markPx * 0.006;
   const entryDriftPct = Math.abs(asset.markPx - lastClosed15m.c) / asset.markPx * 100;
-  const maxEntryDriftPct = Math.max(0.20, (atr15ForTiming / asset.markPx) * 100 * 0.50);
+  const maxEntryDriftPct = Math.max(0.25, (atr15ForTiming / asset.markPx) * 100 * 0.65);
   if (entryDriftPct > maxEntryDriftPct) {
     console.log(`[ENTRY][STALE] ${asset.coin} mark/confirmed-close drift=${entryDriftPct.toFixed(3)}% > ${maxEntryDriftPct.toFixed(3)}%; skip chase`);
-    return [];
+    const skipped = [];
+    skipped.stale = true;
+    return skipped;
   }
   const [book, trades] = await Promise.all([
     request({ type: 'l2Book', coin: asset.coin }, `book ${asset.coin}`).catch(() => null),
@@ -794,13 +796,14 @@ async function main() {
 
   const candidates = [];
   let checked = 0, failed = 0;
-  const rejects = { regime: 0, score: 0, cooldown: 0, risk: 0, vwap: 0, spread: 0, accepted: 0 };
+  const rejects = { stale: 0, regime: 0, score: 0, cooldown: 0, risk: 0, vwap: 0, spread: 0, accepted: 0 };
   const rejectionSamples = [];
   const noteReject = (kind, s, reason) => { rejects[kind]++; if (rejectionSamples.length < 18) rejectionSamples.push(`${s.coin} ${s.side} ${s.pattern}: ${reason}`); };
   for (const asset of eligible) {
     try {
       const found = await analyzeAsset(asset, state.previousMarketContext[asset.coin], btcRegime);
       checked++;
+      if (found.stale) rejects.stale++;
       for (const s of found) {
         // Hard market-quality gate: unknown/wide spreads are not signal-worthy.
         if (s.spreadPct == null || !Number.isFinite(s.spreadPct) || s.spreadPct > MAX_SPREAD_PCT) {
@@ -860,7 +863,7 @@ async function main() {
 
   let sentSignals = 0, sendErrors = 0;
   // Deterministic public selection: highest-scoring eligible setup, not random.
-  const publicPool = chosen.filter(s => n(s.score) > MIN_SCORE);
+  const publicPool = chosen.filter(s => n(s.score) >= MIN_SCORE);
   const publicPick = publicPool[0] || null;
   for (const s of chosen) {
     if (n(s.score) < MIN_SCORE) continue;
