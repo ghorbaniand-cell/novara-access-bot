@@ -1,20 +1,26 @@
-# NOVARA SMART MONEY AI V2.4.4 — Adaptive Regime Gate
+# NOVARA SMART MONEY AI V2.4.5 — Risk Diagnostics + API Rate-Limit Resilience
 
-## What changed
-- Replaced the blanket dual-opposition regime veto with an adaptive rule: an opposing 1H asset trend plus opposing BTC 4H regime is a hard rejection only when BTC's absolute 24h move is at least 1.5%.
-- Below that impulse threshold, candidates continue to the existing score, structural stop/target, minimum 1:1.5 R:R, stale-entry, spread, VWAP, and cooldown checks.
-- BTC opposition now applies a graduated score penalty: 0.15 for a small move, 0.45 at/above 1.5%, and 0.85 at/above 2.5%. This avoids treating a nearly flat BTC day as a decisive veto while preserving caution during strong moves.
-- Added `regimeSoft` diagnostics and explicit logs for candidates allowed through to the mandatory risk checks.
-- Workflow reads VIP/Free Chat IDs from GitHub Variables (`vars.*`) and the bot token from Secrets.
+## Included
+- `novara_smart_money_ai.mjs`: worker replacement.
+- `.github/workflows/novara-smart-money-ai.yml`: workflow replacement, keeping the 5-minute schedule, production environment, existing Telegram variable/secret names, read-only operation, and paper tracking.
 
-## Safety retained
-- Read-only signal generation; no orders or auto-copy.
-- Structural SL/TP remains mandatory; no ATR-only fabricated stop/target.
-- Minimum R:R remains 1:1.5.
-- Minimum score remains 6.0/10, minimum 24h volume remains $2,000,000, spread/stale-entry/VWAP/cooldown checks remain active.
-- This change may produce more candidates, but does not guarantee profitability. Review paper-tracked outcomes before using any signal for manual trading.
+## Changes in V2.4.5
+1. **API 429 resilience:** honors a valid `Retry-After` header, applies exponential backoff with jitter, and sets a shared global cooldown so queued requests wait instead of continuing to hit the API during a rate limit.
+2. **Request pacing:** default request spacing increased from 180 ms to 300 ms; workflow sets it explicitly. Retry policy is configurable and set to three retries with a 1.5–15 second backoff range.
+3. **Visible degraded-data events:** failures for order-book and recent-trades requests are now logged explicitly rather than silently replaced with fallback values.
+4. **Risk auditability:** risk rejection logs now include entry, SL, TP, risk percentage, reward percentage, support/resistance sources and levels, ATR, computed R:R, and required R:R.
+5. **Near-miss diagnostics:** setups close to the score threshold now log score, trend/regime, RSI, relative volume, OI change, flow, book imbalance, spread, and the setup reasons. Setups with R:R just below the threshold get a separate near-miss diagnostic.
+6. **Strategy-version isolation:** the version changes to V2.4.5, so performance statistics for the new version are not mixed with previous versions.
 
-## GitHub configuration
-- Secret: `TELEGRAM_TOKEN` (or `TELEGRAM_BOT_TOKEN`).
-- Variables: `NOVARA_VIP_CHAT_ID` and `NOVARA_FREE_CHAT_ID` (or the documented fallback names in the workflow).
-- Environment: `production`.
+## Deliberately unchanged
+- No trading orders, auto-copy, or account changes; the engine remains read-only with paper outcome tracking.
+- Minimum score remains 6.0/10 and minimum planned R:R remains 1:1.5.
+- Structural support/resistance SL/TP, spread checks, stale-entry checks, VWAP checks, cooldown, volume minimum, and the adaptive regime gate remain mandatory.
+- No forced target beyond a nearby support/resistance level and no fabricated ATR-only stop/target. A setup is not made eligible merely to increase signal count.
+
+## Validation performed
+- `node --check novara_smart_money_ai.mjs` passes.
+- ZIP contents and workflow/worker paths verified.
+
+## Expected result
+Logs should make it easier to distinguish a genuinely poor structural R:R from a score near miss, and API rate limiting should be less bursty. These changes do not guarantee that a signal will be produced in every cycle or that any strategy is profitable. Review paper-tracked outcomes before acting on signals.
