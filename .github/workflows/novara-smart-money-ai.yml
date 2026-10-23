@@ -52,9 +52,10 @@ jobs:
 
       - name: Run read-only signal engine
         env:
-  TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
-  NOVARA_VIP_CHAT_ID: ${{ vars.NOVARA_VIP_CHAT_ID }}
-  NOVARA_FREE_CHAT_ID: ${{ vars.NOVARA_FREE_CHAT_ID }}
+          TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN || secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          NOVARA_FREE_CHAT_ID: ${{ secrets.NOVARA_FREE_CHAT_ID || secrets.FREE_CHAT_ID }}
+          NOVARA_VIP_CHAT_ID: ${{ secrets.NOVARA_VIP_CHAT_ID || secrets.VIP_CHAT_ID || secrets.NOVARA_PREMIUM_CHAT_ID }}
           NOVARA_SMART_MAX_MARKETS: '120'
           NOVARA_SMART_MIN_SCORE: '6.0'
           NOVARA_SMART_MIN_RR: '1.5'
