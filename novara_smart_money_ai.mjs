@@ -14,7 +14,7 @@ import path from 'node:path';
  * All eligible liquid perp markets are considered; the worker does not depend on wallet lists.
  */
 
-const VERSION = 'NOVARA-SMART-MONEY-AI-V1.0.8-DUAL-CHANNEL-ROUTING';
+const VERSION = 'NOVARA-SMART-MONEY-AI-V1.0.9-STRUCTURE-GATE-FIX';
 const API = (process.env.HYPERLIQUID_API_URL || 'https://api.hyperliquid.xyz/info').trim();
 const TOKEN = process.env.TELEGRAM_TOKEN || process.env.TELEGRAM_BOT_TOKEN || '';
 const LEGACY_CHAT = process.env.TELEGRAM_CHAT_ID || '';
@@ -731,14 +731,15 @@ async function main() {
           console.log(`[FILTER][REGIME] ${s.coin} ${s.side} rejected: 1H trend=${s.trend} and BTC 4H=${btcLabel} oppose setup`);
           continue;
         }
-        // Require some room to the next opposing structure; don't buy directly under resistance or short above support.
+        // V1.0.8 applied a second hard distance gate before structural risk validation.
+        // That duplicate gate could reject setups even when the actual SL/TP structure
+        // and configured R:R were valid. Let buildRisk() make the authoritative decision:
+        // it verifies the correct-side support/resistance, buffer, stop bounds and R:R.
         const structureRoomPct = s.side === 'LONG'
           ? (n(s.resistance) > s.entry ? (n(s.resistance) - s.entry) / s.entry * 100 : 0)
           : (n(s.support) > 0 && n(s.support) < s.entry ? (s.entry - n(s.support)) / s.entry * 100 : 0);
-        const minStructureRoomPct = Math.max(0.35, n(s.atrPct) * 0.65);
-        if (structureRoomPct < minStructureRoomPct) {
-          console.log(`[FILTER][STRUCTURE] ${s.coin} ${s.side} rejected: opposing level too close (${structureRoomPct.toFixed(2)}% < ${minStructureRoomPct.toFixed(2)}%)`);
-          continue;
+        if (structureRoomPct > 0 && structureRoomPct < Math.max(0.35, n(s.atrPct) * 0.65)) {
+          console.log(`[STRUCTURE][TIGHT] ${s.coin} ${s.side}: room=${structureRoomPct.toFixed(2)}%; checking actual structural SL/TP and R:R instead of auto-rejecting`);
         }
         if (s.score < MIN_SCORE) continue;
         if (isCooldown(state, s)) continue;
