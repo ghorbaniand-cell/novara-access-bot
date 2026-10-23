@@ -2,7 +2,7 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 
 /*
- * NOVARA SMART MONEY AI V1.0.6
+ * NOVARA SMART MONEY AI V1.0.7
  * READ-ONLY | NO ORDERS | NO AUTO-COPY | PAPER OUTCOME TRACKING
  *
  * Combines three entry families:
@@ -14,7 +14,7 @@ import path from 'node:path';
  * All eligible liquid perp markets are considered; the worker does not depend on wallet lists.
  */
 
-const VERSION = 'NOVARA-SMART-MONEY-AI-V1.0.6-MARKET-STRUCTURE-FILTERS';
+const VERSION = 'NOVARA-SMART-MONEY-AI-V1.0.7-STRUCTURE-FIRST-AUDIT';
 const API = (process.env.HYPERLIQUID_API_URL || 'https://api.hyperliquid.xyz/info').trim();
 const TOKEN = process.env.TELEGRAM_TOKEN || process.env.TELEGRAM_BOT_TOKEN || '';
 const LEGACY_CHAT = process.env.TELEGRAM_CHAT_ID || '';
@@ -27,7 +27,9 @@ const MIN_VOLUME_USD = Math.max(250000, Number(process.env.NOVARA_SMART_MIN_24H_
 const MAX_MARKETS = Math.max(25, Math.min(500, Number(process.env.NOVARA_SMART_MAX_MARKETS || 300)));
 const MIN_SCORE = Math.max(4.5, Math.min(8.5, Number(process.env.NOVARA_SMART_MIN_SCORE || 5.8)));
 const VIP_MIN_SCORE = Math.max(4.5, Math.min(9.5, Number(process.env.NOVARA_VIP_MIN_SCORE || 6.0))); // score <= 6.0 goes FREE; score > 6.0 goes VIP
-const MIN_RR = Math.max(1.2, Number(process.env.NOVARA_SMART_MIN_RR || 1.65));
+const MIN_RR = Math.max(1.5, Number(process.env.NOVARA_SMART_MIN_RR || 1.8));
+const STRUCTURE_BUFFER_ATR = Math.max(0.1, Number(process.env.NOVARA_STRUCTURE_BUFFER_ATR || 0.25));
+const MAX_COUNTERTREND_ATR = Math.max(0.25, Number(process.env.NOVARA_MAX_COUNTERTREND_ATR || 0.75));
 const MAX_SPREAD_PCT = Math.max(0.03, Number(process.env.NOVARA_SMART_MAX_SPREAD_PCT || 0.25));
 const MAX_SIGNALS_PER_CYCLE = Math.max(1, Number(process.env.NOVARA_SMART_MAX_SIGNALS_PER_CYCLE || 8));
 const FREE_DAILY_LIMIT = Math.max(0, Number(process.env.NOVARA_FREE_DAILY_LIMIT || 5));
@@ -332,53 +334,59 @@ function detectPatterns({ coin, c15, c1h, ctx, prevCtx, mid, spread, imbalance, 
 
 function buildRisk(candidate) {
   const entry = n(candidate.entry);
-  const atrValue = Math.max(n(candidate.atr, entry * 0.006), entry * 0.001);
-  if (!(entry > 0) || !['LONG', 'SHORT'].includes(candidate.side)) {
-    return { entry, sl: 0, tp: 0, riskPct: 0, rewardPct: 0, rr: 0, valid: false, reason: 'invalid entry/side' };
+  const atrValue = n(candidate.atr);
+  if (!(entry > 0) || !(atrValue > 0) || !['LONG', 'SHORT'].includes(candidate.side)) {
+    return { entry, sl: 0, tp: 0, riskPct: 0, rewardPct: 0, rr: 0, valid: false, reason: 'invalid entry/side/ATR' };
   }
 
-  // Stops sit beyond the invalidation swing; targets sit before opposing structure.
-  const buffer = Math.max(atrValue * 0.20, entry * 0.0010);
-  const minRisk = entry * 0.0045;
+  // Structure-first risk: do not fabricate ATR-only SL/TP when a usable swing level is missing.
+  const buffer = Math.max(atrValue * STRUCTURE_BUFFER_ATR, entry * 0.0010);
+  const minRisk = entry * 0.0020;
   const maxRisk = entry * 0.025;
   const support = n(candidate.support);
   const resistance = n(candidate.resistance);
-  let sl, tp, riskDist, targetDist;
-  let targetUsesStructure = false;
+  let sl = 0, tp = 0, riskDist = 0, targetDist = 0;
 
   if (candidate.side === 'LONG') {
-    const structuralStop = support > 0 && support < entry ? support - buffer : 0;
-    sl = structuralStop > 0 ? Math.min(entry - minRisk, structuralStop) : entry - Math.max(atrValue * 1.15, minRisk);
+    if (!(support > 0 && support < entry)) {
+      return { entry, sl: 0, tp: 0, riskPct: 0, rewardPct: 0, rr: 0, valid: false, reason: 'no valid structural support for long' };
+    }
+    sl = support - buffer;
     riskDist = entry - sl;
-    if (!(sl < entry) || riskDist > maxRisk) {
-      return { entry, sl, tp: 0, riskPct: riskDist / entry * 100, rewardPct: 0, rr: 0, valid: false, reason: 'long structural stop invalid or too wide' };
+    if (!(sl < support && sl < entry) || riskDist < minRisk || riskDist > maxRisk) {
+      return { entry, sl, tp: 0, riskPct: riskDist / entry * 100, rewardPct: 0, rr: 0, valid: false, reason: 'long structural stop invalid or outside risk bounds' };
     }
-    const structuralTarget = resistance > entry ? resistance - buffer : 0;
-    if (structuralTarget > entry) {
-      targetDist = structuralTarget - entry;
-      targetUsesStructure = true;
-    } else targetDist = riskDist * 1.9;
-    tp = entry + targetDist;
+    if (!(resistance > entry)) {
+      return { entry, sl, tp: 0, riskPct: riskDist / entry * 100, rewardPct: 0, rr: 0, valid: false, reason: 'no overhead resistance target for long' };
+    }
+    // Target must remain below the next resistance, not beyond it.
+    tp = resistance - buffer;
+    targetDist = tp - entry;
+    if (!(tp > entry) || targetDist / riskDist < MIN_RR) {
+      return { entry, sl, tp, riskPct: riskDist / entry * 100, rewardPct: Math.max(0, targetDist) / entry * 100, rr: targetDist / riskDist, valid: false, reason: 'insufficient room before resistance for required R:R' };
+    }
   } else {
-    const structuralStop = resistance > entry ? resistance + buffer : 0;
-    sl = structuralStop > entry ? Math.max(entry + minRisk, structuralStop) : entry + Math.max(atrValue * 1.15, minRisk);
-    riskDist = sl - entry;
-    if (!(sl > entry) || riskDist > maxRisk) {
-      return { entry, sl, tp: 0, riskPct: riskDist / entry * 100, rewardPct: 0, rr: 0, valid: false, reason: 'short structural stop invalid or too wide' };
+    if (!(resistance > entry)) {
+      return { entry, sl: 0, tp: 0, riskPct: 0, rewardPct: 0, rr: 0, valid: false, reason: 'no valid structural resistance for short' };
     }
-    const structuralTarget = support > 0 && support < entry ? support + buffer : 0;
-    if (structuralTarget > 0 && structuralTarget < entry) {
-      targetDist = entry - structuralTarget;
-      targetUsesStructure = true;
-    } else targetDist = riskDist * 1.9;
-    tp = entry - targetDist;
+    sl = resistance + buffer;
+    riskDist = sl - entry;
+    if (!(sl > resistance && sl > entry) || riskDist < minRisk || riskDist > maxRisk) {
+      return { entry, sl, tp: 0, riskPct: riskDist / entry * 100, rewardPct: 0, rr: 0, valid: false, reason: 'short structural stop invalid or outside risk bounds' };
+    }
+    if (!(support > 0 && support < entry)) {
+      return { entry, sl, tp: 0, riskPct: riskDist / entry * 100, rewardPct: 0, rr: 0, valid: false, reason: 'no downside support target for short' };
+    }
+    // Target must remain above the next support, not beyond it.
+    tp = support + buffer;
+    targetDist = entry - tp;
+    if (!(tp < entry) || targetDist / riskDist < MIN_RR) {
+      return { entry, sl, tp, riskPct: riskDist / entry * 100, rewardPct: Math.max(0, targetDist) / entry * 100, rr: targetDist / riskDist, valid: false, reason: 'insufficient room before support for required R:R' };
+    }
   }
 
   const rr = targetDist / riskDist;
-  if (!(tp > 0) || !(targetDist > 0) || (targetUsesStructure && rr < MIN_RR)) {
-    return { entry, sl, tp, riskPct: riskDist / entry * 100, rewardPct: targetDist / entry * 100, rr, valid: false, reason: 'insufficient room before opposing structure' };
-  }
-  return { entry, sl, tp, riskPct: riskDist / entry * 100, rewardPct: targetDist / entry * 100, rr, valid: true, targetUsesStructure };
+  return { entry, sl, tp, riskPct: riskDist / entry * 100, rewardPct: targetDist / entry * 100, rr, valid: true, targetUsesStructure: true };
 }
 function signalKey(s) { return `${s.coin}|${s.side}|${s.pattern}`; }
 function isCooldown(state, s) {
@@ -678,7 +686,7 @@ async function main() {
   console.log(`\n${VERSION} — START`);
   console.log(`Mode: READ-ONLY / NO ORDERS / PAPER TRACKING`);
   console.log(`Time: ${new Date().toISOString()}`);
-  console.log(`Signal threshold: ${MIN_SCORE}/10 | min 24h volume: $${MIN_VOLUME_USD.toLocaleString()} | market cap: ${MAX_MARKETS}`);
+  console.log(`Signal threshold: ${MIN_SCORE}/10 | min R:R: 1:${MIN_RR.toFixed(2)} | structure-first SL/TP | min 24h volume: $${MIN_VOLUME_USD.toLocaleString()} | market cap: ${MAX_MARKETS}`);
 
   const snapshot = await getMarketSnapshot();
   const contexts = snapshot.ctxByCoin;
@@ -714,9 +722,27 @@ async function main() {
       const found = await analyzeAsset(asset, state.previousMarketContext[asset.coin], btcRegime);
       checked++;
       for (const s of found) {
+        // Directional regime gate: avoid counter-trend entries when both the asset trend and BTC regime oppose them.
+        const assetOpposes = s.trend === (s.side === 'LONG' ? 'SHORT' : 'LONG');
+        const btcLabel = s.btcRegime?.label || 'NEUTRAL';
+        const btcOpposes = (s.side === 'LONG' && btcLabel === 'BEARISH') || (s.side === 'SHORT' && btcLabel === 'BULLISH');
+        if (assetOpposes && btcOpposes) {
+          console.log(`[FILTER][REGIME] ${s.coin} ${s.side} rejected: 1H trend=${s.trend} and BTC 4H=${btcLabel} oppose setup`);
+          continue;
+        }
+        // Require some room to the next opposing structure; don't buy directly under resistance or short above support.
+        const structureRoomPct = s.side === 'LONG'
+          ? (n(s.resistance) > s.entry ? (n(s.resistance) - s.entry) / s.entry * 100 : 0)
+          : (n(s.support) > 0 && n(s.support) < s.entry ? (s.entry - n(s.support)) / s.entry * 100 : 0);
+        const minStructureRoomPct = Math.max(0.35, n(s.atrPct) * 0.65);
+        if (structureRoomPct < minStructureRoomPct) {
+          console.log(`[FILTER][STRUCTURE] ${s.coin} ${s.side} rejected: opposing level too close (${structureRoomPct.toFixed(2)}% < ${minStructureRoomPct.toFixed(2)}%)`);
+          continue;
+        }
         if (s.score < MIN_SCORE) continue;
         if (isCooldown(state, s)) continue;
         const risk = buildRisk(s);
+        if (!risk.valid) console.log(`[FILTER][RISK] ${s.coin} ${s.side} rejected: ${risk.reason}`);
         if (!risk.valid || risk.rr < MIN_RR || !(risk.sl > 0) || !(risk.tp > 0)) continue;
         // Avoid chasing a move that has already travelled too far from its 15m mean.
         const distanceToVwap = Math.abs((s.entry - s.vwap) / s.entry) * 100;
