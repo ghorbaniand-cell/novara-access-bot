@@ -2,7 +2,7 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 
 /*
- * NOVARA SMART MONEY AI V2.0.0
+ * NOVARA SMART MONEY AI V2.1.0
  * READ-ONLY | NO ORDERS | NO AUTO-COPY | PAPER OUTCOME TRACKING
  *
  * Combines three entry families:
@@ -14,14 +14,15 @@ import path from 'node:path';
  * All eligible liquid perp markets are considered; the worker does not depend on wallet lists.
  */
 
-const VERSION = 'NOVARA-SMART-MONEY-AI-V2.0.0-STRUCTURE-DIAGNOSTICS';
+const VERSION = 'NOVARA-SMART-MONEY-AI-V2.1.0-STRUCTURE-429-REPAIR';
 const API = (process.env.HYPERLIQUID_API_URL || 'https://api.hyperliquid.xyz/info').trim();
 const TOKEN = process.env.TELEGRAM_TOKEN || process.env.TELEGRAM_BOT_TOKEN || '';
 const LEGACY_CHAT = process.env.TELEGRAM_CHAT_ID || '';
 const FREE_CHAT = process.env.NOVARA_FREE_CHAT_ID || process.env.FREE_CHAT_ID || '';
 const VIP_CHAT = process.env.NOVARA_VIP_CHAT_ID || process.env.VIP_CHAT_ID || process.env.NOVARA_PREMIUM_CHAT_ID || '';
 const STATE_FILE = process.env.NOVARA_SMART_MONEY_STATE_FILE || 'production/state/novara_smart_money_state.json';
-const SCAN_GAP_MS = Math.max(35, Number(process.env.NOVARA_SMART_REQUEST_GAP_MS || 90));
+const SCAN_GAP_MS = Math.max(100, Number(process.env.NOVARA_SMART_REQUEST_GAP_MS || 180));
+const MAX_429_RETRIES = Math.max(0, Math.min(4, Number(process.env.NOVARA_SMART_429_RETRIES || 3))); 
 const TIMEOUT_MS = Math.max(3000, Number(process.env.NOVARA_SMART_TIMEOUT_MS || 12000));
 const MIN_VOLUME_USD = Math.max(250000, Number(process.env.NOVARA_SMART_MIN_24H_VOLUME_USD || 2_000_000));
 const MAX_MARKETS = Math.max(25, Math.min(500, Number(process.env.NOVARA_SMART_MAX_MARKETS || 300)));
@@ -62,20 +63,36 @@ async function paceRequest() {
   await slot;
 }
 async function request(body, label = 'info') {
-  await paceRequest();
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
-  try {
-    const res = await fetch(API, {
-      method: 'POST',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify(body),
-      signal: controller.signal,
-    });
-    const text = await res.text();
-    if (!res.ok) throw new Error(`${label}: HTTP ${res.status} ${text.slice(0, 160)}`);
-    try { return JSON.parse(text); } catch { throw new Error(`${label}: invalid JSON`); }
-  } finally { clearTimeout(timer); }
+  let lastError;
+  for (let attempt = 0; attempt <= MAX_429_RETRIES; attempt++) {
+    await paceRequest();
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
+    try {
+      const res = await fetch(API, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify(body),
+        signal: controller.signal,
+      });
+      const text = await res.text();
+      if (res.status === 429 && attempt < MAX_429_RETRIES) {
+        // Back off globally so concurrent market scans do not immediately repeat the burst.
+        const delay = Math.min(8000, 1000 * (2 ** attempt));
+        nextRequestAt = Math.max(nextRequestAt, now() + delay);
+        console.warn(`[API][429] ${label}: retry ${attempt + 1}/${MAX_429_RETRIES} after ${delay}ms`);
+        lastError = new Error(`${label}: HTTP 429 ${text.slice(0, 160)}`);
+        continue;
+      }
+      if (!res.ok) throw new Error(`${label}: HTTP ${res.status} ${text.slice(0, 160)}`);
+      try { return JSON.parse(text); } catch { throw new Error(`${label}: invalid JSON`); }
+    } catch (error) {
+      lastError = error;
+      // Retry only explicit 429 responses; do not mask timeouts or other API errors.
+      if (!String(error?.message || error).includes('HTTP 429') || attempt >= MAX_429_RETRIES) throw error;
+    } finally { clearTimeout(timer); }
+  }
+  throw lastError || new Error(`${label}: request failed`);
 }
 
 async function readState() {
@@ -236,35 +253,52 @@ function detectPatterns({ coin, c15, c1h, ctx, prevCtx, mid, spread, imbalance, 
   const atrPct = atr15 / mid * 100;
   const levels15 = pivots(c15.slice(-55));
   const levels1h = pivots(c1h.slice(-90));
-  // V2: avoid treating tiny, nearby 15m pivots as the only structural levels.
-  // Prefer the nearest level that has meaningful separation from entry; use 1H
-  // structure as a fallback/confirmation and retain raw nearest levels for diagnostics.
-  const allLows = [
-    ...levels15.lows.map(x => ({ ...x, tf: '15m' })),
-    ...levels1h.lows.map(x => ({ ...x, tf: '1h' })),
+  // V2.1: use confirmed pivots first, then a clearly labelled completed-candle
+  // range extreme if a pivot is absent. Never silently fall back to a too-close raw pivot.
+  const pivotLows = [
+    ...levels15.lows.map(x => ({ ...x, tf: '15m', source: '15m-pivot' })),
+    ...levels1h.lows.map(x => ({ ...x, tf: '1h', source: '1h-pivot' })),
   ];
-  const allHighs = [
-    ...levels15.highs.map(x => ({ ...x, tf: '15m' })),
-    ...levels1h.highs.map(x => ({ ...x, tf: '1h' })),
+  const pivotHighs = [
+    ...levels15.highs.map(x => ({ ...x, tf: '15m', source: '15m-pivot' })),
+    ...levels1h.highs.map(x => ({ ...x, tf: '1h', source: '1h-pivot' })),
   ];
   const minLevelGap = Math.max(atr15 * 0.35, mid * 0.0015);
-  const rawSupport = nearestBelow(allLows, mid);
-  const rawResistance = nearestAbove(allHighs, mid);
-  const supportCandidates = allLows.filter(x => x.price < mid && mid - x.price >= minLevelGap);
+  const rawSupport = nearestBelow(pivotLows, mid);
+  const rawResistance = nearestAbove(pivotHighs, mid);
+  const rangeLows = [
+    { candles: c15.slice(-20), tf: '15m', source: '15m-range-low' },
+    { candles: c15.slice(-40), tf: '15m', source: '15m-range-low' },
+    { candles: c1h.slice(-20), tf: '1h', source: '1h-range-low' },
+    { candles: c1h.slice(-40), tf: '1h', source: '1h-range-low' },
+  ].filter(x => x.candles.length >= 10).map(x => ({ price: Math.min(...x.candles.map(c => c.l)), index: x.candles.length - 1, tf: x.tf, source: x.source }));
+  const rangeHighs = [
+    { candles: c15.slice(-20), tf: '15m', source: '15m-range-high' },
+    { candles: c15.slice(-40), tf: '15m', source: '15m-range-high' },
+    { candles: c1h.slice(-20), tf: '1h', source: '1h-range-high' },
+    { candles: c1h.slice(-40), tf: '1h', source: '1h-range-high' },
+  ].filter(x => x.candles.length >= 10).map(x => ({ price: Math.max(...x.candles.map(c => c.h)), index: x.candles.length - 1, tf: x.tf, source: x.source }));
+  const allLows = [...pivotLows, ...rangeLows];
+  const allHighs = [...pivotHighs, ...rangeHighs];
+  const supportCandidates = allLows.filter(x => x.price > 0 && x.price < mid && mid - x.price >= minLevelGap);
   const resistanceCandidates = allHighs.filter(x => x.price > mid && x.price - mid >= minLevelGap);
-  // Rank levels by proximity with a modest 1H preference and nearby-pivot confluence.
-  const chooseLevel = (levels, direction) => {
-    if (!levels.length) return 0;
-    const sorted = levels.map(level => {
+  // Score levels using normalized distance, a modest 1H preference, and confluence.
+  const chooseLevel = levels => {
+    if (!levels.length) return null;
+    return levels.map(level => {
       const distancePct = Math.abs(level.price - mid) / mid;
-      const nearby = levels.filter(other => Math.abs(other.price - level.price) / mid <= 0.0015).length - 1;
-      const tfBonus = level.tf === '1h' ? 0.08 : 0;
-      return { ...level, rank: distancePct - tfBonus * distancePct - nearby * 0.00015 };
-    }).sort((a, b) => a.rank - b.rank);
-    return sorted[0].price;
+      const nearby = levels.filter(other => other !== level && Math.abs(other.price - level.price) / mid <= 0.0015).length;
+      const tfBonus = level.tf === '1h' ? 0.12 : 0;
+      const rangePenalty = String(level.source).includes('range') ? 0.00005 : 0;
+      return { ...level, rank: distancePct * (1 - tfBonus) - nearby * 0.00015 + rangePenalty };
+    }).sort((a, b) => a.rank - b.rank)[0];
   };
-  const support = chooseLevel(supportCandidates, 'below') || rawSupport;
-  const resistance = chooseLevel(resistanceCandidates, 'above') || rawResistance;
+  const selectedSupport = chooseLevel(supportCandidates);
+  const selectedResistance = chooseLevel(resistanceCandidates);
+  const support = selectedSupport?.price || 0;
+  const resistance = selectedResistance?.price || 0;
+  const supportSource = selectedSupport?.source || 'missing';
+  const resistanceSource = selectedResistance?.source || 'missing';
   const trend = trendBias(c1h);
   const volRatio = volumeRatio(c15);
   const vwap15 = vwap(c15);
@@ -314,7 +348,7 @@ function detectPatterns({ coin, c15, c1h, ctx, prevCtx, mid, spread, imbalance, 
     if (side === 'LONG' && fundingPct < 0.035 || side === 'SHORT' && fundingPct > -0.035) score += 0.15;
     if (spread !== null && spread > MAX_SPREAD_PCT) score -= 1.5;
     score = addContext(side, score, reasons);
-    results.push({ coin, side, pattern: 'SWEEP_RECLAIM', rawSupport, rawResistance, minLevelGap, score: clamp(score, 0, 9.5), reasons, entry: mid, atr: atr15, support, resistance, trend, btcRegime: btcRegime || { label: 'NEUTRAL', change24hPct: 0 }, rsi15, fibConfluence: fib.confluence, volRatio, oiChange, fundingPct, flowDelta: flow.delta, imbalance, vwap: vwap15, spreadPct: spread, atrPct, dayVolume: n(ctx?.dayVolume), maxLeverage: n(ctx?.maxLeverage) });
+    results.push({ coin, side, pattern: 'SWEEP_RECLAIM', rawSupport, rawResistance, minLevelGap, score: clamp(score, 0, 9.5), reasons, entry: mid, atr: atr15, support, resistance, supportSource, resistanceSource, trend, btcRegime: btcRegime || { label: 'NEUTRAL', change24hPct: 0 }, rsi15, fibConfluence: fib.confluence, volRatio, oiChange, fundingPct, flowDelta: flow.delta, imbalance, vwap: vwap15, spreadPct: spread, atrPct, dayVolume: n(ctx?.dayVolume), maxLeverage: n(ctx?.maxLeverage) });
   }
 
   // Pattern 2: close beyond a recent structure level, then retest within tolerance.
@@ -334,7 +368,7 @@ function detectPatterns({ coin, c15, c1h, ctx, prevCtx, mid, spread, imbalance, 
     if (side === 'LONG' && oiConfirmsLong || side === 'SHORT' && oiConfirmsShort) { score += 0.3; reasons.push('OI confirms participation'); }
     if (spread !== null && spread > MAX_SPREAD_PCT) score -= 1.5;
     score = addContext(side, score, reasons);
-    results.push({ coin, side, pattern: 'BREAKOUT_RETEST', rawSupport, rawResistance, minLevelGap, score: clamp(score, 0, 9.5), reasons, entry: mid, atr: atr15, support, resistance, trend, btcRegime: btcRegime || { label: 'NEUTRAL', change24hPct: 0 }, rsi15, fibConfluence: fib.confluence, volRatio, oiChange, fundingPct, flowDelta: flow.delta, imbalance, vwap: vwap15, spreadPct: spread, atrPct, dayVolume: n(ctx?.dayVolume), maxLeverage: n(ctx?.maxLeverage) });
+    results.push({ coin, side, pattern: 'BREAKOUT_RETEST', rawSupport, rawResistance, minLevelGap, score: clamp(score, 0, 9.5), reasons, entry: mid, atr: atr15, support, resistance, supportSource, resistanceSource, trend, btcRegime: btcRegime || { label: 'NEUTRAL', change24hPct: 0 }, rsi15, fibConfluence: fib.confluence, volRatio, oiChange, fundingPct, flowDelta: flow.delta, imbalance, vwap: vwap15, spreadPct: spread, atrPct, dayVolume: n(ctx?.dayVolume), maxLeverage: n(ctx?.maxLeverage) });
   }
 
   // Pattern 3: 1H trend with a 15m pullback into fast mean and a directional recovery candle.
@@ -352,7 +386,7 @@ function detectPatterns({ coin, c15, c1h, ctx, prevCtx, mid, spread, imbalance, 
     if (side === 'LONG' && fundingPct > 0.08 || side === 'SHORT' && fundingPct < -0.08) { score -= 0.25; reasons.push('crowded funding slightly penalized'); }
     if (spread !== null && spread > MAX_SPREAD_PCT) score -= 1.5;
     score = addContext(side, score, reasons);
-    results.push({ coin, side, pattern: 'TREND_PULLBACK', rawSupport, rawResistance, minLevelGap, score: clamp(score, 0, 9.5), reasons, entry: mid, atr: atr15, support, resistance, trend, btcRegime: btcRegime || { label: 'NEUTRAL', change24hPct: 0 }, rsi15, fibConfluence: fib.confluence, volRatio, oiChange, fundingPct, flowDelta: flow.delta, imbalance, vwap: vwap15, spreadPct: spread, atrPct, dayVolume: n(ctx?.dayVolume), maxLeverage: n(ctx?.maxLeverage) });
+    results.push({ coin, side, pattern: 'TREND_PULLBACK', rawSupport, rawResistance, minLevelGap, score: clamp(score, 0, 9.5), reasons, entry: mid, atr: atr15, support, resistance, supportSource, resistanceSource, trend, btcRegime: btcRegime || { label: 'NEUTRAL', change24hPct: 0 }, rsi15, fibConfluence: fib.confluence, volRatio, oiChange, fundingPct, flowDelta: flow.delta, imbalance, vwap: vwap15, spreadPct: spread, atrPct, dayVolume: n(ctx?.dayVolume), maxLeverage: n(ctx?.maxLeverage) });
   }
 
   return results;
@@ -774,7 +808,7 @@ async function main() {
         if (s.score < MIN_SCORE) { noteReject('score', s, `score ${s.score.toFixed(2)} < ${MIN_SCORE}`); continue; }
         if (isCooldown(state, s)) { noteReject('cooldown', s, '90-minute cooldown'); continue; }
         const risk = buildRisk(s);
-        if (!risk.valid) console.log(`[FILTER][RISK] ${s.coin} ${s.side} rejected: ${risk.reason} | entry=${fmtPrice(s.entry)} support=${fmtPrice(s.support)} resistance=${fmtPrice(s.resistance)} rawSupport=${fmtPrice(s.rawSupport)} rawResistance=${fmtPrice(s.rawResistance)} ATR=${fmtPrice(s.atr)} R:R=${n(risk.rr).toFixed(2)}`);
+        if (!risk.valid) console.log(`[FILTER][RISK] ${s.coin} ${s.side} rejected: ${risk.reason} | entry=${fmtPrice(s.entry)} support=${fmtPrice(s.support)}(${s.supportSource || '?'}) resistance=${fmtPrice(s.resistance)}(${s.resistanceSource || '?'}) rawSupport=${fmtPrice(s.rawSupport)} rawResistance=${fmtPrice(s.rawResistance)} ATR=${fmtPrice(s.atr)} R:R=${n(risk.rr).toFixed(2)}`);
         if (!risk.valid || risk.rr < MIN_RR || !(risk.sl > 0) || !(risk.tp > 0)) { noteReject('risk', s, risk.reason || `R:R ${n(risk.rr).toFixed(2)} < ${MIN_RR}`); continue; }
         // Avoid chasing a move that has already travelled too far from its 15m mean.
         const distanceToVwap = Math.abs((s.entry - s.vwap) / s.entry) * 100;
