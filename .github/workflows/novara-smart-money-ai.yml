@@ -3,8 +3,8 @@ name: NOVARA Smart Money AI
 on:
   workflow_dispatch:
   schedule:
-    # 10-minute cadence leaves headroom for API pacing and state persistence.
-    - cron: '*/10 * * * *'
+    # Five-minute cadence; each scan normally completes in under a minute.
+    - cron: '*/5 * * * *'
 
 permissions:
   contents: write
@@ -33,6 +33,22 @@ jobs:
 
       - name: Validate worker syntax
         run: node --check novara_smart_money_ai.mjs
+
+      - name: Verify Telegram environment wiring (without exposing secret values)
+        env:
+          TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN || secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          NOVARA_FREE_CHAT_ID: ${{ secrets.NOVARA_FREE_CHAT_ID || secrets.FREE_CHAT_ID }}
+          NOVARA_VIP_CHAT_ID: ${{ secrets.NOVARA_VIP_CHAT_ID || secrets.VIP_CHAT_ID || secrets.NOVARA_PREMIUM_CHAT_ID }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          [[ -n "${TELEGRAM_TOKEN:-}" ]] && echo 'Telegram token: configured' || echo '::warning::Telegram token missing (TELEGRAM_TOKEN / TELEGRAM_BOT_TOKEN)'
+          [[ -n "${NOVARA_VIP_CHAT_ID:-}${TELEGRAM_CHAT_ID:-}" ]] && echo 'Primary/VIP chat: configured (VIP ID or legacy TELEGRAM_CHAT_ID)' || echo '::warning::No VIP or legacy chat ID configured'
+          [[ -n "${NOVARA_FREE_CHAT_ID:-}" ]] && echo 'Public chat: configured' || echo 'Public chat: not configured (optional)'
+          if [[ -z "${TELEGRAM_TOKEN:-}" || -z "${NOVARA_VIP_CHAT_ID:-}${TELEGRAM_CHAT_ID:-}${NOVARA_FREE_CHAT_ID:-}" ]]; then
+            echo '::warning::The scan can run, but Telegram delivery needs a bot token and at least one chat ID in the production Environment.'
+          fi
 
       - name: Run read-only signal engine
         env:
