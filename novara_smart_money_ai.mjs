@@ -14,7 +14,7 @@ import path from 'node:path';
  * All eligible liquid perp markets are considered; the worker does not depend on wallet lists.
  */
 
-const VERSION = 'NOVARA-SMART-MONEY-AI-V2.2.0-STRUCTURE-SELECTOR-ROUTING-FIX';
+const VERSION = 'NOVARA-SMART-MONEY-AI-V2.3.0-1H-STRUCTURE-15M-ENTRY';
 const API = (process.env.HYPERLIQUID_API_URL || 'https://api.hyperliquid.xyz/info').trim();
 const TOKEN = process.env.TELEGRAM_TOKEN || process.env.TELEGRAM_BOT_TOKEN || '';
 const LEGACY_CHAT = process.env.TELEGRAM_CHAT_ID || '';
@@ -251,58 +251,53 @@ function detectPatterns({ coin, c15, c1h, ctx, prevCtx, mid, spread, imbalance, 
   if (!last || !prev || c15.length < 35 || c1h.length < 30) return [];
   const atr15 = atr(c15, 14) || mid * 0.006;
   const atrPct = atr15 / mid * 100;
-  const levels15 = pivots(c15.slice(-55));
+  // V2.3: structural SL/TP levels come ONLY from completed 1H candles.
+  // 15m candles are reserved for entry timing, momentum, VWAP and RSI.
   const levels1h = pivots(c1h.slice(-90));
-  // V2.1: use confirmed pivots first, then a clearly labelled completed-candle
-  // range extreme if a pivot is absent. Never silently fall back to a too-close raw pivot.
-  const pivotLows = [
-    ...levels15.lows.map(x => ({ ...x, tf: '15m', source: '15m-pivot' })),
-    ...levels1h.lows.map(x => ({ ...x, tf: '1h', source: '1h-pivot' })),
-  ];
-  const pivotHighs = [
-    ...levels15.highs.map(x => ({ ...x, tf: '15m', source: '15m-pivot' })),
-    ...levels1h.highs.map(x => ({ ...x, tf: '1h', source: '1h-pivot' })),
-  ];
-  const minLevelGap = Math.max(atr15 * 0.35, mid * 0.0015);
-  const rawSupport = nearestBelow(pivotLows, mid);
-  const rawResistance = nearestAbove(pivotHighs, mid);
-  const rangeLows = [
-    { candles: c15.slice(-20), tf: '15m', source: '15m-range-low' },
-    { candles: c15.slice(-40), tf: '15m', source: '15m-range-low' },
-    { candles: c1h.slice(-20), tf: '1h', source: '1h-range-low' },
-    { candles: c1h.slice(-40), tf: '1h', source: '1h-range-low' },
-  ].filter(x => x.candles.length >= 10).map(x => ({ price: Math.min(...x.candles.map(c => c.l)), index: x.candles.length - 1, tf: x.tf, source: x.source }));
-  const rangeHighs = [
-    { candles: c15.slice(-20), tf: '15m', source: '15m-range-high' },
-    { candles: c15.slice(-40), tf: '15m', source: '15m-range-high' },
-    { candles: c1h.slice(-20), tf: '1h', source: '1h-range-high' },
-    { candles: c1h.slice(-40), tf: '1h', source: '1h-range-high' },
-  ].filter(x => x.candles.length >= 10).map(x => ({ price: Math.max(...x.candles.map(c => c.h)), index: x.candles.length - 1, tf: x.tf, source: x.source }));
-  const allLows = [...pivotLows, ...rangeLows];
-  const allHighs = [...pivotHighs, ...rangeHighs];
-  const supportCandidates = allLows.filter(x => x.price > 0 && x.price < mid && mid - x.price >= minLevelGap);
-  const resistanceCandidates = allHighs.filter(x => x.price > mid && x.price - mid >= minLevelGap);
-  // Select the nearest valid structure first. The previous weighted rank could
-  // choose a materially farther 1H/range level and push the SL outside the risk cap.
-  // Only use timeframe/confluence as a tie-breaker when levels are almost identical.
+  const atr1h = atr(c1h, 14) || mid * 0.01;
+  const pivotLows1h = levels1h.lows.map(x => ({ ...x, tf: '1h', source: '1h-pivot' }));
+  const pivotHighs1h = levels1h.highs.map(x => ({ ...x, tf: '1h', source: '1h-pivot' }));
+  const minLevelGap = Math.max(atr1h * 0.10, mid * 0.0015);
+  const rawSupport = nearestBelow(pivotLows1h, mid);
+  const rawResistance = nearestAbove(pivotHighs1h, mid);
+
+  // Candidate levels: confirmed 1H pivots plus completed 1H range extremes.
+  // Never allow a 15m pivot/range to become the structural SL/TP anchor.
+  const rangeLows1h = [
+    { candles: c1h.slice(-20), source: '1h-range-low-20' },
+    { candles: c1h.slice(-40), source: '1h-range-low-40' },
+    { candles: c1h.slice(-72), source: '1h-range-low-72' },
+  ].filter(x => x.candles.length >= 10).map(x => ({ price: Math.min(...x.candles.map(c => c.l)), index: x.candles.length - 1, tf: '1h', source: x.source }));
+  const rangeHighs1h = [
+    { candles: c1h.slice(-20), source: '1h-range-high-20' },
+    { candles: c1h.slice(-40), source: '1h-range-high-40' },
+    { candles: c1h.slice(-72), source: '1h-range-high-72' },
+  ].filter(x => x.candles.length >= 10).map(x => ({ price: Math.max(...x.candles.map(c => c.h)), index: x.candles.length - 1, tf: '1h', source: x.source }));
+  const allLows1h = [...pivotLows1h, ...rangeLows1h];
+  const allHighs1h = [...pivotHighs1h, ...rangeHighs1h];
+  const supportCandidates = allLows1h.filter(x => x.price > 0 && x.price < mid && mid - x.price >= minLevelGap);
+  const resistanceCandidates = allHighs1h.filter(x => x.price > mid && x.price - mid >= minLevelGap);
   const chooseLevel = levels => {
     if (!levels.length) return null;
     const ranked = levels.map(level => ({
       ...level,
       distance: Math.abs(level.price - mid),
-      confluence: levels.filter(other => other !== level && Math.abs(other.price - level.price) / mid <= 0.0015).length,
-    })).sort((a, b) => a.distance - b.distance);
+      confluence: levels.filter(other => other !== level && Math.abs(other.price - level.price) / mid <= 0.0025).length,
+    }));
+    // Prefer confluence among nearby 1H levels, but do not select a materially
+    // farther level solely for confluence. Price distance is the primary rank.
+    ranked.sort((a, b) => a.distance - b.distance);
     const nearest = ranked[0];
-    const nearTies = ranked.filter(x => x.distance <= nearest.distance + mid * 0.0010);
-    nearTies.sort((a, b) => (b.confluence - a.confluence) || ((a.tf === '1h' ? 0 : 1) - (b.tf === '1h' ? 0 : 1)) || a.distance - b.distance);
+    const nearTies = ranked.filter(x => x.distance <= nearest.distance + mid * 0.0015);
+    nearTies.sort((a, b) => (b.confluence - a.confluence) || a.distance - b.distance);
     return nearTies[0];
   };
   const selectedSupport = chooseLevel(supportCandidates);
   const selectedResistance = chooseLevel(resistanceCandidates);
   const support = selectedSupport?.price || 0;
   const resistance = selectedResistance?.price || 0;
-  const supportSource = selectedSupport?.source || 'missing';
-  const resistanceSource = selectedResistance?.source || 'missing';
+  const supportSource = selectedSupport?.source || 'missing-1h-structure';
+  const resistanceSource = selectedResistance?.source || 'missing-1h-structure';
   const trend = trendBias(c1h);
   const volRatio = volumeRatio(c15);
   const vwap15 = vwap(c15);
