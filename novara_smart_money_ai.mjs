@@ -2,7 +2,7 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 
 /*
- * NOVARA SMART MONEY AI V2.1.0
+ * NOVARA SMART MONEY AI V2.3.1
  * READ-ONLY | NO ORDERS | NO AUTO-COPY | PAPER OUTCOME TRACKING
  *
  * Combines three entry families:
@@ -14,7 +14,7 @@ import path from 'node:path';
  * All eligible liquid perp markets are considered; the worker does not depend on wallet lists.
  */
 
-const VERSION = 'NOVARA-SMART-MONEY-AI-V2.3.0-1H-STRUCTURE-15M-ENTRY';
+const VERSION = 'NOVARA-SMART-MONEY-AI-V2.3.1-1H-STRUCTURE-TP-BEYOND-LEVELS';
 const API = (process.env.HYPERLIQUID_API_URL || 'https://api.hyperliquid.xyz/info').trim();
 const TOKEN = process.env.TELEGRAM_TOKEN || process.env.TELEGRAM_BOT_TOKEN || '';
 const LEGACY_CHAT = process.env.TELEGRAM_CHAT_ID || '';
@@ -418,8 +418,9 @@ function buildRisk(candidate) {
     if (!(resistance > entry)) {
       return { entry, sl, tp: 0, riskPct: riskDist / entry * 100, rewardPct: 0, rr: 0, valid: false, reason: 'no overhead resistance target for long' };
     }
-    // Target must remain below the next resistance, not beyond it.
-    tp = resistance - buffer;
+    // User-required structural target: place LONG TP beyond the 1H resistance.
+    // This avoids placing the target inside the resistance zone.
+    tp = resistance + buffer;
     targetDist = tp - entry;
     if (!(tp > entry) || targetDist / riskDist < MIN_RR) {
       return { entry, sl, tp, riskPct: riskDist / entry * 100, rewardPct: Math.max(0, targetDist) / entry * 100, rr: targetDist / riskDist, valid: false, reason: 'insufficient room before resistance for required R:R' };
@@ -436,8 +437,9 @@ function buildRisk(candidate) {
     if (!(support > 0 && support < entry)) {
       return { entry, sl, tp: 0, riskPct: riskDist / entry * 100, rewardPct: 0, rr: 0, valid: false, reason: 'no downside support target for short' };
     }
-    // Target must remain above the next support, not beyond it.
-    tp = support + buffer;
+    // User-required structural target: place SHORT TP beyond the 1H support.
+    // This avoids placing the target inside the support zone.
+    tp = support - buffer;
     targetDist = entry - tp;
     if (!(tp < entry) || targetDist / riskDist < MIN_RR) {
       return { entry, sl, tp, riskPct: riskDist / entry * 100, rewardPct: Math.max(0, targetDist) / entry * 100, rr: targetDist / riskDist, valid: false, reason: 'insufficient room before support for required R:R' };
