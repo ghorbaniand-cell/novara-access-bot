@@ -2,7 +2,7 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 
 /*
- * NOVARA SMART MONEY AI V1.0.7
+ * NOVARA SMART MONEY AI V2.0.0
  * READ-ONLY | NO ORDERS | NO AUTO-COPY | PAPER OUTCOME TRACKING
  *
  * Combines three entry families:
@@ -14,7 +14,7 @@ import path from 'node:path';
  * All eligible liquid perp markets are considered; the worker does not depend on wallet lists.
  */
 
-const VERSION = 'NOVARA-SMART-MONEY-AI-V1.0.9-STRUCTURE-GATE-FIX';
+const VERSION = 'NOVARA-SMART-MONEY-AI-V2.0.0-STRUCTURE-DIAGNOSTICS';
 const API = (process.env.HYPERLIQUID_API_URL || 'https://api.hyperliquid.xyz/info').trim();
 const TOKEN = process.env.TELEGRAM_TOKEN || process.env.TELEGRAM_BOT_TOKEN || '';
 const LEGACY_CHAT = process.env.TELEGRAM_CHAT_ID || '';
@@ -34,7 +34,7 @@ const MAX_SPREAD_PCT = Math.max(0.03, Number(process.env.NOVARA_SMART_MAX_SPREAD
 const MAX_SIGNALS_PER_CYCLE = Math.max(1, Number(process.env.NOVARA_SMART_MAX_SIGNALS_PER_CYCLE || 8));
 const FREE_DAILY_LIMIT = 0; // Public channel is capped at one randomly selected signal per run, not per day
 const TELEGRAM_GAP_MS = Math.max(1000, Number(process.env.NOVARA_TELEGRAM_MIN_GAP_MS || 3200));
-const STATE_SCHEMA = 1; // State schema remains compatible with V1.0.5 paper history
+const STATE_SCHEMA = 1; // Preserve existing state; tag V2 trades for isolated performance statistics
 const now = () => Date.now();
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 const n = (v, d = 0) => { const x = Number(v); return Number.isFinite(x) ? x : d; };
@@ -236,9 +236,35 @@ function detectPatterns({ coin, c15, c1h, ctx, prevCtx, mid, spread, imbalance, 
   const atrPct = atr15 / mid * 100;
   const levels15 = pivots(c15.slice(-55));
   const levels1h = pivots(c1h.slice(-90));
-  // Combine 15m and 1H pivots so risk levels are not limited to intraday micro-structure.
-  const support = nearestBelow([...levels15.lows, ...levels1h.lows], mid);
-  const resistance = nearestAbove([...levels15.highs, ...levels1h.highs], mid);
+  // V2: avoid treating tiny, nearby 15m pivots as the only structural levels.
+  // Prefer the nearest level that has meaningful separation from entry; use 1H
+  // structure as a fallback/confirmation and retain raw nearest levels for diagnostics.
+  const allLows = [
+    ...levels15.lows.map(x => ({ ...x, tf: '15m' })),
+    ...levels1h.lows.map(x => ({ ...x, tf: '1h' })),
+  ];
+  const allHighs = [
+    ...levels15.highs.map(x => ({ ...x, tf: '15m' })),
+    ...levels1h.highs.map(x => ({ ...x, tf: '1h' })),
+  ];
+  const minLevelGap = Math.max(atr15 * 0.35, mid * 0.0015);
+  const rawSupport = nearestBelow(allLows, mid);
+  const rawResistance = nearestAbove(allHighs, mid);
+  const supportCandidates = allLows.filter(x => x.price < mid && mid - x.price >= minLevelGap);
+  const resistanceCandidates = allHighs.filter(x => x.price > mid && x.price - mid >= minLevelGap);
+  // Rank levels by proximity with a modest 1H preference and nearby-pivot confluence.
+  const chooseLevel = (levels, direction) => {
+    if (!levels.length) return 0;
+    const sorted = levels.map(level => {
+      const distancePct = Math.abs(level.price - mid) / mid;
+      const nearby = levels.filter(other => Math.abs(other.price - level.price) / mid <= 0.0015).length - 1;
+      const tfBonus = level.tf === '1h' ? 0.08 : 0;
+      return { ...level, rank: distancePct - tfBonus * distancePct - nearby * 0.00015 };
+    }).sort((a, b) => a.rank - b.rank);
+    return sorted[0].price;
+  };
+  const support = chooseLevel(supportCandidates, 'below') || rawSupport;
+  const resistance = chooseLevel(resistanceCandidates, 'above') || rawResistance;
   const trend = trendBias(c1h);
   const volRatio = volumeRatio(c15);
   const vwap15 = vwap(c15);
@@ -288,7 +314,7 @@ function detectPatterns({ coin, c15, c1h, ctx, prevCtx, mid, spread, imbalance, 
     if (side === 'LONG' && fundingPct < 0.035 || side === 'SHORT' && fundingPct > -0.035) score += 0.15;
     if (spread !== null && spread > MAX_SPREAD_PCT) score -= 1.5;
     score = addContext(side, score, reasons);
-    results.push({ coin, side, pattern: 'SWEEP_RECLAIM', score: clamp(score, 0, 9.5), reasons, entry: mid, atr: atr15, support, resistance, trend, btcRegime: btcRegime || { label: 'NEUTRAL', change24hPct: 0 }, rsi15, fibConfluence: fib.confluence, volRatio, oiChange, fundingPct, flowDelta: flow.delta, imbalance, vwap: vwap15, spreadPct: spread, atrPct, dayVolume: n(ctx?.dayVolume), maxLeverage: n(ctx?.maxLeverage) });
+    results.push({ coin, side, pattern: 'SWEEP_RECLAIM', rawSupport, rawResistance, minLevelGap, score: clamp(score, 0, 9.5), reasons, entry: mid, atr: atr15, support, resistance, trend, btcRegime: btcRegime || { label: 'NEUTRAL', change24hPct: 0 }, rsi15, fibConfluence: fib.confluence, volRatio, oiChange, fundingPct, flowDelta: flow.delta, imbalance, vwap: vwap15, spreadPct: spread, atrPct, dayVolume: n(ctx?.dayVolume), maxLeverage: n(ctx?.maxLeverage) });
   }
 
   // Pattern 2: close beyond a recent structure level, then retest within tolerance.
@@ -308,7 +334,7 @@ function detectPatterns({ coin, c15, c1h, ctx, prevCtx, mid, spread, imbalance, 
     if (side === 'LONG' && oiConfirmsLong || side === 'SHORT' && oiConfirmsShort) { score += 0.3; reasons.push('OI confirms participation'); }
     if (spread !== null && spread > MAX_SPREAD_PCT) score -= 1.5;
     score = addContext(side, score, reasons);
-    results.push({ coin, side, pattern: 'BREAKOUT_RETEST', score: clamp(score, 0, 9.5), reasons, entry: mid, atr: atr15, support, resistance, trend, btcRegime: btcRegime || { label: 'NEUTRAL', change24hPct: 0 }, rsi15, fibConfluence: fib.confluence, volRatio, oiChange, fundingPct, flowDelta: flow.delta, imbalance, vwap: vwap15, spreadPct: spread, atrPct, dayVolume: n(ctx?.dayVolume), maxLeverage: n(ctx?.maxLeverage) });
+    results.push({ coin, side, pattern: 'BREAKOUT_RETEST', rawSupport, rawResistance, minLevelGap, score: clamp(score, 0, 9.5), reasons, entry: mid, atr: atr15, support, resistance, trend, btcRegime: btcRegime || { label: 'NEUTRAL', change24hPct: 0 }, rsi15, fibConfluence: fib.confluence, volRatio, oiChange, fundingPct, flowDelta: flow.delta, imbalance, vwap: vwap15, spreadPct: spread, atrPct, dayVolume: n(ctx?.dayVolume), maxLeverage: n(ctx?.maxLeverage) });
   }
 
   // Pattern 3: 1H trend with a 15m pullback into fast mean and a directional recovery candle.
@@ -326,7 +352,7 @@ function detectPatterns({ coin, c15, c1h, ctx, prevCtx, mid, spread, imbalance, 
     if (side === 'LONG' && fundingPct > 0.08 || side === 'SHORT' && fundingPct < -0.08) { score -= 0.25; reasons.push('crowded funding slightly penalized'); }
     if (spread !== null && spread > MAX_SPREAD_PCT) score -= 1.5;
     score = addContext(side, score, reasons);
-    results.push({ coin, side, pattern: 'TREND_PULLBACK', score: clamp(score, 0, 9.5), reasons, entry: mid, atr: atr15, support, resistance, trend, btcRegime: btcRegime || { label: 'NEUTRAL', change24hPct: 0 }, rsi15, fibConfluence: fib.confluence, volRatio, oiChange, fundingPct, flowDelta: flow.delta, imbalance, vwap: vwap15, spreadPct: spread, atrPct, dayVolume: n(ctx?.dayVolume), maxLeverage: n(ctx?.maxLeverage) });
+    results.push({ coin, side, pattern: 'TREND_PULLBACK', rawSupport, rawResistance, minLevelGap, score: clamp(score, 0, 9.5), reasons, entry: mid, atr: atr15, support, resistance, trend, btcRegime: btcRegime || { label: 'NEUTRAL', change24hPct: 0 }, rsi15, fibConfluence: fib.confluence, volRatio, oiChange, fundingPct, flowDelta: flow.delta, imbalance, vwap: vwap15, spreadPct: spread, atrPct, dayVolume: n(ctx?.dayVolume), maxLeverage: n(ctx?.maxLeverage) });
   }
 
   return results;
@@ -595,7 +621,7 @@ function formatOutcome(trade) {
 
 function report24h(state, audience) {
   const cutoff = now() - 24 * 3600_000;
-  const cohort = state.paperTrades.filter(t => n(t.openedAt) >= cutoff && n(t.openedAt) <= now());
+  const cohort = state.paperTrades.filter(t => t.strategyVersion === VERSION && n(t.openedAt) >= cutoff && n(t.openedAt) <= now());
   const tp = cohort.filter(t => t.status === 'TP').length;
   const sl = cohort.filter(t => t.status === 'SL').length;
   const ambiguous = cohort.filter(t => t.status === 'AMBIGUOUS').length;
@@ -628,13 +654,13 @@ ${details.length ? details.join('\n') : 'No tracked signals were opened in this 
 }
 
 function dailySummary(state) {
-  const all = state.paperTrades.filter(t => t.status === 'TP' || t.status === 'SL');
+  const all = state.paperTrades.filter(t => t.strategyVersion === VERSION && (t.status === 'TP' || t.status === 'SL'));
   const tp = all.filter(t => t.status === 'TP').length;
   const sl = all.filter(t => t.status === 'SL').length;
   const closed = tp + sl;
   const r = all.reduce((sum, t) => sum + n(t.pnlR), 0);
   const avgR = closed ? r / closed : 0;
-  return { closed, tp, sl, winRate: closed ? tp / closed * 100 : 0, realizedR: r, avgR, open: state.paperTrades.filter(t => t.status === 'OPEN').length };
+  return { closed, tp, sl, winRate: closed ? tp / closed * 100 : 0, realizedR: r, avgR, open: state.paperTrades.filter(t => t.strategyVersion === VERSION && t.status === 'OPEN').length };
 }
 
 async function getMarketSnapshot() {
@@ -718,6 +744,9 @@ async function main() {
 
   const candidates = [];
   let checked = 0, failed = 0;
+  const rejects = { regime: 0, score: 0, cooldown: 0, risk: 0, vwap: 0, accepted: 0 };
+  const rejectionSamples = [];
+  const noteReject = (kind, s, reason) => { rejects[kind]++; if (rejectionSamples.length < 18) rejectionSamples.push(`${s.coin} ${s.side} ${s.pattern}: ${reason}`); };
   for (const asset of eligible) {
     try {
       const found = await analyzeAsset(asset, state.previousMarketContext[asset.coin], btcRegime);
@@ -729,6 +758,7 @@ async function main() {
         const btcOpposes = (s.side === 'LONG' && btcLabel === 'BEARISH') || (s.side === 'SHORT' && btcLabel === 'BULLISH');
         if (assetOpposes && btcOpposes) {
           console.log(`[FILTER][REGIME] ${s.coin} ${s.side} rejected: 1H trend=${s.trend} and BTC 4H=${btcLabel} oppose setup`);
+          noteReject('regime', s, `trend=${s.trend}, BTC=${btcLabel}`);
           continue;
         }
         // V1.0.8 applied a second hard distance gate before structural risk validation.
@@ -741,17 +771,17 @@ async function main() {
         if (structureRoomPct > 0 && structureRoomPct < Math.max(0.35, n(s.atrPct) * 0.65)) {
           console.log(`[STRUCTURE][TIGHT] ${s.coin} ${s.side}: room=${structureRoomPct.toFixed(2)}%; checking actual structural SL/TP and R:R instead of auto-rejecting`);
         }
-        if (s.score < MIN_SCORE) continue;
-        if (isCooldown(state, s)) continue;
+        if (s.score < MIN_SCORE) { noteReject('score', s, `score ${s.score.toFixed(2)} < ${MIN_SCORE}`); continue; }
+        if (isCooldown(state, s)) { noteReject('cooldown', s, '90-minute cooldown'); continue; }
         const risk = buildRisk(s);
-        if (!risk.valid) console.log(`[FILTER][RISK] ${s.coin} ${s.side} rejected: ${risk.reason}`);
-        if (!risk.valid || risk.rr < MIN_RR || !(risk.sl > 0) || !(risk.tp > 0)) continue;
+        if (!risk.valid) console.log(`[FILTER][RISK] ${s.coin} ${s.side} rejected: ${risk.reason} | entry=${fmtPrice(s.entry)} support=${fmtPrice(s.support)} resistance=${fmtPrice(s.resistance)} rawSupport=${fmtPrice(s.rawSupport)} rawResistance=${fmtPrice(s.rawResistance)} ATR=${fmtPrice(s.atr)} R:R=${n(risk.rr).toFixed(2)}`);
+        if (!risk.valid || risk.rr < MIN_RR || !(risk.sl > 0) || !(risk.tp > 0)) { noteReject('risk', s, risk.reason || `R:R ${n(risk.rr).toFixed(2)} < ${MIN_RR}`); continue; }
         // Avoid chasing a move that has already travelled too far from its 15m mean.
         const distanceToVwap = Math.abs((s.entry - s.vwap) / s.entry) * 100;
-        if (distanceToVwap > Math.max(2.2, s.atr / s.entry * 100 * 2.8)) continue;
+        if (distanceToVwap > Math.max(2.2, s.atr / s.entry * 100 * 2.8)) { noteReject('vwap', s, `distance ${distanceToVwap.toFixed(2)}%`); continue; }
         s.risk = risk;
         s.leverageInfo = suggestLeverage(s);
-        candidates.push(s);
+        candidates.push(s); rejects.accepted++;
       }
     } catch (e) {
       failed++;
@@ -760,6 +790,8 @@ async function main() {
   }
 
   // If several patterns fire on one market/side, keep the highest-quality setup only for this cycle.
+  console.log(`[DIAGNOSTICS][REJECTS] ${JSON.stringify(rejects)}`);
+  for (const sample of rejectionSamples) console.log(`[DIAGNOSTICS][SAMPLE] ${sample}`);
   candidates.sort((a, b) => b.score - a.score);
   const chosen = [];
   const seenMarketSide = new Set();
@@ -794,7 +826,7 @@ async function main() {
     if (anySent) {
       sentSignals++;
       state.alertHistory[signalKey(s)] = now();
-      state.paperTrades.push({ id: `${s.coin}|${s.side}|${s.pattern}|${now()}`, coin: s.coin, side: s.side, pattern: s.pattern, score: Number(s.score.toFixed(2)), audience: 'BOTH', outcomeDelivered: [], entry: s.risk.entry, sl: s.risk.sl, tp: s.risk.tp, rr: s.risk.rr, suggestedLeverage: s.leverageInfo?.leverage ?? null, btcRegime: s.btcRegime?.label || 'NEUTRAL', rsi15: s.rsi15, fibConfluence: Boolean(s.fibConfluence), openedAt: now(), status: 'OPEN', pnlR: null, reasons: s.reasons });
+      state.paperTrades.push({ strategyVersion: VERSION, id: `${s.coin}|${s.side}|${s.pattern}|${now()}`, coin: s.coin, side: s.side, pattern: s.pattern, score: Number(s.score.toFixed(2)), audience: 'BOTH', outcomeDelivered: [], entry: s.risk.entry, sl: s.risk.sl, tp: s.risk.tp, rr: s.risk.rr, suggestedLeverage: s.leverageInfo?.leverage ?? null, btcRegime: s.btcRegime?.label || 'NEUTRAL', rsi15: s.rsi15, fibConfluence: Boolean(s.fibConfluence), openedAt: now(), status: 'OPEN', pnlR: null, reasons: s.reasons });
     } else {
       sendErrors++;
       console.warn(`[DELIVERY][FAIL] ${s.coin} ${s.side}: no destination confirmed delivery`);
@@ -806,10 +838,10 @@ async function main() {
   for (const a of eligible) nextCtx[a.coin] = { markPx: a.markPx, openInterest: a.openInterest, funding: a.funding, at: now() };
   state.previousMarketContext = nextCtx;
   state.lastRunAt = now();
-  state.lastCycle = { at: state.lastRunAt, eligible: eligible.length, totalEligible: snapshot.totalEligible, checked, failed, rawCandidates: candidates.length, signalsSelected: chosen.length, sentSignals, sendErrors, openPaperTrades: state.paperTrades.filter(t => t.status === 'OPEN').length };
+  state.lastCycle = { at: state.lastRunAt, rejectionCounts: rejects, eligible: eligible.length, totalEligible: snapshot.totalEligible, checked, failed, rawCandidates: candidates.length, signalsSelected: chosen.length, sentSignals, sendErrors, openPaperTrades: state.paperTrades.filter(t => t.status === 'OPEN').length };
 
   const stats = dailySummary(state);
-  console.log(`[CYCLE] markets=${eligible.length}/${snapshot.totalEligible} checked=${checked} dataErrors=${failed} candidates=${candidates.length} selected=${chosen.length} sent=${sentSignals} deliveryErrors=${sendErrors} paperOpen=${stats.open} paperClosed=${stats.closed} paperWinRate=${stats.winRate.toFixed(1)}% paperNetR=${stats.realizedR.toFixed(2)} runtime=${((now() - started) / 1000).toFixed(1)}s`);
+  console.log(`[CYCLE] markets=${eligible.length}/${snapshot.totalEligible} checked=${checked} dataErrors=${failed} candidates=${candidates.length} selected=${chosen.length} sent=${sentSignals} deliveryErrors=${sendErrors} paperOpen=${stats.open} paperClosed=${stats.closed} paperWinRate=${stats.winRate.toFixed(1)}% paperNetR=${stats.realizedR.toFixed(2)} v2Rejects=${JSON.stringify(rejects)} runtime=${((now() - started) / 1000).toFixed(1)}s`);
 
   // No WATCHING/status spam. Send separate audience-specific reports so VIP signal details never leak to FREE.
   if (!state.pendingDailyReports && now() - n(state.lastDailyReportAt) >= 24 * 3600_000) {
