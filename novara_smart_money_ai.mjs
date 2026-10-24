@@ -3,6 +3,7 @@ import path from 'node:path';
 
 /*
  * NOVARA SMART MONEY AI V2.4.5
+ * Directional BTC impulse gate blocks counter-trend entries during strong BTC moves.
  * READ-ONLY | NO ORDERS | NO AUTO-COPY | PAPER OUTCOME TRACKING
  *
  * Combines three entry families:
@@ -14,14 +15,14 @@ import path from 'node:path';
  * All eligible liquid perp markets are considered; the worker does not depend on wallet lists.
  */
 
-const VERSION = 'NOVARA-SMART-MONEY-AI-V2.4.5-RISK-DIAGNOSTICS-RATE-LIMIT-FIX';
+const VERSION = 'NOVARA-SMART-MONEY-AI-V2.4.5-BTC-DIRECTIONAL-GATE';
 const API = (process.env.HYPERLIQUID_API_URL || 'https://api.hyperliquid.xyz/info').trim();
 const TOKEN = process.env.TELEGRAM_TOKEN || process.env.TELEGRAM_BOT_TOKEN || '';
 const LEGACY_CHAT = process.env.TELEGRAM_CHAT_ID || '';
 const FREE_CHAT = process.env.NOVARA_FREE_CHAT_ID || process.env.FREE_CHAT_ID || '';
 const VIP_CHAT = process.env.NOVARA_VIP_CHAT_ID || process.env.VIP_CHAT_ID || process.env.NOVARA_PREMIUM_CHAT_ID || '';
 const STATE_FILE = process.env.NOVARA_SMART_MONEY_STATE_FILE || 'production/state/novara_smart_money_state.json';
-const SCAN_GAP_MS = Math.max(200, Number(process.env.NOVARA_SMART_REQUEST_GAP_MS || 300));
+const SCAN_GAP_MS = Math.max(100, Number(process.env.NOVARA_SMART_REQUEST_GAP_MS || 180));
 const MAX_429_RETRIES = Math.max(0, Math.min(4, Number(process.env.NOVARA_SMART_429_RETRIES || 3))); 
 const TIMEOUT_MS = Math.max(3000, Number(process.env.NOVARA_SMART_TIMEOUT_MS || 12000));
 const MIN_VOLUME_USD = Math.max(250000, Number(process.env.NOVARA_SMART_MIN_24H_VOLUME_USD || 2_000_000));
@@ -51,12 +52,9 @@ const fmtPrice = x => {
 
 let nextRequestAt = 0;
 let requestGate = Promise.resolve();
-let globalRateLimitUntil = 0;
-const RATE_LIMIT_BASE_MS = Math.max(1000, Number(process.env.NOVARA_SMART_429_BASE_MS || 1500));
-const RATE_LIMIT_MAX_MS = Math.max(RATE_LIMIT_BASE_MS, Number(process.env.NOVARA_SMART_429_MAX_MS || 15000));
 async function paceRequest() {
   const slot = requestGate.then(async () => {
-    const wait = Math.max(0, nextRequestAt - now(), globalRateLimitUntil - now());
+    const wait = Math.max(0, nextRequestAt - now());
     if (wait) await sleep(wait);
     nextRequestAt = now() + SCAN_GAP_MS;
   });
@@ -77,32 +75,20 @@ async function request(body, label = 'info') {
         signal: controller.signal,
       });
       const text = await res.text();
-      if (res.status === 429) {
-        const retryAfterHeader = Number(res.headers.get('retry-after'));
-        const serverDelay = Number.isFinite(retryAfterHeader) && retryAfterHeader > 0
-          ? retryAfterHeader * 1000 : 0;
-        const exponential = Math.min(RATE_LIMIT_MAX_MS, RATE_LIMIT_BASE_MS * (2 ** attempt));
-        const jitter = Math.floor(Math.random() * Math.min(750, exponential * 0.2));
-        const delay = Math.min(RATE_LIMIT_MAX_MS, Math.max(serverDelay, exponential) + jitter);
-        globalRateLimitUntil = Math.max(globalRateLimitUntil, now() + delay);
-        nextRequestAt = Math.max(nextRequestAt, globalRateLimitUntil);
+      if (res.status === 429 && attempt < MAX_429_RETRIES) {
+        // Back off globally so concurrent market scans do not immediately repeat the burst.
+        const delay = Math.min(8000, 1000 * (2 ** attempt));
+        nextRequestAt = Math.max(nextRequestAt, now() + delay);
+        console.warn(`[API][429] ${label}: retry ${attempt + 1}/${MAX_429_RETRIES} after ${delay}ms`);
         lastError = new Error(`${label}: HTTP 429 ${text.slice(0, 160)}`);
-        if (attempt < MAX_429_RETRIES) {
-          console.warn(`[API][429] ${label}: retry ${attempt + 1}/${MAX_429_RETRIES} after ${delay}ms (global cooldown)`);
-          continue;
-        }
-        console.error(`[API][429][EXHAUSTED] ${label}: retries exhausted; request marked unavailable`);
-        throw lastError;
+        continue;
       }
       if (!res.ok) throw new Error(`${label}: HTTP ${res.status} ${text.slice(0, 160)}`);
       try { return JSON.parse(text); } catch { throw new Error(`${label}: invalid JSON`); }
     } catch (error) {
       lastError = error;
-      if (String(error?.message || error).includes('HTTP 429')) {
-        if (attempt >= MAX_429_RETRIES) throw error;
-        continue;
-      }
-      throw error;
+      // Retry only explicit 429 responses; do not mask timeouts or other API errors.
+      if (!String(error?.message || error).includes('HTTP 429') || attempt >= MAX_429_RETRIES) throw error;
     } finally { clearTimeout(timer); }
   }
   throw lastError || new Error(`${label}: request failed`);
@@ -772,8 +758,8 @@ async function analyzeAsset(asset, previous, btcRegime) {
     return skipped;
   }
   const [book, trades] = await Promise.all([
-    request({ type: 'l2Book', coin: asset.coin }, `book ${asset.coin}`).catch(error => { console.warn(`[API][DEGRADED] book ${asset.coin}: ${error?.message || error}`); return null; }),
-    request({ type: 'recentTrades', coin: asset.coin }, `trades ${asset.coin}`).catch(error => { console.warn(`[API][DEGRADED] trades ${asset.coin}: ${error?.message || error}`); return []; }),
+    request({ type: 'l2Book', coin: asset.coin }, `book ${asset.coin}`).catch(() => null),
+    request({ type: 'recentTrades', coin: asset.coin }, `trades ${asset.coin}`).catch(() => []),
   ]);
   const spread = spreadPct(book, asset.markPx);
   const imbalance = bookImbalance(book);
@@ -789,7 +775,6 @@ async function main() {
   console.log(`Mode: READ-ONLY / NO ORDERS / PAPER TRACKING`);
   console.log(`Time: ${new Date().toISOString()}`);
   console.log(`Signal threshold: ${MIN_SCORE}/10 | min R:R: 1:${MIN_RR.toFixed(2)} | structure-first SL/TP | min 24h volume: $${MIN_VOLUME_USD.toLocaleString()} | max markets scanned: ${MAX_MARKETS}`);
-  console.log(`[API][POLICY] requestGap=${SCAN_GAP_MS}ms retries429=${MAX_429_RETRIES} backoff=${RATE_LIMIT_BASE_MS}-${RATE_LIMIT_MAX_MS}ms globalCooldown=yes`);
   console.log(`[TELEGRAM][CONFIG] token=${TOKEN ? 'configured' : 'MISSING'} vipChat=${VIP_CHAT ? 'configured' : (LEGACY_CHAT ? 'legacy-fallback' : 'MISSING')} freeChat=${FREE_CHAT ? 'configured' : 'MISSING'} legacyChat=${LEGACY_CHAT ? 'configured' : 'MISSING'}`);
   if (!TOKEN || (!VIP_CHAT && !LEGACY_CHAT && !FREE_CHAT)) {
     console.warn('[TELEGRAM][ACTION REQUIRED] Signals may be generated but cannot be delivered until TELEGRAM_TOKEN and at least one chat ID are configured in the production environment.');
@@ -824,7 +809,7 @@ async function main() {
 
   const candidates = [];
   let checked = 0, failed = 0;
-  const rejects = { stale: 0, regime: 0, regimeSoft: 0, score: 0, cooldown: 0, risk: 0, vwap: 0, spread: 0, accepted: 0 };
+  const rejects = { stale: 0, regime: 0, btcCountertrend: 0, regimeSoft: 0, score: 0, cooldown: 0, risk: 0, vwap: 0, spread: 0, accepted: 0 };
   const rejectionSamples = [];
   const noteReject = (kind, s, reason) => { rejects[kind]++; if (rejectionSamples.length < 18) rejectionSamples.push(`${s.coin} ${s.side} ${s.pattern}: ${reason}`); };
   for (const asset of eligible) {
@@ -846,6 +831,20 @@ async function main() {
         const btcLabel = s.btcRegime?.label || 'NEUTRAL';
         const btcOpposes = (s.side === 'LONG' && btcLabel === 'BEARISH') || (s.side === 'SHORT' && btcLabel === 'BULLISH');
         const btcMoveAbs = Math.abs(n(s.btcRegime?.change24hPct));
+        // Directional BTC risk gate: during a material BTC selloff, do not issue
+        // counter-trend LONG signals merely because an altcoin prints a local
+        // sweep/reclaim candle. The previous gate required the alt 1H trend to
+        // oppose the setup too, so a NEUTRAL alt trend could let dangerous LONGs pass.
+        const btcChange24h = n(s.btcRegime?.change24hPct);
+        const btcBearImpulse = btcLabel === 'BEARISH' && btcChange24h <= -BTC_COUNTERTREND_HARD_MOVE_PCT;
+        const btcBullImpulse = btcLabel === 'BULLISH' && btcChange24h >= BTC_COUNTERTREND_HARD_MOVE_PCT;
+        if ((s.side === 'LONG' && btcBearImpulse) || (s.side === 'SHORT' && btcBullImpulse)) {
+          rejects.btcCountertrend++;
+          const direction = s.side === 'LONG' ? 'LONG against bearish BTC impulse' : 'SHORT against bullish BTC impulse';
+          console.log(`[FILTER][BTC-DIRECTIONAL] ${s.coin} ${s.side} hard-rejected: ${direction}; BTC 4H=${btcLabel}, signed24h=${btcChange24h.toFixed(2)}%, threshold=${BTC_COUNTERTREND_HARD_MOVE_PCT.toFixed(2)}%`);
+          noteReject('regime', s, `${direction}; BTC signed24h=${btcChange24h.toFixed(2)}%`);
+          continue;
+        }
         if (assetOpposes && btcOpposes && btcMoveAbs >= BTC_COUNTERTREND_HARD_MOVE_PCT) {
           console.log(`[FILTER][REGIME] ${s.coin} ${s.side} hard-rejected: 1H trend=${s.trend} and BTC 4H=${btcLabel}, BTC impulse=${btcMoveAbs.toFixed(2)}% >= ${BTC_COUNTERTREND_HARD_MOVE_PCT.toFixed(2)}%`);
           noteReject('regime', s, `trend=${s.trend}, BTC=${btcLabel}, impulse=${btcMoveAbs.toFixed(2)}%`);
@@ -865,23 +864,11 @@ async function main() {
         if (structureRoomPct > 0 && structureRoomPct < Math.max(0.35, n(s.atrPct) * 0.65)) {
           console.log(`[STRUCTURE][TIGHT] ${s.coin} ${s.side}: room=${structureRoomPct.toFixed(2)}%; checking actual structural SL/TP and R:R instead of auto-rejecting`);
         }
-        if (s.score < MIN_SCORE) {
-          noteReject('score', s, `score ${s.score.toFixed(2)} < ${MIN_SCORE}`);
-          if (s.score >= MIN_SCORE - 0.75) {
-            console.log(`[NEAR-MISS][SCORE] ${s.coin} ${s.side} ${s.pattern} score=${s.score.toFixed(2)}/${MIN_SCORE} trend=${s.trend} BTC=${s.btcRegime?.label || 'NEUTRAL'} RSI15=${n(s.rsi15).toFixed(1)} volRatio=${n(s.volRatio).toFixed(2)} OI=${n(s.oiChange).toFixed(2)} flow=${n(s.flowDelta).toFixed(3)} imbalance=${n(s.imbalance).toFixed(3)} spread=${s.spreadPct == null ? 'NA' : n(s.spreadPct).toFixed(3) + '%'} reasons=${(s.reasons || []).slice(0, 8).join('; ')}`);
-          }
-          continue;
-        }
+        if (s.score < MIN_SCORE) { noteReject('score', s, `score ${s.score.toFixed(2)} < ${MIN_SCORE}`); continue; }
         if (isCooldown(state, s)) { noteReject('cooldown', s, '90-minute cooldown'); continue; }
         const risk = buildRisk(s);
-        if (!risk.valid) console.log(`[FILTER][RISK] ${s.coin} ${s.side} rejected: ${risk.reason} | entry=${fmtPrice(risk.entry || s.entry)} SL=${fmtPrice(risk.sl)} TP=${fmtPrice(risk.tp)} risk=${pct(risk.riskPct)} reward=${pct(risk.rewardPct)} support=${fmtPrice(s.support)}(${s.supportSource || '?'}) resistance=${fmtPrice(s.resistance)}(${s.resistanceSource || '?'}) rawSupport=${fmtPrice(s.rawSupport)} rawResistance=${fmtPrice(s.rawResistance)} ATR=${fmtPrice(s.atr)} R:R=${n(risk.rr).toFixed(2)} required=1:${MIN_RR.toFixed(2)}`);
-        if (!risk.valid || risk.rr < MIN_RR || !(risk.sl > 0) || !(risk.tp > 0)) {
-          noteReject('risk', s, risk.reason || `R:R ${n(risk.rr).toFixed(2)} < ${MIN_RR}`);
-          if (n(risk.rr) >= MIN_RR - 0.5 && n(risk.rr) < MIN_RR) {
-            console.log(`[NEAR-MISS][RISK] ${s.coin} ${s.side} ${s.pattern} R:R=1:${n(risk.rr).toFixed(2)} required=1:${MIN_RR.toFixed(2)} entry=${fmtPrice(risk.entry)} SL=${fmtPrice(risk.sl)} TP=${fmtPrice(risk.tp)} risk=${pct(risk.riskPct)} reward=${pct(risk.rewardPct)} support=${fmtPrice(s.support)} resistance=${fmtPrice(s.resistance)} bufferATR=${STRUCTURE_BUFFER_ATR}`);
-          }
-          continue;
-        }
+        if (!risk.valid) console.log(`[FILTER][RISK] ${s.coin} ${s.side} rejected: ${risk.reason} | entry=${fmtPrice(s.entry)} support=${fmtPrice(s.support)}(${s.supportSource || '?'}) resistance=${fmtPrice(s.resistance)}(${s.resistanceSource || '?'}) rawSupport=${fmtPrice(s.rawSupport)} rawResistance=${fmtPrice(s.rawResistance)} ATR=${fmtPrice(s.atr)} R:R=${n(risk.rr).toFixed(2)}`);
+        if (!risk.valid || risk.rr < MIN_RR || !(risk.sl > 0) || !(risk.tp > 0)) { noteReject('risk', s, risk.reason || `R:R ${n(risk.rr).toFixed(2)} < ${MIN_RR}`); continue; }
         // Avoid chasing a move that has already travelled too far from its 15m mean.
         const distanceToVwap = Math.abs((s.entry - s.vwap) / s.entry) * 100;
         if (distanceToVwap > Math.max(2.2, s.atr / s.entry * 100 * 2.8)) { noteReject('vwap', s, `distance ${distanceToVwap.toFixed(2)}%`); continue; }
