@@ -2,7 +2,7 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 
 /*
- * NOVARA SMART MONEY AI V2.4.5
+ * NOVARA SMART MONEY AI V2.5.0 — TRADINGVIEW BRIDGE
  * Directional BTC impulse gate blocks counter-trend entries during strong BTC moves.
  * READ-ONLY | NO ORDERS | NO AUTO-COPY | PAPER OUTCOME TRACKING
  *
@@ -15,18 +15,22 @@ import path from 'node:path';
  * All eligible liquid perp markets are considered; the worker does not depend on wallet lists.
  */
 
-const VERSION = 'NOVARA-SMART-MONEY-AI-V2.4.5-BTC-DIRECTIONAL-GATE';
+const VERSION = 'NOVARA-SMART-MONEY-AI-V2.5.0-TRADINGVIEW-BRIDGE';
 const API = (process.env.HYPERLIQUID_API_URL || 'https://api.hyperliquid.xyz/info').trim();
 const TOKEN = process.env.TELEGRAM_TOKEN || process.env.TELEGRAM_BOT_TOKEN || '';
 const LEGACY_CHAT = process.env.TELEGRAM_CHAT_ID || '';
 const FREE_CHAT = process.env.NOVARA_FREE_CHAT_ID || process.env.FREE_CHAT_ID || '';
 const VIP_CHAT = process.env.NOVARA_VIP_CHAT_ID || process.env.VIP_CHAT_ID || process.env.NOVARA_PREMIUM_CHAT_ID || '';
 const STATE_FILE = process.env.NOVARA_SMART_MONEY_STATE_FILE || 'production/state/novara_smart_money_state.json';
+const TV_LEVELS_FILE = process.env.NOVARA_TV_LEVELS_FILE || 'production/state/tradingview_signals.json';
+const TV_MAX_AGE_MS = Math.max(60_000, Number(process.env.NOVARA_TV_MAX_AGE_MS || 20 * 60_000));
+const TV_MAX_DRIFT_PCT = Math.max(0.05, Number(process.env.NOVARA_TV_MAX_DRIFT_PCT || 0.65));
+const TV_REQUIRE_LEVELS = String(process.env.NOVARA_TV_REQUIRE_LEVELS || 'false').toLowerCase() === 'true';
 const SCAN_GAP_MS = Math.max(100, Number(process.env.NOVARA_SMART_REQUEST_GAP_MS || 180));
 const MAX_429_RETRIES = Math.max(0, Math.min(4, Number(process.env.NOVARA_SMART_429_RETRIES || 3))); 
 const TIMEOUT_MS = Math.max(3000, Number(process.env.NOVARA_SMART_TIMEOUT_MS || 12000));
 const MIN_VOLUME_USD = Math.max(250000, Number(process.env.NOVARA_SMART_MIN_24H_VOLUME_USD || 2_000_000));
-const MAX_MARKETS = Math.max(25, Math.min(300, Number(process.env.NOVARA_SMART_MAX_MARKETS || 120)));
+const MAX_MARKETS = Math.max(25, Math.min(1000, Number(process.env.NOVARA_SMART_MAX_MARKETS || 1000)));
 const MIN_SCORE = Math.max(5.8, Math.min(8.5, Number(process.env.NOVARA_SMART_MIN_SCORE || 6.0)));
 const MIN_RR = Math.max(1.5, Number(process.env.NOVARA_SMART_MIN_RR || 1.5));
 const BTC_COUNTERTREND_HARD_MOVE_PCT = Math.max(1.0, Number(process.env.NOVARA_BTC_COUNTERTREND_HARD_MOVE_PCT || 1.5));
@@ -453,6 +457,30 @@ function buildRisk(candidate) {
   const rr = targetDist / riskDist;
   return { entry, sl, tp, riskPct: riskDist / entry * 100, rewardPct: targetDist / entry * 100, rr, valid: true, targetUsesStructure: true };
 }
+async function readTradingViewSignals() {
+  try {
+    const parsed = JSON.parse(await fs.readFile(TV_LEVELS_FILE, 'utf8'));
+    return parsed && typeof parsed === 'object' ? parsed : { signals: {} };
+  } catch { return { signals: {} }; }
+}
+function tradingViewRisk(candidate, tvSignal, liveMark) {
+  if (!tvSignal || !Number.isFinite(Number(tvSignal.receivedAt)) || now() - Number(tvSignal.receivedAt) > TV_MAX_AGE_MS) {
+    return { valid: false, reason: 'TradingView signal missing or stale' };
+  }
+  const entry = n(tvSignal.entry), sl = n(tvSignal.sl), tp = n(tvSignal.tp);
+  if (!(entry > 0 && sl > 0 && tp > 0)) return { valid: false, reason: 'TradingView levels invalid' };
+  const driftPct = liveMark > 0 ? Math.abs(liveMark - entry) / liveMark * 100 : Infinity;
+  if (driftPct > TV_MAX_DRIFT_PCT) return { valid: false, reason: `TradingView entry drift ${driftPct.toFixed(3)}% exceeds ${TV_MAX_DRIFT_PCT}%` };
+  const correctSide = candidate.side === 'LONG' ? sl < entry && tp > entry : sl > entry && tp < entry;
+  if (!correctSide) return { valid: false, reason: 'TradingView SL/TP are on the wrong side of entry' };
+  const riskDist = Math.abs(entry - sl), rewardDist = Math.abs(tp - entry);
+  const riskPct = riskDist / entry * 100, rewardPct = rewardDist / entry * 100, rr = rewardDist / riskDist;
+  if (!(riskDist > 0) || riskPct < 0.20 || riskPct > 2.5 || rr < MIN_RR) {
+    return { valid: false, reason: `TradingView risk bounds/R:R invalid (risk=${riskPct.toFixed(2)}%, R:R=${rr.toFixed(2)})` };
+  }
+  return { valid: true, entry, sl, tp, riskPct, rewardPct, rr, targetUsesStructure: true, source: 'TradingView webhook', tvReceivedAt: Number(tvSignal.receivedAt), tvSymbol: tvSignal.tvSymbol || '', tvTimeframe: tvSignal.timeframe || '' };
+}
+
 function signalKey(s) { return `${s.coin}|${s.side}|${s.pattern}`; }
 function isCooldown(state, s) {
   const last = n(state.alertHistory[signalKey(s)]);
@@ -770,11 +798,13 @@ async function analyzeAsset(asset, previous, btcRegime) {
 async function main() {
   const started = now();
   const state = await readState();
+  const tvFeed = await readTradingViewSignals();
+  const tvSignals = tvFeed.signals || {};
   state.version = VERSION;
   console.log(`\n${VERSION} — START`);
   console.log(`Mode: READ-ONLY / NO ORDERS / PAPER TRACKING`);
   console.log(`Time: ${new Date().toISOString()}`);
-  console.log(`Signal threshold: ${MIN_SCORE}/10 | min R:R: 1:${MIN_RR.toFixed(2)} | structure-first SL/TP | min 24h volume: $${MIN_VOLUME_USD.toLocaleString()} | max markets scanned: ${MAX_MARKETS}`);
+  console.log(`Signal threshold: ${MIN_SCORE}/10 | min R:R: 1:${MIN_RR.toFixed(2)} | TradingView levels preferred + validated | structure-first SL/TP fallback ${TV_REQUIRE_LEVELS ? '(TV levels REQUIRED)' : '(TV fallback enabled)'} | min 24h volume: $${MIN_VOLUME_USD.toLocaleString()} | max markets scanned: ${MAX_MARKETS}`);
   console.log(`[TELEGRAM][CONFIG] token=${TOKEN ? 'configured' : 'MISSING'} vipChat=${VIP_CHAT ? 'configured' : (LEGACY_CHAT ? 'legacy-fallback' : 'MISSING')} freeChat=${FREE_CHAT ? 'configured' : 'MISSING'} legacyChat=${LEGACY_CHAT ? 'configured' : 'MISSING'}`);
   if (!TOKEN || (!VIP_CHAT && !LEGACY_CHAT && !FREE_CHAT)) {
     console.warn('[TELEGRAM][ACTION REQUIRED] Signals may be generated but cannot be delivered until TELEGRAM_TOKEN and at least one chat ID are configured in the production environment.');
@@ -791,6 +821,7 @@ async function main() {
     console.warn(`[BTC][WARN] 4H regime unavailable; neutral filter used: ${e?.message || e}`);
   }
   console.log(`[BTC][REGIME] 4H=${btcRegime.label} trend=${btcRegime.trend} approx24h=${btcRegime.change24hPct.toFixed(2)}%`);
+  console.log(`[TRADINGVIEW][FEED] signals=${Object.keys(tvSignals).length} maxAge=${Math.round(TV_MAX_AGE_MS/60000)}m requireLevels=${TV_REQUIRE_LEVELS}`);
   if (!n(state.lastDailyReportAt)) state.lastDailyReportAt = now(); // first report is sent after one full 24-hour observation window
   const closed = await updatePaperTrades(state, contexts);
   for (const t of closed) {
@@ -809,7 +840,7 @@ async function main() {
 
   const candidates = [];
   let checked = 0, failed = 0;
-  const rejects = { stale: 0, regime: 0, btcCountertrend: 0, regimeSoft: 0, score: 0, cooldown: 0, risk: 0, vwap: 0, spread: 0, accepted: 0 };
+  const rejects = { stale: 0, regime: 0, btcCountertrend: 0, regimeSoft: 0, score: 0, cooldown: 0, risk: 0, tradingView: 0, vwap: 0, spread: 0, accepted: 0 };
   const rejectionSamples = [];
   const noteReject = (kind, s, reason) => { rejects[kind]++; if (rejectionSamples.length < 18) rejectionSamples.push(`${s.coin} ${s.side} ${s.pattern}: ${reason}`); };
   for (const asset of eligible) {
@@ -866,8 +897,24 @@ async function main() {
         }
         if (s.score < MIN_SCORE) { noteReject('score', s, `score ${s.score.toFixed(2)} < ${MIN_SCORE}`); continue; }
         if (isCooldown(state, s)) { noteReject('cooldown', s, '90-minute cooldown'); continue; }
-        const risk = buildRisk(s);
-        if (!risk.valid) console.log(`[FILTER][RISK] ${s.coin} ${s.side} rejected: ${risk.reason} | entry=${fmtPrice(s.entry)} support=${fmtPrice(s.support)}(${s.supportSource || '?'}) resistance=${fmtPrice(s.resistance)}(${s.resistanceSource || '?'}) rawSupport=${fmtPrice(s.rawSupport)} rawResistance=${fmtPrice(s.rawResistance)} ATR=${fmtPrice(s.atr)} R:R=${n(risk.rr).toFixed(2)}`);
+        const tvKey = `${s.coin}|${s.side}`;
+        const tvSignal = tvSignals[tvKey];
+        let risk = tradingViewRisk(s, tvSignal, asset.markPx);
+        if (risk.valid) {
+          s.entry = risk.entry;
+          s.reasons.push(`TradingView levels verified (${risk.tvTimeframe || 'chart'}; R:R ${risk.rr.toFixed(2)})`);
+          s.priceSource = 'TradingView';
+          console.log(`[TRADINGVIEW][LEVELS] ${s.coin} ${s.side} entry=${fmtPrice(risk.entry)} SL=${fmtPrice(risk.sl)} TP=${fmtPrice(risk.tp)} R:R=${risk.rr.toFixed(2)} drift=${(Math.abs(asset.markPx-risk.entry)/asset.markPx*100).toFixed(3)}%`);
+        } else {
+          if (TV_REQUIRE_LEVELS) {
+            rejects.tradingView++;
+            noteReject('tradingView', s, risk.reason || 'no fresh TradingView setup');
+            continue;
+          }
+          risk = buildRisk(s);
+          s.priceSource = 'NOVARA exchange candles (TradingView levels unavailable)';
+          if (!risk.valid) console.log(`[FILTER][RISK] ${s.coin} ${s.side} rejected: ${risk.reason} | entry=${fmtPrice(s.entry)} support=${fmtPrice(s.support)}(${s.supportSource || '?'}) resistance=${fmtPrice(s.resistance)}(${s.resistanceSource || '?'}) rawSupport=${fmtPrice(s.rawSupport)} rawResistance=${fmtPrice(s.rawResistance)} ATR=${fmtPrice(s.atr)} R:R=${n(risk.rr).toFixed(2)}`);
+        }
         if (!risk.valid || risk.rr < MIN_RR || !(risk.sl > 0) || !(risk.tp > 0)) { noteReject('risk', s, risk.reason || `R:R ${n(risk.rr).toFixed(2)} < ${MIN_RR}`); continue; }
         // Avoid chasing a move that has already travelled too far from its 15m mean.
         const distanceToVwap = Math.abs((s.entry - s.vwap) / s.entry) * 100;
@@ -902,7 +949,7 @@ async function main() {
   const publicPick = publicPool[0] || null;
   for (const s of chosen) {
     if (n(s.score) < MIN_SCORE) continue;
-    const message = formatSignal(s, s.risk);
+    const message = formatSignal(s, s.risk) + `\n📡 Price levels: ${escapeHtml(s.priceSource || 'NOVARA structural levels')}`;
     const destinations = [];
     // Every eligible signal goes to VIP. At most the top-scoring signal goes public per cycle.
     const vip = configuredAudience('VIP');
@@ -926,7 +973,7 @@ async function main() {
       sentSignals++;
       state.alertHistory[signalKey(s)] = now();
       const audience = deliveredNames.includes('VIP') && deliveredNames.includes('FREE') ? 'BOTH' : deliveredNames[0];
-      state.paperTrades.push({ strategyVersion: VERSION, id: `${s.coin}|${s.side}|${s.pattern}|${now()}`, coin: s.coin, side: s.side, pattern: s.pattern, score: Number(s.score.toFixed(2)), audience, outcomeDelivered: [], entry: s.risk.entry, sl: s.risk.sl, tp: s.risk.tp, rr: s.risk.rr, suggestedLeverage: s.leverageInfo?.leverage ?? null, btcRegime: s.btcRegime?.label || 'NEUTRAL', rsi15: s.rsi15, fibConfluence: Boolean(s.fibConfluence), openedAt: now(), lastCheckedAt: now(), status: 'OPEN', pnlR: null, reasons: s.reasons });
+      state.paperTrades.push({ strategyVersion: VERSION, id: `${s.coin}|${s.side}|${s.pattern}|${now()}`, coin: s.coin, side: s.side, pattern: s.pattern, score: Number(s.score.toFixed(2)), audience, outcomeDelivered: [], entry: s.risk.entry, sl: s.risk.sl, tp: s.risk.tp, rr: s.risk.rr, suggestedLeverage: s.leverageInfo?.leverage ?? null, btcRegime: s.btcRegime?.label || 'NEUTRAL', rsi15: s.rsi15, fibConfluence: Boolean(s.fibConfluence), openedAt: now(), lastCheckedAt: now(), status: 'OPEN', pnlR: null, reasons: s.reasons, priceSource: s.priceSource || 'NOVARA structural levels', tvReceivedAt: s.risk.tvReceivedAt || null });
     } else {
       sendErrors++;
       console.warn(`[DELIVERY][FAIL] ${s.coin} ${s.side}: no destination confirmed delivery`);

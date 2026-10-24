@@ -1,14 +1,15 @@
-# NOVARA V2.4.5 — BTC Directional Regime Gate
+# NOVARA V2.5.0 — TradingView Bridge and Broad Market Scan
 
-## Root cause addressed
-V2.4.4 only hard-blocked a counter-trend setup when BOTH the altcoin 1H trend opposed the setup and BTC opposed it. If an altcoin's 1H trend was NEUTRAL, a LONG `SWEEP_RECLAIM` could pass during a meaningful BTC selloff, provided its score and structural R:R passed.
+## Included
+- TradingView webhook receiver with shared-secret URL path, payload/level validation, stale-bar rejection, atomic JSON persistence, and bounded request body.
+- Pine Script market-structure indicator using confirmed pivots, ATR-buffered SL, minimum-R:R TP, local EMA trend gate, and BTC 4H impulse gate.
+- Worker consumes fresh matching TradingView levels when present, validates entry drift against live exchange mark, validates level orientation, SL risk bounds, and minimum R:R. Source is labeled in Telegram/paper state.
+- Fallback remains configurable so market scanning can continue while TradingView alerts are being configured. Set NOVARA_TV_REQUIRE_LEVELS=true to force TV levels for every emitted signal after coverage is complete.
+- Market cap raised to 1000, default 1000; all eligible markets are considered up to configured cap and exchange universe size.
+- VPS systemd webhook service and five-minute scan timer; GitHub workflow changed to manual validation only to avoid duplicate scans/state conflicts.
+- Read-only and paper tracking retained; no order execution added.
 
-## Change
-- Added a signed BTC directional impulse gate: when BTC regime is BEARISH and its estimated 24h change is at or below `-NOVARA_BTC_COUNTERTREND_HARD_MOVE_PCT`, LONG signals are rejected. The symmetric rule blocks SHORT signals during a strong bullish BTC impulse.
-- Added `btcCountertrend` to cycle rejection diagnostics; rejected setups also enter the existing rejection sample log.
-- Kept score threshold (6.0), minimum R:R (1.5), volume threshold ($2m), structural SL/TP logic, Telegram wiring, paper tracking, and read-only/no-orders mode unchanged.
-
-## Important limitations
-- This is a protective filter, not a guarantee against losses. It intentionally reduces counter-trend entries during strong BTC impulses; it can also miss a genuine reversal.
-- The BTC 24h move is an approximation based on the available 4h candles, not a separate formal support-break detector. The provided screenshot alone cannot prove the bot's exact BTC regime at the timestamp of each past signal.
-- Syntax validation is not a live-market backtest. Validate on paper tracking before relying on signal outcomes.
+## Validation
+- Node syntax validation is run for worker and webhook server.
+- Pine Script must be compiled and tested in TradingView Pine Editor; not executable in local Node runtime.
+- This is not a backtest and does not guarantee win rate. Evaluate paper results including fees, slippage, ambiguous candles, and expectancy.
