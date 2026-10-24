@@ -1,0 +1,1026 @@
+import fs from 'node:fs/promises';
+import path from 'node:path';
+
+/*
+ * NOVARA SMART MONEY AI V2.5.0
+ * READ-ONLY | NO ORDERS | NO AUTO-COPY | PAPER OUTCOME TRACKING
+ *
+ * Combines three entry families:
+ *  1) Liquidity sweep + reclaim
+ *  2) Breakout + retest
+ *  3) Trend pullback + continuation
+ *
+ * Data: Hyperliquid public Info API (no paid data API required).
+ * All eligible liquid perp markets are considered; the worker does not depend on wallet lists.
+ */
+
+const VERSION = 'NOVARA-SMART-MONEY-AI-V2.5.0-ADAPTIVE-BTC-REGIME';
+const API = (process.env.HYPERLIQUID_API_URL || 'https://api.hyperliquid.xyz/info').trim();
+const TOKEN = process.env.TELEGRAM_TOKEN || process.env.TELEGRAM_BOT_TOKEN || '';
+const LEGACY_CHAT = process.env.TELEGRAM_CHAT_ID || '';
+const FREE_CHAT = process.env.NOVARA_FREE_CHAT_ID || process.env.FREE_CHAT_ID || '';
+const VIP_CHAT = process.env.NOVARA_VIP_CHAT_ID || process.env.VIP_CHAT_ID || process.env.NOVARA_PREMIUM_CHAT_ID || '';
+const STATE_FILE = process.env.NOVARA_SMART_MONEY_STATE_FILE || 'production/state/novara_smart_money_state.json';
+const SCAN_GAP_MS = Math.max(200, Number(process.env.NOVARA_SMART_REQUEST_GAP_MS || 300));
+const MAX_429_RETRIES = Math.max(0, Math.min(4, Number(process.env.NOVARA_SMART_429_RETRIES || 3))); 
+const TIMEOUT_MS = Math.max(3000, Number(process.env.NOVARA_SMART_TIMEOUT_MS || 12000));
+const MIN_VOLUME_USD = Math.max(250000, Number(process.env.NOVARA_SMART_MIN_24H_VOLUME_USD || 2_000_000));
+const MAX_MARKETS = Math.max(25, Math.min(300, Number(process.env.NOVARA_SMART_MAX_MARKETS || 120)));
+const MIN_SCORE = Math.max(5.8, Math.min(8.5, Number(process.env.NOVARA_SMART_MIN_SCORE || 6.0)));
+const MIN_RR = Math.max(1.5, Number(process.env.NOVARA_SMART_MIN_RR || 1.5));
+const BTC_COUNTERTREND_HARD_MOVE_PCT = Math.max(1.0, Number(process.env.NOVARA_BTC_COUNTERTREND_HARD_MOVE_PCT || 2.0));
+const BTC_COUNTERTREND_MIN_SCORE = Math.max(MIN_SCORE, Math.min(8.8, Number(process.env.NOVARA_BTC_COUNTERTREND_MIN_SCORE || 7.0)));
+const BTC_COUNTERTREND_MIN_EVIDENCE = Math.max(1, Math.min(5, Number(process.env.NOVARA_BTC_COUNTERTREND_MIN_EVIDENCE || 2)));
+const STRUCTURE_BUFFER_ATR = Math.max(0.1, Number(process.env.NOVARA_STRUCTURE_BUFFER_ATR || 0.25));
+const MAX_SPREAD_PCT = Math.max(0.03, Number(process.env.NOVARA_SMART_MAX_SPREAD_PCT || 0.25));
+const MAX_SIGNALS_PER_CYCLE = Math.max(1, Number(process.env.NOVARA_SMART_MAX_SIGNALS_PER_CYCLE || 8));
+const TELEGRAM_GAP_MS = Math.max(1000, Number(process.env.NOVARA_TELEGRAM_MIN_GAP_MS || 3200));
+const STATE_SCHEMA = 1; // Preserve existing state; tag V2 trades for isolated performance statistics
+const now = () => Date.now();
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+const n = (v, d = 0) => { const x = Number(v); return Number.isFinite(x) ? x : d; };
+const clamp = (x, lo, hi) => Math.max(lo, Math.min(hi, x));
+const pct = (x, digits = 2) => `${n(x).toFixed(digits)}%`;
+const fmtPrice = x => {
+  const v = n(x);
+  if (!(v > 0)) return '—';
+  if (v >= 1000) return v.toLocaleString('en-US', { maximumFractionDigits: 2 });
+  if (v >= 1) return v.toFixed(4);
+  if (v >= 0.01) return v.toFixed(6);
+  if (v >= 0.0001) return v.toFixed(8);
+  return v.toExponential(5);
+};
+
+let nextRequestAt = 0;
+let requestGate = Promise.resolve();
+let globalRateLimitUntil = 0;
+const RATE_LIMIT_BASE_MS = Math.max(1000, Number(process.env.NOVARA_SMART_429_BASE_MS || 1500));
+const RATE_LIMIT_MAX_MS = Math.max(RATE_LIMIT_BASE_MS, Number(process.env.NOVARA_SMART_429_MAX_MS || 15000));
+async function paceRequest() {
+  const slot = requestGate.then(async () => {
+    const wait = Math.max(0, nextRequestAt - now(), globalRateLimitUntil - now());
+    if (wait) await sleep(wait);
+    nextRequestAt = now() + SCAN_GAP_MS;
+  });
+  requestGate = slot.catch(() => {});
+  await slot;
+}
+async function request(body, label = 'info') {
+  let lastError;
+  for (let attempt = 0; attempt <= MAX_429_RETRIES; attempt++) {
+    await paceRequest();
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
+    try {
+      const res = await fetch(API, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify(body),
+        signal: controller.signal,
+      });
+      const text = await res.text();
+      if (res.status === 429) {
+        const retryAfterHeader = Number(res.headers.get('retry-after'));
+        const serverDelay = Number.isFinite(retryAfterHeader) && retryAfterHeader > 0
+          ? retryAfterHeader * 1000 : 0;
+        const exponential = Math.min(RATE_LIMIT_MAX_MS, RATE_LIMIT_BASE_MS * (2 ** attempt));
+        const jitter = Math.floor(Math.random() * Math.min(750, exponential * 0.2));
+        const delay = Math.min(RATE_LIMIT_MAX_MS, Math.max(serverDelay, exponential) + jitter);
+        globalRateLimitUntil = Math.max(globalRateLimitUntil, now() + delay);
+        nextRequestAt = Math.max(nextRequestAt, globalRateLimitUntil);
+        lastError = new Error(`${label}: HTTP 429 ${text.slice(0, 160)}`);
+        if (attempt < MAX_429_RETRIES) {
+          console.warn(`[API][429] ${label}: retry ${attempt + 1}/${MAX_429_RETRIES} after ${delay}ms (global cooldown)`);
+          continue;
+        }
+        console.error(`[API][429][EXHAUSTED] ${label}: retries exhausted; request marked unavailable`);
+        throw lastError;
+      }
+      if (!res.ok) throw new Error(`${label}: HTTP ${res.status} ${text.slice(0, 160)}`);
+      try { return JSON.parse(text); } catch { throw new Error(`${label}: invalid JSON`); }
+    } catch (error) {
+      lastError = error;
+      if (String(error?.message || error).includes('HTTP 429')) {
+        if (attempt >= MAX_429_RETRIES) throw error;
+        continue;
+      }
+      throw error;
+    } finally { clearTimeout(timer); }
+  }
+  throw lastError || new Error(`${label}: request failed`);
+}
+
+async function readState() {
+  try {
+    const parsed = JSON.parse(await fs.readFile(STATE_FILE, 'utf8'));
+    if (parsed?.schema === STATE_SCHEMA) return parsed;
+  } catch {}
+  return {
+    schema: STATE_SCHEMA,
+    version: VERSION,
+    lastRunAt: 0,
+    previousMarketContext: {},
+    alertHistory: {},
+    dailyFreeCount: {},
+    paperTrades: [],
+    dailyStats: {},
+    lastStatusAt: 0,
+    lastDailyReportAt: 0,
+  };
+}
+async function writeState(state) {
+  await fs.mkdir(path.dirname(STATE_FILE), { recursive: true });
+  const tmp = `${STATE_FILE}.tmp`;
+  await fs.writeFile(tmp, JSON.stringify(state, null, 2) + '\n');
+  await fs.rename(tmp, STATE_FILE);
+}
+
+function ema(values, period) {
+  if (!values.length) return 0;
+  const k = 2 / (period + 1);
+  let out = values[0];
+  for (let i = 1; i < values.length; i++) out = values[i] * k + out * (1 - k);
+  return out;
+}
+function mean(values) { return values.length ? values.reduce((a, b) => a + b, 0) / values.length : 0; }
+function median(values) {
+  if (!values.length) return 0;
+  const s = [...values].sort((a, b) => a - b);
+  const m = Math.floor(s.length / 2);
+  return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2;
+}
+function parseCandle(c) {
+  return { t: n(c.t), T: n(c.T), o: n(c.o), h: n(c.h), l: n(c.l), c: n(c.c), v: n(c.v), n: n(c.n) };
+}
+function completedCandles(raw, intervalMs) {
+  const currentTime = now();
+  return (Array.isArray(raw) ? raw : []).map(parseCandle)
+    .filter(c => c.t > 0 && c.c > 0 && (c.T ? c.T < currentTime : c.t + intervalMs <= currentTime))
+    .sort((a, b) => a.t - b.t);
+}
+function atr(candles, period = 14) {
+  if (candles.length < 2) return 0;
+  const trs = [];
+  for (let i = 1; i < candles.length; i++) {
+    const c = candles[i], p = candles[i - 1];
+    trs.push(Math.max(c.h - c.l, Math.abs(c.h - p.c), Math.abs(c.l - p.c)));
+  }
+  return mean(trs.slice(-period));
+}
+function pivots(candles, left = 2, right = 2) {
+  const highs = [], lows = [];
+  for (let i = left; i < candles.length - right; i++) {
+    const c = candles[i];
+    if (candles.slice(i - left, i).every(x => c.h > x.h) && candles.slice(i + 1, i + right + 1).every(x => c.h >= x.h)) highs.push({ price: c.h, index: i });
+    if (candles.slice(i - left, i).every(x => c.l < x.l) && candles.slice(i + 1, i + right + 1).every(x => c.l <= x.l)) lows.push({ price: c.l, index: i });
+  }
+  return { highs, lows };
+}
+function nearestBelow(levels, price) { return levels.filter(x => x.price < price).sort((a, b) => b.price - a.price)[0]?.price || 0; }
+function nearestAbove(levels, price) { return levels.filter(x => x.price > price).sort((a, b) => a.price - b.price)[0]?.price || 0; }
+function volumeRatio(candles) {
+  const recent = candles.at(-1)?.v || 0;
+  const base = mean(candles.slice(-21, -1).map(c => c.v));
+  return base > 0 ? recent / base : 1;
+}
+function vwap(candles) {
+  const rows = candles.slice(-32);
+  const denom = rows.reduce((s, c) => s + c.v, 0);
+  return denom > 0 ? rows.reduce((s, c) => s + ((c.h + c.l + c.c) / 3) * c.v, 0) / denom : rows.at(-1)?.c || 0;
+}
+function rsi(candles, period = 14) {
+  const closes = candles.map(c => c.c).filter(x => x > 0);
+  if (closes.length <= period) return 50;
+  let avgGain = 0, avgLoss = 0;
+  for (let i = 1; i <= period; i++) {
+    const change = closes[i] - closes[i - 1];
+    if (change > 0) avgGain += change; else avgLoss -= change;
+  }
+  avgGain /= period;
+  avgLoss /= period;
+  for (let i = period + 1; i < closes.length; i++) {
+    const change = closes[i] - closes[i - 1];
+    const gain = Math.max(0, change), loss = Math.max(0, -change);
+    avgGain = ((avgGain * (period - 1)) + gain) / period;
+    avgLoss = ((avgLoss * (period - 1)) + loss) / period;
+  }
+  if (avgLoss === 0) return avgGain === 0 ? 50 : 100;
+  const rs = avgGain / avgLoss;
+  return 100 - 100 / (1 + rs);
+}
+function fibonacciConfluence(candles, price, tolerancePct) {
+  const rows = candles.slice(-48);
+  if (rows.length < 20 || !(price > 0)) return { confluence: false, level: 0, distancePct: null };
+  const high = Math.max(...rows.map(c => c.h));
+  const low = Math.min(...rows.map(c => c.l));
+  const range = high - low;
+  if (!(range > 0)) return { confluence: false, level: 0, distancePct: null };
+  const levels = [0.382, 0.5, 0.618].flatMap(r => [high - range * r, low + range * r]);
+  const nearest = levels.map(level => ({ level, distancePct: Math.abs(price - level) / price * 100 }))
+    .sort((a, b) => a.distancePct - b.distancePct)[0];
+  return { confluence: nearest.distancePct <= tolerancePct, level: nearest.level, distancePct: nearest.distancePct };
+}
+function marketRegime(candles) {
+  if (!Array.isArray(candles) || candles.length < 60) return { trend: 'NEUTRAL', change24hPct: 0, label: 'NEUTRAL' };
+  const trend = trendBias(candles);
+  const last = candles.at(-1)?.c || 0;
+  const base = candles.at(-7)?.c || last; // six completed 4H bars, approximately 24 hours
+  const change24hPct = base > 0 ? (last - base) / base * 100 : 0;
+  let label = trend === 'LONG' ? 'BULLISH' : trend === 'SHORT' ? 'BEARISH' : 'NEUTRAL';
+  if (change24hPct <= -2.5) label = 'BEARISH';
+  else if (change24hPct >= 2.5) label = 'BULLISH';
+  return { trend, change24hPct, label };
+}
+function trendBias(candles) {
+  const closes = candles.map(c => c.c);
+  const fast = ema(closes.slice(-60), 20);
+  const slow = ema(closes.slice(-100), 50);
+  const last = closes.at(-1) || 0;
+  const prev = closes.at(-5) || last;
+  if (last > fast && fast > slow && last >= prev) return 'LONG';
+  if (last < fast && fast < slow && last <= prev) return 'SHORT';
+  return 'NEUTRAL';
+}
+function spreadPct(book, mid) {
+  const bids = book?.levels?.[0] || [], asks = book?.levels?.[1] || [];
+  if (!bids.length || !asks.length || !(mid > 0)) return null;
+  return ((n(asks[0].px) - n(bids[0].px)) / mid) * 100;
+}
+function bookImbalance(book) {
+  const bids = (book?.levels?.[0] || []).slice(0, 10).reduce((s, x) => s + n(x.sz) * n(x.px), 0);
+  const asks = (book?.levels?.[1] || []).slice(0, 10).reduce((s, x) => s + n(x.sz) * n(x.px), 0);
+  const total = bids + asks;
+  return total > 0 ? (bids - asks) / total : 0;
+}
+function tradeDelta(trades) {
+  let buy = 0, sell = 0;
+  for (const t of Array.isArray(trades) ? trades : []) {
+    const usd = Math.abs(n(t.sz) * n(t.px));
+    if (String(t.side).toUpperCase() === 'B') buy += usd;
+    else if (String(t.side).toUpperCase() === 'A') sell += usd;
+  }
+  const total = buy + sell;
+  return { buy, sell, delta: total ? (buy - sell) / total : 0, total };
+}
+
+function detectPatterns({ coin, c15, c1h, ctx, prevCtx, mid, spread, imbalance, flow, btcRegime }) {
+  const last = c15.at(-1), prev = c15.at(-2);
+  if (!last || !prev || c15.length < 35 || c1h.length < 30) return [];
+  const atr15 = atr(c15, 14) || mid * 0.006;
+  const atrPct = atr15 / mid * 100;
+  // V2.3: structural SL/TP levels come ONLY from completed 1H candles.
+  // 15m candles are reserved for entry timing, momentum, VWAP and RSI.
+  const levels1h = pivots(c1h.slice(-90));
+  const atr1h = atr(c1h, 14) || mid * 0.01;
+  const pivotLows1h = levels1h.lows.map(x => ({ ...x, tf: '1h', source: '1h-pivot' }));
+  const pivotHighs1h = levels1h.highs.map(x => ({ ...x, tf: '1h', source: '1h-pivot' }));
+  const minLevelGap = Math.max(atr1h * 0.10, mid * 0.0015);
+  const rawSupport = nearestBelow(pivotLows1h, mid);
+  const rawResistance = nearestAbove(pivotHighs1h, mid);
+
+  // Candidate levels: confirmed 1H pivots plus completed 1H range extremes.
+  // Never allow a 15m pivot/range to become the structural SL/TP anchor.
+  const rangeLows1h = [
+    { candles: c1h.slice(-20), source: '1h-range-low-20' },
+    { candles: c1h.slice(-40), source: '1h-range-low-40' },
+    { candles: c1h.slice(-72), source: '1h-range-low-72' },
+  ].filter(x => x.candles.length >= 10).map(x => ({ price: Math.min(...x.candles.map(c => c.l)), index: x.candles.length - 1, tf: '1h', source: x.source }));
+  const rangeHighs1h = [
+    { candles: c1h.slice(-20), source: '1h-range-high-20' },
+    { candles: c1h.slice(-40), source: '1h-range-high-40' },
+    { candles: c1h.slice(-72), source: '1h-range-high-72' },
+  ].filter(x => x.candles.length >= 10).map(x => ({ price: Math.max(...x.candles.map(c => c.h)), index: x.candles.length - 1, tf: '1h', source: x.source }));
+  const allLows1h = [...pivotLows1h, ...rangeLows1h];
+  const allHighs1h = [...pivotHighs1h, ...rangeHighs1h];
+  const supportCandidates = allLows1h.filter(x => x.price > 0 && x.price < mid && mid - x.price >= minLevelGap);
+  const resistanceCandidates = allHighs1h.filter(x => x.price > mid && x.price - mid >= minLevelGap);
+  const chooseLevel = levels => {
+    if (!levels.length) return null;
+    const ranked = levels.map(level => ({
+      ...level,
+      distance: Math.abs(level.price - mid),
+      confluence: levels.filter(other => other !== level && Math.abs(other.price - level.price) / mid <= 0.0025).length,
+    }));
+    // Prefer confluence among nearby 1H levels, but do not select a materially
+    // farther level solely for confluence. Price distance is the primary rank.
+    ranked.sort((a, b) => a.distance - b.distance);
+    const nearest = ranked[0];
+    const nearTies = ranked.filter(x => x.distance <= nearest.distance + mid * 0.0015);
+    nearTies.sort((a, b) => (b.confluence - a.confluence) || a.distance - b.distance);
+    return nearTies[0];
+  };
+  const selectedSupport = chooseLevel(supportCandidates);
+  const selectedResistance = chooseLevel(resistanceCandidates);
+  const support = selectedSupport?.price || 0;
+  const resistance = selectedResistance?.price || 0;
+  const supportSource = selectedSupport?.source || 'missing-1h-structure';
+  const resistanceSource = selectedResistance?.source || 'missing-1h-structure';
+  const trend = trendBias(c1h);
+  const volRatio = volumeRatio(c15);
+  const vwap15 = vwap(c15);
+  const rsi15 = rsi(c15, 14);
+  const fib = fibonacciConfluence(c1h, mid, Math.max(0.35, atrPct * 0.35));
+  const oiNow = n(ctx?.openInterest);
+  const oiPrev = n(prevCtx?.openInterest);
+  const oiChange = oiPrev > 0 ? (oiNow - oiPrev) / oiPrev * 100 : 0;
+  const funding = n(ctx?.funding);
+  const fundingPct = funding * 100;
+  const bullishFlow = flow.delta > 0.08 || imbalance > 0.12;
+  const bearishFlow = flow.delta < -0.08 || imbalance < -0.12;
+  const oiConfirmsLong = oiChange > 0.25 && mid >= last.o;
+  const oiConfirmsShort = oiChange > 0.25 && mid <= last.o;
+  const results = [];
+  const addContext = (side, score, reasons) => {
+    if (fib.confluence) { score += 0.25; reasons.push(`1H Fibonacci confluence (${fib.level.toPrecision(6)})`); }
+    if (side === 'LONG' && rsi15 >= 72 || side === 'SHORT' && rsi15 <= 28) {
+      score -= 0.45; reasons.push(`15m RSI stretched (${rsi15.toFixed(1)})`);
+    } else if (side === 'LONG' && rsi15 >= 45 && rsi15 <= 68 || side === 'SHORT' && rsi15 >= 32 && rsi15 <= 55) {
+      score += 0.15; reasons.push(`15m RSI supports entry (${rsi15.toFixed(1)})`);
+    }
+    const btcLabel = btcRegime?.label || 'NEUTRAL';
+    const btcOpposes = side === 'LONG' && btcLabel === 'BEARISH' || side === 'SHORT' && btcLabel === 'BULLISH';
+    const btcAligns = side === 'LONG' && btcLabel === 'BULLISH' || side === 'SHORT' && btcLabel === 'BEARISH';
+    if (btcOpposes) {
+      // Adaptive context penalty: a weak/flat BTC regime should not veto a strong
+      // altcoin setup. Reserve the strongest penalty for an actual BTC impulse.
+      const btcMoveAbs = Math.abs(n(btcRegime?.change24hPct));
+      const btcPenalty = btcMoveAbs >= 2.5 ? 0.85 : btcMoveAbs >= BTC_COUNTERTREND_HARD_MOVE_PCT ? 0.45 : 0.15;
+      score -= btcPenalty;
+      reasons.push(`BTC 4H regime opposes ${side} (${btcLabel}; ${btcMoveAbs.toFixed(2)}%/24h, score penalty -${btcPenalty.toFixed(2)})`);
+    } else if (btcAligns) { score += 0.20; reasons.push(`BTC 4H regime aligns (${btcLabel})`); }
+    return score;
+  };
+
+  // Pattern 1: sweep a recent swing level, then reclaim it on a completed candle.
+  const priorLow = Math.min(...c15.slice(-10, -1).map(c => c.l));
+  const priorHigh = Math.max(...c15.slice(-10, -1).map(c => c.h));
+  const sweepLong = last.l < priorLow && last.c > priorLow && last.c > last.o;
+  const sweepShort = last.h > priorHigh && last.c < priorHigh && last.c < last.o;
+  if (sweepLong || sweepShort) {
+    const side = sweepLong ? 'LONG' : 'SHORT';
+    let score = 5.0;
+    const reasons = ['Liquidity sweep + reclaim'];
+    if (side === 'LONG' && bullishFlow || side === 'SHORT' && bearishFlow) { score += 0.9; reasons.push('order-flow supports reversal'); }
+    if (volRatio >= 1.15) { score += 0.45; reasons.push('relative volume expansion'); }
+    if (side === 'LONG' && trend === 'LONG' || side === 'SHORT' && trend === 'SHORT') { score += 0.4; reasons.push('aligned 1H trend'); }
+    if (side === 'LONG' && oiConfirmsLong || side === 'SHORT' && oiConfirmsShort) { score += 0.25; reasons.push('OI rising with directional move'); }
+    if (side === 'LONG' && fundingPct < 0.035 || side === 'SHORT' && fundingPct > -0.035) score += 0.15;
+    if (spread !== null && spread > MAX_SPREAD_PCT) score -= 1.5;
+    score = addContext(side, score, reasons);
+    results.push({ coin, side, pattern: 'SWEEP_RECLAIM', rawSupport, rawResistance, minLevelGap, score: clamp(score, 0, 9.5), reasons, entry: mid, atr: atr15, support, resistance, supportSource, resistanceSource, trend, btcRegime: btcRegime || { label: 'NEUTRAL', change24hPct: 0 }, rsi15, fibConfluence: fib.confluence, volRatio, oiChange, fundingPct, flowDelta: flow.delta, imbalance, vwap: vwap15, spreadPct: spread, atrPct, dayVolume: n(ctx?.dayVolume), maxLeverage: n(ctx?.maxLeverage) });
+  }
+
+  // Pattern 2: close beyond a recent structure level, then retest within tolerance.
+  const breakoutHigh = Math.max(...c15.slice(-14, -2).map(c => c.h));
+  const breakoutLow = Math.min(...c15.slice(-14, -2).map(c => c.l));
+  const tolerance = Math.max(atr15 * 0.25, mid * 0.0015);
+  const retestLong = prev.c > breakoutHigh && last.l <= breakoutHigh + tolerance && last.c >= breakoutHigh && last.c > last.o;
+  const retestShort = prev.c < breakoutLow && last.h >= breakoutLow - tolerance && last.c <= breakoutLow && last.c < last.o;
+  if (retestLong || retestShort) {
+    const side = retestLong ? 'LONG' : 'SHORT';
+    let score = 5.05;
+    const reasons = ['Breakout + retest'];
+    if (side === 'LONG' && bullishFlow || side === 'SHORT' && bearishFlow) { score += 0.7; reasons.push('order-flow confirms continuation'); }
+    if (volRatio >= 1.1) { score += 0.45; reasons.push('volume supports level break'); }
+    if (side === 'LONG' && trend === 'LONG' || side === 'SHORT' && trend === 'SHORT') { score += 0.65; reasons.push('aligned 1H trend'); }
+    if (side === 'LONG' && mid >= vwap15 || side === 'SHORT' && mid <= vwap15) { score += 0.25; reasons.push('VWAP alignment'); }
+    if (side === 'LONG' && oiConfirmsLong || side === 'SHORT' && oiConfirmsShort) { score += 0.3; reasons.push('OI confirms participation'); }
+    if (spread !== null && spread > MAX_SPREAD_PCT) score -= 1.5;
+    score = addContext(side, score, reasons);
+    results.push({ coin, side, pattern: 'BREAKOUT_RETEST', rawSupport, rawResistance, minLevelGap, score: clamp(score, 0, 9.5), reasons, entry: mid, atr: atr15, support, resistance, supportSource, resistanceSource, trend, btcRegime: btcRegime || { label: 'NEUTRAL', change24hPct: 0 }, rsi15, fibConfluence: fib.confluence, volRatio, oiChange, fundingPct, flowDelta: flow.delta, imbalance, vwap: vwap15, spreadPct: spread, atrPct, dayVolume: n(ctx?.dayVolume), maxLeverage: n(ctx?.maxLeverage) });
+  }
+
+  // Pattern 3: 1H trend with a 15m pullback into fast mean and a directional recovery candle.
+  const ema20_15 = ema(c15.slice(-60).map(c => c.c), 20);
+  const pullbackLong = trend === 'LONG' && last.l <= ema20_15 + atr15 * 0.25 && last.c > ema20_15 && last.c > last.o && last.c > prev.c;
+  const pullbackShort = trend === 'SHORT' && last.h >= ema20_15 - atr15 * 0.25 && last.c < ema20_15 && last.c < last.o && last.c < prev.c;
+  if (pullbackLong || pullbackShort) {
+    const side = pullbackLong ? 'LONG' : 'SHORT';
+    let score = 4.95;
+    const reasons = ['Trend pullback + continuation'];
+    if (side === 'LONG' && bullishFlow || side === 'SHORT' && bearishFlow) { score += 0.75; reasons.push('order-flow resumes with trend'); }
+    if (volRatio >= 0.9) { score += 0.25; reasons.push('participation present'); }
+    if (side === 'LONG' && mid >= vwap15 || side === 'SHORT' && mid <= vwap15) { score += 0.4; reasons.push('VWAP alignment'); }
+    if (side === 'LONG' && oiConfirmsLong || side === 'SHORT' && oiConfirmsShort) { score += 0.3; reasons.push('OI rising with trend'); }
+    if (side === 'LONG' && fundingPct > 0.08 || side === 'SHORT' && fundingPct < -0.08) { score -= 0.25; reasons.push('crowded funding slightly penalized'); }
+    if (spread !== null && spread > MAX_SPREAD_PCT) score -= 1.5;
+    score = addContext(side, score, reasons);
+    results.push({ coin, side, pattern: 'TREND_PULLBACK', rawSupport, rawResistance, minLevelGap, score: clamp(score, 0, 9.5), reasons, entry: mid, atr: atr15, support, resistance, supportSource, resistanceSource, trend, btcRegime: btcRegime || { label: 'NEUTRAL', change24hPct: 0 }, rsi15, fibConfluence: fib.confluence, volRatio, oiChange, fundingPct, flowDelta: flow.delta, imbalance, vwap: vwap15, spreadPct: spread, atrPct, dayVolume: n(ctx?.dayVolume), maxLeverage: n(ctx?.maxLeverage) });
+  }
+
+  return results;
+}
+
+function buildRisk(candidate) {
+  const entry = n(candidate.entry);
+  const atrValue = n(candidate.atr);
+  if (!(entry > 0) || !(atrValue > 0) || !['LONG', 'SHORT'].includes(candidate.side)) {
+    return { entry, sl: 0, tp: 0, riskPct: 0, rewardPct: 0, rr: 0, valid: false, reason: 'invalid entry/side/ATR' };
+  }
+
+  // Structure-first risk: do not fabricate ATR-only SL/TP when a usable swing level is missing.
+  const buffer = Math.max(atrValue * STRUCTURE_BUFFER_ATR, entry * 0.0010);
+  const minRisk = entry * 0.0020;
+  const maxRisk = entry * 0.025;
+  const support = n(candidate.support);
+  const resistance = n(candidate.resistance);
+  let sl = 0, tp = 0, riskDist = 0, targetDist = 0;
+
+  if (candidate.side === 'LONG') {
+    if (!(support > 0 && support < entry)) {
+      return { entry, sl: 0, tp: 0, riskPct: 0, rewardPct: 0, rr: 0, valid: false, reason: 'no valid structural support for long' };
+    }
+    sl = support - buffer;
+    riskDist = entry - sl;
+    if (!(sl < support && sl < entry) || riskDist < minRisk || riskDist > maxRisk) {
+      return { entry, sl, tp: 0, riskPct: riskDist / entry * 100, rewardPct: 0, rr: 0, valid: false, reason: 'long structural stop invalid or outside risk bounds' };
+    }
+    if (!(resistance > entry)) {
+      return { entry, sl, tp: 0, riskPct: riskDist / entry * 100, rewardPct: 0, rr: 0, valid: false, reason: 'no overhead resistance target for long' };
+    }
+    // Conservative target: take profit BEFORE the overhead 1H resistance zone.
+    // If the level is too close to provide the required R:R, reject instead of
+    // assuming price will cleanly break through resistance.
+    tp = resistance - buffer;
+    targetDist = tp - entry;
+    if (!(tp > entry) || targetDist / riskDist < MIN_RR) {
+      return { entry, sl, tp, riskPct: riskDist / entry * 100, rewardPct: Math.max(0, targetDist) / entry * 100, rr: targetDist / riskDist, valid: false, reason: 'insufficient room to take profit before resistance at required R:R' };
+    }
+  } else {
+    if (!(resistance > entry)) {
+      return { entry, sl: 0, tp: 0, riskPct: 0, rewardPct: 0, rr: 0, valid: false, reason: 'no valid structural resistance for short' };
+    }
+    sl = resistance + buffer;
+    riskDist = sl - entry;
+    if (!(sl > resistance && sl > entry) || riskDist < minRisk || riskDist > maxRisk) {
+      return { entry, sl, tp: 0, riskPct: riskDist / entry * 100, rewardPct: 0, rr: 0, valid: false, reason: 'short structural stop invalid or outside risk bounds' };
+    }
+    if (!(support > 0 && support < entry)) {
+      return { entry, sl, tp: 0, riskPct: riskDist / entry * 100, rewardPct: 0, rr: 0, valid: false, reason: 'no downside support target for short' };
+    }
+    // Conservative target: take profit BEFORE the downside 1H support zone.
+    tp = support + buffer;
+    targetDist = entry - tp;
+    if (!(tp < entry) || targetDist / riskDist < MIN_RR) {
+      return { entry, sl, tp, riskPct: riskDist / entry * 100, rewardPct: Math.max(0, targetDist) / entry * 100, rr: targetDist / riskDist, valid: false, reason: 'insufficient room to take profit before support at required R:R' };
+    }
+  }
+
+  const rr = targetDist / riskDist;
+  return { entry, sl, tp, riskPct: riskDist / entry * 100, rewardPct: targetDist / entry * 100, rr, valid: true, targetUsesStructure: true };
+}
+function signalKey(s) { return `${s.coin}|${s.side}|${s.pattern}`; }
+function isCooldown(state, s) {
+  const last = n(state.alertHistory[signalKey(s)]);
+  // 90-minute per coin/side/pattern cooldown; opposite sides and other patterns remain independent.
+  return last > 0 && now() - last < 90 * 60_000;
+}
+function countertrendEvidence(s) {
+  // Count independent, observable confirmations rather than relying on a score alone.
+  // These are deliberately moderate so strong reversal setups remain possible.
+  const checks = [
+    ['asset_trend', s.trend === s.side],
+    ['directional_trade_flow', s.side === 'LONG' ? n(s.flowDelta) >= 0.12 : n(s.flowDelta) <= -0.12],
+    ['directional_order_book', s.side === 'LONG' ? n(s.imbalance) >= 0.15 : n(s.imbalance) <= -0.15],
+    ['volume_expansion', n(s.volRatio) >= 1.15],
+    ['directional_rsi_momentum', s.side === 'LONG' ? n(s.rsi15, 50) >= 50 && n(s.rsi15, 50) <= 68 : n(s.rsi15, 50) >= 32 && n(s.rsi15, 50) <= 50],
+  ];
+  return { count: checks.filter(([, ok]) => ok).length, passed: checks.filter(([, ok]) => ok).map(([name]) => name), checks };
+}
+function btcImpulseOpposes(s) {
+  const regime = s.btcRegime || {};
+  const move = n(regime.change24hPct);
+  const label = regime.label || 'NEUTRAL';
+  // A directional BTC move of at least 2% only tightens the opposite side.
+  // It does not disable countertrend signals automatically.
+  return (s.side === 'LONG' && label === 'BEARISH' && move <= -BTC_COUNTERTREND_HARD_MOVE_PCT) ||
+    (s.side === 'SHORT' && label === 'BULLISH' && move >= BTC_COUNTERTREND_HARD_MOVE_PCT);
+}
+function dayKey(ts = now()) { return new Date(ts).toISOString().slice(0, 10); }
+function escapeHtml(s) { return String(s).replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;'); }
+function suggestLeverage(s) {
+  // This is a signal annotation only: no orders or account settings are changed.
+  // Blend setup quality, coin liquidity and current market confirmation; penalize volatility/crowding.
+  const signalStrength = clamp((n(s.score, 5.8) - MIN_SCORE) / Math.max(0.1, 9.5 - MIN_SCORE), 0, 1);
+  const vol = Math.max(0, n(s.dayVolume));
+  const coinStrength = clamp(Math.log10(Math.max(1, vol / 2_000_000)) / Math.log10(50), 0, 1);
+  const alignedTrend = s.trend === s.side ? 1 : 0;
+  const btcLabel = s.btcRegime?.label || 'NEUTRAL';
+  const btcAlignment = (s.side === 'LONG' && btcLabel === 'BULLISH') || (s.side === 'SHORT' && btcLabel === 'BEARISH') ? 1 :
+    ((s.side === 'LONG' && btcLabel === 'BEARISH') || (s.side === 'SHORT' && btcLabel === 'BULLISH') ? 0 : 0.5);
+  const alignedFlow = (s.side === 'LONG' && n(s.flowDelta) > 0.08) || (s.side === 'SHORT' && n(s.flowDelta) < -0.08) ? 1 : 0;
+  const alignedBook = (s.side === 'LONG' && n(s.imbalance) > 0.12) || (s.side === 'SHORT' && n(s.imbalance) < -0.12) ? 1 : 0;
+  const oiConfirm = n(s.oiChange) > 0.25 ? 1 : 0;
+  const volumeConfirm = n(s.volRatio) >= 1.1 ? 1 : 0;
+  const spread = s.spreadPct == null ? 0.5 : clamp(1 - n(s.spreadPct) / Math.max(0.01, MAX_SPREAD_PCT), 0, 1);
+  const atrPct = n(s.atrPct, n(s.atr) / Math.max(0.00000001, n(s.entry)) * 100);
+  const volatilitySuitability = atrPct <= 0.9 ? 1 : atrPct <= 1.5 ? 0.75 : atrPct <= 2.0 ? 0.45 : 0.15;
+  const fundingCrowded = (s.side === 'LONG' && n(s.fundingPct) > 0.08) || (s.side === 'SHORT' && n(s.fundingPct) < -0.08);
+  const marketStrength = clamp(
+    alignedTrend * 0.22 + alignedFlow * 0.16 + alignedBook * 0.09 + oiConfirm * 0.11 +
+    volumeConfirm * 0.11 + spread * 0.11 + volatilitySuitability * 0.11 + btcAlignment * 0.09 - (fundingCrowded ? 0.10 : 0),
+    0, 1
+  );
+  const combined = signalStrength * 0.40 + coinStrength * 0.25 + marketStrength * 0.35;
+  let leverage = Math.round(5 + combined * 10);
+  const exchangeMax = n(s.maxLeverage);
+  if (exchangeMax > 0) leverage = Math.min(leverage, Math.floor(exchangeMax));
+  leverage = Math.max(1, leverage);
+  const cappedBelowRequestedRange = exchangeMax > 0 && exchangeMax < 5;
+  return { leverage, signalStrength, coinStrength, marketStrength, exchangeMax, cappedBelowRequestedRange };
+}
+
+function formatSignal(s, risk) {
+  const lev = s.leverageInfo || suggestLeverage(s);
+  const emoji = s.side === 'LONG' ? '🟢' : '🔴';
+  const reasons = s.reasons.slice(0, 4).map(x => `• ${escapeHtml(x)}`).join('\n');
+  return `${emoji} <b>NOVARA SMART MONEY AI</b>\n━━━━━━━━━━━━━━━━━━\n<b>${s.side} ${escapeHtml(s.coin)} PERP</b>\n🧭 Setup: ${escapeHtml(s.pattern.replaceAll('_', ' '))}\n📍 Entry (reference): <code>${fmtPrice(risk.entry)}</code>\n🛑 Stop Loss: <code>${fmtPrice(risk.sl)}</code> (${pct(risk.riskPct)})\n🎯 Take Profit: <code>${fmtPrice(risk.tp)}</code> (${pct(risk.rewardPct)})\n⚖️ Planned R:R: 1:${risk.rr.toFixed(2)}\n⚡ Suggested Leverage: ${lev.leverage}x${lev.cappedBelowRequestedRange ? ` (exchange max: ${Math.floor(lev.exchangeMax)}x)` : ''}\n🧠 Setup score: ${s.score.toFixed(2)}/10 (not a win-probability estimate)\n📊 1H trend: ${s.trend} | BTC 4H: ${s.btcRegime?.label || 'NEUTRAL'} (${n(s.btcRegime?.change24hPct).toFixed(2)}%/24h)\n📉 15m RSI: ${n(s.rsi15, 50).toFixed(1)} | Fib confluence: ${s.fibConfluence ? 'YES' : 'NO'} | Volume: ${s.volRatio.toFixed(2)}x\n🌊 Trade delta: ${(s.flowDelta * 100).toFixed(1)}% | Book imbalance: ${(s.imbalance * 100).toFixed(1)}%\n📈 OI change since prior scan: ${s.oiChange >= 0 ? '+' : ''}${s.oiChange.toFixed(2)}% | Funding: ${s.fundingPct.toFixed(4)}%\n🧩 Evidence:\n${reasons}\n\n⚠️ Research signal only — paper-tracked, not financial advice. Verify price/slippage before any manual trade.`;
+}
+
+let telegramNextAt = 0;
+async function sendTelegram(chatId, message) {
+  if (!TOKEN || !chatId) return { sent: false, reason: !TOKEN ? 'telegram_token_not_configured' : 'telegram_chat_not_configured' };
+  const wait = Math.max(0, telegramNextAt - now());
+  if (wait) await sleep(wait);
+  telegramNextAt = now() + TELEGRAM_GAP_MS;
+  const response = await fetch(`https://api.telegram.org/bot${TOKEN}/sendMessage`, {
+    method: 'POST', headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ chat_id: chatId, text: message, parse_mode: 'HTML', disable_web_page_preview: true }),
+  });
+  const raw = await response.text();
+  let data = {}; try { data = JSON.parse(raw); } catch {}
+  if (!response.ok || !data.ok) throw new Error(`Telegram ${response.status}: ${raw.slice(0, 180)}`);
+  return { sent: true };
+}
+function audienceForScore(score) {
+  return n(score) >= MIN_SCORE ? 'BOTH' : 'NONE';
+}
+function audienceForTrade(trade) {
+  if (trade.audience === 'FREE' || trade.audience === 'VIP' || trade.audience === 'LEGACY' || trade.audience === 'BOTH') return trade.audience;
+  // Backward compatibility for paper trades recorded before score-based routing existed.
+  return audienceForScore(trade.score);
+}
+function configuredAudience(name) {
+  if (name === 'VIP') {
+    if (VIP_CHAT) return { name: 'VIP', id: VIP_CHAT, viaLegacy: false };
+    // Backward-compatible fallback: TELEGRAM_CHAT_ID remains a usable primary
+    // destination even when a FREE chat is also configured.
+    if (LEGACY_CHAT) return { name: 'VIP', id: LEGACY_CHAT, viaLegacy: true };
+    return null;
+  }
+  if (name === 'FREE' && FREE_CHAT) return { name: 'FREE', id: FREE_CHAT, viaLegacy: false };
+  if (name === 'LEGACY' && !VIP_CHAT && LEGACY_CHAT) return { name: 'LEGACY', id: LEGACY_CHAT, viaLegacy: true };
+  return null;
+}
+async function sendSignalToAudience(state, message, audience) {
+  const results = [];
+  const names = audience === 'BOTH' ? ['VIP', 'FREE'] : [audience];
+  for (const name of names) {
+    const destination = configuredAudience(name);
+    if (!destination) {
+      results.push({ name, sent: false, reason: `${name.toLowerCase()}_chat_not_configured` });
+      continue;
+    }
+    try { results.push({ name, ...(await sendTelegram(destination.id, message)) }); }
+    catch (e) { results.push({ name, sent: false, reason: e.message }); }
+  }
+  return results;
+}
+
+// Outcome updates and 24-hour performance reports are broadcast to both configured channels.
+async function sendUpdateToAudience(message, audience, alreadySent = []) {
+  const names = audience === 'BOTH' ? ['VIP', 'FREE'] : [audience];
+  const results = [];
+  for (const name of names) {
+    const destination = configuredAudience(name);
+    if (!destination || alreadySent.includes(name)) continue;
+    try { results.push({ name, ...(await sendTelegram(destination.id, message)) }); }
+    catch (e) { results.push({ name, sent: false, reason: e.message }); }
+  }
+  return results;
+}
+
+function reportAudiences() {
+  const names = [];
+  if (FREE_CHAT) names.push('FREE');
+  if (VIP_CHAT || LEGACY_CHAT) names.push('VIP');
+  return names;
+}
+
+function candleHit(trade, candle) {
+  const hitSL = trade.side === 'LONG' ? candle.l <= trade.sl : candle.h >= trade.sl;
+  const hitTP = trade.side === 'LONG' ? candle.h >= trade.tp : candle.l <= trade.tp;
+  if (hitSL && hitTP) return 'AMBIGUOUS';
+  if (hitSL) return 'SL';
+  if (hitTP) return 'TP';
+  return null;
+}
+
+async function updatePaperTrades(state, contexts) {
+  const closed = [];
+  const openTrades = state.paperTrades.filter(t => t.status === 'OPEN');
+  const byCoin = new Map();
+  for (const trade of openTrades) {
+    if (!byCoin.has(trade.coin)) byCoin.set(trade.coin, []);
+    byCoin.get(trade.coin).push(trade);
+  }
+
+  // Check completed 1-minute candles for touches between five-minute scans. Current mark is a fallback.
+  const candlesByCoin = new Map();
+  for (const [coin, trades] of byCoin) {
+    const oldest = Math.min(...trades.map(t => n(t.lastCheckedAt, n(t.openedAt))));
+    const startTime = Math.max(now() - 6 * 3600_000, Math.floor(oldest / 60_000) * 60_000);
+    try {
+      const raw = await request({ type: 'candleSnapshot', req: { coin, interval: '1m', startTime, endTime: now() } }, `exit candles ${coin}`);
+      const bars = (Array.isArray(raw) ? raw : []).map(parseCandle).filter(c => c.t > 0 && c.c > 0 && c.T < now()).sort((a,b) => a.t-b.t);
+      candlesByCoin.set(coin, { bars, ok: true });
+    } catch (e) {
+      console.warn(`[OUTCOME][WARN] ${coin}: ${e?.message || e}`);
+      candlesByCoin.set(coin, { bars: [], ok: false });
+    }
+  }
+
+  for (const trade of openTrades) {
+    const mark = n(contexts[trade.coin]?.markPx);
+    const candleSet = candlesByCoin.get(trade.coin) || { bars: [], ok: false };
+    let result = null, exitMark = 0, hitAt = 0;
+    const lastCheckedAt = n(trade.lastCheckedAt, n(trade.openedAt));
+    const firstWholeMinute = Math.ceil(Math.max(lastCheckedAt, n(trade.openedAt)) / 60_000) * 60_000;
+    for (const bar of candleSet.bars) {
+      // Only use fully post-entry, post-check minute bars to avoid counting price action from before the signal/check.
+      if (bar.t < firstWholeMinute) continue;
+      const hit = candleHit(trade, bar);
+      if (hit) { result = hit; exitMark = bar.c; hitAt = bar.T || bar.t + 60_000; break; }
+    }
+    if (!result && mark > 0) {
+      if (trade.side === 'LONG') {
+        if (mark <= trade.sl) result = 'SL'; else if (mark >= trade.tp) result = 'TP';
+      } else {
+        if (mark >= trade.sl) result = 'SL'; else if (mark <= trade.tp) result = 'TP';
+      }
+      if (result) { exitMark = mark; hitAt = now(); }
+    }
+    if (candleSet.ok) trade.lastCheckedAt = now();
+    if (!result) continue;
+
+    trade.status = result;
+    trade.closedAt = hitAt || now();
+    trade.exitMark = exitMark || mark;
+    trade.pnlR = result === 'TP' ? n(trade.rr) : result === 'SL' ? -1 : null;
+    trade.exitDetection = result === 'AMBIGUOUS' ? 'same_1m_candle_both_levels' : (exitMark && exitMark !== mark ? '1m_candle_ohlc' : 'mark_price');
+    closed.push(trade);
+    if (result === 'TP' || result === 'SL') {
+      const dk = dayKey(trade.closedAt);
+      state.dailyStats[dk] ||= { tp: 0, sl: 0, closed: 0, realizedR: 0 };
+      state.dailyStats[dk][result === 'TP' ? 'tp' : 'sl']++;
+      state.dailyStats[dk].closed++;
+      state.dailyStats[dk].realizedR += trade.pnlR;
+    }
+  }
+  state.paperTrades = state.paperTrades.filter(t => t.status === 'OPEN' || now() - n(t.closedAt) < 14 * 86400_000);
+  return closed;
+}
+
+function formatOutcome(trade) {
+  const result = trade.status === 'TP' ? '🎯 TAKE PROFIT TOUCHED' : trade.status === 'SL' ? '🛑 STOP LOSS TOUCHED' : '⚠️ BOTH LEVELS IN SAME 1M CANDLE';
+  const durationMin = Math.max(0, Math.round((n(trade.closedAt) - n(trade.openedAt)) / 60_000));
+  const outcomeR = trade.status === 'AMBIGUOUS' ? 'undetermined' : `${trade.pnlR >= 0 ? '+' : ''}${n(trade.pnlR).toFixed(2)}R`;
+  return `${result}
+━━━━━━━━━━━━━━━━━━
+<b>${trade.side} ${escapeHtml(trade.coin)} PERP</b>
+🧭 Setup: ${escapeHtml(String(trade.pattern || '').replaceAll('_', ' '))}
+📍 Entry: <code>${fmtPrice(trade.entry)}</code>
+🛑 SL: <code>${fmtPrice(trade.sl)}</code>
+🎯 TP: <code>${fmtPrice(trade.tp)}</code>
+💹 Exit/reference: <code>${fmtPrice(trade.exitMark)}</code>
+⚡ Suggested leverage: ${n(trade.suggestedLeverage) || '—'}x
+📊 Result: <b>${outcomeR}</b>
+⏱ Duration: ${durationMin} min
+🧪 Paper tracking only — no real order was placed.`;
+}
+
+function report24h(state, audience) {
+  const cutoff = now() - 24 * 3600_000;
+  const cohort = state.paperTrades.filter(t => {
+    if (t.strategyVersion !== VERSION || n(t.openedAt) < cutoff || n(t.openedAt) > now()) return false;
+    const deliveredTo = t.audience || 'VIP';
+    if (audience === 'FREE') return deliveredTo === 'FREE' || deliveredTo === 'BOTH';
+    if (audience === 'VIP') return deliveredTo === 'VIP' || deliveredTo === 'BOTH' || deliveredTo === 'LEGACY';
+    return deliveredTo === 'LEGACY';
+  });
+  const tp = cohort.filter(t => t.status === 'TP').length;
+  const sl = cohort.filter(t => t.status === 'SL').length;
+  const ambiguous = cohort.filter(t => t.status === 'AMBIGUOUS').length;
+  const open = cohort.filter(t => t.status === 'OPEN').length;
+  const resolved = tp + sl;
+  const winRate = resolved ? tp / resolved * 100 : 0;
+  const successOfAll = cohort.length ? tp / cohort.length * 100 : 0;
+  const lossOfAll = cohort.length ? sl / cohort.length * 100 : 0;
+  const netR = cohort.filter(t => t.status === 'TP' || t.status === 'SL').reduce((sum,t) => sum + n(t.pnlR), 0);
+  const details = [...cohort].sort((a,b) => n(b.openedAt)-n(a.openedAt)).slice(0, 12).map(t => {
+    const status = t.status === 'OPEN' ? 'OPEN' : t.status === 'TP' ? 'TP ✅' : t.status === 'SL' ? 'SL ❌' : 'AMBIGUOUS ⚠️';
+    return `• ${escapeHtml(t.coin)} ${t.side} | ${status} | score ${n(t.score).toFixed(2)}/10 | ${n(t.suggestedLeverage) || '—'}x | ${t.status === 'TP' || t.status === 'SL' ? `${n(t.pnlR) > 0 ? '+' : ''}${n(t.pnlR).toFixed(2)}R` : 'pending'}`;
+  });
+  return `📊 <b>NOVARA — 24H ${audience === 'FREE' ? 'PUBLIC' : audience === 'VIP' ? 'VIP' : 'CHANNEL'} SIGNAL PERFORMANCE</b>
+━━━━━━━━━━━━━━━━━━
+🔐 Coverage: all NOVARA signals tracked in the last 24 hours
+🕒 Window: last 24 hours (UTC)
+🔔 Signals sent/tracked: <b>${cohort.length}</b>
+🎯 TP reached: <b>${tp}</b> (${successOfAll.toFixed(1)}% of all signals)
+🛑 SL reached: <b>${sl}</b> (${lossOfAll.toFixed(1)}% of all signals)
+📈 Win rate of resolved signals: <b>${resolved ? `${winRate.toFixed(1)}%` : 'N/A — no resolved signals'}</b> (${tp}/${resolved})
+⏳ Still open/pending: <b>${open}</b>
+⚠️ Ambiguous 1m candles: <b>${ambiguous}</b> (excluded from win rate)
+🧮 Net realized result: <b>${netR >= 0 ? '+' : ''}${netR.toFixed(2)}R</b> (paper estimate, before fees/slippage)
+
+<b>Signal details (up to 12 most recent):</b>
+${details.length ? details.join('\n') : 'No tracked signals were opened in this 24-hour window.'}
+
+ℹ️ Win rate = TP ÷ (TP + SL). TP% of all signals also includes open/ambiguous signals in its denominator. Paper tracking only; no real orders.`;
+}
+
+function dailySummary(state) {
+  const all = state.paperTrades.filter(t => t.strategyVersion === VERSION && (t.status === 'TP' || t.status === 'SL'));
+  const tp = all.filter(t => t.status === 'TP').length;
+  const sl = all.filter(t => t.status === 'SL').length;
+  const closed = tp + sl;
+  const r = all.reduce((sum, t) => sum + n(t.pnlR), 0);
+  const avgR = closed ? r / closed : 0;
+  return { closed, tp, sl, winRate: closed ? tp / closed * 100 : 0, realizedR: r, avgR, open: state.paperTrades.filter(t => t.strategyVersion === VERSION && t.status === 'OPEN').length };
+}
+
+async function getMarketSnapshot() {
+  const result = await request({ type: 'metaAndAssetCtxs' }, 'metaAndAssetCtxs');
+  const meta = result?.[0];
+  const contexts = result?.[1];
+  if (!meta?.universe || !Array.isArray(contexts)) throw new Error('Hyperliquid metaAndAssetCtxs returned an unexpected schema');
+  const ctxByCoin = {};
+  const assets = [];
+  for (let i = 0; i < meta.universe.length; i++) {
+    const u = meta.universe[i], c = contexts[i] || {};
+    const coin = String(u.name || '');
+    const volume = n(c.dayNtlVlm);
+    const markPx = n(c.markPx || c.midPx);
+    if (!coin || !(markPx > 0) || volume < MIN_VOLUME_USD || u.isDelisted) continue;
+    const ctx = { coin, markPx, dayVolume: volume, funding: n(c.funding), openInterest: n(c.openInterest), premium: n(c.premium), oraclePx: n(c.oraclePx), maxLeverage: n(u.maxLeverage) };
+    ctxByCoin[coin] = ctx;
+    assets.push(ctx);
+  }
+  assets.sort((a, b) => b.dayVolume - a.dayVolume);
+  return { ctxByCoin, assets: assets.slice(0, MAX_MARKETS), totalEligible: assets.length };
+}
+async function candles(coin, interval, hours) {
+  const endTime = now();
+  const startTime = endTime - hours * 3600_000;
+  const raw = await request({ type: 'candleSnapshot', req: { coin, interval, startTime, endTime } }, `candles ${coin} ${interval}`);
+  const intervalMs = { '1m': 60_000, '3m': 180_000, '5m': 300_000, '15m': 900_000, '30m': 1_800_000, '1h': 3_600_000, '2h': 7_200_000, '4h': 14_400_000, '8h': 28_800_000, '12h': 43_200_000, '1d': 86_400_000 };
+  return completedCandles(raw, intervalMs[interval] || 900_000);
+}
+async function analyzeAsset(asset, previous, btcRegime) {
+  const [c15, c1h] = await Promise.all([
+    candles(asset.coin, '15m', 30),
+    candles(asset.coin, '1h', 90),
+  ]);
+  if (c15.length < 35 || c1h.length < 30) return [];
+  // Entry confirmation is based on a completed 15m candle. Do not send a signal
+  // if the live mark has already drifted too far from that confirmed close.
+  const lastClosed15m = c15.at(-1);
+  const atr15ForTiming = atr(c15, 14) || asset.markPx * 0.006;
+  const entryDriftPct = Math.abs(asset.markPx - lastClosed15m.c) / asset.markPx * 100;
+  const maxEntryDriftPct = Math.max(0.35, (atr15ForTiming / asset.markPx) * 100 * 0.80);
+  if (entryDriftPct > maxEntryDriftPct) {
+    console.log(`[ENTRY][STALE] ${asset.coin} mark/confirmed-close drift=${entryDriftPct.toFixed(3)}% > ${maxEntryDriftPct.toFixed(3)}%; skip chase`);
+    const skipped = [];
+    skipped.stale = true;
+    return skipped;
+  }
+  const [book, trades] = await Promise.all([
+    request({ type: 'l2Book', coin: asset.coin }, `book ${asset.coin}`).catch(error => { console.warn(`[API][DEGRADED] book ${asset.coin}: ${error?.message || error}`); return null; }),
+    request({ type: 'recentTrades', coin: asset.coin }, `trades ${asset.coin}`).catch(error => { console.warn(`[API][DEGRADED] trades ${asset.coin}: ${error?.message || error}`); return []; }),
+  ]);
+  const spread = spreadPct(book, asset.markPx);
+  const imbalance = bookImbalance(book);
+  const flow = tradeDelta(trades);
+  return detectPatterns({ coin: asset.coin, c15, c1h, ctx: asset, prevCtx: previous, mid: asset.markPx, spread, imbalance, flow, btcRegime });
+}
+
+async function main() {
+  const started = now();
+  const state = await readState();
+  state.version = VERSION;
+  console.log(`\n${VERSION} — START`);
+  console.log(`Mode: READ-ONLY / NO ORDERS / PAPER TRACKING`);
+  console.log(`Time: ${new Date().toISOString()}`);
+  console.log(`Signal threshold: ${MIN_SCORE}/10 | min R:R: 1:${MIN_RR.toFixed(2)} | BTC countertrend: ${BTC_COUNTERTREND_HARD_MOVE_PCT.toFixed(1)}% impulse requires score >= ${BTC_COUNTERTREND_MIN_SCORE.toFixed(1)} and ${BTC_COUNTERTREND_MIN_EVIDENCE} confirmations | structure-first SL/TP | min 24h volume: $${MIN_VOLUME_USD.toLocaleString()} | max markets scanned: ${MAX_MARKETS}`);
+  console.log(`[API][POLICY] requestGap=${SCAN_GAP_MS}ms retries429=${MAX_429_RETRIES} backoff=${RATE_LIMIT_BASE_MS}-${RATE_LIMIT_MAX_MS}ms globalCooldown=yes`);
+  console.log(`[TELEGRAM][CONFIG] token=${TOKEN ? 'configured' : 'MISSING'} vipChat=${VIP_CHAT ? 'configured' : (LEGACY_CHAT ? 'legacy-fallback' : 'MISSING')} freeChat=${FREE_CHAT ? 'configured' : 'MISSING'} legacyChat=${LEGACY_CHAT ? 'configured' : 'MISSING'}`);
+  if (!TOKEN || (!VIP_CHAT && !LEGACY_CHAT && !FREE_CHAT)) {
+    console.warn('[TELEGRAM][ACTION REQUIRED] Signals may be generated but cannot be delivered until TELEGRAM_TOKEN and at least one chat ID are configured in the production environment.');
+  }
+
+  const snapshot = await getMarketSnapshot();
+  const contexts = snapshot.ctxByCoin;
+  const eligible = snapshot.assets;
+  let btcRegime = { trend: 'NEUTRAL', change24hPct: 0, label: 'NEUTRAL' };
+  try {
+    const btc4h = await candles('BTC', '4h', 30 * 24);
+    btcRegime = marketRegime(btc4h);
+  } catch (e) {
+    console.warn(`[BTC][WARN] 4H regime unavailable; neutral filter used: ${e?.message || e}`);
+  }
+  console.log(`[BTC][REGIME] 4H=${btcRegime.label} trend=${btcRegime.trend} approx24h=${btcRegime.change24hPct.toFixed(2)}%`);
+  if (!n(state.lastDailyReportAt)) state.lastDailyReportAt = now(); // first report is sent after one full 24-hour observation window
+  const closed = await updatePaperTrades(state, contexts);
+  for (const t of closed) {
+    console.log(`[PAPER][${t.status}] ${t.coin} ${t.side} entry=${fmtPrice(t.entry)} mark=${fmtPrice(t.exitMark)} R=${t.pnlR ?? 'undetermined'}`);
+  }
+  // Retry undelivered outcome notifications only to the audience that received the signal.
+  for (const t of state.paperTrades.filter(x => x.status !== 'OPEN' && !x.outcomeNotifiedAt)) {
+    t.audience = audienceForTrade(t);
+    t.outcomeDelivered ||= [];
+    const updateResults = await sendUpdateToAudience(formatOutcome(t), t.audience, t.outcomeDelivered);
+    for (const r of updateResults) if (r.sent && !t.outcomeDelivered.includes(r.name)) t.outcomeDelivered.push(r.name);
+    const required = t.audience === 'BOTH' ? ['VIP', 'FREE'] : [t.audience];
+    if (required.length && required.every(name => t.outcomeDelivered.includes(name))) t.outcomeNotifiedAt = now();
+    console.log(`[OUTCOME][DELIVERY] ${t.coin} ${t.status} audience=${t.audience} ${JSON.stringify(updateResults)} delivered=${t.outcomeDelivered.join(',')}`);
+  }
+
+  const candidates = [];
+  let checked = 0, failed = 0;
+  const rejects = { stale: 0, regime: 0, regimeSoft: 0, score: 0, cooldown: 0, risk: 0, vwap: 0, spread: 0, accepted: 0 };
+  const rejectionSamples = [];
+  const noteReject = (kind, s, reason) => { rejects[kind]++; if (rejectionSamples.length < 18) rejectionSamples.push(`${s.coin} ${s.side} ${s.pattern}: ${reason}`); };
+  for (const asset of eligible) {
+    try {
+      const found = await analyzeAsset(asset, state.previousMarketContext[asset.coin], btcRegime);
+      checked++;
+      if (found.stale) rejects.stale++;
+      for (const s of found) {
+        // Hard market-quality gate: unknown/wide spreads are not signal-worthy.
+        if (s.spreadPct == null || !Number.isFinite(s.spreadPct) || s.spreadPct > MAX_SPREAD_PCT) {
+          noteReject('spread', s, s.spreadPct == null ? 'order-book spread unavailable' : `spread ${s.spreadPct.toFixed(3)}% > ${MAX_SPREAD_PCT}%`);
+          continue;
+        }
+        // Adaptive regime gate: trend disagreement is a warning, not an automatic
+        // rejection. Hard-block only when BOTH the asset trend and BTC oppose the
+        // setup and BTC itself has a material 24h impulse. Structure/R:R gates below
+        // remain mandatory for every direction, including counter-trend setups.
+        const assetOpposes = s.trend === (s.side === 'LONG' ? 'SHORT' : 'LONG');
+        const btcLabel = s.btcRegime?.label || 'NEUTRAL';
+        const btcOpposes = (s.side === 'LONG' && btcLabel === 'BEARISH') || (s.side === 'SHORT' && btcLabel === 'BULLISH');
+        const btcMoveAbs = Math.abs(n(s.btcRegime?.change24hPct));
+        if (assetOpposes && btcOpposes) {
+          rejects.regimeSoft++;
+          console.log(`[FILTER][REGIME][ADAPTIVE] ${s.coin} ${s.side}: asset trend=${s.trend}, BTC=${btcLabel}, impulse=${btcMoveAbs.toFixed(2)}%; evaluate setup strength before deciding`);
+        }
+        // V1.0.8 applied a second hard distance gate before structural risk validation.
+        // That duplicate gate could reject setups even when the actual SL/TP structure
+        // and configured R:R were valid. Let buildRisk() make the authoritative decision:
+        // it verifies the correct-side support/resistance, buffer, stop bounds and R:R.
+        const structureRoomPct = s.side === 'LONG'
+          ? (n(s.resistance) > s.entry ? (n(s.resistance) - s.entry) / s.entry * 100 : 0)
+          : (n(s.support) > 0 && n(s.support) < s.entry ? (s.entry - n(s.support)) / s.entry * 100 : 0);
+        if (structureRoomPct > 0 && structureRoomPct < Math.max(0.35, n(s.atrPct) * 0.65)) {
+          console.log(`[STRUCTURE][TIGHT] ${s.coin} ${s.side}: room=${structureRoomPct.toFixed(2)}%; checking actual structural SL/TP and R:R instead of auto-rejecting`);
+        }
+        if (s.score < MIN_SCORE) {
+          noteReject('score', s, `score ${s.score.toFixed(2)} < ${MIN_SCORE}`);
+          if (s.score >= MIN_SCORE - 0.75) {
+            console.log(`[NEAR-MISS][SCORE] ${s.coin} ${s.side} ${s.pattern} score=${s.score.toFixed(2)}/${MIN_SCORE} trend=${s.trend} BTC=${s.btcRegime?.label || 'NEUTRAL'} RSI15=${n(s.rsi15).toFixed(1)} volRatio=${n(s.volRatio).toFixed(2)} OI=${n(s.oiChange).toFixed(2)} flow=${n(s.flowDelta).toFixed(3)} imbalance=${n(s.imbalance).toFixed(3)} spread=${s.spreadPct == null ? 'NA' : n(s.spreadPct).toFixed(3) + '%'} reasons=${(s.reasons || []).slice(0, 8).join('; ')}`);
+          }
+          continue;
+        }
+        if (btcImpulseOpposes(s)) {
+          const evidence = countertrendEvidence(s);
+          const minScore = BTC_COUNTERTREND_MIN_SCORE;
+          if (s.score < minScore || evidence.count < BTC_COUNTERTREND_MIN_EVIDENCE) {
+            const reason = `BTC ${s.btcRegime.label} ${n(s.btcRegime.change24hPct).toFixed(2)}%/24h opposes ${s.side}; score=${s.score.toFixed(2)}/${minScore.toFixed(2)}, evidence=${evidence.count}/${BTC_COUNTERTREND_MIN_EVIDENCE} [${evidence.passed.join(',') || 'none'}]`;
+            console.log(`[FILTER][BTC-COUNTERTREND] ${s.coin} ${s.side} rejected: ${reason}`);
+            noteReject('regime', s, reason);
+            continue;
+          }
+          console.log(`[FILTER][BTC-COUNTERTREND][PASS] ${s.coin} ${s.side}: BTC ${s.btcRegime.label} ${n(s.btcRegime.change24hPct).toFixed(2)}%/24h; score=${s.score.toFixed(2)} evidence=${evidence.count} [${evidence.passed.join(',')}]`);
+        }
+        if (isCooldown(state, s)) { noteReject('cooldown', s, '90-minute cooldown'); continue; }
+        const risk = buildRisk(s);
+        if (!risk.valid) console.log(`[FILTER][RISK] ${s.coin} ${s.side} rejected: ${risk.reason} | entry=${fmtPrice(risk.entry || s.entry)} SL=${fmtPrice(risk.sl)} TP=${fmtPrice(risk.tp)} risk=${pct(risk.riskPct)} reward=${pct(risk.rewardPct)} support=${fmtPrice(s.support)}(${s.supportSource || '?'}) resistance=${fmtPrice(s.resistance)}(${s.resistanceSource || '?'}) rawSupport=${fmtPrice(s.rawSupport)} rawResistance=${fmtPrice(s.rawResistance)} ATR=${fmtPrice(s.atr)} R:R=${n(risk.rr).toFixed(2)} required=1:${MIN_RR.toFixed(2)}`);
+        if (!risk.valid || risk.rr < MIN_RR || !(risk.sl > 0) || !(risk.tp > 0)) {
+          noteReject('risk', s, risk.reason || `R:R ${n(risk.rr).toFixed(2)} < ${MIN_RR}`);
+          if (n(risk.rr) >= MIN_RR - 0.5 && n(risk.rr) < MIN_RR) {
+            console.log(`[NEAR-MISS][RISK] ${s.coin} ${s.side} ${s.pattern} R:R=1:${n(risk.rr).toFixed(2)} required=1:${MIN_RR.toFixed(2)} entry=${fmtPrice(risk.entry)} SL=${fmtPrice(risk.sl)} TP=${fmtPrice(risk.tp)} risk=${pct(risk.riskPct)} reward=${pct(risk.rewardPct)} support=${fmtPrice(s.support)} resistance=${fmtPrice(s.resistance)} bufferATR=${STRUCTURE_BUFFER_ATR}`);
+          }
+          continue;
+        }
+        // Avoid chasing a move that has already travelled too far from its 15m mean.
+        const distanceToVwap = Math.abs((s.entry - s.vwap) / s.entry) * 100;
+        if (distanceToVwap > Math.max(2.2, s.atr / s.entry * 100 * 2.8)) { noteReject('vwap', s, `distance ${distanceToVwap.toFixed(2)}%`); continue; }
+        s.risk = risk;
+        s.leverageInfo = suggestLeverage(s);
+        candidates.push(s); rejects.accepted++;
+      }
+    } catch (e) {
+      failed++;
+      console.warn(`[SCAN][WARN] ${asset.coin}: ${e?.message || e}`);
+    }
+  }
+
+  // If several patterns fire on one market/side, keep the highest-quality setup only for this cycle.
+  console.log(`[DIAGNOSTICS][REJECTS] ${JSON.stringify(rejects)}`);
+  for (const sample of rejectionSamples) console.log(`[DIAGNOSTICS][SAMPLE] ${sample}`);
+  candidates.sort((a, b) => b.score - a.score);
+  const chosen = [];
+  const seenMarketSide = new Set();
+  for (const c of candidates) {
+    const k = `${c.coin}|${c.side}`;
+    if (seenMarketSide.has(k)) continue;
+    seenMarketSide.add(k);
+    chosen.push(c);
+    if (chosen.length >= MAX_SIGNALS_PER_CYCLE) break;
+  }
+
+  let sentSignals = 0, sendErrors = 0;
+  // Deterministic public selection: highest-scoring eligible setup, not random.
+  const publicPool = chosen.filter(s => n(s.score) >= MIN_SCORE);
+  const publicPick = publicPool[0] || null;
+  for (const s of chosen) {
+    if (n(s.score) < MIN_SCORE) continue;
+    const message = formatSignal(s, s.risk);
+    const destinations = [];
+    // Every eligible signal goes to VIP. At most the top-scoring signal goes public per cycle.
+    const vip = configuredAudience('VIP');
+    if (vip) {
+      try {
+        const result = await sendTelegram(vip.id, message);
+        destinations.push({ name: 'VIP', ...(vip.viaLegacy ? { route: 'TELEGRAM_CHAT_ID fallback' } : {}), ...result });
+      } catch (e) { destinations.push({ name: 'VIP', sent: false, reason: e.message }); }
+    } else destinations.push({ name: 'VIP', sent: false, reason: 'vip_chat_not_configured_and_no_legacy_fallback' });
+    if (s === publicPick) {
+      const pub = configuredAudience('FREE');
+      if (pub) {
+        try { destinations.push({ name: 'FREE', ...(await sendTelegram(pub.id, message)) }); }
+        catch (e) { destinations.push({ name: 'FREE', sent: false, reason: e.message }); }
+      } else destinations.push({ name: 'FREE', sent: false, reason: 'free_chat_not_configured' });
+    }
+    const deliveredNames = destinations.filter(x => x.sent).map(x => x.name);
+    const anySent = deliveredNames.length > 0;
+    console.log(`[SIGNAL] ${s.coin} ${s.side} pattern=${s.pattern} score=${s.score.toFixed(2)} audience=${s === publicPick ? 'VIP+PUBLIC' : 'VIP'} leverage=${s.leverageInfo?.leverage ?? suggestLeverage(s).leverage}x entry=${fmtPrice(s.risk.entry)} SL=${fmtPrice(s.risk.sl)} TP=${fmtPrice(s.risk.tp)} deliveries=${JSON.stringify(destinations)}`);
+    if (anySent) {
+      sentSignals++;
+      state.alertHistory[signalKey(s)] = now();
+      const audience = deliveredNames.includes('VIP') && deliveredNames.includes('FREE') ? 'BOTH' : deliveredNames[0];
+      state.paperTrades.push({ strategyVersion: VERSION, id: `${s.coin}|${s.side}|${s.pattern}|${now()}`, coin: s.coin, side: s.side, pattern: s.pattern, score: Number(s.score.toFixed(2)), audience, outcomeDelivered: [], entry: s.risk.entry, sl: s.risk.sl, tp: s.risk.tp, rr: s.risk.rr, suggestedLeverage: s.leverageInfo?.leverage ?? null, btcRegime: s.btcRegime?.label || 'NEUTRAL', rsi15: s.rsi15, fibConfluence: Boolean(s.fibConfluence), openedAt: now(), lastCheckedAt: now(), status: 'OPEN', pnlR: null, reasons: s.reasons });
+    } else {
+      sendErrors++;
+      console.warn(`[DELIVERY][FAIL] ${s.coin} ${s.side}: no destination confirmed delivery`);
+    }
+  }
+
+  // Persist a compact market context for OI change measurement on the next run.
+  const nextCtx = {};
+  for (const a of eligible) nextCtx[a.coin] = { markPx: a.markPx, openInterest: a.openInterest, funding: a.funding, at: now() };
+  state.previousMarketContext = nextCtx;
+  state.lastRunAt = now();
+  state.lastCycle = { at: state.lastRunAt, rejectionCounts: rejects, eligible: eligible.length, totalEligible: snapshot.totalEligible, checked, failed, rawCandidates: candidates.length, signalsSelected: chosen.length, sentSignals, sendErrors, openPaperTrades: state.paperTrades.filter(t => t.status === 'OPEN').length };
+
+  const stats = dailySummary(state);
+  console.log(`[CYCLE] markets=${eligible.length}/${snapshot.totalEligible} checked=${checked} dataErrors=${failed} candidates=${candidates.length} selected=${chosen.length} sent=${sentSignals} deliveryErrors=${sendErrors} paperOpen=${stats.open} paperClosed=${stats.closed} paperWinRate=${stats.winRate.toFixed(1)}% paperNetR=${stats.realizedR.toFixed(2)} v2Rejects=${JSON.stringify(rejects)} runtime=${((now() - started) / 1000).toFixed(1)}s`);
+
+  // No WATCHING/status spam. Send separate audience-specific reports so VIP signal details never leak to FREE.
+  if (!state.pendingDailyReports && now() - n(state.lastDailyReportAt) >= 24 * 3600_000) {
+    state.pendingDailyReports = {};
+    state.pendingDailyReportCreatedAt = now();
+    for (const audience of reportAudiences()) {
+      state.pendingDailyReports[audience] = { text: report24h(state, audience), delivered: false };
+    }
+  }
+  if (state.pendingDailyReports && typeof state.pendingDailyReports === 'object') {
+    for (const [audience, report] of Object.entries(state.pendingDailyReports)) {
+      if (report.delivered) continue;
+      const destination = configuredAudience(audience);
+      if (!destination) {
+        console.warn(`[REPORT][24H] audience=${audience} not configured; report retained`);
+        continue;
+      }
+      const reportResults = await sendUpdateToAudience(report.text, audience, []);
+      if (reportResults.some(r => r.sent)) report.delivered = true;
+      console.log(`[REPORT][24H] audience=${audience} ${JSON.stringify(reportResults)} delivered=${report.delivered}`);
+    }
+    const pending = Object.values(state.pendingDailyReports).some(r => !r.delivered);
+    if (!pending && Object.keys(state.pendingDailyReports).length > 0) {
+      state.lastDailyReportAt = n(state.pendingDailyReportCreatedAt, now());
+      delete state.pendingDailyReports;
+      delete state.pendingDailyReportCreatedAt;
+      // Clear legacy single-report fields from previous versions without re-broadcasting them.
+      delete state.pendingDailyReportText;
+      delete state.pendingDailyReportDelivered;
+      delete state.pendingDailyReportCreatedAtLegacy;
+    }
+  }
+
+  await writeState(state);
+}
+
+main().catch(async error => {
+  console.error(`[FATAL] ${error?.stack || error}`);
+  process.exitCode = 1;
+});
