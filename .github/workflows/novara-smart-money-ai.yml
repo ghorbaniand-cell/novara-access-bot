@@ -1,31 +1,88 @@
-name: NOVARA Smart Money AI — Validate Package
+name: NOVARA Smart Money AI
 
 on:
   workflow_dispatch:
+  schedule:
+    # Five-minute cadence; each scan normally completes in under a minute.
+    - cron: '*/5 * * * *'
 
 permissions:
-  contents: read
+  contents: write
+
+concurrency:
+  group: novara-smart-money-ai-${{ github.ref }}
+  cancel-in-progress: false
 
 jobs:
-  validate:
+  scan:
+    name: Scan markets and track paper outcomes
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 8
+    environment: production
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref_name }}
+          fetch-depth: 0
+
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - name: Validate worker and webhook syntax
+
+      - name: Validate worker syntax
+        run: node --check novara_smart_money_ai.mjs
+
+      - name: Verify Telegram environment wiring (without exposing secret values)
+        env:
+          TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN || secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          NOVARA_FREE_CHAT_ID: ${{ vars.NOVARA_FREE_CHAT_ID || vars.FREE_CHAT_ID }}
+          NOVARA_VIP_CHAT_ID: ${{ vars.NOVARA_VIP_CHAT_ID || vars.VIP_CHAT_ID || vars.NOVARA_PREMIUM_CHAT_ID }}
+        shell: bash
         run: |
-          node --check novara_smart_money_ai.mjs
-          node --check vps/tradingview-webhook.mjs
-      - name: Confirm required package files
+          set -euo pipefail
+          [[ -n "${TELEGRAM_TOKEN:-}" ]] && echo 'Telegram token: configured' || echo '::warning::Telegram token missing (TELEGRAM_TOKEN / TELEGRAM_BOT_TOKEN)'
+          [[ -n "${NOVARA_VIP_CHAT_ID:-}${TELEGRAM_CHAT_ID:-}" ]] && echo 'Primary/VIP chat: configured (VIP ID or legacy TELEGRAM_CHAT_ID)' || echo '::warning::No VIP or legacy chat ID configured'
+          [[ -n "${NOVARA_FREE_CHAT_ID:-}" ]] && echo 'Public chat: configured' || echo 'Public chat: not configured (optional)'
+          if [[ -z "${TELEGRAM_TOKEN:-}" || -z "${NOVARA_VIP_CHAT_ID:-}${TELEGRAM_CHAT_ID:-}${NOVARA_FREE_CHAT_ID:-}" ]]; then
+            echo '::warning::The scan can run, but Telegram delivery needs a bot token and at least one chat ID in the production Environment.'
+          fi
+
+      - name: Run read-only signal engine
+        env:
+          TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN || secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          NOVARA_FREE_CHAT_ID: ${{ vars.NOVARA_FREE_CHAT_ID || vars.FREE_CHAT_ID }}
+          NOVARA_VIP_CHAT_ID: ${{ vars.NOVARA_VIP_CHAT_ID || vars.VIP_CHAT_ID || vars.NOVARA_PREMIUM_CHAT_ID }}
+          NOVARA_SMART_MAX_MARKETS: '120'
+          NOVARA_SMART_REQUEST_GAP_MS: '300'
+          NOVARA_SMART_429_RETRIES: '3'
+          NOVARA_SMART_429_BASE_MS: '1500'
+          NOVARA_SMART_429_MAX_MS: '15000'
+          NOVARA_SMART_MIN_SCORE: '6.0'
+          NOVARA_BTC_COUNTERTREND_HARD_MOVE_PCT: '1.5'
+          NOVARA_SMART_MIN_RR: '1.5'
+          NOVARA_SMART_MIN_24H_VOLUME_USD: '2000000'
+          NOVARA_SMART_MONEY_STATE_FILE: production/state/novara_smart_money_state.json
+        run: node novara_smart_money_ai.mjs
+
+      - name: Persist observer state
+        if: always()
+        shell: bash
         run: |
-          test -s novara_smart_money_ai.mjs
-          test -s vps/tradingview-webhook.mjs
-          test -s tradingview/NOVARA_Market_Structure_Gate.pine
-          test -s systemd/novara-scan.service
-          test -s systemd/novara-scan.timer
-          echo 'Package files present. Pine Script must be compiled/tested in TradingView Pine Editor.'
+          set -euo pipefail
+          if [[ ! -f production/state/novara_smart_money_state.json ]]; then
+            echo 'State file was not created; nothing to persist.'
+            exit 0
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -f production/state/novara_smart_money_state.json
+          if git diff --cached --quiet; then
+            echo 'Observer state unchanged.'
+            exit 0
+          fi
+          git commit -m 'chore(novara): persist observer state [skip ci]'
+          git push origin "HEAD:${GITHUB_REF_NAME}"
