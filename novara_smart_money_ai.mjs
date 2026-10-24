@@ -14,7 +14,7 @@ import path from 'node:path';
  * All eligible liquid perp markets are considered; the worker does not depend on wallet lists.
  */
 
-const VERSION = 'NOVARA-SMART-MONEY-AI-V2.5.0-ADAPTIVE-BTC-REGIME';
+const VERSION = 'NOVARA-SMART-MONEY-AI-V2.6.0-MULTI-TF-BTC-STATUS';
 const API = (process.env.HYPERLIQUID_API_URL || 'https://api.hyperliquid.xyz/info').trim();
 const TOKEN = process.env.TELEGRAM_TOKEN || process.env.TELEGRAM_BOT_TOKEN || '';
 const LEGACY_CHAT = process.env.TELEGRAM_CHAT_ID || '';
@@ -220,16 +220,20 @@ function fibonacciConfluence(candles, price, tolerancePct) {
     .sort((a, b) => a.distancePct - b.distancePct)[0];
   return { confluence: nearest.distancePct <= tolerancePct, level: nearest.level, distancePct: nearest.distancePct };
 }
-function marketRegime(candles) {
-  if (!Array.isArray(candles) || candles.length < 60) return { trend: 'NEUTRAL', change24hPct: 0, label: 'NEUTRAL' };
+function marketRegime(candles, barsPer24h = 6, timeframe = '4H') {
+  const needed = Math.max(60, barsPer24h + 5);
+  if (!Array.isArray(candles) || candles.length < needed) {
+    return { timeframe, status: 'UNAVAILABLE', trend: 'UNAVAILABLE', change24hPct: null, label: 'UNAVAILABLE', candles: Array.isArray(candles) ? candles.length : 0 };
+  }
   const trend = trendBias(candles);
   const last = candles.at(-1)?.c || 0;
-  const base = candles.at(-7)?.c || last; // six completed 4H bars, approximately 24 hours
-  const change24hPct = base > 0 ? (last - base) / base * 100 : 0;
+  const base = candles.at(-(barsPer24h + 1))?.c || last;
+  if (!(last > 0 && base > 0)) return { timeframe, status: 'UNAVAILABLE', trend: 'UNAVAILABLE', change24hPct: null, label: 'UNAVAILABLE', candles: candles.length };
+  const change24hPct = (last - base) / base * 100;
   let label = trend === 'LONG' ? 'BULLISH' : trend === 'SHORT' ? 'BEARISH' : 'NEUTRAL';
   if (change24hPct <= -2.5) label = 'BEARISH';
   else if (change24hPct >= 2.5) label = 'BULLISH';
-  return { trend, change24hPct, label };
+  return { timeframe, status: 'OK', trend, change24hPct, label, candles: candles.length };
 }
 function trendBias(candles) {
   const closes = candles.map(c => c.c);
@@ -348,6 +352,15 @@ function detectPatterns({ coin, c15, c1h, ctx, prevCtx, mid, spread, imbalance, 
       score -= btcPenalty;
       reasons.push(`BTC 4H regime opposes ${side} (${btcLabel}; ${btcMoveAbs.toFixed(2)}%/24h, score penalty -${btcPenalty.toFixed(2)})`);
     } else if (btcAligns) { score += 0.20; reasons.push(`BTC 4H regime aligns (${btcLabel})`); }
+    // Shorter BTC timeframes refine (but never independently veto) the 4H context.
+    for (const tf of ['1H', '15m']) {
+      const shortRegime = btcRegime?.timeframes?.[tf];
+      if (shortRegime?.status !== 'OK') continue;
+      const aligned = (side === 'LONG' && shortRegime.trend === 'LONG') || (side === 'SHORT' && shortRegime.trend === 'SHORT');
+      const opposed = (side === 'LONG' && shortRegime.trend === 'SHORT') || (side === 'SHORT' && shortRegime.trend === 'LONG');
+      if (aligned) { score += 0.10; reasons.push(`BTC ${tf} trend confirms ${side} (+0.10)`); }
+      else if (opposed) { score -= 0.15; reasons.push(`BTC ${tf} trend conflicts with ${side} (-0.15)`); }
+    }
     return score;
   };
 
@@ -534,7 +547,13 @@ function formatSignal(s, risk) {
   const lev = s.leverageInfo || suggestLeverage(s);
   const emoji = s.side === 'LONG' ? '🟢' : '🔴';
   const reasons = s.reasons.slice(0, 4).map(x => `• ${escapeHtml(x)}`).join('\n');
-  return `${emoji} <b>NOVARA SMART MONEY AI</b>\n━━━━━━━━━━━━━━━━━━\n<b>${s.side} ${escapeHtml(s.coin)} PERP</b>\n🧭 Setup: ${escapeHtml(s.pattern.replaceAll('_', ' '))}\n📍 Entry (reference): <code>${fmtPrice(risk.entry)}</code>\n🛑 Stop Loss: <code>${fmtPrice(risk.sl)}</code> (${pct(risk.riskPct)})\n🎯 Take Profit: <code>${fmtPrice(risk.tp)}</code> (${pct(risk.rewardPct)})\n⚖️ Planned R:R: 1:${risk.rr.toFixed(2)}\n⚡ Suggested Leverage: ${lev.leverage}x${lev.cappedBelowRequestedRange ? ` (exchange max: ${Math.floor(lev.exchangeMax)}x)` : ''}\n🧠 Setup score: ${s.score.toFixed(2)}/10 (not a win-probability estimate)\n📊 1H trend: ${s.trend} | BTC 4H: ${s.btcRegime?.label || 'NEUTRAL'} (${n(s.btcRegime?.change24hPct).toFixed(2)}%/24h)\n📉 15m RSI: ${n(s.rsi15, 50).toFixed(1)} | Fib confluence: ${s.fibConfluence ? 'YES' : 'NO'} | Volume: ${s.volRatio.toFixed(2)}x\n🌊 Trade delta: ${(s.flowDelta * 100).toFixed(1)}% | Book imbalance: ${(s.imbalance * 100).toFixed(1)}%\n📈 OI change since prior scan: ${s.oiChange >= 0 ? '+' : ''}${s.oiChange.toFixed(2)}% | Funding: ${s.fundingPct.toFixed(4)}%\n🧩 Evidence:\n${reasons}\n\n⚠️ Research signal only — paper-tracked, not financial advice. Verify price/slippage before any manual trade.`;
+  const btc = s.btcRegime || {};
+  const tfLine = (tf, label) => {
+    const r = btc.timeframes?.[tf];
+    if (!r || r.status !== 'OK' || !Number.isFinite(Number(r.change24hPct))) return `${tf}: UNAVAILABLE`;
+    return `${tf}: ${r.label}/${r.trend} (${Number(r.change24hPct).toFixed(2)}%/24h)`;
+  };
+  return `${emoji} <b>NOVARA SMART MONEY AI</b>\n━━━━━━━━━━━━━━━━━━\n<b>${s.side} ${escapeHtml(s.coin)} PERP</b>\n🧭 Setup: ${escapeHtml(s.pattern.replaceAll('_', ' '))}\n📍 Entry (reference): <code>${fmtPrice(risk.entry)}</code>\n🛑 Stop Loss: <code>${fmtPrice(risk.sl)}</code> (${pct(risk.riskPct)})\n🎯 Take Profit: <code>${fmtPrice(risk.tp)}</code> (${pct(risk.rewardPct)})\n⚖️ Planned R:R: 1:${risk.rr.toFixed(2)}\n⚡ Suggested Leverage: ${lev.leverage}x${lev.cappedBelowRequestedRange ? ` (exchange max: ${Math.floor(lev.exchangeMax)}x)` : ''}\n🧠 Setup score: ${s.score.toFixed(2)}/10 (not a win-probability estimate)\n📊 Asset 1H trend: ${s.trend}\n₿ <b>BTC MARKET CHECK</b>\n${tfLine('4H', '4H')}\n${tfLine('1H', '1H')}\n${tfLine('15m', '15m')}\n📉 Alt 15m RSI: ${n(s.rsi15, 50).toFixed(1)} | Fib: ${s.fibConfluence ? 'YES' : 'NO'} | Volume: ${s.volRatio.toFixed(2)}x\n🌊 Trade delta: ${(s.flowDelta * 100).toFixed(1)}% | Book imbalance: ${(s.imbalance * 100).toFixed(1)}%\n📈 OI change: ${s.oiChange >= 0 ? '+' : ''}${s.oiChange.toFixed(2)}% | Funding: ${s.fundingPct.toFixed(4)}%\n🧩 Evidence:\n${reasons}\n\n⚠️ Research signal only — paper-tracked, not financial advice. Verify price/slippage before any manual trade.`;
 }
 
 let telegramNextAt = 0;
@@ -821,14 +840,28 @@ async function main() {
   const snapshot = await getMarketSnapshot();
   const contexts = snapshot.ctxByCoin;
   const eligible = snapshot.assets;
-  let btcRegime = { trend: 'NEUTRAL', change24hPct: 0, label: 'NEUTRAL' };
-  try {
-    const btc4h = await candles('BTC', '4h', 30 * 24);
-    btcRegime = marketRegime(btc4h);
-  } catch (e) {
-    console.warn(`[BTC][WARN] 4H regime unavailable; neutral filter used: ${e?.message || e}`);
+  const btcRegime = { timeframe: '4H', status: 'UNAVAILABLE', trend: 'UNAVAILABLE', change24hPct: null, label: 'UNAVAILABLE', timeframes: {} };
+  const btcTfSpecs = [
+    { key: '4H', interval: '4h', hours: 30 * 24, barsPer24h: 6 },
+    { key: '1H', interval: '1h', hours: 96, barsPer24h: 24 },
+    { key: '15m', interval: '15m', hours: 60, barsPer24h: 96 },
+  ];
+  for (const tf of btcTfSpecs) {
+    try {
+      const rows = await candles('BTC', tf.interval, tf.hours);
+      const regime = marketRegime(rows, tf.barsPer24h, tf.key);
+      btcRegime.timeframes[tf.key] = regime;
+      console.log(`[BTC][REGIME] ${tf.key}=${regime.label} trend=${regime.trend} change24h=${Number.isFinite(regime.change24hPct) ? regime.change24hPct.toFixed(2) + '%' : 'UNAVAILABLE'} candles=${regime.candles}`);
+      if (tf.key === '4H') Object.assign(btcRegime, regime, { timeframes: btcRegime.timeframes });
+    } catch (e) {
+      const unavailable = { timeframe: tf.key, status: 'UNAVAILABLE', trend: 'UNAVAILABLE', change24hPct: null, label: 'UNAVAILABLE', candles: 0 };
+      btcRegime.timeframes[tf.key] = unavailable;
+      console.warn(`[BTC][WARN] ${tf.key} regime unavailable; not silently treating missing data as neutral: ${e?.message || e}`);
+    }
   }
-  console.log(`[BTC][REGIME] 4H=${btcRegime.label} trend=${btcRegime.trend} approx24h=${btcRegime.change24hPct.toFixed(2)}%`);
+  // Keep the 4H regime as the primary directional gate, while attaching all timeframes for signal diagnostics.
+  btcRegime.timeframes = { ...btcRegime.timeframes };
+  console.log(`[BTC][SUMMARY] ${['4H', '1H', '15m'].map(tf => { const r = btcRegime.timeframes[tf]; return `${tf}=${r?.status === 'OK' ? `${r.label}/${r.trend} ${r.change24hPct.toFixed(2)}%` : 'UNAVAILABLE'}`; }).join(' | ')}`);
   if (!n(state.lastDailyReportAt)) state.lastDailyReportAt = now(); // first report is sent after one full 24-hour observation window
   const closed = await updatePaperTrades(state, contexts);
   for (const t of closed) {
