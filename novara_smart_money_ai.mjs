@@ -26,8 +26,7 @@ const STATE_FILE = process.env.NOVARA_SMART_MONEY_STATE_FILE || 'production/stat
 const SCAN_GAP_MS = Math.max(200, Number(process.env.NOVARA_SMART_REQUEST_GAP_MS || 300));
 const MAX_429_RETRIES = Math.max(0, Math.min(4, Number(process.env.NOVARA_SMART_429_RETRIES || 3))); 
 const TIMEOUT_MS = Math.max(3000, Number(process.env.NOVARA_SMART_TIMEOUT_MS || 12000));
-const MIN_VOLUME_USD = Math.max(250000, Number(process.env.NOVARA_SMART_MIN_24H_VOLUME_USD || 2_000_000));
-const MAX_MARKETS = Math.max(25, Math.min(300, Number(process.env.NOVARA_SMART_MAX_MARKETS || 120)));
+// No 24h-volume floor and no fixed market-count cap: evaluate every active Hyperliquid perp market returned by metaAndAssetCtxs.
 const MIN_SCORE = Math.max(5.8, Math.min(8.5, Number(process.env.NOVARA_SMART_MIN_SCORE || 6.0)));
 const MIN_RR = Math.max(1.5, Number(process.env.NOVARA_SMART_MIN_RR || 1.5));
 const BTC_COUNTERTREND_HARD_MOVE_PCT = Math.max(1.0, Number(process.env.NOVARA_BTC_COUNTERTREND_HARD_MOVE_PCT || 2.0));
@@ -785,13 +784,13 @@ async function getMarketSnapshot() {
     const coin = String(u.name || '');
     const volume = n(c.dayNtlVlm);
     const markPx = n(c.markPx || c.midPx);
-    if (!coin || !(markPx > 0) || volume < MIN_VOLUME_USD || u.isDelisted) continue;
+    if (!coin || !(markPx > 0) || u.isDelisted) continue;
     const ctx = { coin, markPx, dayVolume: volume, funding: n(c.funding), openInterest: n(c.openInterest), premium: n(c.premium), oraclePx: n(c.oraclePx), maxLeverage: n(u.maxLeverage) };
     ctxByCoin[coin] = ctx;
     assets.push(ctx);
   }
   assets.sort((a, b) => b.dayVolume - a.dayVolume);
-  return { ctxByCoin, assets: assets.slice(0, MAX_MARKETS), totalEligible: assets.length };
+  return { ctxByCoin, assets, totalEligible: assets.length };
 }
 async function candles(coin, interval, hours) {
   const endTime = now();
@@ -835,7 +834,7 @@ async function main() {
   console.log(`\n${VERSION} — START`);
   console.log(`Mode: READ-ONLY / NO ORDERS / PAPER TRACKING`);
   console.log(`Time: ${new Date().toISOString()}`);
-  console.log(`Signal threshold: ${MIN_SCORE}/10 | min R:R: 1:${MIN_RR.toFixed(2)} | BTC countertrend: ${BTC_COUNTERTREND_HARD_MOVE_PCT.toFixed(1)}% impulse requires score >= ${BTC_COUNTERTREND_MIN_SCORE.toFixed(1)} and ${BTC_COUNTERTREND_MIN_EVIDENCE} confirmations | structure-first SL/TP | min 24h volume: $${MIN_VOLUME_USD.toLocaleString()} | max markets scanned: ${MAX_MARKETS}`);
+  console.log(`Signal threshold: ${MIN_SCORE}/10 | min R:R: 1:${MIN_RR.toFixed(2)} | BTC countertrend: ${BTC_COUNTERTREND_HARD_MOVE_PCT.toFixed(1)}% impulse requires score >= ${BTC_COUNTERTREND_MIN_SCORE.toFixed(1)} and ${BTC_COUNTERTREND_MIN_EVIDENCE} confirmations | structure-first SL/TP | 24h volume floor: NONE | market cap: NONE (all active listed perps)`);
   console.log(`[API][POLICY] requestGap=${SCAN_GAP_MS}ms retries429=${MAX_429_RETRIES} backoff=${RATE_LIMIT_BASE_MS}-${RATE_LIMIT_MAX_MS}ms globalCooldown=yes`);
   console.log(`[TELEGRAM][CONFIG] token=${TOKEN ? 'configured' : 'MISSING'} vipChat=${VIP_CHAT ? 'configured' : (LEGACY_CHAT ? 'legacy-fallback' : 'MISSING')} freeChat=${FREE_CHAT ? 'configured' : 'MISSING'} legacyChat=${LEGACY_CHAT ? 'configured' : 'MISSING'}`);
   if (!TOKEN || (!VIP_CHAT && !LEGACY_CHAT && !FREE_CHAT)) {
