@@ -1,1818 +1,1182 @@
 {
   "schema": 1,
-  "version": "NOVARA-SMART-MONEY-AI-V2.8.5-STRUCTURE-FIRST-REPAIR-PREMIUM-CARDS",
-  "lastRunAt": 1793047029781,
+  "version": "NOVARA-SMART-MONEY-AI-V2.8.6-LEVEL-PROXIMITY-EARLY-ENTRY",
+  "lastRunAt": 1793049606279,
   "previousMarketContext": {
     "BTC": {
-      "markPx": 79906,
-      "openInterest": 42403.90772,
+      "markPx": 79918,
+      "openInterest": 42205.19028,
       "funding": 0.0000125,
-      "at": 1793047029781
+      "at": 1793049606279
     },
     "ETH": {
-      "markPx": 2313,
-      "openInterest": 1128120.7385999996,
-      "funding": 0.0000050411,
-      "at": 1793047029781
+      "markPx": 2304.9,
+      "openInterest": 1127947.0072000003,
+      "funding": -0.0000021609,
+      "at": 1793049606279
     },
     "HYPE": {
-      "markPx": 77.768,
-      "openInterest": 20646162.40000001,
+      "markPx": 77.195,
+      "openInterest": 20616017.47999999,
       "funding": 0.0000125,
-      "at": 1793047029781
+      "at": 1793049606279
     },
     "ZEC": {
-      "markPx": 1227.2,
-      "openInterest": 487844.8999999998,
+      "markPx": 1218.9,
+      "openInterest": 488868.4400000002,
       "funding": 0.0000125,
-      "at": 1793047029781
+      "at": 1793049606279
     },
     "SOL": {
-      "markPx": 100.38,
-      "openInterest": 5550049.199999999,
+      "markPx": 100.27,
+      "openInterest": 5555600.080000001,
       "funding": 0.0000125,
-      "at": 1793047029781
+      "at": 1793049606279
     },
     "NEAR": {
-      "markPx": 4.4825,
-      "openInterest": 58759916.19999997,
-      "funding": -2.89e-8,
-      "at": 1793047029781
-    },
-    "ENA": {
-      "markPx": 0.208615,
-      "openInterest": 472229022,
-      "funding": 0.0000050675,
-      "at": 1793047029781
+      "markPx": 4.44375,
+      "openInterest": 58496173.200000025,
+      "funding": 0.0000041255,
+      "at": 1793049606279
     },
     "PUMP": {
-      "markPx": 0.004234,
-      "openInterest": 26866462114,
-      "funding": -0.0000124278,
-      "at": 1793047029781
+      "markPx": 0.004186,
+      "openInterest": 26663927312,
+      "funding": -0.0000448597,
+      "at": 1793049606279
+    },
+    "ENA": {
+      "markPx": 0.20614,
+      "openInterest": 472127562,
+      "funding": 0.0000125,
+      "at": 1793049606279
     },
     "XMR": {
-      "markPx": 594.93,
-      "openInterest": 175267.316,
-      "funding": 0.0000765031,
-      "at": 1793047029781
+      "markPx": 594.64,
+      "openInterest": 178263.47,
+      "funding": 0.0000949045,
+      "at": 1793049606279
     },
     "XRP": {
-      "markPx": 1.2939,
-      "openInterest": 171268222,
+      "markPx": 1.288635,
+      "openInterest": 171216624,
       "funding": 0.0000125,
-      "at": 1793047029781
+      "at": 1793049606279
     },
     "WLD": {
-      "markPx": 0.43766,
-      "openInterest": 144332725,
-      "funding": 0.0000125,
-      "at": 1793047029781
+      "markPx": 0.43501,
+      "openInterest": 144112268.40000004,
+      "funding": -0.0000072023,
+      "at": 1793049606279
     },
     "SUI": {
-      "markPx": 0.91115,
-      "openInterest": 36856615.000000015,
+      "markPx": 0.90554,
+      "openInterest": 37940915.00000001,
       "funding": 0.0000125,
-      "at": 1793047029781
+      "at": 1793049606279
     },
     "CHIP": {
-      "markPx": 0.05275,
-      "openInterest": 288832712,
-      "funding": 0.0000103106,
-      "at": 1793047029781
-    },
-    "ZRO": {
-      "markPx": 1.6262,
-      "openInterest": 39200967.199999996,
+      "markPx": 0.051475,
+      "openInterest": 287783116,
       "funding": 0.0000125,
-      "at": 1793047029781
+      "at": 1793049606279
     },
     "LIT": {
-      "markPx": 3.0296,
-      "openInterest": 35455258,
+      "markPx": 2.986,
+      "openInterest": 35302156,
       "funding": 0.0000125,
-      "at": 1793047029781
+      "at": 1793049606279
+    },
+    "ZRO": {
+      "markPx": 1.61537,
+      "openInterest": 39194073.400000006,
+      "funding": 0.0000125,
+      "at": 1793049606279
     },
     "kPEPE": {
-      "markPx": 0.004315,
-      "openInterest": 8649871974,
+      "markPx": 0.004266,
+      "openInterest": 8668868716,
       "funding": 0.0000125,
-      "at": 1793047029781
-    },
-    "UNI": {
-      "markPx": 7.08765,
-      "openInterest": 11232618.399999999,
-      "funding": 0.0000125,
-      "at": 1793047029781
+      "at": 1793049606279
     },
     "VVV": {
-      "markPx": 25.232,
-      "openInterest": 2978591.44,
+      "markPx": 24.861,
+      "openInterest": 2971251.26,
       "funding": 0.0000125,
-      "at": 1793047029781
+      "at": 1793049606279
+    },
+    "UNI": {
+      "markPx": 7.0385,
+      "openInterest": 11228882.199999997,
+      "funding": 0.0000125,
+      "at": 1793049606279
     },
     "FARTCOIN": {
-      "markPx": 0.12726,
-      "openInterest": 189881760.99999997,
-      "funding": -0.0000063076,
-      "at": 1793047029781
+      "markPx": 0.12629,
+      "openInterest": 189395170.2,
+      "funding": 0.0000077354,
+      "at": 1793049606279
     },
     "DOGE": {
-      "markPx": 0.077284,
-      "openInterest": 1011145336,
-      "funding": 0.0000111597,
-      "at": 1793047029781
+      "markPx": 0.077032,
+      "openInterest": 1011170244,
+      "funding": 0.0000085039,
+      "at": 1793049606279
     },
     "STRK": {
-      "markPx": 0.04678,
-      "openInterest": 734834598,
-      "funding": 0.0000098121,
-      "at": 1793047029781
-    },
-    "INJ": {
-      "markPx": 7.9964,
-      "openInterest": 719975.2000000001,
-      "funding": 0.0000125,
-      "at": 1793047029781
+      "markPx": 0.04668,
+      "openInterest": 735086069.4,
+      "funding": -8.831e-7,
+      "at": 1793049606279
     },
     "CRV": {
-      "markPx": 0.34268,
-      "openInterest": 58971580.60000001,
+      "markPx": 0.33827,
+      "openInterest": 59087510.59999999,
       "funding": 0.0000125,
-      "at": 1793047029781
+      "at": 1793049606279
+    },
+    "INJ": {
+      "markPx": 7.9295,
+      "openInterest": 719243.6,
+      "funding": 0.0000125,
+      "at": 1793049606279
     },
     "TAO": {
-      "markPx": 250.74,
-      "openInterest": 153560.932,
+      "markPx": 249.07,
+      "openInterest": 153528.788,
       "funding": 0.0000125,
-      "at": 1793047029781
-    },
-    "AAVE": {
-      "markPx": 134.93,
-      "openInterest": 381958.86,
-      "funding": 0.0000042646,
-      "at": 1793047029781
+      "at": 1793049606279
     },
     "ONDO": {
-      "markPx": 0.41399,
-      "openInterest": 52769198,
+      "markPx": 0.41087,
+      "openInterest": 52594742,
       "funding": 0.0000125,
-      "at": 1793047029781
+      "at": 1793049606279
     },
-    "CASHCAT": {
-      "markPx": 0.090472,
-      "openInterest": 215468650,
-      "funding": 0.0000125,
-      "at": 1793047029781
+    "AAVE": {
+      "markPx": 134.27,
+      "openInterest": 381883.3800000001,
+      "funding": 0.0000096058,
+      "at": 1793049606279
     },
     "BNB": {
-      "markPx": 742.433,
-      "openInterest": 59720.192,
+      "markPx": 741.42,
+      "openInterest": 59705.988,
       "funding": 0.0000125,
-      "at": 1793047029781
+      "at": 1793049606279
+    },
+    "CASHCAT": {
+      "markPx": 0.089741,
+      "openInterest": 214547520,
+      "funding": 0.0000125,
+      "at": 1793049606279
     },
     "ADA": {
-      "markPx": 0.20512,
-      "openInterest": 146547212,
-      "funding": -3.171e-7,
-      "at": 1793047029781
+      "markPx": 0.20411,
+      "openInterest": 146538218,
+      "funding": 0.0000033249,
+      "at": 1793049606279
     },
     "LINK": {
-      "markPx": 11.36651,
-      "openInterest": 4864399.800000001,
-      "funding": 0.0000048553,
-      "at": 1793047029781
+      "markPx": 11.312,
+      "openInterest": 4860307.2,
+      "funding": 3.355e-7,
+      "at": 1793049606279
     },
     "XPL": {
-      "markPx": 0.072975,
-      "openInterest": 699437320,
+      "markPx": 0.072182,
+      "openInterest": 700271608,
       "funding": 0.0000125,
-      "at": 1793047029781
+      "at": 1793049606279
     },
     "AERO": {
-      "markPx": 0.67493,
-      "openInterest": 37793164,
-      "funding": 0.0000125,
-      "at": 1793047029781
+      "markPx": 0.67238,
+      "openInterest": 37786078,
+      "funding": 0.0000014576,
+      "at": 1793049606279
     },
     "PONS": {
-      "markPx": 0.24508,
-      "openInterest": 82190436,
+      "markPx": 0.24438,
+      "openInterest": 82235046,
       "funding": 0.0000125,
-      "at": 1793047029781
+      "at": 1793049606279
     },
     "GRASS": {
-      "markPx": 0.68011,
-      "openInterest": 47726451.599999994,
+      "markPx": 0.6717,
+      "openInterest": 47751331.400000006,
       "funding": 0.0000125,
-      "at": 1793047029781
-    },
-    "NIL": {
-      "markPx": 0.088606,
-      "openInterest": 33221334,
-      "funding": 0.0000125,
-      "at": 1793047029781
+      "at": 1793049606279
     },
     "LTC": {
-      "markPx": 56.582,
-      "openInterest": 402971.98,
-      "funding": -0.0000107897,
-      "at": 1793047029781
-    },
-    "PAXG": {
-      "markPx": 4023.7,
-      "openInterest": 6334.386,
-      "funding": 0.0000125,
-      "at": 1793047029781
+      "markPx": 56.416,
+      "openInterest": 402880.12,
+      "funding": -0.0000066146,
+      "at": 1793049606279
     },
     "ARB": {
-      "markPx": 0.16787,
-      "openInterest": 91796735,
+      "markPx": 0.16656,
+      "openInterest": 91175493.60000002,
+      "funding": 0.0000039796,
+      "at": 1793049606279
+    },
+    "NIL": {
+      "markPx": 0.08771,
+      "openInterest": 33259510,
       "funding": 0.0000125,
-      "at": 1793047029781
+      "at": 1793049606279
+    },
+    "PAXG": {
+      "markPx": 4025.2,
+      "openInterest": 6340.09,
+      "funding": 0.0000125,
+      "at": 1793049606279
     },
     "USELESS": {
-      "markPx": 0.15255,
-      "openInterest": 48552804,
+      "markPx": 0.15038,
+      "openInterest": 48775222,
       "funding": 0.0000125,
-      "at": 1793047029781
-    },
-    "TRUMP": {
-      "markPx": 1.6969,
-      "openInterest": 4943267,
-      "funding": -0.0000476674,
-      "at": 1793047029781
+      "at": 1793049606279
     },
     "GRAM": {
-      "markPx": 1.2175,
-      "openInterest": 18815228,
-      "funding": 0.0000125,
-      "at": 1793047029781
+      "markPx": 1.2078,
+      "openInterest": 18819938,
+      "funding": 0.0000077543,
+      "at": 1793049606279
+    },
+    "TRUMP": {
+      "markPx": 1.6851,
+      "openInterest": 4929904.6,
+      "funding": -0.0000223344,
+      "at": 1793049606279
     },
     "SKR": {
-      "markPx": 0.013901,
-      "openInterest": 24186626,
+      "markPx": 0.013853,
+      "openInterest": 24111236,
       "funding": 0.0000125,
-      "at": 1793047029781
+      "at": 1793049606279
     },
     "MON": {
-      "markPx": 0.021646,
-      "openInterest": 1469314386,
-      "funding": 0.0000125,
-      "at": 1793047029781
-    },
-    "BCH": {
-      "markPx": 278.36,
-      "openInterest": 30348.09,
-      "funding": 0.0000125,
-      "at": 1793047029781
+      "markPx": 0.021447,
+      "openInterest": 1467666030,
+      "funding": 0.0000038015,
+      "at": 1793049606279
     },
     "JUP": {
-      "markPx": 0.27807,
-      "openInterest": 28774520,
-      "funding": -0.0000209803,
-      "at": 1793047029781
+      "markPx": 0.27518,
+      "openInterest": 28159098,
+      "funding": -0.0000104506,
+      "at": 1793049606279
+    },
+    "BCH": {
+      "markPx": 277.36,
+      "openInterest": 30357.74,
+      "funding": 0.0000125,
+      "at": 1793049606279
     },
     "WLFI": {
-      "markPx": 0.053119,
-      "openInterest": 224549422,
-      "funding": 0.0000103154,
-      "at": 1793047029781
+      "markPx": 0.052857,
+      "openInterest": 224289962,
+      "funding": 0.000007492,
+      "at": 1793049606279
     },
     "SPX": {
-      "markPx": 0.37157,
-      "openInterest": 13426877,
+      "markPx": 0.36813,
+      "openInterest": 13434286.399999999,
       "funding": 0.0000125,
-      "at": 1793047029781
-    },
-    "TIA": {
-      "markPx": 0.54279,
-      "openInterest": 16172796.4,
-      "funding": -0.0000312279,
-      "at": 1793047029781
+      "at": 1793049606279
     },
     "RENDER": {
-      "markPx": 1.7222,
-      "openInterest": 1412885.2,
-      "funding": -0.0000081701,
-      "at": 1793047029781
+      "markPx": 1.7061,
+      "openInterest": 1413363.6,
+      "funding": 0.0000125,
+      "at": 1793049606279
+    },
+    "TIA": {
+      "markPx": 0.54165,
+      "openInterest": 16161063.999999998,
+      "funding": -0.0000390738,
+      "at": 1793049606279
     },
     "ETHFI": {
-      "markPx": 0.64506,
-      "openInterest": 15171231.8,
+      "markPx": 0.63793,
+      "openInterest": 15155528.400000002,
       "funding": 0.0000125,
-      "at": 1793047029781
+      "at": 1793049606279
     },
     "AVAX": {
-      "markPx": 8.9156,
-      "openInterest": 2003641.68,
-      "funding": -0.0000043638,
-      "at": 1793047029781
+      "markPx": 8.865,
+      "openInterest": 2004544.4,
+      "funding": -0.0000043056,
+      "at": 1793049606279
     },
     "MET": {
-      "markPx": 0.316893,
-      "openInterest": 11821296,
-      "funding": 0.000001689,
-      "at": 1793047029781
+      "markPx": 0.315389,
+      "openInterest": 11833564,
+      "funding": -0.0000021282,
+      "at": 1793049606279
     },
     "APT": {
-      "markPx": 0.6932,
-      "openInterest": 6318730.939999999,
-      "funding": -0.0000129906,
-      "at": 1793047029781
-    },
-    "INIT": {
-      "markPx": 0.15694,
-      "openInterest": 12057526,
-      "funding": 0.0000125,
-      "at": 1793047029781
+      "markPx": 0.6885,
+      "openInterest": 6311210.1,
+      "funding": 0.0000033395,
+      "at": 1793049606279
     },
     "DOT": {
-      "markPx": 1.00637,
-      "openInterest": 5560321.999999999,
-      "funding": -0.0000135294,
-      "at": 1793047029781
+      "markPx": 1.0008,
+      "openInterest": 5557924.200000001,
+      "funding": -0.000024608,
+      "at": 1793049606279
+    },
+    "INIT": {
+      "markPx": 0.1553,
+      "openInterest": 12216552,
+      "funding": 0.0000125,
+      "at": 1793049606279
     },
     "BABY": {
-      "markPx": 0.014163,
-      "openInterest": 17330728,
-      "funding": -0.0001063608,
-      "at": 1793047029781
-    },
-    "PYTH": {
-      "markPx": 0.073674,
-      "openInterest": 37628006,
-      "funding": 0.0000125,
-      "at": 1793047029781
+      "markPx": 0.014098,
+      "openInterest": 17501622,
+      "funding": -0.0001665337,
+      "at": 1793049606279
     },
     "MORPHO": {
-      "markPx": 2.1215,
-      "openInterest": 3169708.3999999994,
+      "markPx": 2.1187,
+      "openInterest": 3166880.5999999996,
       "funding": 0.0000125,
-      "at": 1793047029781
+      "at": 1793049606279
+    },
+    "PYTH": {
+      "markPx": 0.073086,
+      "openInterest": 37551066,
+      "funding": 0.0000125,
+      "at": 1793049606279
     },
     "REZ": {
-      "markPx": 0.004626,
-      "openInterest": 355622658,
-      "funding": -0.0000568445,
-      "at": 1793047029781
+      "markPx": 0.004688,
+      "openInterest": 355313378,
+      "funding": -0.0000720168,
+      "at": 1793049606279
     },
     "ASTER": {
-      "markPx": 0.7097,
-      "openInterest": 34579110,
-      "funding": -0.0000020847,
-      "at": 1793047029781
+      "markPx": 0.70762,
+      "openInterest": 34579336,
+      "funding": 0.0000125,
+      "at": 1793049606279
     },
     "FIL": {
-      "markPx": 0.90638,
-      "openInterest": 10103483.4,
-      "funding": 0.0000085506,
-      "at": 1793047029781
+      "markPx": 0.89673,
+      "openInterest": 10077417.400000002,
+      "funding": -0.0000126278,
+      "at": 1793049606279
     },
     "HBAR": {
-      "markPx": 0.076783,
-      "openInterest": 153445262,
+      "markPx": 0.076286,
+      "openInterest": 153456046,
       "funding": 0.0000125,
-      "at": 1793047029781
+      "at": 1793049606279
     },
     "TRX": {
-      "markPx": 0.33001,
-      "openInterest": 37487408,
-      "funding": -0.0000297329,
-      "at": 1793047029781
+      "markPx": 0.329817,
+      "openInterest": 37492668,
+      "funding": -0.0000367783,
+      "at": 1793049606279
     },
     "PENGU": {
-      "markPx": 0.007498,
-      "openInterest": 804169452,
+      "markPx": 0.007431,
+      "openInterest": 801679114,
       "funding": 0.0000125,
-      "at": 1793047029781
+      "at": 1793049606279
     },
     "ICP": {
-      "markPx": 2.6067,
-      "openInterest": 1459671.5999999999,
+      "markPx": 2.594,
+      "openInterest": 1448489.4,
       "funding": 0.0000125,
-      "at": 1793047029781
+      "at": 1793049606279
     },
     "XLM": {
-      "markPx": 0.16801,
-      "openInterest": 70543206,
-      "funding": 0.0000125,
-      "at": 1793047029781
+      "markPx": 0.167465,
+      "openInterest": 70417932,
+      "funding": -0.0000021003,
+      "at": 1793049606279
     },
     "LDO": {
-      "markPx": 0.36891,
-      "openInterest": 24185237,
+      "markPx": 0.36627,
+      "openInterest": 24245576.2,
       "funding": 0.0000125,
-      "at": 1793047029781
+      "at": 1793049606279
     },
     "MEGA": {
-      "markPx": 0.046601,
-      "openInterest": 160172082,
+      "markPx": 0.04633,
+      "openInterest": 160141910,
       "funding": 0.0000125,
-      "at": 1793047029781
+      "at": 1793049606279
     },
     "PURR": {
-      "markPx": 0.097662,
-      "openInterest": 108575328,
+      "markPx": 0.097432,
+      "openInterest": 108520550,
       "funding": 0.0000125,
-      "at": 1793047029781
+      "at": 1793049606279
     },
     "SEI": {
-      "markPx": 0.051965,
-      "openInterest": 48934390,
-      "funding": 0.0000125,
-      "at": 1793047029781
+      "markPx": 0.051647,
+      "openInterest": 48870978,
+      "funding": 0.00000439,
+      "at": 1793049606279
     },
     "OP": {
-      "markPx": 0.11004,
-      "openInterest": 34683718,
-      "funding": -0.0000299924,
-      "at": 1793047029781
+      "markPx": 0.10967,
+      "openInterest": 34656164.8,
+      "funding": -0.0000200036,
+      "at": 1793049606279
     },
     "ZK": {
-      "markPx": 0.012321,
-      "openInterest": 393107594,
+      "markPx": 0.012177,
+      "openInterest": 392859408,
       "funding": 0.0000125,
-      "at": 1793047029781
+      "at": 1793049606279
     },
     "JTO": {
-      "markPx": 0.4318,
-      "openInterest": 6866396,
+      "markPx": 0.42753,
+      "openInterest": 6870942,
       "funding": 0.0000125,
-      "at": 1793047029781
+      "at": 1793049606279
     },
     "W": {
-      "markPx": 0.01232,
-      "openInterest": 263916607.4,
-      "funding": 0.0000088032,
-      "at": 1793047029781
-    },
-    "PENDLE": {
-      "markPx": 1.9568,
-      "openInterest": 4588980,
-      "funding": 0.0000125,
-      "at": 1793047029781
-    },
-    "kBONK": {
-      "markPx": 0.003019,
-      "openInterest": 2622799202,
-      "funding": 0.0000125,
-      "at": 1793047029781
+      "markPx": 0.0122,
+      "openInterest": 263117536.2,
+      "funding": 0.0000060504,
+      "at": 1793049606279
     },
     "DASH": {
-      "markPx": 52.9389,
-      "openInterest": 72051.8,
+      "markPx": 52.355,
+      "openInterest": 69336.12,
       "funding": 0.0000125,
-      "at": 1793047029781
+      "at": 1793049606279
     },
-    "FET": {
-      "markPx": 0.17395,
-      "openInterest": 42439950,
+    "PENDLE": {
+      "markPx": 1.9438,
+      "openInterest": 4586844,
       "funding": 0.0000125,
-      "at": 1793047029781
+      "at": 1793049606279
+    },
+    "kBONK": {
+      "markPx": 0.002997,
+      "openInterest": 2626179054,
+      "funding": -0.0000043592,
+      "at": 1793049606279
     },
     "POL": {
-      "markPx": 0.09097,
-      "openInterest": 64407030,
-      "funding": -0.0000172315,
-      "at": 1793047029781
+      "markPx": 0.090189,
+      "openInterest": 64378426,
+      "funding": -0.0000018691,
+      "at": 1793049606279
+    },
+    "FET": {
+      "markPx": 0.172741,
+      "openInterest": 42434188,
+      "funding": 0.0000125,
+      "at": 1793049606279
     },
     "EIGEN": {
-      "markPx": 0.1968,
-      "openInterest": 13982111.4,
+      "markPx": 0.1954,
+      "openInterest": 13959413.120000001,
       "funding": 0.0000125,
-      "at": 1793047029781
-    },
-    "STX": {
-      "markPx": 0.30258,
-      "openInterest": 6423093.199999999,
-      "funding": 0.0000125,
-      "at": 1793047029781
-    },
-    "ALT": {
-      "markPx": 0.006312,
-      "openInterest": 195485040,
-      "funding": -0.000404704,
-      "at": 1793047029781
+      "at": 1793049606279
     },
     "CC": {
-      "markPx": 0.0991,
-      "openInterest": 58477104,
-      "funding": 4.071e-7,
-      "at": 1793047029781
+      "markPx": 0.098257,
+      "openInterest": 58457468,
+      "funding": 0.0000125,
+      "at": 1793049606279
+    },
+    "STX": {
+      "markPx": 0.29985,
+      "openInterest": 6422520.8,
+      "funding": 0.0000125,
+      "at": 1793049606279
+    },
+    "ALT": {
+      "markPx": 0.006286,
+      "openInterest": 195592218,
+      "funding": -0.0002424947,
+      "at": 1793049606279
     },
     "2Z": {
-      "markPx": 0.02775,
-      "openInterest": 26611620,
+      "markPx": 0.027653,
+      "openInterest": 26673614,
       "funding": 0.0000125,
-      "at": 1793047029781
+      "at": 1793049606279
     },
     "STBL": {
-      "markPx": 0.02743,
-      "openInterest": 69907534,
+      "markPx": 0.027376,
+      "openInterest": 69966286,
       "funding": 0.0000125,
-      "at": 1793047029781
+      "at": 1793049606279
     },
     "SYRUP": {
-      "markPx": 0.17456,
-      "openInterest": 28443688,
+      "markPx": 0.17533,
+      "openInterest": 28433386,
       "funding": 0.0000125,
-      "at": 1793047029781
-    },
-    "VIRTUAL": {
-      "markPx": 0.61341,
-      "openInterest": 9138970.400000002,
-      "funding": 0.0000125,
-      "at": 1793047029781
-    },
-    "ATOM": {
-      "markPx": 1.6375,
-      "openInterest": 2284700.06,
-      "funding": -0.0000635379,
-      "at": 1793047029781
+      "at": 1793049606279
     },
     "MELANIA": {
-      "markPx": 0.08548,
-      "openInterest": 13763993.200000001,
+      "markPx": 0.08498,
+      "openInterest": 13748217.000000002,
       "funding": 0.0000125,
-      "at": 1793047029781
+      "at": 1793049606279
     },
     "MINA": {
-      "markPx": 0.063528,
-      "openInterest": 15511618,
+      "markPx": 0.063059,
+      "openInterest": 15518462,
       "funding": 0.0000125,
-      "at": 1793047029781
+      "at": 1793049606279
     },
-    "USUAL": {
-      "markPx": 0.01075,
-      "openInterest": 67152004.6,
-      "funding": 0.0000125,
-      "at": 1793047029781
-    },
-    "SOPH": {
-      "markPx": 0.001394,
-      "openInterest": 222562688,
-      "funding": 0.0000125,
-      "at": 1793047029781
-    },
-    "COMP": {
-      "markPx": 21.715,
-      "openInterest": 62685.52,
-      "funding": 0.0000125,
-      "at": 1793047029781
-    },
-    "POLYX": {
-      "markPx": 0.033932,
-      "openInterest": 4572706,
-      "funding": -0.0000432913,
-      "at": 1793047029781
+    "ATOM": {
+      "markPx": 1.6291,
+      "openInterest": 2284439.08,
+      "funding": -0.0000587345,
+      "at": 1793049606279
     },
     "AR": {
-      "markPx": 3.3897,
-      "openInterest": 382240.4,
-      "funding": -0.000011085,
-      "at": 1793047029781
+      "markPx": 3.3605,
+      "openInterest": 379795.06,
+      "funding": -0.00000979,
+      "at": 1793049606279
+    },
+    "USUAL": {
+      "markPx": 0.01071,
+      "openInterest": 67209032,
+      "funding": 0.0000125,
+      "at": 1793049606279
+    },
+    "SOPH": {
+      "markPx": 0.001386,
+      "openInterest": 223748842,
+      "funding": 0.0000125,
+      "at": 1793049606279
+    },
+    "VIRTUAL": {
+      "markPx": 0.60949,
+      "openInterest": 9126236.600000001,
+      "funding": 0.0000125,
+      "at": 1793049606279
+    },
+    "COMP": {
+      "markPx": 21.685,
+      "openInterest": 62499.7,
+      "funding": -0.0000112307,
+      "at": 1793049606279
+    },
+    "POLYX": {
+      "markPx": 0.033831,
+      "openInterest": 4541230,
+      "funding": -0.0000407556,
+      "at": 1793049606279
     },
     "ANIME": {
-      "markPx": 0.002761,
-      "openInterest": 177535054,
-      "funding": -0.000184206,
-      "at": 1793047029781
+      "markPx": 0.002729,
+      "openInterest": 182832178,
+      "funding": -0.0001690885,
+      "at": 1793049606279
     },
     "ALGO": {
-      "markPx": 0.104212,
-      "openInterest": 30027080,
+      "markPx": 0.10368,
+      "openInterest": 30010382,
       "funding": 0.0000125,
-      "at": 1793047029781
-    },
-    "WIF": {
-      "markPx": 0.18019,
-      "openInterest": 26262296,
-      "funding": 0.0000125,
-      "at": 1793047029781
+      "at": 1793049606279
     },
     "ZORA": {
-      "markPx": 0.006173,
-      "openInterest": 107539700,
-      "funding": -0.0000270088,
-      "at": 1793047029781
+      "markPx": 0.006114,
+      "openInterest": 107212444,
+      "funding": 0.0000116343,
+      "at": 1793049606279
     },
-    "AVNT": {
-      "markPx": 0.11005,
-      "openInterest": 14970496,
+    "WIF": {
+      "markPx": 0.17878,
+      "openInterest": 26263924,
       "funding": 0.0000125,
-      "at": 1793047029781
+      "at": 1793049606279
     },
     "ETC": {
-      "markPx": 7.5643,
-      "openInterest": 378498.42,
-      "funding": -0.0000118481,
-      "at": 1793047029781
+      "markPx": 7.5312,
+      "openInterest": 377495.42,
+      "funding": -0.00000595,
+      "at": 1793049606279
+    },
+    "AVNT": {
+      "markPx": 0.1092,
+      "openInterest": 14932170,
+      "funding": 0.0000125,
+      "at": 1793049606279
     },
     "GMX": {
-      "markPx": 8.0381,
-      "openInterest": 104456.58,
+      "markPx": 7.9891,
+      "openInterest": 104323.08,
       "funding": 0.0000125,
-      "at": 1793047029781
+      "at": 1793049606279
     },
     "FOGO": {
-      "markPx": 0.003278,
-      "openInterest": 84052760,
+      "markPx": 0.003243,
+      "openInterest": 83576834,
       "funding": 0.0000125,
-      "at": 1793047029781
+      "at": 1793049606279
     },
     "kSHIB": {
-      "markPx": 0.004865,
-      "openInterest": 582203890,
+      "markPx": 0.004836,
+      "openInterest": 582578312,
       "funding": 0.0000125,
-      "at": 1793047029781
+      "at": 1793049606279
     },
     "RUNE": {
-      "markPx": 0.62584,
-      "openInterest": 3157077.4,
+      "markPx": 0.62367,
+      "openInterest": 3156641.6,
       "funding": 0.0000125,
-      "at": 1793047029781
-    },
-    "IO": {
-      "markPx": 0.14456,
-      "openInterest": 4534178.000000001,
-      "funding": 0.0000087239,
-      "at": 1793047029781
-    },
-    "S": {
-      "markPx": 0.047082,
-      "openInterest": 17193752,
-      "funding": -0.0000042081,
-      "at": 1793047029781
+      "at": 1793049606279
     },
     "SAND": {
-      "markPx": 0.047849,
-      "openInterest": 21913056,
-      "funding": -0.0000019092,
-      "at": 1793047029781
+      "markPx": 0.047688,
+      "openInterest": 22267502,
+      "funding": -0.0000248237,
+      "at": 1793049606279
+    },
+    "S": {
+      "markPx": 0.046691,
+      "openInterest": 17164702,
+      "funding": -0.0000033498,
+      "at": 1793049606279
+    },
+    "IO": {
+      "markPx": 0.14323,
+      "openInterest": 4524343.199999998,
+      "funding": 0.0000125,
+      "at": 1793049606279
     },
     "SKY": {
-      "markPx": 0.068288,
-      "openInterest": 47474802,
+      "markPx": 0.067769,
+      "openInterest": 47459306,
       "funding": 0.0000125,
-      "at": 1793047029781
+      "at": 1793049606279
     },
     "BSV": {
-      "markPx": 17.247,
-      "openInterest": 49288.68,
+      "markPx": 17.2393,
+      "openInterest": 49279.62,
       "funding": 0.0000125,
-      "at": 1793047029781
+      "at": 1793049606279
     },
     "APE": {
-      "markPx": 0.12113,
-      "openInterest": 8159575.6,
+      "markPx": 0.12086,
+      "openInterest": 8162025.000000001,
       "funding": 0.0000125,
-      "at": 1793047029781
-    },
-    "MNT": {
-      "markPx": 0.51299,
-      "openInterest": 9701911.000000002,
-      "funding": 0.0000125,
-      "at": 1793047029781
+      "at": 1793049606279
     },
     "CELO": {
-      "markPx": 0.078611,
-      "openInterest": 7236526,
+      "markPx": 0.07789,
+      "openInterest": 7259652,
       "funding": 0.0000125,
-      "at": 1793047029781
+      "at": 1793049606279
+    },
+    "MNT": {
+      "markPx": 0.51056,
+      "openInterest": 9700097.399999999,
+      "funding": 0.0000125,
+      "at": 1793049606279
     },
     "BRETT": {
-      "markPx": 0.00463,
-      "openInterest": 40713876,
+      "markPx": 0.004608,
+      "openInterest": 40847962,
       "funding": 0.0000125,
-      "at": 1793047029781
-    },
-    "SUPER": {
-      "markPx": 0.17655,
-      "openInterest": 7377542,
-      "funding": 0.0000125,
-      "at": 1793047029781
+      "at": 1793049606279
     },
     "AZTEC": {
-      "markPx": 0.0163,
-      "openInterest": 93153016,
+      "markPx": 0.016253,
+      "openInterest": 93145196,
       "funding": 0.0000125,
-      "at": 1793047029781
-    },
-    "BERA": {
-      "markPx": 0.14993,
-      "openInterest": 9633114.799999999,
-      "funding": -0.0000140009,
-      "at": 1793047029781
-    },
-    "CFX": {
-      "markPx": 0.048014,
-      "openInterest": 65910648,
-      "funding": 0.0000125,
-      "at": 1793047029781
-    },
-    "KAS": {
-      "markPx": 0.03537,
-      "openInterest": 49914482,
-      "funding": 0.0000125,
-      "at": 1793047029781
+      "at": 1793049606279
     },
     "DYDX": {
-      "markPx": 0.10299,
-      "openInterest": 13462855.8,
+      "markPx": 0.10517,
+      "openInterest": 13446685.400000002,
       "funding": 0.0000125,
-      "at": 1793047029781
+      "at": 1793049606279
+    },
+    "CFX": {
+      "markPx": 0.047622,
+      "openInterest": 65816230,
+      "funding": 0.0000125,
+      "at": 1793049606279
     },
     "CAKE": {
-      "markPx": 2.1313,
-      "openInterest": 836380.8,
-      "funding": 0.000010256,
-      "at": 1793047029781
+      "markPx": 2.1246,
+      "openInterest": 842512,
+      "funding": -0.0000176401,
+      "at": 1793049606279
+    },
+    "KAS": {
+      "markPx": 0.035102,
+      "openInterest": 49907112,
+      "funding": 0.0000125,
+      "at": 1793049606279
+    },
+    "BERA": {
+      "markPx": 0.1487,
+      "openInterest": 9632706.6,
+      "funding": -0.0000294848,
+      "at": 1793049606279
+    },
+    "SUPER": {
+      "markPx": 0.175636,
+      "openInterest": 7383054,
+      "funding": 0.0000125,
+      "at": 1793049606279
     },
     "GOAT": {
-      "markPx": 0.013833,
-      "openInterest": 44587594,
+      "markPx": 0.013761,
+      "openInterest": 44470678,
       "funding": 0.0000125,
-      "at": 1793047029781
-    },
-    "PEOPLE": {
-      "markPx": 0.007413,
-      "openInterest": 23529182,
-      "funding": 0.0000068087,
-      "at": 1793047029781
-    },
-    "0G": {
-      "markPx": 0.20078,
-      "openInterest": 9020414,
-      "funding": 0.0000125,
-      "at": 1793047029781
-    },
-    "BLUR": {
-      "markPx": 0.007309,
-      "openInterest": 84717966,
-      "funding": 0.0000125,
-      "at": 1793047029781
-    },
-    "DYM": {
-      "markPx": 0.01767,
-      "openInterest": 15455812,
-      "funding": 0.0000125,
-      "at": 1793047029781
-    },
-    "SNX": {
-      "markPx": 0.19536,
-      "openInterest": 2276307.8,
-      "funding": 0.0000125,
-      "at": 1793047029781
+      "at": 1793049606279
     },
     "MERL": {
-      "markPx": 0.027311,
-      "openInterest": 19745738,
+      "markPx": 0.027525,
+      "openInterest": 19863218,
       "funding": 0.0000125,
-      "at": 1793047029781
+      "at": 1793049606279
+    },
+    "PEOPLE": {
+      "markPx": 0.007363,
+      "openInterest": 23456180,
+      "funding": -0.0000032558,
+      "at": 1793049606279
+    },
+    "SNX": {
+      "markPx": 0.19406,
+      "openInterest": 2278562.4,
+      "funding": 0.0000125,
+      "at": 1793049606279
+    },
+    "0G": {
+      "markPx": 0.19978,
+      "openInterest": 9025306,
+      "funding": 0.0000125,
+      "at": 1793049606279
+    },
+    "BLUR": {
+      "markPx": 0.007244,
+      "openInterest": 84794840,
+      "funding": 0.0000125,
+      "at": 1793049606279
+    },
+    "DYM": {
+      "markPx": 0.01759,
+      "openInterest": 15410962,
+      "funding": 0.0000125,
+      "at": 1793049606279
     },
     "KAITO": {
-      "markPx": 0.24928,
-      "openInterest": 6368396,
+      "markPx": 0.247815,
+      "openInterest": 6359140,
       "funding": 0.0000125,
-      "at": 1793047029781
+      "at": 1793049606279
     },
     "MANTA": {
-      "markPx": 0.06152,
-      "openInterest": 5576608.4,
+      "markPx": 0.06148,
+      "openInterest": 5581620.600000001,
       "funding": 0.0000125,
-      "at": 1793047029781
+      "at": 1793049606279
     },
     "HYPER": {
-      "markPx": 0.063485,
-      "openInterest": 961104,
+      "markPx": 0.063348,
+      "openInterest": 946220,
       "funding": 0.0000125,
-      "at": 1793047029781
+      "at": 1793049606279
     },
     "ACE": {
-      "markPx": 0.1411,
-      "openInterest": 1420329.0199999998,
+      "markPx": 0.1402,
+      "openInterest": 1416549.78,
       "funding": 0.0000125,
-      "at": 1793047029781
+      "at": 1793049606279
     },
     "WCT": {
-      "markPx": 0.035974,
-      "openInterest": 3005320,
+      "markPx": 0.036045,
+      "openInterest": 3006312,
       "funding": 0.0000125,
-      "at": 1793047029781
+      "at": 1793049606279
     },
     "YGG": {
-      "markPx": 0.024078,
-      "openInterest": 8150448,
-      "funding": -0.0000204013,
-      "at": 1793047029781
-    },
-    "POPCAT": {
-      "markPx": 0.042685,
-      "openInterest": 36627454,
-      "funding": 0.0000125,
-      "at": 1793047029781
+      "markPx": 0.024,
+      "openInterest": 8168410,
+      "funding": -0.0000250433,
+      "at": 1793049606279
     },
     "NXPC": {
-      "markPx": 0.17085,
-      "openInterest": 971106,
+      "markPx": 0.17014,
+      "openInterest": 968760,
       "funding": 0.0000125,
-      "at": 1793047029781
+      "at": 1793049606279
+    },
+    "POPCAT": {
+      "markPx": 0.042605,
+      "openInterest": 36610432,
+      "funding": 0.0000125,
+      "at": 1793049606279
     },
     "HEMI": {
-      "markPx": 0.004604,
-      "openInterest": 81839272,
+      "markPx": 0.004583,
+      "openInterest": 82055932,
       "funding": 0.0000125,
-      "at": 1793047029781
+      "at": 1793049606279
     },
     "MOODENG": {
-      "markPx": 0.038277,
-      "openInterest": 8118128,
+      "markPx": 0.03787,
+      "openInterest": 8093838,
       "funding": 0.0000125,
-      "at": 1793047029781
+      "at": 1793049606279
     },
     "ENS": {
-      "markPx": 5.2018,
-      "openInterest": 350870.38,
+      "markPx": 5.1747,
+      "openInterest": 350841.38,
       "funding": 0.0000125,
-      "at": 1793047029781
+      "at": 1793049606279
     },
     "PNUT": {
-      "markPx": 0.04128,
-      "openInterest": 24358879.599999998,
+      "markPx": 0.04099,
+      "openInterest": 24360048.799999997,
       "funding": 0.0000125,
-      "at": 1793047029781
+      "at": 1793049606279
     },
     "ZEN": {
-      "markPx": 5.6738,
-      "openInterest": 126528.58,
+      "markPx": 5.6344,
+      "openInterest": 126787.34,
       "funding": 0.0000125,
-      "at": 1793047029781
+      "at": 1793049606279
     },
     "BIGTIME": {
-      "markPx": 0.006839,
-      "openInterest": 18073422,
-      "funding": 0.0000045072,
-      "at": 1793047029781
+      "markPx": 0.006842,
+      "openInterest": 18061616,
+      "funding": 0.0000125,
+      "at": 1793049606279
     },
     "GALA": {
-      "markPx": 0.001727,
-      "openInterest": 276322620,
-      "funding": -0.0000231922,
-      "at": 1793047029781
+      "markPx": 0.001713,
+      "openInterest": 276183964,
+      "funding": -0.0000141819,
+      "at": 1793049606279
     },
     "STABLE": {
-      "markPx": 0.026366,
-      "openInterest": 31084962,
+      "markPx": 0.026399,
+      "openInterest": 31088992,
       "funding": 0.0000125,
-      "at": 1793047029781
+      "at": 1793049606279
     },
     "MOVE": {
-      "markPx": 0.006777,
-      "openInterest": 33236156,
+      "markPx": 0.006758,
+      "openInterest": 33202718,
       "funding": 0.0000125,
-      "at": 1793047029781
+      "at": 1793049606279
     },
     "BIO": {
-      "markPx": 0.022126,
-      "openInterest": 36480906,
+      "markPx": 0.02196,
+      "openInterest": 36486130,
       "funding": 0.0000125,
-      "at": 1793047029781
+      "at": 1793049606279
     },
     "IMX": {
-      "markPx": 0.1381,
-      "openInterest": 27580326.599999998,
+      "markPx": 0.13742,
+      "openInterest": 27568513.599999998,
       "funding": 0.0000125,
-      "at": 1793047029781
-    },
-    "kLUNC": {
-      "markPx": 0.044606,
-      "openInterest": 5525496,
-      "funding": 0.0000125,
-      "at": 1793047029781
+      "at": 1793049606279
     },
     "IOTA": {
-      "markPx": 0.042229,
-      "openInterest": 28894950,
+      "markPx": 0.04191,
+      "openInterest": 28892332,
       "funding": 0.0000125,
-      "at": 1793047029781
+      "at": 1793049606279
     },
     "SUSHI": {
-      "markPx": 0.20105,
-      "openInterest": 1401374.8,
-      "funding": -0.0000139636,
-      "at": 1793047029781
+      "markPx": 0.19996,
+      "openInterest": 1397141,
+      "funding": -0.0000114277,
+      "at": 1793049606279
     },
     "APEX": {
-      "markPx": 0.22024,
-      "openInterest": 7201388,
+      "markPx": 0.21969,
+      "openInterest": 7199264,
       "funding": 0.0000125,
-      "at": 1793047029781
+      "at": 1793049606279
+    },
+    "kLUNC": {
+      "markPx": 0.044471,
+      "openInterest": 5531488,
+      "funding": 0.0000125,
+      "at": 1793049606279
     },
     "GRIFFAIN": {
-      "markPx": 0.013599,
-      "openInterest": 99479360,
+      "markPx": 0.013524,
+      "openInterest": 99448612,
       "funding": 0.0000125,
-      "at": 1793047029781
-    },
-    "AXS": {
-      "markPx": 0.94565,
-      "openInterest": 471955.8,
-      "funding": 0.0000125,
-      "at": 1793047029781
-    },
-    "GAS": {
-      "markPx": 1.1607,
-      "openInterest": 68757.8,
-      "funding": 0.0000125,
-      "at": 1793047029781
-    },
-    "BOME": {
-      "markPx": 0.000619,
-      "openInterest": 713685906,
-      "funding": 0.0000125,
-      "at": 1793047029781
-    },
-    "TRB": {
-      "markPx": 17.293,
-      "openInterest": 30571.26,
-      "funding": 0.0000015164,
-      "at": 1793047029781
-    },
-    "ORDI": {
-      "markPx": 3.5711,
-      "openInterest": 97327.78,
-      "funding": 0.0000125,
-      "at": 1793047029781
+      "at": 1793049606279
     },
     "RESOLV": {
-      "markPx": 0.016625,
-      "openInterest": 70350764,
+      "markPx": 0.016744,
+      "openInterest": 70235116,
       "funding": 0.0000125,
-      "at": 1793047029781
+      "at": 1793049606279
+    },
+    "TRB": {
+      "markPx": 17.173,
+      "openInterest": 30551.7,
+      "funding": 0.0000124609,
+      "at": 1793049606279
+    },
+    "GAS": {
+      "markPx": 1.156,
+      "openInterest": 69266.6,
+      "funding": 0.0000101143,
+      "at": 1793049606279
+    },
+    "AXS": {
+      "markPx": 0.94073,
+      "openInterest": 472288.4,
+      "funding": 0.0000125,
+      "at": 1793049606279
     },
     "LINEA": {
-      "markPx": 0.002532,
-      "openInterest": 926302372,
+      "markPx": 0.002517,
+      "openInterest": 926460912,
       "funding": 0.0000125,
-      "at": 1793047029781
+      "at": 1793049606279
+    },
+    "BOME": {
+      "markPx": 0.000618,
+      "openInterest": 713089718,
+      "funding": 0.0000125,
+      "at": 1793049606279
     },
     "RSR": {
-      "markPx": 0.00159,
-      "openInterest": 222129730,
+      "markPx": 0.001579,
+      "openInterest": 222268378,
       "funding": 0.0000125,
-      "at": 1793047029781
+      "at": 1793049606279
+    },
+    "ORDI": {
+      "markPx": 3.5533,
+      "openInterest": 97225.08,
+      "funding": 0.0000125,
+      "at": 1793049606279
     },
     "PROVE": {
-      "markPx": 0.18491,
-      "openInterest": 1176668,
-      "funding": 0.0000125,
-      "at": 1793047029781
+      "markPx": 0.184717,
+      "openInterest": 1175588,
+      "funding": 0.0000064035,
+      "at": 1793049606279
     },
     "ME": {
-      "markPx": 0.06053,
-      "openInterest": 3298785.2,
+      "markPx": 0.06031,
+      "openInterest": 3311106.8,
       "funding": 0.0000125,
-      "at": 1793047029781
+      "at": 1793049606279
     },
     "GMT": {
-      "markPx": 0.006877,
-      "openInterest": 13840682,
+      "markPx": 0.00685,
+      "openInterest": 13812928,
       "funding": 0.0000125,
-      "at": 1793047029781
+      "at": 1793049606279
     },
     "XAI": {
-      "markPx": 0.00765,
-      "openInterest": 35934769.800000004,
-      "funding": -0.0000536584,
-      "at": 1793047029781
+      "markPx": 0.00762,
+      "openInterest": 35929348.599999994,
+      "funding": -0.000054207,
+      "at": 1793049606279
     },
     "ZETA": {
-      "markPx": 0.03885,
-      "openInterest": 19099819.8,
+      "markPx": 0.03864,
+      "openInterest": 19084874.8,
       "funding": 0.0000125,
-      "at": 1793047029781
+      "at": 1793049606279
     },
     "TURBO": {
-      "markPx": 0.000814,
-      "openInterest": 246102544,
+      "markPx": 0.000812,
+      "openInterest": 245201882,
       "funding": 0.0000125,
-      "at": 1793047029781
-    },
-    "LAYER": {
-      "markPx": 0.064406,
-      "openInterest": 6084912,
-      "funding": 0.0000125,
-      "at": 1793047029781
+      "at": 1793049606279
     },
     "kFLOKI": {
-      "markPx": 0.022892,
-      "openInterest": 17219898,
+      "markPx": 0.022772,
+      "openInterest": 17239248,
       "funding": 0.0000125,
-      "at": 1793047029781
+      "at": 1793049606279
     },
-    "AIXBT": {
-      "markPx": 0.018253,
-      "openInterest": 8066630,
-      "funding": -0.0000092727,
-      "at": 1793047029781
+    "LAYER": {
+      "markPx": 0.06411,
+      "openInterest": 6079430,
+      "funding": 0.0000125,
+      "at": 1793049606279
     },
     "BANANA": {
-      "markPx": 3.3324,
-      "openInterest": 36850,
+      "markPx": 3.3298,
+      "openInterest": 36518.8,
       "funding": 0.0000125,
-      "at": 1793047029781
+      "at": 1793049606279
+    },
+    "AIXBT": {
+      "markPx": 0.018157,
+      "openInterest": 8050646,
+      "funding": -0.0000026209,
+      "at": 1793049606279
     },
     "kNEIRO": {
-      "markPx": 0.06611,
-      "openInterest": 2006808.8,
+      "markPx": 0.06563,
+      "openInterest": 2003959,
       "funding": 0.0000125,
-      "at": 1793047029781
+      "at": 1793049606279
     },
     "NEO": {
-      "markPx": 2.0816,
-      "openInterest": 195733.86,
+      "markPx": 2.0713,
+      "openInterest": 195721.44,
       "funding": 0.0000125,
-      "at": 1793047029781
+      "at": 1793049606279
     },
     "SAGA": {
-      "markPx": 0.01794,
-      "openInterest": 63996369.4,
+      "markPx": 0.01784,
+      "openInterest": 63992192.4,
       "funding": 0.0000125,
-      "at": 1793047029781
+      "at": 1793049606279
     },
     "UMA": {
-      "markPx": 0.35278,
-      "openInterest": 390534,
+      "markPx": 0.352,
+      "openInterest": 390073.8,
       "funding": 0.0000125,
-      "at": 1793047029781
+      "at": 1793049606279
     },
     "MEME": {
-      "markPx": 0.000464,
-      "openInterest": 740676206,
+      "markPx": 0.000461,
+      "openInterest": 741580120,
       "funding": 0.0000125,
-      "at": 1793047029781
+      "at": 1793049606279
     },
     "HMSTR": {
-      "markPx": 0.00014,
-      "openInterest": 8912058286,
+      "markPx": 0.000139,
+      "openInterest": 8911860318,
       "funding": 0.0000125,
-      "at": 1793047029781
+      "at": 1793049606279
     },
     "NOT": {
       "markPx": 0.000367,
-      "openInterest": 631881400,
+      "openInterest": 633003424,
       "funding": 0.0000125,
-      "at": 1793047029781
+      "at": 1793049606279
     },
     "TNSR": {
-      "markPx": 0.02938,
-      "openInterest": 4996748.8,
+      "markPx": 0.02926,
+      "openInterest": 4992793.2,
       "funding": 0.0000125,
-      "at": 1793047029781
+      "at": 1793049606279
     }
   },
   "alertHistory": {
-    "PROVE|LONG|SWEEP_RECLAIM": 1793039602458,
-    "PROVE|LONG|GLOBAL": 1793039602458,
-    "XMR|LONG|BREAKOUT_RETEST": 1793039605611,
-    "XMR|LONG|GLOBAL": 1793039605611,
-    "HYPER|LONG|BREAKOUT_RETEST": 1793039608828,
-    "HYPER|LONG|GLOBAL": 1793039608828,
-    "MELANIA|SHORT|SWEEP_RECLAIM": 1793039612076,
-    "MELANIA|SHORT|GLOBAL": 1793039612076,
-    "STABLE|SHORT|BREAKOUT_RETEST": 1793042507448,
-    "STABLE|SHORT|GLOBAL": 1793044909077,
-    "ME|LONG|SWEEP_RECLAIM": 1793042510583,
-    "ME|LONG|GLOBAL": 1793042510583,
-    "ORDI|SHORT|SWEEP_RECLAIM": 1793042513808,
-    "ORDI|SHORT|GLOBAL": 1793042513808,
-    "MERL|LONG|TREND_PULLBACK": 1793042517007,
-    "MERL|LONG|GLOBAL": 1793042517007,
-    "kSHIB|SHORT|SWEEP_RECLAIM": 1793042520196,
-    "kSHIB|SHORT|GLOBAL": 1793042520196,
-    "ETHFI|LONG|TREND_PULLBACK": 1793042523404,
-    "ETHFI|LONG|GLOBAL": 1793042523404,
-    "GMX|SHORT|SWEEP_RECLAIM": 1793042526595,
-    "GMX|SHORT|GLOBAL": 1793042526595,
-    "BCH|LONG|SWEEP_RECLAIM": 1793042529821,
-    "BCH|LONG|GLOBAL": 1793042529821,
-    "PUMP|SHORT|TREND_PULLBACK": 1793044905828,
-    "PUMP|SHORT|GLOBAL": 1793044905828,
-    "STABLE|SHORT|TREND_PULLBACK": 1793044909077,
-    "AVAX|SHORT|TREND_PULLBACK": 1793044912327,
-    "AVAX|SHORT|GLOBAL": 1793044912328,
-    "PENDLE|SHORT|TREND_PULLBACK": 1793044915448,
-    "PENDLE|SHORT|GLOBAL": 1793044915448,
-    "HEMI|SHORT|TREND_PULLBACK": 1793044918746,
-    "HEMI|SHORT|GLOBAL": 1793044918746,
-    "AR|SHORT|TREND_PULLBACK": 1793044921849,
-    "AR|SHORT|GLOBAL": 1793044921849,
-    "HYPER|SHORT|BREAKOUT_RETEST": 1793044925121,
-    "HYPER|SHORT|GLOBAL": 1793044925121,
-    "REZ|LONG|TREND_PULLBACK": 1793044928273,
-    "REZ|LONG|GLOBAL": 1793044928273,
-    "LDO|SHORT|TREND_PULLBACK": 1793047010662,
-    "LDO|SHORT|GLOBAL": 1793047010662,
-    "BIGTIME|SHORT|SWEEP_RECLAIM": 1793047013876,
-    "BIGTIME|SHORT|GLOBAL": 1793047013876,
-    "DYM|SHORT|TREND_PULLBACK": 1793047016983,
-    "DYM|SHORT|GLOBAL": 1793047016983,
-    "LINEA|SHORT|TREND_PULLBACK": 1793047020194,
-    "LINEA|SHORT|GLOBAL": 1793047020194,
-    "XRP|SHORT|TREND_PULLBACK": 1793047023391,
-    "XRP|SHORT|GLOBAL": 1793047023391,
-    "SYRUP|SHORT|TREND_PULLBACK": 1793047026580,
-    "SYRUP|SHORT|GLOBAL": 1793047026580,
-    "AVNT|SHORT|TREND_PULLBACK": 1793047029781,
-    "AVNT|SHORT|GLOBAL": 1793047029781
+    "MEGA|SHORT|SWEEP_RECLAIM": 1793049583870,
+    "MEGA|SHORT|GLOBAL": 1793049583870,
+    "POPCAT|SHORT|SWEEP_RECLAIM": 1793049587154,
+    "POPCAT|SHORT|GLOBAL": 1793049587154,
+    "PNUT|SHORT|TREND_PULLBACK": 1793049590343,
+    "PNUT|SHORT|GLOBAL": 1793049590343,
+    "ADA|SHORT|TREND_PULLBACK": 1793049593472,
+    "ADA|SHORT|GLOBAL": 1793049593472,
+    "WIF|SHORT|TREND_PULLBACK": 1793049596697,
+    "WIF|SHORT|GLOBAL": 1793049596697,
+    "GMX|SHORT|TREND_PULLBACK": 1793049599885,
+    "GMX|SHORT|GLOBAL": 1793049599885,
+    "ZEC|SHORT|BREAKOUT_RETEST": 1793049603149,
+    "ZEC|SHORT|GLOBAL": 1793049603149,
+    "RENDER|SHORT|BREAKOUT_RETEST": 1793049606279,
+    "RENDER|SHORT|GLOBAL": 1793049606279
   },
   "dailyFreeCount": {},
   "paperTrades": [
     {
-      "strategyVersion": "NOVARA-SMART-MONEY-AI-V2.8.5-STRUCTURE-FIRST-REPAIR-PREMIUM-CARDS",
-      "id": "PROVE|LONG|SWEEP_RECLAIM|1793039602458",
-      "coin": "PROVE",
-      "side": "LONG",
+      "strategyVersion": "NOVARA-SMART-MONEY-AI-V2.8.6-LEVEL-PROXIMITY-EARLY-ENTRY",
+      "id": "MEGA|SHORT|SWEEP_RECLAIM|1793049583870",
+      "coin": "MEGA",
+      "side": "SHORT",
       "pattern": "SWEEP_RECLAIM",
-      "score": 7,
+      "score": 7.38,
       "audience": "BOTH",
       "outcomeDelivered": [],
-      "entry": 0.18457,
-      "sl": 0.18320424285714285,
-      "tp": 0.18813424285714284,
-      "rr": 2.609719360271053,
+      "entry": 0.04633,
+      "sl": 0.04676065142857143,
+      "tp": 0.045564651428571426,
+      "rr": 1.777188047343585,
       "suggestedLeverage": 3,
       "btcRegime": "BEARISH",
-      "rsi15": 50.878557872946566,
+      "rsi15": 44.1877120389522,
       "fibConfluence": true,
-      "openedAt": 1793039602458,
-      "lastCheckedAt": 1793046767089,
+      "openedAt": 1793049583870,
+      "lastCheckedAt": 1793049583870,
       "status": "OPEN",
       "pnlR": null,
       "reasons": [
-        "Final-side evidence adjustment +0.15 (original=LONG, final=LONG; checks trend/flow/order-book/RSI/VWAP)",
-        "1H ASSET TREND AUTHORITY: LONG->LONG; 15m used for entry timing only; BTC SHORT is context, not a side override; source=weighted 1H/15m (SHORT); SL/TP from repeated-touch 1H levels",
-        "Liquidity sweep + reclaim",
-        "order-flow supports reversal",
-        "aligned 1H trend",
-        "1H Fibonacci confluence (0.184479)",
-        "15m RSI supports entry (50.9)"
-      ]
-    },
-    {
-      "strategyVersion": "NOVARA-SMART-MONEY-AI-V2.8.5-STRUCTURE-FIRST-REPAIR-PREMIUM-CARDS",
-      "id": "XMR|LONG|BREAKOUT_RETEST|1793039605611",
-      "coin": "XMR",
-      "side": "LONG",
-      "pattern": "BREAKOUT_RETEST",
-      "score": 6.99,
-      "audience": "VIP",
-      "outcomeDelivered": [],
-      "entry": 595.24,
-      "sl": 590.10714,
-      "tp": 605.60714,
-      "rr": 2.0197589647876324,
-      "suggestedLeverage": 5,
-      "btcRegime": "BEARISH",
-      "rsi15": 64.21863592274869,
-      "fibConfluence": true,
-      "openedAt": 1793039605611,
-      "lastCheckedAt": 1793046767089,
-      "status": "OPEN",
-      "pnlR": null,
-      "reasons": [
-        "Final-side evidence adjustment +0.14 (original=LONG, final=LONG; checks trend/flow/order-book/RSI/VWAP)",
-        "1H ASSET TREND AUTHORITY: LONG->LONG; 15m used for entry timing only; BTC SHORT is context, not a side override; source=1H + 15m live; SL/TP from repeated-touch 1H levels",
-        "Breakout + retest",
-        "order-flow confirms continuation",
-        "volume supports level break",
-        "VWAP alignment",
-        "1H Fibonacci confluence (596.804)",
-        "15m RSI supports entry (64.2)"
-      ]
-    },
-    {
-      "strategyVersion": "NOVARA-SMART-MONEY-AI-V2.8.5-STRUCTURE-FIRST-REPAIR-PREMIUM-CARDS",
-      "id": "HYPER|LONG|BREAKOUT_RETEST|1793039608828",
-      "coin": "HYPER",
-      "side": "LONG",
-      "pattern": "BREAKOUT_RETEST",
-      "score": 6.35,
-      "audience": "VIP",
-      "outcomeDelivered": [],
-      "entry": 0.063612,
-      "sl": 0.06309897,
-      "tp": 0.06448997000000001,
-      "rr": 1.7113424166228286,
-      "suggestedLeverage": 3,
-      "btcRegime": "BEARISH",
-      "rsi15": 42.93216373635857,
-      "fibConfluence": false,
-      "openedAt": 1793039608828,
-      "lastCheckedAt": 1793046767089,
-      "status": "OPEN",
-      "pnlR": null,
-      "reasons": [
-        "Final-side evidence adjustment -0.25 (original=SHORT, final=LONG; checks trend/flow/order-book/RSI/VWAP)",
-        "1H ASSET TREND AUTHORITY: SHORT->LONG; 15m used for entry timing only; BTC SHORT is context, not a side override; source=weighted 1H/15m (SHORT); SL/TP from repeated-touch 1H levels",
-        "Breakout + retest",
-        "order-flow confirms continuation",
-        "volume supports level break",
-        "VWAP alignment",
-        "15m RSI supports entry (42.9)"
-      ]
-    },
-    {
-      "strategyVersion": "NOVARA-SMART-MONEY-AI-V2.8.5-STRUCTURE-FIRST-REPAIR-PREMIUM-CARDS",
-      "id": "MELANIA|SHORT|SWEEP_RECLAIM|1793039612076",
-      "coin": "MELANIA",
-      "side": "SHORT",
-      "pattern": "SWEEP_RECLAIM",
-      "score": 6.09,
-      "audience": "VIP",
-      "outcomeDelivered": [
-        "VIP"
-      ],
-      "entry": 0.08569,
-      "sl": 0.08661352857142857,
-      "tp": 0.08315352857142858,
-      "rr": 2.746500224295038,
-      "suggestedLeverage": 3,
-      "btcRegime": "BEARISH",
-      "rsi15": 69.74201013960554,
-      "fibConfluence": false,
-      "openedAt": 1793039612076,
-      "lastCheckedAt": 1793042194973,
-      "status": "SL",
-      "pnlR": -1,
-      "reasons": [
-        "Final-side evidence adjustment +0.04 (original=SHORT, final=SHORT; checks trend/flow/order-book/RSI/VWAP)",
-        "1H ASSET TREND AUTHORITY: SHORT->SHORT; 15m used for entry timing only; BTC SHORT is context, not a side override; source=weighted 1H/15m (SHORT); SL/TP from repeated-touch 1H levels",
-        "Liquidity sweep + reclaim",
-        "order-flow supports reversal"
-      ],
-      "closedAt": 1793040059999,
-      "exitMark": 0.08682,
-      "paperMarginUsd": 1000,
-      "exitDetection": "1m_candle_ohlc",
-      "outcomeNotifiedAt": 1793042200452
-    },
-    {
-      "strategyVersion": "NOVARA-SMART-MONEY-AI-V2.8.5-STRUCTURE-FIRST-REPAIR-PREMIUM-CARDS",
-      "id": "STABLE|SHORT|BREAKOUT_RETEST|1793042507448",
-      "coin": "STABLE",
-      "side": "SHORT",
-      "pattern": "BREAKOUT_RETEST",
-      "score": 7.29,
-      "audience": "BOTH",
-      "outcomeDelivered": [
-        "VIP",
-        "FREE"
-      ],
-      "entry": 0.026182,
-      "sl": 0.02643105857142857,
-      "tp": 0.025762058571428572,
-      "rr": 1.686115142163922,
-      "suggestedLeverage": 3,
-      "btcRegime": "BEARISH",
-      "rsi15": 36.65170058543475,
-      "fibConfluence": false,
-      "openedAt": 1793042507448,
-      "lastCheckedAt": 1793044657427,
-      "status": "SL",
-      "pnlR": -1,
-      "reasons": [
-        "Final-side evidence adjustment +0.29 (original=SHORT, final=SHORT; checks trend/flow/order-book/RSI/VWAP)",
+        "Final-side evidence adjustment +0.28 (original=SHORT, final=SHORT; checks trend/flow/order-book/RSI/VWAP)",
         "1H ASSET TREND AUTHORITY: SHORT->SHORT; 15m used for entry timing only; BTC SHORT is context, not a side override; source=1H + 15m live; SL/TP from repeated-touch 1H levels",
-        "Breakout + retest",
-        "order-flow confirms continuation",
-        "aligned 1H trend",
-        "VWAP alignment",
-        "15m RSI supports entry (36.7)",
-        "BTC 1H trend confirms SHORT (+0.10)",
-        "BTC 15m trend confirms SHORT (+0.10)"
-      ],
-      "closedAt": 1793042639999,
-      "exitMark": 0.026453,
-      "paperMarginUsd": 1000,
-      "exitDetection": "1m_candle_ohlc",
-      "outcomeNotifiedAt": 1793044664666
-    },
-    {
-      "strategyVersion": "NOVARA-SMART-MONEY-AI-V2.8.5-STRUCTURE-FIRST-REPAIR-PREMIUM-CARDS",
-      "id": "ME|LONG|SWEEP_RECLAIM|1793042510583",
-      "coin": "ME",
-      "side": "LONG",
-      "pattern": "SWEEP_RECLAIM",
-      "score": 6.98,
-      "audience": "VIP",
-      "outcomeDelivered": [],
-      "entry": 0.06051,
-      "sl": 0.059635014285714286,
-      "tp": 0.062015014285714286,
-      "rr": 1.7200444088883045,
-      "suggestedLeverage": 3,
-      "btcRegime": "BEARISH",
-      "rsi15": 49.40577224491601,
-      "fibConfluence": true,
-      "openedAt": 1793042510583,
-      "lastCheckedAt": 1793046767089,
-      "status": "OPEN",
-      "pnlR": null,
-      "reasons": [
-        "Final-side evidence adjustment +0.38 (original=LONG, final=LONG; checks trend/flow/order-book/RSI/VWAP)",
-        "1H ASSET TREND AUTHORITY: LONG->LONG; 15m used for entry timing only; BTC SHORT is context, not a side override; source=1H + 15m live; SL/TP from repeated-touch 1H levels",
         "Liquidity sweep + reclaim",
         "order-flow supports reversal",
         "relative volume expansion",
-        "1H Fibonacci confluence (0.0605511)",
-        "15m RSI supports entry (49.4)",
-        "BTC 1H trend conflicts with LONG (-0.15)",
-        "BTC 15m trend conflicts with LONG (-0.15)"
+        "1H Fibonacci confluence (0.0461705)",
+        "15m RSI supports entry (44.2)",
+        "BTC 1H trend confirms SHORT (+0.10)",
+        "BTC 15m trend confirms SHORT (+0.10)"
       ]
     },
     {
-      "strategyVersion": "NOVARA-SMART-MONEY-AI-V2.8.5-STRUCTURE-FIRST-REPAIR-PREMIUM-CARDS",
-      "id": "ORDI|SHORT|SWEEP_RECLAIM|1793042513808",
-      "coin": "ORDI",
+      "strategyVersion": "NOVARA-SMART-MONEY-AI-V2.8.6-LEVEL-PROXIMITY-EARLY-ENTRY",
+      "id": "POPCAT|SHORT|SWEEP_RECLAIM|1793049587154",
+      "coin": "POPCAT",
       "side": "SHORT",
       "pattern": "SWEEP_RECLAIM",
-      "score": 6.73,
+      "score": 7.28,
       "audience": "VIP",
       "outcomeDelivered": [],
-      "entry": 3.5775,
-      "sl": 3.5957404285714287,
-      "tp": 3.5237404285714287,
-      "rr": 2.94727567491365,
+      "entry": 0.042605,
+      "sl": 0.04297506857142857,
+      "tp": 0.04195106857142857,
+      "rr": 1.7670547543312294,
       "suggestedLeverage": 3,
       "btcRegime": "BEARISH",
-      "rsi15": 47.09320488180861,
+      "rsi15": 44.35602599787723,
       "fibConfluence": true,
-      "openedAt": 1793042513808,
-      "lastCheckedAt": 1793046767089,
-      "status": "OPEN",
-      "pnlR": null,
-      "reasons": [
-        "Final-side evidence adjustment +0.13 (original=LONG, final=SHORT; checks trend/flow/order-book/RSI/VWAP)",
-        "1H ASSET TREND AUTHORITY: LONG->SHORT; 15m used for entry timing only; BTC SHORT is context, not a side override; source=1H + 15m live; SL/TP from repeated-touch 1H levels",
-        "Liquidity sweep + reclaim",
-        "order-flow supports reversal",
-        "relative volume expansion",
-        "1H Fibonacci confluence (3.57642)",
-        "15m RSI supports entry (47.1)",
-        "BTC 1H trend conflicts with LONG (-0.15)",
-        "BTC 15m trend conflicts with LONG (-0.15)"
-      ]
-    },
-    {
-      "strategyVersion": "NOVARA-SMART-MONEY-AI-V2.8.5-STRUCTURE-FIRST-REPAIR-PREMIUM-CARDS",
-      "id": "MERL|LONG|TREND_PULLBACK|1793042517007",
-      "coin": "MERL",
-      "side": "LONG",
-      "pattern": "TREND_PULLBACK",
-      "score": 6.63,
-      "audience": "VIP",
-      "outcomeDelivered": [],
-      "entry": 0.027345,
-      "sl": 0.02694583,
-      "tp": 0.02837883,
-      "rr": 2.5899491444747786,
-      "suggestedLeverage": 3,
-      "btcRegime": "BEARISH",
-      "rsi15": 53.76391355947843,
-      "fibConfluence": false,
-      "openedAt": 1793042517007,
-      "lastCheckedAt": 1793046767089,
-      "status": "OPEN",
-      "pnlR": null,
-      "reasons": [
-        "Final-side evidence adjustment +0.43 (original=LONG, final=LONG; checks trend/flow/order-book/RSI/VWAP)",
-        "1H ASSET TREND AUTHORITY: LONG->LONG; 15m used for entry timing only; BTC SHORT is context, not a side override; source=1H + 15m live; SL/TP from repeated-touch 1H levels",
-        "Trend pullback + continuation",
-        "order-flow resumes with trend",
-        "participation present",
-        "VWAP alignment",
-        "15m RSI supports entry (53.8)",
-        "BTC 1H trend conflicts with LONG (-0.15)",
-        "BTC 15m trend conflicts with LONG (-0.15)"
-      ]
-    },
-    {
-      "strategyVersion": "NOVARA-SMART-MONEY-AI-V2.8.5-STRUCTURE-FIRST-REPAIR-PREMIUM-CARDS",
-      "id": "kSHIB|SHORT|SWEEP_RECLAIM|1793042520196",
-      "coin": "kSHIB",
-      "side": "SHORT",
-      "pattern": "SWEEP_RECLAIM",
-      "score": 6.59,
-      "audience": "VIP",
-      "outcomeDelivered": [],
-      "entry": 0.004866,
-      "sl": 0.0048933442857142856,
-      "tp": 0.004813344285714286,
-      "rr": 1.9256569667206092,
-      "suggestedLeverage": 8,
-      "btcRegime": "BEARISH",
-      "rsi15": 50.63672692816842,
-      "fibConfluence": true,
-      "openedAt": 1793042520196,
-      "lastCheckedAt": 1793046767089,
-      "status": "OPEN",
-      "pnlR": null,
-      "reasons": [
-        "Final-side evidence adjustment -0.01 (original=LONG, final=SHORT; checks trend/flow/order-book/RSI/VWAP)",
-        "1H ASSET TREND AUTHORITY: LONG->SHORT; 15m used for entry timing only; BTC SHORT is context, not a side override; source=1H + 15m live; SL/TP from repeated-touch 1H levels",
-        "Liquidity sweep + reclaim",
-        "order-flow supports reversal",
-        "relative volume expansion",
-        "1H Fibonacci confluence (0.00487100)",
-        "15m RSI supports entry (50.6)",
-        "BTC 1H trend conflicts with LONG (-0.15)",
-        "BTC 15m trend conflicts with LONG (-0.15)"
-      ]
-    },
-    {
-      "strategyVersion": "NOVARA-SMART-MONEY-AI-V2.8.5-STRUCTURE-FIRST-REPAIR-PREMIUM-CARDS",
-      "id": "ETHFI|LONG|TREND_PULLBACK|1793042523404",
-      "coin": "ETHFI",
-      "side": "LONG",
-      "pattern": "TREND_PULLBACK",
-      "score": 6.58,
-      "audience": "VIP",
-      "outcomeDelivered": [],
-      "entry": 0.64321,
-      "sl": 0.6339593857142858,
-      "tp": 0.6608193857142858,
-      "rr": 1.9035909584383186,
-      "suggestedLeverage": 5,
-      "btcRegime": "BEARISH",
-      "rsi15": 56.37921283919129,
-      "fibConfluence": false,
-      "openedAt": 1793042523404,
-      "lastCheckedAt": 1793046767089,
-      "status": "OPEN",
-      "pnlR": null,
-      "reasons": [
-        "Final-side evidence adjustment +0.33 (original=LONG, final=LONG; checks trend/flow/order-book/RSI/VWAP)",
-        "1H ASSET TREND AUTHORITY: LONG->LONG; 15m used for entry timing only; BTC SHORT is context, not a side override; source=1H + 15m live; SL/TP from repeated-touch 1H levels",
-        "Trend pullback + continuation",
-        "order-flow resumes with trend",
-        "VWAP alignment",
-        "OI rising with trend",
-        "15m RSI supports entry (56.4)",
-        "BTC 1H trend conflicts with LONG (-0.15)",
-        "BTC 15m trend conflicts with LONG (-0.15)"
-      ]
-    },
-    {
-      "strategyVersion": "NOVARA-SMART-MONEY-AI-V2.8.5-STRUCTURE-FIRST-REPAIR-PREMIUM-CARDS",
-      "id": "GMX|SHORT|SWEEP_RECLAIM|1793042526595",
-      "coin": "GMX",
-      "side": "SHORT",
-      "pattern": "SWEEP_RECLAIM",
-      "score": 6.54,
-      "audience": "VIP",
-      "outcomeDelivered": [],
-      "entry": 8.0201,
-      "sl": 8.121599142857143,
-      "tp": 7.860799142857143,
-      "rr": 1.5694798267121006,
-      "suggestedLeverage": 3,
-      "btcRegime": "BEARISH",
-      "rsi15": 44.03340977892354,
-      "fibConfluence": false,
-      "openedAt": 1793042526595,
-      "lastCheckedAt": 1793046767089,
-      "status": "OPEN",
-      "pnlR": null,
-      "reasons": [
-        "Final-side evidence adjustment +0.09 (original=LONG, final=SHORT; checks trend/flow/order-book/RSI/VWAP)",
-        "1H ASSET TREND AUTHORITY: LONG->SHORT; 15m used for entry timing only; BTC SHORT is context, not a side override; source=1H + 15m live; SL/TP from repeated-touch 1H levels",
-        "Liquidity sweep + reclaim",
-        "order-flow supports reversal",
-        "relative volume expansion",
-        "OI rising with directional move",
-        "BTC 1H trend conflicts with LONG (-0.15)",
-        "BTC 15m trend conflicts with LONG (-0.15)"
-      ]
-    },
-    {
-      "strategyVersion": "NOVARA-SMART-MONEY-AI-V2.8.5-STRUCTURE-FIRST-REPAIR-PREMIUM-CARDS",
-      "id": "BCH|LONG|SWEEP_RECLAIM|1793042529821",
-      "coin": "BCH",
-      "side": "LONG",
-      "pattern": "SWEEP_RECLAIM",
-      "score": 6.53,
-      "audience": "VIP",
-      "outcomeDelivered": [],
-      "entry": 279.29,
-      "sl": 274.7023142857143,
-      "tp": 287.1323142857143,
-      "rr": 1.7094270998760603,
-      "suggestedLeverage": 7,
-      "btcRegime": "BEARISH",
-      "rsi15": 51.16630854829402,
-      "fibConfluence": true,
-      "openedAt": 1793042529821,
-      "lastCheckedAt": 1793046767089,
-      "status": "OPEN",
-      "pnlR": null,
-      "reasons": [
-        "Final-side evidence adjustment +0.38 (original=LONG, final=LONG; checks trend/flow/order-book/RSI/VWAP)",
-        "1H ASSET TREND AUTHORITY: LONG->LONG; 15m used for entry timing only; BTC SHORT is context, not a side override; source=1H + 15m live; SL/TP from repeated-touch 1H levels",
-        "Liquidity sweep + reclaim",
-        "order-flow supports reversal",
-        "1H Fibonacci confluence (278.898)",
-        "15m RSI supports entry (51.2)",
-        "BTC 1H trend conflicts with LONG (-0.15)",
-        "BTC 15m trend conflicts with LONG (-0.15)"
-      ]
-    },
-    {
-      "strategyVersion": "NOVARA-SMART-MONEY-AI-V2.8.5-STRUCTURE-FIRST-REPAIR-PREMIUM-CARDS",
-      "id": "PUMP|SHORT|TREND_PULLBACK|1793044905828",
-      "coin": "PUMP",
-      "side": "SHORT",
-      "pattern": "TREND_PULLBACK",
-      "score": 7.58,
-      "audience": "BOTH",
-      "outcomeDelivered": [],
-      "entry": 0.004224,
-      "sl": 0.004271825714285714,
-      "tp": 0.004130825714285714,
-      "rr": 1.948204791206205,
-      "suggestedLeverage": 10,
-      "btcRegime": "BEARISH",
-      "rsi15": 42.49861937160743,
-      "fibConfluence": true,
-      "openedAt": 1793044905828,
-      "lastCheckedAt": 1793046767089,
-      "status": "OPEN",
-      "pnlR": null,
-      "reasons": [
-        "Final-side evidence adjustment +0.33 (original=SHORT, final=SHORT; checks trend/flow/order-book/RSI/VWAP)",
-        "1H ASSET TREND AUTHORITY: SHORT->SHORT; 15m used for entry timing only; BTC SHORT is context, not a side override; source=1H + 15m live; SL/TP from repeated-touch 1H levels",
-        "Trend pullback + continuation",
-        "order-flow resumes with trend",
-        "participation present",
-        "VWAP alignment",
-        "OI rising with trend",
-        "1H Fibonacci confluence (0.00423080)",
-        "15m RSI supports entry (42.5)",
-        "BTC 1H trend confirms SHORT (+0.10)",
-        "BTC 15m trend confirms SHORT (+0.10)"
-      ]
-    },
-    {
-      "strategyVersion": "NOVARA-SMART-MONEY-AI-V2.8.5-STRUCTURE-FIRST-REPAIR-PREMIUM-CARDS",
-      "id": "STABLE|SHORT|TREND_PULLBACK|1793044909077",
-      "coin": "STABLE",
-      "side": "SHORT",
-      "pattern": "TREND_PULLBACK",
-      "score": 7.41,
-      "audience": "VIP",
-      "outcomeDelivered": [],
-      "entry": 0.026446,
-      "sl": 0.026628867142857143,
-      "tp": 0.026114867142857143,
-      "rr": 1.8107837852617517,
-      "suggestedLeverage": 3,
-      "btcRegime": "BEARISH",
-      "rsi15": 46.83539377559929,
-      "fibConfluence": false,
-      "openedAt": 1793044909077,
-      "lastCheckedAt": 1793046767089,
-      "status": "OPEN",
-      "pnlR": null,
-      "reasons": [
-        "Final-side evidence adjustment +0.41 (original=SHORT, final=SHORT; checks trend/flow/order-book/RSI/VWAP)",
-        "1H ASSET TREND AUTHORITY: SHORT->SHORT; 15m used for entry timing only; BTC SHORT is context, not a side override; source=1H + 15m live; SL/TP from repeated-touch 1H levels",
-        "Trend pullback + continuation",
-        "order-flow resumes with trend",
-        "participation present",
-        "VWAP alignment",
-        "OI rising with trend",
-        "15m RSI supports entry (46.8)",
-        "BTC 1H trend confirms SHORT (+0.10)",
-        "BTC 15m trend confirms SHORT (+0.10)"
-      ]
-    },
-    {
-      "strategyVersion": "NOVARA-SMART-MONEY-AI-V2.8.5-STRUCTURE-FIRST-REPAIR-PREMIUM-CARDS",
-      "id": "AVAX|SHORT|TREND_PULLBACK|1793044912328",
-      "coin": "AVAX",
-      "side": "SHORT",
-      "pattern": "TREND_PULLBACK",
-      "score": 7.13,
-      "audience": "VIP",
-      "outcomeDelivered": [],
-      "entry": 8.9205,
-      "sl": 8.966159,
-      "tp": 8.829058999999999,
-      "rr": 2.002693882914735,
-      "suggestedLeverage": 9,
-      "btcRegime": "BEARISH",
-      "rsi15": 46.07826865502251,
-      "fibConfluence": true,
-      "openedAt": 1793044912328,
-      "lastCheckedAt": 1793046767089,
-      "status": "OPEN",
-      "pnlR": null,
-      "reasons": [
-        "Final-side evidence adjustment +0.43 (original=SHORT, final=SHORT; checks trend/flow/order-book/RSI/VWAP)",
-        "1H ASSET TREND AUTHORITY: SHORT->SHORT; 15m used for entry timing only; BTC SHORT is context, not a side override; source=1H + 15m live; SL/TP from repeated-touch 1H levels",
-        "Trend pullback + continuation",
-        "order-flow resumes with trend",
-        "VWAP alignment",
-        "1H Fibonacci confluence (8.93269)",
-        "15m RSI supports entry (46.1)",
-        "BTC 1H trend confirms SHORT (+0.10)",
-        "BTC 15m trend confirms SHORT (+0.10)"
-      ]
-    },
-    {
-      "strategyVersion": "NOVARA-SMART-MONEY-AI-V2.8.5-STRUCTURE-FIRST-REPAIR-PREMIUM-CARDS",
-      "id": "PENDLE|SHORT|TREND_PULLBACK|1793044915448",
-      "coin": "PENDLE",
-      "side": "SHORT",
-      "pattern": "TREND_PULLBACK",
-      "score": 7.13,
-      "audience": "VIP",
-      "outcomeDelivered": [],
-      "entry": 1.9566,
-      "sl": 1.9724557142857142,
-      "tp": 1.9323557142857142,
-      "rr": 1.52905667177223,
-      "suggestedLeverage": 5,
-      "btcRegime": "BEARISH",
-      "rsi15": 46.29829197534282,
-      "fibConfluence": true,
-      "openedAt": 1793044915448,
-      "lastCheckedAt": 1793046767089,
-      "status": "OPEN",
-      "pnlR": null,
-      "reasons": [
-        "Final-side evidence adjustment +0.43 (original=SHORT, final=SHORT; checks trend/flow/order-book/RSI/VWAP)",
-        "1H ASSET TREND AUTHORITY: SHORT->SHORT; 15m used for entry timing only; BTC SHORT is context, not a side override; source=1H + 15m live; SL/TP from repeated-touch 1H levels",
-        "Trend pullback + continuation",
-        "order-flow resumes with trend",
-        "VWAP alignment",
-        "1H Fibonacci confluence (1.95440)",
-        "15m RSI supports entry (46.3)",
-        "BTC 1H trend confirms SHORT (+0.10)",
-        "BTC 15m trend confirms SHORT (+0.10)"
-      ]
-    },
-    {
-      "strategyVersion": "NOVARA-SMART-MONEY-AI-V2.8.5-STRUCTURE-FIRST-REPAIR-PREMIUM-CARDS",
-      "id": "HEMI|SHORT|TREND_PULLBACK|1793044918746",
-      "coin": "HEMI",
-      "side": "SHORT",
-      "pattern": "TREND_PULLBACK",
-      "score": 7.13,
-      "audience": "VIP",
-      "outcomeDelivered": [],
-      "entry": 0.004608,
-      "sl": 0.0046334714285714285,
-      "tp": 0.004534471428571428,
-      "rr": 2.886707795849731,
-      "suggestedLeverage": 3,
-      "btcRegime": "BEARISH",
-      "rsi15": 43.201036491560444,
-      "fibConfluence": true,
-      "openedAt": 1793044918746,
-      "lastCheckedAt": 1793046767089,
-      "status": "OPEN",
-      "pnlR": null,
-      "reasons": [
-        "Final-side evidence adjustment +0.43 (original=SHORT, final=SHORT; checks trend/flow/order-book/RSI/VWAP)",
-        "1H ASSET TREND AUTHORITY: SHORT->SHORT; 15m used for entry timing only; BTC SHORT is context, not a side override; source=1H + 15m live; SL/TP from repeated-touch 1H levels",
-        "Trend pullback + continuation",
-        "order-flow resumes with trend",
-        "VWAP alignment",
-        "1H Fibonacci confluence (0.00461950)",
-        "15m RSI supports entry (43.2)",
-        "BTC 1H trend confirms SHORT (+0.10)",
-        "BTC 15m trend confirms SHORT (+0.10)"
-      ]
-    },
-    {
-      "strategyVersion": "NOVARA-SMART-MONEY-AI-V2.8.5-STRUCTURE-FIRST-REPAIR-PREMIUM-CARDS",
-      "id": "AR|SHORT|TREND_PULLBACK|1793044921849",
-      "coin": "AR",
-      "side": "SHORT",
-      "pattern": "TREND_PULLBACK",
-      "score": 6.99,
-      "audience": "VIP",
-      "outcomeDelivered": [],
-      "entry": 3.394,
-      "sl": 3.419884857142857,
-      "tp": 3.353784857142857,
-      "rr": 1.5536165656699894,
-      "suggestedLeverage": 5,
-      "btcRegime": "BEARISH",
-      "rsi15": 49.11233722134049,
-      "fibConfluence": true,
-      "openedAt": 1793044921849,
-      "lastCheckedAt": 1793046767089,
-      "status": "OPEN",
-      "pnlR": null,
-      "reasons": [
-        "Final-side evidence adjustment +0.29 (original=SHORT, final=SHORT; checks trend/flow/order-book/RSI/VWAP)",
-        "1H ASSET TREND AUTHORITY: SHORT->SHORT; 15m used for entry timing only; BTC SHORT is context, not a side override; source=1H + 15m live; SL/TP from repeated-touch 1H levels",
-        "Trend pullback + continuation",
-        "order-flow resumes with trend",
-        "VWAP alignment",
-        "1H Fibonacci confluence (3.39175)",
-        "15m RSI supports entry (49.1)",
-        "BTC 1H trend confirms SHORT (+0.10)",
-        "BTC 15m trend confirms SHORT (+0.10)"
-      ]
-    },
-    {
-      "strategyVersion": "NOVARA-SMART-MONEY-AI-V2.8.5-STRUCTURE-FIRST-REPAIR-PREMIUM-CARDS",
-      "id": "HYPER|SHORT|BREAKOUT_RETEST|1793044925121",
-      "coin": "HYPER",
-      "side": "SHORT",
-      "pattern": "BREAKOUT_RETEST",
-      "score": 6.78,
-      "audience": "VIP",
-      "outcomeDelivered": [],
-      "entry": 0.063288,
-      "sl": 0.06444160285714286,
-      "tp": 0.06149660285714286,
-      "rr": 1.5528716245501568,
-      "suggestedLeverage": 3,
-      "btcRegime": "BEARISH",
-      "rsi15": 39.817498154226065,
-      "fibConfluence": true,
-      "openedAt": 1793044925121,
-      "lastCheckedAt": 1793046767089,
+      "openedAt": 1793049587154,
+      "lastCheckedAt": 1793049587154,
       "status": "OPEN",
       "pnlR": null,
       "reasons": [
         "Final-side evidence adjustment +0.18 (original=SHORT, final=SHORT; checks trend/flow/order-book/RSI/VWAP)",
         "1H ASSET TREND AUTHORITY: SHORT->SHORT; 15m used for entry timing only; BTC SHORT is context, not a side override; source=1H + 15m live; SL/TP from repeated-touch 1H levels",
-        "Breakout + retest",
-        "order-flow confirms continuation",
-        "VWAP alignment",
-        "1H Fibonacci confluence (0.0633120)",
-        "15m RSI supports entry (39.8)",
+        "Liquidity sweep + reclaim",
+        "order-flow supports reversal",
+        "relative volume expansion",
+        "1H Fibonacci confluence (0.0427285)",
+        "15m RSI supports entry (44.4)",
         "BTC 1H trend confirms SHORT (+0.10)",
         "BTC 15m trend confirms SHORT (+0.10)"
       ]
     },
     {
-      "strategyVersion": "NOVARA-SMART-MONEY-AI-V2.8.5-STRUCTURE-FIRST-REPAIR-PREMIUM-CARDS",
-      "id": "REZ|LONG|TREND_PULLBACK|1793044928273",
-      "coin": "REZ",
-      "side": "LONG",
-      "pattern": "TREND_PULLBACK",
-      "score": 6.26,
-      "audience": "VIP",
-      "outcomeDelivered": [],
-      "entry": 0.004639,
-      "sl": 0.004518234285714286,
-      "tp": 0.004826234285714286,
-      "rr": 1.550392732090477,
-      "suggestedLeverage": 3,
-      "btcRegime": "BEARISH",
-      "rsi15": 52.276446502298285,
-      "fibConfluence": false,
-      "openedAt": 1793044928273,
-      "lastCheckedAt": 1793046767089,
-      "status": "OPEN",
-      "pnlR": null,
-      "reasons": [
-        "Final-side evidence adjustment +0.31 (original=LONG, final=LONG; checks trend/flow/order-book/RSI/VWAP)",
-        "1H ASSET TREND AUTHORITY: LONG->LONG; 15m used for entry timing only; BTC SHORT is context, not a side override; source=1H + 15m live; SL/TP from repeated-touch 1H levels",
-        "Trend pullback + continuation",
-        "order-flow resumes with trend",
-        "VWAP alignment",
-        "15m RSI supports entry (52.3)",
-        "BTC 1H trend conflicts with LONG (-0.15)",
-        "BTC 15m trend conflicts with LONG (-0.15)"
-      ]
-    },
-    {
-      "strategyVersion": "NOVARA-SMART-MONEY-AI-V2.8.5-STRUCTURE-FIRST-REPAIR-PREMIUM-CARDS",
-      "id": "LDO|SHORT|TREND_PULLBACK|1793047010662",
-      "coin": "LDO",
+      "strategyVersion": "NOVARA-SMART-MONEY-AI-V2.8.6-LEVEL-PROXIMITY-EARLY-ENTRY",
+      "id": "PNUT|SHORT|TREND_PULLBACK|1793049590343",
+      "coin": "PNUT",
       "side": "SHORT",
       "pattern": "TREND_PULLBACK",
-      "score": 7.58,
-      "audience": "BOTH",
+      "score": 7.28,
+      "audience": "VIP",
       "outcomeDelivered": [],
-      "entry": 0.36891,
-      "sl": 0.37233478571428574,
-      "tp": 0.3635947857142857,
-      "rr": 1.5519844828664962,
-      "suggestedLeverage": 5,
+      "entry": 0.04099,
+      "sl": 0.04134868571428572,
+      "tp": 0.040348685714285716,
+      "rr": 1.7879560299505843,
+      "suggestedLeverage": 3,
       "btcRegime": "BEARISH",
-      "rsi15": 42.55364335440096,
+      "rsi15": 38.248925043120906,
       "fibConfluence": true,
-      "openedAt": 1793047010662,
-      "lastCheckedAt": 1793047010662,
+      "openedAt": 1793049590343,
+      "lastCheckedAt": 1793049590343,
       "status": "OPEN",
       "pnlR": null,
       "reasons": [
@@ -1822,99 +1186,31 @@
         "order-flow resumes with trend",
         "participation present",
         "VWAP alignment",
-        "OI rising with trend",
-        "1H Fibonacci confluence (0.368800)",
-        "15m RSI supports entry (42.6)",
+        "1H Fibonacci confluence (0.0411171)",
+        "15m RSI supports entry (38.2)",
         "BTC 1H trend confirms SHORT (+0.10)",
         "BTC 15m trend confirms SHORT (+0.10)"
       ]
     },
     {
-      "strategyVersion": "NOVARA-SMART-MONEY-AI-V2.8.5-STRUCTURE-FIRST-REPAIR-PREMIUM-CARDS",
-      "id": "BIGTIME|SHORT|SWEEP_RECLAIM|1793047013876",
-      "coin": "BIGTIME",
-      "side": "SHORT",
-      "pattern": "SWEEP_RECLAIM",
-      "score": 7.5,
-      "audience": "VIP",
-      "outcomeDelivered": [],
-      "entry": 0.006839,
-      "sl": 0.0069050628571428576,
-      "tp": 0.006731062857142857,
-      "rr": 1.6338552028371,
-      "suggestedLeverage": 3,
-      "btcRegime": "BEARISH",
-      "rsi15": 51.86585676675852,
-      "fibConfluence": true,
-      "openedAt": 1793047013876,
-      "lastCheckedAt": 1793047013876,
-      "status": "OPEN",
-      "pnlR": null,
-      "reasons": [
-        "Final-side evidence adjustment +0.45 (original=SHORT, final=SHORT; checks trend/flow/order-book/RSI/VWAP)",
-        "1H ASSET TREND AUTHORITY: SHORT->SHORT; 15m used for entry timing only; BTC SHORT is context, not a side override; source=1H + 15m live; SL/TP from repeated-touch 1H levels",
-        "Liquidity sweep + reclaim",
-        "order-flow supports reversal",
-        "aligned 1H trend",
-        "1H Fibonacci confluence (0.00682586)",
-        "15m RSI supports entry (51.9)",
-        "BTC 1H trend confirms SHORT (+0.10)",
-        "BTC 15m trend confirms SHORT (+0.10)"
-      ]
-    },
-    {
-      "strategyVersion": "NOVARA-SMART-MONEY-AI-V2.8.5-STRUCTURE-FIRST-REPAIR-PREMIUM-CARDS",
-      "id": "DYM|SHORT|TREND_PULLBACK|1793047016983",
-      "coin": "DYM",
-      "side": "SHORT",
-      "pattern": "TREND_PULLBACK",
-      "score": 7.38,
-      "audience": "VIP",
-      "outcomeDelivered": [],
-      "entry": 0.01767,
-      "sl": 0.0179028,
-      "tp": 0.0173128,
-      "rr": 1.5343642611684045,
-      "suggestedLeverage": 3,
-      "btcRegime": "BEARISH",
-      "rsi15": 46.202973392789715,
-      "fibConfluence": true,
-      "openedAt": 1793047016983,
-      "lastCheckedAt": 1793047016983,
-      "status": "OPEN",
-      "pnlR": null,
-      "reasons": [
-        "Final-side evidence adjustment +0.43 (original=SHORT, final=SHORT; checks trend/flow/order-book/RSI/VWAP)",
-        "1H ASSET TREND AUTHORITY: SHORT->SHORT; 15m used for entry timing only; BTC SHORT is context, not a side override; source=1H + 15m live; SL/TP from repeated-touch 1H levels",
-        "Trend pullback + continuation",
-        "order-flow resumes with trend",
-        "participation present",
-        "VWAP alignment",
-        "1H Fibonacci confluence (0.0176904)",
-        "15m RSI supports entry (46.2)",
-        "BTC 1H trend confirms SHORT (+0.10)",
-        "BTC 15m trend confirms SHORT (+0.10)"
-      ]
-    },
-    {
-      "strategyVersion": "NOVARA-SMART-MONEY-AI-V2.8.5-STRUCTURE-FIRST-REPAIR-PREMIUM-CARDS",
-      "id": "LINEA|SHORT|TREND_PULLBACK|1793047020194",
-      "coin": "LINEA",
+      "strategyVersion": "NOVARA-SMART-MONEY-AI-V2.8.6-LEVEL-PROXIMITY-EARLY-ENTRY",
+      "id": "ADA|SHORT|TREND_PULLBACK|1793049593472",
+      "coin": "ADA",
       "side": "SHORT",
       "pattern": "TREND_PULLBACK",
       "score": 7.13,
       "audience": "VIP",
       "outcomeDelivered": [],
-      "entry": 0.002532,
-      "sl": 0.002559191428571429,
-      "tp": 0.002486191428571429,
-      "rr": 1.6846695387201507,
-      "suggestedLeverage": 3,
+      "entry": 0.20411,
+      "sl": 0.2055229,
+      "tp": 0.2012429,
+      "rr": 2.029230660343989,
+      "suggestedLeverage": 9,
       "btcRegime": "BEARISH",
-      "rsi15": 45.584101836792264,
+      "rsi15": 41.17479988973223,
       "fibConfluence": true,
-      "openedAt": 1793047020194,
-      "lastCheckedAt": 1793047020194,
+      "openedAt": 1793049593472,
+      "lastCheckedAt": 1793049593472,
       "status": "OPEN",
       "pnlR": null,
       "reasons": [
@@ -1923,143 +1219,171 @@
         "Trend pullback + continuation",
         "order-flow resumes with trend",
         "VWAP alignment",
-        "1H Fibonacci confluence (0.00252924)",
-        "15m RSI supports entry (45.6)",
+        "1H Fibonacci confluence (0.203763)",
+        "15m RSI supports entry (41.2)",
         "BTC 1H trend confirms SHORT (+0.10)",
         "BTC 15m trend confirms SHORT (+0.10)"
       ]
     },
     {
-      "strategyVersion": "NOVARA-SMART-MONEY-AI-V2.8.5-STRUCTURE-FIRST-REPAIR-PREMIUM-CARDS",
-      "id": "XRP|SHORT|TREND_PULLBACK|1793047023391",
-      "coin": "XRP",
+      "strategyVersion": "NOVARA-SMART-MONEY-AI-V2.8.6-LEVEL-PROXIMITY-EARLY-ENTRY",
+      "id": "WIF|SHORT|TREND_PULLBACK|1793049596697",
+      "coin": "WIF",
       "side": "SHORT",
       "pattern": "TREND_PULLBACK",
-      "score": 6.99,
+      "score": 7.03,
       "audience": "VIP",
       "outcomeDelivered": [],
-      "entry": 1.2939,
-      "sl": 1.304433142857143,
-      "tp": 1.2754331428571428,
-      "rr": 1.7532143438398522,
-      "suggestedLeverage": 10,
-      "btcRegime": "BEARISH",
-      "rsi15": 46.73297817327514,
-      "fibConfluence": true,
-      "openedAt": 1793047023391,
-      "lastCheckedAt": 1793047023391,
-      "status": "OPEN",
-      "pnlR": null,
-      "reasons": [
-        "Final-side evidence adjustment +0.29 (original=SHORT, final=SHORT; checks trend/flow/order-book/RSI/VWAP)",
-        "1H ASSET TREND AUTHORITY: SHORT->SHORT; 15m used for entry timing only; BTC SHORT is context, not a side override; source=1H + 15m live; SL/TP from repeated-touch 1H levels",
-        "Trend pullback + continuation",
-        "order-flow resumes with trend",
-        "VWAP alignment",
-        "1H Fibonacci confluence (1.29405)",
-        "15m RSI supports entry (46.7)",
-        "BTC 1H trend confirms SHORT (+0.10)",
-        "BTC 15m trend confirms SHORT (+0.10)"
-      ]
-    },
-    {
-      "strategyVersion": "NOVARA-SMART-MONEY-AI-V2.8.5-STRUCTURE-FIRST-REPAIR-PREMIUM-CARDS",
-      "id": "SYRUP|SHORT|TREND_PULLBACK|1793047026580",
-      "coin": "SYRUP",
-      "side": "SHORT",
-      "pattern": "TREND_PULLBACK",
-      "score": 6.99,
-      "audience": "VIP",
-      "outcomeDelivered": [],
-      "entry": 0.17456,
-      "sl": 0.17631412857142856,
-      "tp": 0.17168412857142856,
-      "rr": 1.6394872504866143,
-      "suggestedLeverage": 3,
-      "btcRegime": "BEARISH",
-      "rsi15": 42.87246871921375,
-      "fibConfluence": true,
-      "openedAt": 1793047026580,
-      "lastCheckedAt": 1793047026580,
-      "status": "OPEN",
-      "pnlR": null,
-      "reasons": [
-        "Final-side evidence adjustment +0.29 (original=SHORT, final=SHORT; checks trend/flow/order-book/RSI/VWAP)",
-        "1H ASSET TREND AUTHORITY: SHORT->SHORT; 15m used for entry timing only; BTC SHORT is context, not a side override; source=1H + 15m live; SL/TP from repeated-touch 1H levels",
-        "Trend pullback + continuation",
-        "order-flow resumes with trend",
-        "VWAP alignment",
-        "1H Fibonacci confluence (0.174665)",
-        "15m RSI supports entry (42.9)",
-        "BTC 1H trend confirms SHORT (+0.10)",
-        "BTC 15m trend confirms SHORT (+0.10)"
-      ]
-    },
-    {
-      "strategyVersion": "NOVARA-SMART-MONEY-AI-V2.8.5-STRUCTURE-FIRST-REPAIR-PREMIUM-CARDS",
-      "id": "AVNT|SHORT|TREND_PULLBACK|1793047029781",
-      "coin": "AVNT",
-      "side": "SHORT",
-      "pattern": "TREND_PULLBACK",
-      "score": 6.04,
-      "audience": "VIP",
-      "outcomeDelivered": [],
-      "entry": 0.11005,
-      "sl": 0.1110782,
-      "tp": 0.1083382,
-      "rr": 1.6648511962653063,
+      "entry": 0.17878,
+      "sl": 0.18030915714285717,
+      "tp": 0.17617915714285715,
+      "rr": 1.7008342597695811,
       "suggestedLeverage": 5,
       "btcRegime": "BEARISH",
-      "rsi15": 44.83828000625472,
-      "fibConfluence": false,
-      "openedAt": 1793047029781,
-      "lastCheckedAt": 1793047029781,
+      "rsi15": 41.591194226389234,
+      "fibConfluence": true,
+      "openedAt": 1793049596697,
+      "lastCheckedAt": 1793049596697,
       "status": "OPEN",
       "pnlR": null,
       "reasons": [
-        "Final-side evidence adjustment +0.09 (original=SHORT, final=SHORT; checks trend/flow/order-book/RSI/VWAP)",
+        "Final-side evidence adjustment +0.33 (original=SHORT, final=SHORT; checks trend/flow/order-book/RSI/VWAP)",
         "1H ASSET TREND AUTHORITY: SHORT->SHORT; 15m used for entry timing only; BTC SHORT is context, not a side override; source=1H + 15m live; SL/TP from repeated-touch 1H levels",
         "Trend pullback + continuation",
+        "order-flow resumes with trend",
+        "VWAP alignment",
+        "1H Fibonacci confluence (0.179227)",
+        "15m RSI supports entry (41.6)",
+        "BTC 1H trend confirms SHORT (+0.10)",
+        "BTC 15m trend confirms SHORT (+0.10)"
+      ]
+    },
+    {
+      "strategyVersion": "NOVARA-SMART-MONEY-AI-V2.8.6-LEVEL-PROXIMITY-EARLY-ENTRY",
+      "id": "GMX|SHORT|TREND_PULLBACK|1793049599885",
+      "coin": "GMX",
+      "side": "SHORT",
+      "pattern": "TREND_PULLBACK",
+      "score": 6.99,
+      "audience": "VIP",
+      "outcomeDelivered": [],
+      "entry": 7.9891,
+      "sl": 8.042050142857143,
+      "tp": 7.860150142857143,
+      "rr": 2.4353070678346835,
+      "suggestedLeverage": 3,
+      "btcRegime": "BEARISH",
+      "rsi15": 40.09575273872251,
+      "fibConfluence": false,
+      "openedAt": 1793049599885,
+      "lastCheckedAt": 1793049599885,
+      "status": "OPEN",
+      "pnlR": null,
+      "reasons": [
+        "Final-side evidence adjustment +0.29 (original=SHORT, final=SHORT; checks trend/flow/order-book/RSI/VWAP)",
+        "1H ASSET TREND AUTHORITY: SHORT->SHORT; 15m used for entry timing only; BTC SHORT is context, not a side override; source=1H + 15m live; SL/TP from repeated-touch 1H levels",
+        "Trend pullback + continuation",
+        "order-flow resumes with trend",
         "participation present",
         "VWAP alignment",
-        "15m RSI supports entry (44.8)",
+        "15m RSI supports entry (40.1)",
+        "BTC 1H trend confirms SHORT (+0.10)",
+        "BTC 15m trend confirms SHORT (+0.10)"
+      ]
+    },
+    {
+      "strategyVersion": "NOVARA-SMART-MONEY-AI-V2.8.6-LEVEL-PROXIMITY-EARLY-ENTRY",
+      "id": "ZEC|SHORT|BREAKOUT_RETEST|1793049603149",
+      "coin": "ZEC",
+      "side": "SHORT",
+      "pattern": "BREAKOUT_RETEST",
+      "score": 6.88,
+      "audience": "VIP",
+      "outcomeDelivered": [],
+      "entry": 1218.9,
+      "sl": 1228.3452857142859,
+      "tp": 1203.4452857142858,
+      "rr": 1.636235763873127,
+      "suggestedLeverage": 10,
+      "btcRegime": "BEARISH",
+      "rsi15": 38.94486212845341,
+      "fibConfluence": true,
+      "openedAt": 1793049603149,
+      "lastCheckedAt": 1793049603149,
+      "status": "OPEN",
+      "pnlR": null,
+      "reasons": [
+        "Final-side evidence adjustment +0.28 (original=SHORT, final=SHORT; checks trend/flow/order-book/RSI/VWAP)",
+        "1H ASSET TREND AUTHORITY: SHORT->SHORT; 15m used for entry timing only; BTC SHORT is context, not a side override; source=1H + 15m live; SL/TP from repeated-touch 1H levels",
+        "Breakout + retest",
+        "order-flow confirms continuation",
+        "VWAP alignment",
+        "1H Fibonacci confluence (1222.70)",
+        "15m RSI supports entry (38.9)",
+        "BTC 1H trend confirms SHORT (+0.10)",
+        "BTC 15m trend confirms SHORT (+0.10)"
+      ]
+    },
+    {
+      "strategyVersion": "NOVARA-SMART-MONEY-AI-V2.8.6-LEVEL-PROXIMITY-EARLY-ENTRY",
+      "id": "RENDER|SHORT|BREAKOUT_RETEST|1793049606279",
+      "coin": "RENDER",
+      "side": "SHORT",
+      "pattern": "BREAKOUT_RETEST",
+      "score": 6.88,
+      "audience": "VIP",
+      "outcomeDelivered": [],
+      "entry": 1.7061,
+      "sl": 1.7241875714285715,
+      "tp": 1.6715875714285715,
+      "rr": 1.9080742103891202,
+      "suggestedLeverage": 5,
+      "btcRegime": "BEARISH",
+      "rsi15": 35.1059433836992,
+      "fibConfluence": true,
+      "openedAt": 1793049606279,
+      "lastCheckedAt": 1793049606279,
+      "status": "OPEN",
+      "pnlR": null,
+      "reasons": [
+        "Final-side evidence adjustment +0.28 (original=SHORT, final=SHORT; checks trend/flow/order-book/RSI/VWAP)",
+        "1H ASSET TREND AUTHORITY: SHORT->SHORT; 15m used for entry timing only; BTC SHORT is context, not a side override; source=1H + 15m live; SL/TP from repeated-touch 1H levels",
+        "Breakout + retest",
+        "order-flow confirms continuation",
+        "VWAP alignment",
+        "1H Fibonacci confluence (1.70613)",
+        "15m RSI supports entry (35.1)",
         "BTC 1H trend confirms SHORT (+0.10)",
         "BTC 15m trend confirms SHORT (+0.10)"
       ]
     }
   ],
-  "dailyStats": {
-    "2026-10-26": {
-      "tp": 0,
-      "sl": 2,
-      "closed": 2,
-      "realizedR": -2
-    }
-  },
+  "dailyStats": {},
   "lastStatusAt": 1792650003809,
-  "lastDailyReportAt": 1793039340741,
+  "lastDailyReportAt": 1793049294184,
   "lastCycle": {
-    "at": 1793047029781,
+    "at": 1793049606279,
     "rejectionCounts": {
-      "stale": 0,
+      "stale": 1,
       "regime": 0,
       "regimeSoft": 0,
-      "score": 8,
-      "cooldown": 3,
-      "risk": 13,
-      "vwap": 0,
+      "score": 1,
+      "cooldown": 0,
+      "risk": 5,
+      "location": 43,
+      "vwap": 1,
       "spread": 1,
-      "accepted": 7
+      "accepted": 14
     },
     "eligible": 178,
     "totalEligible": 178,
     "checked": 178,
     "failed": 0,
-    "rawCandidates": 7,
-    "signalsSelected": 7,
-    "sentSignals": 7,
+    "rawCandidates": 14,
+    "signalsSelected": 8,
+    "sentSignals": 8,
     "sendErrors": 0,
-    "openPaperTrades": 25
+    "openPaperTrades": 8
   },
   "archivedPaperTrades": [
     {
@@ -12763,9 +12087,961 @@
       "outcomeNotifiedAt": 1793037897400,
       "archivedAt": 1793039340741,
       "archiveReason": "V2.8.5_CLEAN_START"
+    },
+    {
+      "strategyVersion": "NOVARA-SMART-MONEY-AI-V2.8.5-STRUCTURE-FIRST-REPAIR-PREMIUM-CARDS",
+      "id": "PROVE|LONG|SWEEP_RECLAIM|1793039602458",
+      "coin": "PROVE",
+      "side": "LONG",
+      "pattern": "SWEEP_RECLAIM",
+      "score": 7,
+      "audience": "BOTH",
+      "outcomeDelivered": [],
+      "entry": 0.18457,
+      "sl": 0.18320424285714285,
+      "tp": 0.18813424285714284,
+      "rr": 2.609719360271053,
+      "suggestedLeverage": 3,
+      "btcRegime": "BEARISH",
+      "rsi15": 50.878557872946566,
+      "fibConfluence": true,
+      "openedAt": 1793039602458,
+      "lastCheckedAt": 1793046767089,
+      "status": "OPEN",
+      "pnlR": null,
+      "reasons": [
+        "Final-side evidence adjustment +0.15 (original=LONG, final=LONG; checks trend/flow/order-book/RSI/VWAP)",
+        "1H ASSET TREND AUTHORITY: LONG->LONG; 15m used for entry timing only; BTC SHORT is context, not a side override; source=weighted 1H/15m (SHORT); SL/TP from repeated-touch 1H levels",
+        "Liquidity sweep + reclaim",
+        "order-flow supports reversal",
+        "aligned 1H trend",
+        "1H Fibonacci confluence (0.184479)",
+        "15m RSI supports entry (50.9)"
+      ],
+      "archivedAt": 1793049294184,
+      "archiveReason": "V2.8.6_CLEAN_START"
+    },
+    {
+      "strategyVersion": "NOVARA-SMART-MONEY-AI-V2.8.5-STRUCTURE-FIRST-REPAIR-PREMIUM-CARDS",
+      "id": "XMR|LONG|BREAKOUT_RETEST|1793039605611",
+      "coin": "XMR",
+      "side": "LONG",
+      "pattern": "BREAKOUT_RETEST",
+      "score": 6.99,
+      "audience": "VIP",
+      "outcomeDelivered": [],
+      "entry": 595.24,
+      "sl": 590.10714,
+      "tp": 605.60714,
+      "rr": 2.0197589647876324,
+      "suggestedLeverage": 5,
+      "btcRegime": "BEARISH",
+      "rsi15": 64.21863592274869,
+      "fibConfluence": true,
+      "openedAt": 1793039605611,
+      "lastCheckedAt": 1793046767089,
+      "status": "OPEN",
+      "pnlR": null,
+      "reasons": [
+        "Final-side evidence adjustment +0.14 (original=LONG, final=LONG; checks trend/flow/order-book/RSI/VWAP)",
+        "1H ASSET TREND AUTHORITY: LONG->LONG; 15m used for entry timing only; BTC SHORT is context, not a side override; source=1H + 15m live; SL/TP from repeated-touch 1H levels",
+        "Breakout + retest",
+        "order-flow confirms continuation",
+        "volume supports level break",
+        "VWAP alignment",
+        "1H Fibonacci confluence (596.804)",
+        "15m RSI supports entry (64.2)"
+      ],
+      "archivedAt": 1793049294184,
+      "archiveReason": "V2.8.6_CLEAN_START"
+    },
+    {
+      "strategyVersion": "NOVARA-SMART-MONEY-AI-V2.8.5-STRUCTURE-FIRST-REPAIR-PREMIUM-CARDS",
+      "id": "HYPER|LONG|BREAKOUT_RETEST|1793039608828",
+      "coin": "HYPER",
+      "side": "LONG",
+      "pattern": "BREAKOUT_RETEST",
+      "score": 6.35,
+      "audience": "VIP",
+      "outcomeDelivered": [],
+      "entry": 0.063612,
+      "sl": 0.06309897,
+      "tp": 0.06448997000000001,
+      "rr": 1.7113424166228286,
+      "suggestedLeverage": 3,
+      "btcRegime": "BEARISH",
+      "rsi15": 42.93216373635857,
+      "fibConfluence": false,
+      "openedAt": 1793039608828,
+      "lastCheckedAt": 1793046767089,
+      "status": "OPEN",
+      "pnlR": null,
+      "reasons": [
+        "Final-side evidence adjustment -0.25 (original=SHORT, final=LONG; checks trend/flow/order-book/RSI/VWAP)",
+        "1H ASSET TREND AUTHORITY: SHORT->LONG; 15m used for entry timing only; BTC SHORT is context, not a side override; source=weighted 1H/15m (SHORT); SL/TP from repeated-touch 1H levels",
+        "Breakout + retest",
+        "order-flow confirms continuation",
+        "volume supports level break",
+        "VWAP alignment",
+        "15m RSI supports entry (42.9)"
+      ],
+      "archivedAt": 1793049294184,
+      "archiveReason": "V2.8.6_CLEAN_START"
+    },
+    {
+      "strategyVersion": "NOVARA-SMART-MONEY-AI-V2.8.5-STRUCTURE-FIRST-REPAIR-PREMIUM-CARDS",
+      "id": "MELANIA|SHORT|SWEEP_RECLAIM|1793039612076",
+      "coin": "MELANIA",
+      "side": "SHORT",
+      "pattern": "SWEEP_RECLAIM",
+      "score": 6.09,
+      "audience": "VIP",
+      "outcomeDelivered": [
+        "VIP"
+      ],
+      "entry": 0.08569,
+      "sl": 0.08661352857142857,
+      "tp": 0.08315352857142858,
+      "rr": 2.746500224295038,
+      "suggestedLeverage": 3,
+      "btcRegime": "BEARISH",
+      "rsi15": 69.74201013960554,
+      "fibConfluence": false,
+      "openedAt": 1793039612076,
+      "lastCheckedAt": 1793042194973,
+      "status": "SL",
+      "pnlR": -1,
+      "reasons": [
+        "Final-side evidence adjustment +0.04 (original=SHORT, final=SHORT; checks trend/flow/order-book/RSI/VWAP)",
+        "1H ASSET TREND AUTHORITY: SHORT->SHORT; 15m used for entry timing only; BTC SHORT is context, not a side override; source=weighted 1H/15m (SHORT); SL/TP from repeated-touch 1H levels",
+        "Liquidity sweep + reclaim",
+        "order-flow supports reversal"
+      ],
+      "closedAt": 1793040059999,
+      "exitMark": 0.08682,
+      "paperMarginUsd": 1000,
+      "exitDetection": "1m_candle_ohlc",
+      "outcomeNotifiedAt": 1793042200452,
+      "archivedAt": 1793049294184,
+      "archiveReason": "V2.8.6_CLEAN_START"
+    },
+    {
+      "strategyVersion": "NOVARA-SMART-MONEY-AI-V2.8.5-STRUCTURE-FIRST-REPAIR-PREMIUM-CARDS",
+      "id": "STABLE|SHORT|BREAKOUT_RETEST|1793042507448",
+      "coin": "STABLE",
+      "side": "SHORT",
+      "pattern": "BREAKOUT_RETEST",
+      "score": 7.29,
+      "audience": "BOTH",
+      "outcomeDelivered": [
+        "VIP",
+        "FREE"
+      ],
+      "entry": 0.026182,
+      "sl": 0.02643105857142857,
+      "tp": 0.025762058571428572,
+      "rr": 1.686115142163922,
+      "suggestedLeverage": 3,
+      "btcRegime": "BEARISH",
+      "rsi15": 36.65170058543475,
+      "fibConfluence": false,
+      "openedAt": 1793042507448,
+      "lastCheckedAt": 1793044657427,
+      "status": "SL",
+      "pnlR": -1,
+      "reasons": [
+        "Final-side evidence adjustment +0.29 (original=SHORT, final=SHORT; checks trend/flow/order-book/RSI/VWAP)",
+        "1H ASSET TREND AUTHORITY: SHORT->SHORT; 15m used for entry timing only; BTC SHORT is context, not a side override; source=1H + 15m live; SL/TP from repeated-touch 1H levels",
+        "Breakout + retest",
+        "order-flow confirms continuation",
+        "aligned 1H trend",
+        "VWAP alignment",
+        "15m RSI supports entry (36.7)",
+        "BTC 1H trend confirms SHORT (+0.10)",
+        "BTC 15m trend confirms SHORT (+0.10)"
+      ],
+      "closedAt": 1793042639999,
+      "exitMark": 0.026453,
+      "paperMarginUsd": 1000,
+      "exitDetection": "1m_candle_ohlc",
+      "outcomeNotifiedAt": 1793044664666,
+      "archivedAt": 1793049294184,
+      "archiveReason": "V2.8.6_CLEAN_START"
+    },
+    {
+      "strategyVersion": "NOVARA-SMART-MONEY-AI-V2.8.5-STRUCTURE-FIRST-REPAIR-PREMIUM-CARDS",
+      "id": "ME|LONG|SWEEP_RECLAIM|1793042510583",
+      "coin": "ME",
+      "side": "LONG",
+      "pattern": "SWEEP_RECLAIM",
+      "score": 6.98,
+      "audience": "VIP",
+      "outcomeDelivered": [],
+      "entry": 0.06051,
+      "sl": 0.059635014285714286,
+      "tp": 0.062015014285714286,
+      "rr": 1.7200444088883045,
+      "suggestedLeverage": 3,
+      "btcRegime": "BEARISH",
+      "rsi15": 49.40577224491601,
+      "fibConfluence": true,
+      "openedAt": 1793042510583,
+      "lastCheckedAt": 1793046767089,
+      "status": "OPEN",
+      "pnlR": null,
+      "reasons": [
+        "Final-side evidence adjustment +0.38 (original=LONG, final=LONG; checks trend/flow/order-book/RSI/VWAP)",
+        "1H ASSET TREND AUTHORITY: LONG->LONG; 15m used for entry timing only; BTC SHORT is context, not a side override; source=1H + 15m live; SL/TP from repeated-touch 1H levels",
+        "Liquidity sweep + reclaim",
+        "order-flow supports reversal",
+        "relative volume expansion",
+        "1H Fibonacci confluence (0.0605511)",
+        "15m RSI supports entry (49.4)",
+        "BTC 1H trend conflicts with LONG (-0.15)",
+        "BTC 15m trend conflicts with LONG (-0.15)"
+      ],
+      "archivedAt": 1793049294184,
+      "archiveReason": "V2.8.6_CLEAN_START"
+    },
+    {
+      "strategyVersion": "NOVARA-SMART-MONEY-AI-V2.8.5-STRUCTURE-FIRST-REPAIR-PREMIUM-CARDS",
+      "id": "ORDI|SHORT|SWEEP_RECLAIM|1793042513808",
+      "coin": "ORDI",
+      "side": "SHORT",
+      "pattern": "SWEEP_RECLAIM",
+      "score": 6.73,
+      "audience": "VIP",
+      "outcomeDelivered": [],
+      "entry": 3.5775,
+      "sl": 3.5957404285714287,
+      "tp": 3.5237404285714287,
+      "rr": 2.94727567491365,
+      "suggestedLeverage": 3,
+      "btcRegime": "BEARISH",
+      "rsi15": 47.09320488180861,
+      "fibConfluence": true,
+      "openedAt": 1793042513808,
+      "lastCheckedAt": 1793046767089,
+      "status": "OPEN",
+      "pnlR": null,
+      "reasons": [
+        "Final-side evidence adjustment +0.13 (original=LONG, final=SHORT; checks trend/flow/order-book/RSI/VWAP)",
+        "1H ASSET TREND AUTHORITY: LONG->SHORT; 15m used for entry timing only; BTC SHORT is context, not a side override; source=1H + 15m live; SL/TP from repeated-touch 1H levels",
+        "Liquidity sweep + reclaim",
+        "order-flow supports reversal",
+        "relative volume expansion",
+        "1H Fibonacci confluence (3.57642)",
+        "15m RSI supports entry (47.1)",
+        "BTC 1H trend conflicts with LONG (-0.15)",
+        "BTC 15m trend conflicts with LONG (-0.15)"
+      ],
+      "archivedAt": 1793049294184,
+      "archiveReason": "V2.8.6_CLEAN_START"
+    },
+    {
+      "strategyVersion": "NOVARA-SMART-MONEY-AI-V2.8.5-STRUCTURE-FIRST-REPAIR-PREMIUM-CARDS",
+      "id": "MERL|LONG|TREND_PULLBACK|1793042517007",
+      "coin": "MERL",
+      "side": "LONG",
+      "pattern": "TREND_PULLBACK",
+      "score": 6.63,
+      "audience": "VIP",
+      "outcomeDelivered": [],
+      "entry": 0.027345,
+      "sl": 0.02694583,
+      "tp": 0.02837883,
+      "rr": 2.5899491444747786,
+      "suggestedLeverage": 3,
+      "btcRegime": "BEARISH",
+      "rsi15": 53.76391355947843,
+      "fibConfluence": false,
+      "openedAt": 1793042517007,
+      "lastCheckedAt": 1793046767089,
+      "status": "OPEN",
+      "pnlR": null,
+      "reasons": [
+        "Final-side evidence adjustment +0.43 (original=LONG, final=LONG; checks trend/flow/order-book/RSI/VWAP)",
+        "1H ASSET TREND AUTHORITY: LONG->LONG; 15m used for entry timing only; BTC SHORT is context, not a side override; source=1H + 15m live; SL/TP from repeated-touch 1H levels",
+        "Trend pullback + continuation",
+        "order-flow resumes with trend",
+        "participation present",
+        "VWAP alignment",
+        "15m RSI supports entry (53.8)",
+        "BTC 1H trend conflicts with LONG (-0.15)",
+        "BTC 15m trend conflicts with LONG (-0.15)"
+      ],
+      "archivedAt": 1793049294184,
+      "archiveReason": "V2.8.6_CLEAN_START"
+    },
+    {
+      "strategyVersion": "NOVARA-SMART-MONEY-AI-V2.8.5-STRUCTURE-FIRST-REPAIR-PREMIUM-CARDS",
+      "id": "kSHIB|SHORT|SWEEP_RECLAIM|1793042520196",
+      "coin": "kSHIB",
+      "side": "SHORT",
+      "pattern": "SWEEP_RECLAIM",
+      "score": 6.59,
+      "audience": "VIP",
+      "outcomeDelivered": [],
+      "entry": 0.004866,
+      "sl": 0.0048933442857142856,
+      "tp": 0.004813344285714286,
+      "rr": 1.9256569667206092,
+      "suggestedLeverage": 8,
+      "btcRegime": "BEARISH",
+      "rsi15": 50.63672692816842,
+      "fibConfluence": true,
+      "openedAt": 1793042520196,
+      "lastCheckedAt": 1793046767089,
+      "status": "OPEN",
+      "pnlR": null,
+      "reasons": [
+        "Final-side evidence adjustment -0.01 (original=LONG, final=SHORT; checks trend/flow/order-book/RSI/VWAP)",
+        "1H ASSET TREND AUTHORITY: LONG->SHORT; 15m used for entry timing only; BTC SHORT is context, not a side override; source=1H + 15m live; SL/TP from repeated-touch 1H levels",
+        "Liquidity sweep + reclaim",
+        "order-flow supports reversal",
+        "relative volume expansion",
+        "1H Fibonacci confluence (0.00487100)",
+        "15m RSI supports entry (50.6)",
+        "BTC 1H trend conflicts with LONG (-0.15)",
+        "BTC 15m trend conflicts with LONG (-0.15)"
+      ],
+      "archivedAt": 1793049294184,
+      "archiveReason": "V2.8.6_CLEAN_START"
+    },
+    {
+      "strategyVersion": "NOVARA-SMART-MONEY-AI-V2.8.5-STRUCTURE-FIRST-REPAIR-PREMIUM-CARDS",
+      "id": "ETHFI|LONG|TREND_PULLBACK|1793042523404",
+      "coin": "ETHFI",
+      "side": "LONG",
+      "pattern": "TREND_PULLBACK",
+      "score": 6.58,
+      "audience": "VIP",
+      "outcomeDelivered": [],
+      "entry": 0.64321,
+      "sl": 0.6339593857142858,
+      "tp": 0.6608193857142858,
+      "rr": 1.9035909584383186,
+      "suggestedLeverage": 5,
+      "btcRegime": "BEARISH",
+      "rsi15": 56.37921283919129,
+      "fibConfluence": false,
+      "openedAt": 1793042523404,
+      "lastCheckedAt": 1793046767089,
+      "status": "OPEN",
+      "pnlR": null,
+      "reasons": [
+        "Final-side evidence adjustment +0.33 (original=LONG, final=LONG; checks trend/flow/order-book/RSI/VWAP)",
+        "1H ASSET TREND AUTHORITY: LONG->LONG; 15m used for entry timing only; BTC SHORT is context, not a side override; source=1H + 15m live; SL/TP from repeated-touch 1H levels",
+        "Trend pullback + continuation",
+        "order-flow resumes with trend",
+        "VWAP alignment",
+        "OI rising with trend",
+        "15m RSI supports entry (56.4)",
+        "BTC 1H trend conflicts with LONG (-0.15)",
+        "BTC 15m trend conflicts with LONG (-0.15)"
+      ],
+      "archivedAt": 1793049294184,
+      "archiveReason": "V2.8.6_CLEAN_START"
+    },
+    {
+      "strategyVersion": "NOVARA-SMART-MONEY-AI-V2.8.5-STRUCTURE-FIRST-REPAIR-PREMIUM-CARDS",
+      "id": "GMX|SHORT|SWEEP_RECLAIM|1793042526595",
+      "coin": "GMX",
+      "side": "SHORT",
+      "pattern": "SWEEP_RECLAIM",
+      "score": 6.54,
+      "audience": "VIP",
+      "outcomeDelivered": [],
+      "entry": 8.0201,
+      "sl": 8.121599142857143,
+      "tp": 7.860799142857143,
+      "rr": 1.5694798267121006,
+      "suggestedLeverage": 3,
+      "btcRegime": "BEARISH",
+      "rsi15": 44.03340977892354,
+      "fibConfluence": false,
+      "openedAt": 1793042526595,
+      "lastCheckedAt": 1793046767089,
+      "status": "OPEN",
+      "pnlR": null,
+      "reasons": [
+        "Final-side evidence adjustment +0.09 (original=LONG, final=SHORT; checks trend/flow/order-book/RSI/VWAP)",
+        "1H ASSET TREND AUTHORITY: LONG->SHORT; 15m used for entry timing only; BTC SHORT is context, not a side override; source=1H + 15m live; SL/TP from repeated-touch 1H levels",
+        "Liquidity sweep + reclaim",
+        "order-flow supports reversal",
+        "relative volume expansion",
+        "OI rising with directional move",
+        "BTC 1H trend conflicts with LONG (-0.15)",
+        "BTC 15m trend conflicts with LONG (-0.15)"
+      ],
+      "archivedAt": 1793049294184,
+      "archiveReason": "V2.8.6_CLEAN_START"
+    },
+    {
+      "strategyVersion": "NOVARA-SMART-MONEY-AI-V2.8.5-STRUCTURE-FIRST-REPAIR-PREMIUM-CARDS",
+      "id": "BCH|LONG|SWEEP_RECLAIM|1793042529821",
+      "coin": "BCH",
+      "side": "LONG",
+      "pattern": "SWEEP_RECLAIM",
+      "score": 6.53,
+      "audience": "VIP",
+      "outcomeDelivered": [],
+      "entry": 279.29,
+      "sl": 274.7023142857143,
+      "tp": 287.1323142857143,
+      "rr": 1.7094270998760603,
+      "suggestedLeverage": 7,
+      "btcRegime": "BEARISH",
+      "rsi15": 51.16630854829402,
+      "fibConfluence": true,
+      "openedAt": 1793042529821,
+      "lastCheckedAt": 1793046767089,
+      "status": "OPEN",
+      "pnlR": null,
+      "reasons": [
+        "Final-side evidence adjustment +0.38 (original=LONG, final=LONG; checks trend/flow/order-book/RSI/VWAP)",
+        "1H ASSET TREND AUTHORITY: LONG->LONG; 15m used for entry timing only; BTC SHORT is context, not a side override; source=1H + 15m live; SL/TP from repeated-touch 1H levels",
+        "Liquidity sweep + reclaim",
+        "order-flow supports reversal",
+        "1H Fibonacci confluence (278.898)",
+        "15m RSI supports entry (51.2)",
+        "BTC 1H trend conflicts with LONG (-0.15)",
+        "BTC 15m trend conflicts with LONG (-0.15)"
+      ],
+      "archivedAt": 1793049294184,
+      "archiveReason": "V2.8.6_CLEAN_START"
+    },
+    {
+      "strategyVersion": "NOVARA-SMART-MONEY-AI-V2.8.5-STRUCTURE-FIRST-REPAIR-PREMIUM-CARDS",
+      "id": "PUMP|SHORT|TREND_PULLBACK|1793044905828",
+      "coin": "PUMP",
+      "side": "SHORT",
+      "pattern": "TREND_PULLBACK",
+      "score": 7.58,
+      "audience": "BOTH",
+      "outcomeDelivered": [],
+      "entry": 0.004224,
+      "sl": 0.004271825714285714,
+      "tp": 0.004130825714285714,
+      "rr": 1.948204791206205,
+      "suggestedLeverage": 10,
+      "btcRegime": "BEARISH",
+      "rsi15": 42.49861937160743,
+      "fibConfluence": true,
+      "openedAt": 1793044905828,
+      "lastCheckedAt": 1793046767089,
+      "status": "OPEN",
+      "pnlR": null,
+      "reasons": [
+        "Final-side evidence adjustment +0.33 (original=SHORT, final=SHORT; checks trend/flow/order-book/RSI/VWAP)",
+        "1H ASSET TREND AUTHORITY: SHORT->SHORT; 15m used for entry timing only; BTC SHORT is context, not a side override; source=1H + 15m live; SL/TP from repeated-touch 1H levels",
+        "Trend pullback + continuation",
+        "order-flow resumes with trend",
+        "participation present",
+        "VWAP alignment",
+        "OI rising with trend",
+        "1H Fibonacci confluence (0.00423080)",
+        "15m RSI supports entry (42.5)",
+        "BTC 1H trend confirms SHORT (+0.10)",
+        "BTC 15m trend confirms SHORT (+0.10)"
+      ],
+      "archivedAt": 1793049294184,
+      "archiveReason": "V2.8.6_CLEAN_START"
+    },
+    {
+      "strategyVersion": "NOVARA-SMART-MONEY-AI-V2.8.5-STRUCTURE-FIRST-REPAIR-PREMIUM-CARDS",
+      "id": "STABLE|SHORT|TREND_PULLBACK|1793044909077",
+      "coin": "STABLE",
+      "side": "SHORT",
+      "pattern": "TREND_PULLBACK",
+      "score": 7.41,
+      "audience": "VIP",
+      "outcomeDelivered": [],
+      "entry": 0.026446,
+      "sl": 0.026628867142857143,
+      "tp": 0.026114867142857143,
+      "rr": 1.8107837852617517,
+      "suggestedLeverage": 3,
+      "btcRegime": "BEARISH",
+      "rsi15": 46.83539377559929,
+      "fibConfluence": false,
+      "openedAt": 1793044909077,
+      "lastCheckedAt": 1793046767089,
+      "status": "OPEN",
+      "pnlR": null,
+      "reasons": [
+        "Final-side evidence adjustment +0.41 (original=SHORT, final=SHORT; checks trend/flow/order-book/RSI/VWAP)",
+        "1H ASSET TREND AUTHORITY: SHORT->SHORT; 15m used for entry timing only; BTC SHORT is context, not a side override; source=1H + 15m live; SL/TP from repeated-touch 1H levels",
+        "Trend pullback + continuation",
+        "order-flow resumes with trend",
+        "participation present",
+        "VWAP alignment",
+        "OI rising with trend",
+        "15m RSI supports entry (46.8)",
+        "BTC 1H trend confirms SHORT (+0.10)",
+        "BTC 15m trend confirms SHORT (+0.10)"
+      ],
+      "archivedAt": 1793049294184,
+      "archiveReason": "V2.8.6_CLEAN_START"
+    },
+    {
+      "strategyVersion": "NOVARA-SMART-MONEY-AI-V2.8.5-STRUCTURE-FIRST-REPAIR-PREMIUM-CARDS",
+      "id": "AVAX|SHORT|TREND_PULLBACK|1793044912328",
+      "coin": "AVAX",
+      "side": "SHORT",
+      "pattern": "TREND_PULLBACK",
+      "score": 7.13,
+      "audience": "VIP",
+      "outcomeDelivered": [],
+      "entry": 8.9205,
+      "sl": 8.966159,
+      "tp": 8.829058999999999,
+      "rr": 2.002693882914735,
+      "suggestedLeverage": 9,
+      "btcRegime": "BEARISH",
+      "rsi15": 46.07826865502251,
+      "fibConfluence": true,
+      "openedAt": 1793044912328,
+      "lastCheckedAt": 1793046767089,
+      "status": "OPEN",
+      "pnlR": null,
+      "reasons": [
+        "Final-side evidence adjustment +0.43 (original=SHORT, final=SHORT; checks trend/flow/order-book/RSI/VWAP)",
+        "1H ASSET TREND AUTHORITY: SHORT->SHORT; 15m used for entry timing only; BTC SHORT is context, not a side override; source=1H + 15m live; SL/TP from repeated-touch 1H levels",
+        "Trend pullback + continuation",
+        "order-flow resumes with trend",
+        "VWAP alignment",
+        "1H Fibonacci confluence (8.93269)",
+        "15m RSI supports entry (46.1)",
+        "BTC 1H trend confirms SHORT (+0.10)",
+        "BTC 15m trend confirms SHORT (+0.10)"
+      ],
+      "archivedAt": 1793049294184,
+      "archiveReason": "V2.8.6_CLEAN_START"
+    },
+    {
+      "strategyVersion": "NOVARA-SMART-MONEY-AI-V2.8.5-STRUCTURE-FIRST-REPAIR-PREMIUM-CARDS",
+      "id": "PENDLE|SHORT|TREND_PULLBACK|1793044915448",
+      "coin": "PENDLE",
+      "side": "SHORT",
+      "pattern": "TREND_PULLBACK",
+      "score": 7.13,
+      "audience": "VIP",
+      "outcomeDelivered": [],
+      "entry": 1.9566,
+      "sl": 1.9724557142857142,
+      "tp": 1.9323557142857142,
+      "rr": 1.52905667177223,
+      "suggestedLeverage": 5,
+      "btcRegime": "BEARISH",
+      "rsi15": 46.29829197534282,
+      "fibConfluence": true,
+      "openedAt": 1793044915448,
+      "lastCheckedAt": 1793046767089,
+      "status": "OPEN",
+      "pnlR": null,
+      "reasons": [
+        "Final-side evidence adjustment +0.43 (original=SHORT, final=SHORT; checks trend/flow/order-book/RSI/VWAP)",
+        "1H ASSET TREND AUTHORITY: SHORT->SHORT; 15m used for entry timing only; BTC SHORT is context, not a side override; source=1H + 15m live; SL/TP from repeated-touch 1H levels",
+        "Trend pullback + continuation",
+        "order-flow resumes with trend",
+        "VWAP alignment",
+        "1H Fibonacci confluence (1.95440)",
+        "15m RSI supports entry (46.3)",
+        "BTC 1H trend confirms SHORT (+0.10)",
+        "BTC 15m trend confirms SHORT (+0.10)"
+      ],
+      "archivedAt": 1793049294184,
+      "archiveReason": "V2.8.6_CLEAN_START"
+    },
+    {
+      "strategyVersion": "NOVARA-SMART-MONEY-AI-V2.8.5-STRUCTURE-FIRST-REPAIR-PREMIUM-CARDS",
+      "id": "HEMI|SHORT|TREND_PULLBACK|1793044918746",
+      "coin": "HEMI",
+      "side": "SHORT",
+      "pattern": "TREND_PULLBACK",
+      "score": 7.13,
+      "audience": "VIP",
+      "outcomeDelivered": [],
+      "entry": 0.004608,
+      "sl": 0.0046334714285714285,
+      "tp": 0.004534471428571428,
+      "rr": 2.886707795849731,
+      "suggestedLeverage": 3,
+      "btcRegime": "BEARISH",
+      "rsi15": 43.201036491560444,
+      "fibConfluence": true,
+      "openedAt": 1793044918746,
+      "lastCheckedAt": 1793046767089,
+      "status": "OPEN",
+      "pnlR": null,
+      "reasons": [
+        "Final-side evidence adjustment +0.43 (original=SHORT, final=SHORT; checks trend/flow/order-book/RSI/VWAP)",
+        "1H ASSET TREND AUTHORITY: SHORT->SHORT; 15m used for entry timing only; BTC SHORT is context, not a side override; source=1H + 15m live; SL/TP from repeated-touch 1H levels",
+        "Trend pullback + continuation",
+        "order-flow resumes with trend",
+        "VWAP alignment",
+        "1H Fibonacci confluence (0.00461950)",
+        "15m RSI supports entry (43.2)",
+        "BTC 1H trend confirms SHORT (+0.10)",
+        "BTC 15m trend confirms SHORT (+0.10)"
+      ],
+      "archivedAt": 1793049294184,
+      "archiveReason": "V2.8.6_CLEAN_START"
+    },
+    {
+      "strategyVersion": "NOVARA-SMART-MONEY-AI-V2.8.5-STRUCTURE-FIRST-REPAIR-PREMIUM-CARDS",
+      "id": "AR|SHORT|TREND_PULLBACK|1793044921849",
+      "coin": "AR",
+      "side": "SHORT",
+      "pattern": "TREND_PULLBACK",
+      "score": 6.99,
+      "audience": "VIP",
+      "outcomeDelivered": [],
+      "entry": 3.394,
+      "sl": 3.419884857142857,
+      "tp": 3.353784857142857,
+      "rr": 1.5536165656699894,
+      "suggestedLeverage": 5,
+      "btcRegime": "BEARISH",
+      "rsi15": 49.11233722134049,
+      "fibConfluence": true,
+      "openedAt": 1793044921849,
+      "lastCheckedAt": 1793046767089,
+      "status": "OPEN",
+      "pnlR": null,
+      "reasons": [
+        "Final-side evidence adjustment +0.29 (original=SHORT, final=SHORT; checks trend/flow/order-book/RSI/VWAP)",
+        "1H ASSET TREND AUTHORITY: SHORT->SHORT; 15m used for entry timing only; BTC SHORT is context, not a side override; source=1H + 15m live; SL/TP from repeated-touch 1H levels",
+        "Trend pullback + continuation",
+        "order-flow resumes with trend",
+        "VWAP alignment",
+        "1H Fibonacci confluence (3.39175)",
+        "15m RSI supports entry (49.1)",
+        "BTC 1H trend confirms SHORT (+0.10)",
+        "BTC 15m trend confirms SHORT (+0.10)"
+      ],
+      "archivedAt": 1793049294184,
+      "archiveReason": "V2.8.6_CLEAN_START"
+    },
+    {
+      "strategyVersion": "NOVARA-SMART-MONEY-AI-V2.8.5-STRUCTURE-FIRST-REPAIR-PREMIUM-CARDS",
+      "id": "HYPER|SHORT|BREAKOUT_RETEST|1793044925121",
+      "coin": "HYPER",
+      "side": "SHORT",
+      "pattern": "BREAKOUT_RETEST",
+      "score": 6.78,
+      "audience": "VIP",
+      "outcomeDelivered": [],
+      "entry": 0.063288,
+      "sl": 0.06444160285714286,
+      "tp": 0.06149660285714286,
+      "rr": 1.5528716245501568,
+      "suggestedLeverage": 3,
+      "btcRegime": "BEARISH",
+      "rsi15": 39.817498154226065,
+      "fibConfluence": true,
+      "openedAt": 1793044925121,
+      "lastCheckedAt": 1793046767089,
+      "status": "OPEN",
+      "pnlR": null,
+      "reasons": [
+        "Final-side evidence adjustment +0.18 (original=SHORT, final=SHORT; checks trend/flow/order-book/RSI/VWAP)",
+        "1H ASSET TREND AUTHORITY: SHORT->SHORT; 15m used for entry timing only; BTC SHORT is context, not a side override; source=1H + 15m live; SL/TP from repeated-touch 1H levels",
+        "Breakout + retest",
+        "order-flow confirms continuation",
+        "VWAP alignment",
+        "1H Fibonacci confluence (0.0633120)",
+        "15m RSI supports entry (39.8)",
+        "BTC 1H trend confirms SHORT (+0.10)",
+        "BTC 15m trend confirms SHORT (+0.10)"
+      ],
+      "archivedAt": 1793049294184,
+      "archiveReason": "V2.8.6_CLEAN_START"
+    },
+    {
+      "strategyVersion": "NOVARA-SMART-MONEY-AI-V2.8.5-STRUCTURE-FIRST-REPAIR-PREMIUM-CARDS",
+      "id": "REZ|LONG|TREND_PULLBACK|1793044928273",
+      "coin": "REZ",
+      "side": "LONG",
+      "pattern": "TREND_PULLBACK",
+      "score": 6.26,
+      "audience": "VIP",
+      "outcomeDelivered": [],
+      "entry": 0.004639,
+      "sl": 0.004518234285714286,
+      "tp": 0.004826234285714286,
+      "rr": 1.550392732090477,
+      "suggestedLeverage": 3,
+      "btcRegime": "BEARISH",
+      "rsi15": 52.276446502298285,
+      "fibConfluence": false,
+      "openedAt": 1793044928273,
+      "lastCheckedAt": 1793046767089,
+      "status": "OPEN",
+      "pnlR": null,
+      "reasons": [
+        "Final-side evidence adjustment +0.31 (original=LONG, final=LONG; checks trend/flow/order-book/RSI/VWAP)",
+        "1H ASSET TREND AUTHORITY: LONG->LONG; 15m used for entry timing only; BTC SHORT is context, not a side override; source=1H + 15m live; SL/TP from repeated-touch 1H levels",
+        "Trend pullback + continuation",
+        "order-flow resumes with trend",
+        "VWAP alignment",
+        "15m RSI supports entry (52.3)",
+        "BTC 1H trend conflicts with LONG (-0.15)",
+        "BTC 15m trend conflicts with LONG (-0.15)"
+      ],
+      "archivedAt": 1793049294184,
+      "archiveReason": "V2.8.6_CLEAN_START"
+    },
+    {
+      "strategyVersion": "NOVARA-SMART-MONEY-AI-V2.8.5-STRUCTURE-FIRST-REPAIR-PREMIUM-CARDS",
+      "id": "LDO|SHORT|TREND_PULLBACK|1793047010662",
+      "coin": "LDO",
+      "side": "SHORT",
+      "pattern": "TREND_PULLBACK",
+      "score": 7.58,
+      "audience": "BOTH",
+      "outcomeDelivered": [],
+      "entry": 0.36891,
+      "sl": 0.37233478571428574,
+      "tp": 0.3635947857142857,
+      "rr": 1.5519844828664962,
+      "suggestedLeverage": 5,
+      "btcRegime": "BEARISH",
+      "rsi15": 42.55364335440096,
+      "fibConfluence": true,
+      "openedAt": 1793047010662,
+      "lastCheckedAt": 1793047010662,
+      "status": "OPEN",
+      "pnlR": null,
+      "reasons": [
+        "Final-side evidence adjustment +0.33 (original=SHORT, final=SHORT; checks trend/flow/order-book/RSI/VWAP)",
+        "1H ASSET TREND AUTHORITY: SHORT->SHORT; 15m used for entry timing only; BTC SHORT is context, not a side override; source=1H + 15m live; SL/TP from repeated-touch 1H levels",
+        "Trend pullback + continuation",
+        "order-flow resumes with trend",
+        "participation present",
+        "VWAP alignment",
+        "OI rising with trend",
+        "1H Fibonacci confluence (0.368800)",
+        "15m RSI supports entry (42.6)",
+        "BTC 1H trend confirms SHORT (+0.10)",
+        "BTC 15m trend confirms SHORT (+0.10)"
+      ],
+      "archivedAt": 1793049294184,
+      "archiveReason": "V2.8.6_CLEAN_START"
+    },
+    {
+      "strategyVersion": "NOVARA-SMART-MONEY-AI-V2.8.5-STRUCTURE-FIRST-REPAIR-PREMIUM-CARDS",
+      "id": "BIGTIME|SHORT|SWEEP_RECLAIM|1793047013876",
+      "coin": "BIGTIME",
+      "side": "SHORT",
+      "pattern": "SWEEP_RECLAIM",
+      "score": 7.5,
+      "audience": "VIP",
+      "outcomeDelivered": [],
+      "entry": 0.006839,
+      "sl": 0.0069050628571428576,
+      "tp": 0.006731062857142857,
+      "rr": 1.6338552028371,
+      "suggestedLeverage": 3,
+      "btcRegime": "BEARISH",
+      "rsi15": 51.86585676675852,
+      "fibConfluence": true,
+      "openedAt": 1793047013876,
+      "lastCheckedAt": 1793047013876,
+      "status": "OPEN",
+      "pnlR": null,
+      "reasons": [
+        "Final-side evidence adjustment +0.45 (original=SHORT, final=SHORT; checks trend/flow/order-book/RSI/VWAP)",
+        "1H ASSET TREND AUTHORITY: SHORT->SHORT; 15m used for entry timing only; BTC SHORT is context, not a side override; source=1H + 15m live; SL/TP from repeated-touch 1H levels",
+        "Liquidity sweep + reclaim",
+        "order-flow supports reversal",
+        "aligned 1H trend",
+        "1H Fibonacci confluence (0.00682586)",
+        "15m RSI supports entry (51.9)",
+        "BTC 1H trend confirms SHORT (+0.10)",
+        "BTC 15m trend confirms SHORT (+0.10)"
+      ],
+      "archivedAt": 1793049294184,
+      "archiveReason": "V2.8.6_CLEAN_START"
+    },
+    {
+      "strategyVersion": "NOVARA-SMART-MONEY-AI-V2.8.5-STRUCTURE-FIRST-REPAIR-PREMIUM-CARDS",
+      "id": "DYM|SHORT|TREND_PULLBACK|1793047016983",
+      "coin": "DYM",
+      "side": "SHORT",
+      "pattern": "TREND_PULLBACK",
+      "score": 7.38,
+      "audience": "VIP",
+      "outcomeDelivered": [],
+      "entry": 0.01767,
+      "sl": 0.0179028,
+      "tp": 0.0173128,
+      "rr": 1.5343642611684045,
+      "suggestedLeverage": 3,
+      "btcRegime": "BEARISH",
+      "rsi15": 46.202973392789715,
+      "fibConfluence": true,
+      "openedAt": 1793047016983,
+      "lastCheckedAt": 1793047016983,
+      "status": "OPEN",
+      "pnlR": null,
+      "reasons": [
+        "Final-side evidence adjustment +0.43 (original=SHORT, final=SHORT; checks trend/flow/order-book/RSI/VWAP)",
+        "1H ASSET TREND AUTHORITY: SHORT->SHORT; 15m used for entry timing only; BTC SHORT is context, not a side override; source=1H + 15m live; SL/TP from repeated-touch 1H levels",
+        "Trend pullback + continuation",
+        "order-flow resumes with trend",
+        "participation present",
+        "VWAP alignment",
+        "1H Fibonacci confluence (0.0176904)",
+        "15m RSI supports entry (46.2)",
+        "BTC 1H trend confirms SHORT (+0.10)",
+        "BTC 15m trend confirms SHORT (+0.10)"
+      ],
+      "archivedAt": 1793049294184,
+      "archiveReason": "V2.8.6_CLEAN_START"
+    },
+    {
+      "strategyVersion": "NOVARA-SMART-MONEY-AI-V2.8.5-STRUCTURE-FIRST-REPAIR-PREMIUM-CARDS",
+      "id": "LINEA|SHORT|TREND_PULLBACK|1793047020194",
+      "coin": "LINEA",
+      "side": "SHORT",
+      "pattern": "TREND_PULLBACK",
+      "score": 7.13,
+      "audience": "VIP",
+      "outcomeDelivered": [],
+      "entry": 0.002532,
+      "sl": 0.002559191428571429,
+      "tp": 0.002486191428571429,
+      "rr": 1.6846695387201507,
+      "suggestedLeverage": 3,
+      "btcRegime": "BEARISH",
+      "rsi15": 45.584101836792264,
+      "fibConfluence": true,
+      "openedAt": 1793047020194,
+      "lastCheckedAt": 1793047020194,
+      "status": "OPEN",
+      "pnlR": null,
+      "reasons": [
+        "Final-side evidence adjustment +0.43 (original=SHORT, final=SHORT; checks trend/flow/order-book/RSI/VWAP)",
+        "1H ASSET TREND AUTHORITY: SHORT->SHORT; 15m used for entry timing only; BTC SHORT is context, not a side override; source=1H + 15m live; SL/TP from repeated-touch 1H levels",
+        "Trend pullback + continuation",
+        "order-flow resumes with trend",
+        "VWAP alignment",
+        "1H Fibonacci confluence (0.00252924)",
+        "15m RSI supports entry (45.6)",
+        "BTC 1H trend confirms SHORT (+0.10)",
+        "BTC 15m trend confirms SHORT (+0.10)"
+      ],
+      "archivedAt": 1793049294184,
+      "archiveReason": "V2.8.6_CLEAN_START"
+    },
+    {
+      "strategyVersion": "NOVARA-SMART-MONEY-AI-V2.8.5-STRUCTURE-FIRST-REPAIR-PREMIUM-CARDS",
+      "id": "XRP|SHORT|TREND_PULLBACK|1793047023391",
+      "coin": "XRP",
+      "side": "SHORT",
+      "pattern": "TREND_PULLBACK",
+      "score": 6.99,
+      "audience": "VIP",
+      "outcomeDelivered": [],
+      "entry": 1.2939,
+      "sl": 1.304433142857143,
+      "tp": 1.2754331428571428,
+      "rr": 1.7532143438398522,
+      "suggestedLeverage": 10,
+      "btcRegime": "BEARISH",
+      "rsi15": 46.73297817327514,
+      "fibConfluence": true,
+      "openedAt": 1793047023391,
+      "lastCheckedAt": 1793047023391,
+      "status": "OPEN",
+      "pnlR": null,
+      "reasons": [
+        "Final-side evidence adjustment +0.29 (original=SHORT, final=SHORT; checks trend/flow/order-book/RSI/VWAP)",
+        "1H ASSET TREND AUTHORITY: SHORT->SHORT; 15m used for entry timing only; BTC SHORT is context, not a side override; source=1H + 15m live; SL/TP from repeated-touch 1H levels",
+        "Trend pullback + continuation",
+        "order-flow resumes with trend",
+        "VWAP alignment",
+        "1H Fibonacci confluence (1.29405)",
+        "15m RSI supports entry (46.7)",
+        "BTC 1H trend confirms SHORT (+0.10)",
+        "BTC 15m trend confirms SHORT (+0.10)"
+      ],
+      "archivedAt": 1793049294184,
+      "archiveReason": "V2.8.6_CLEAN_START"
+    },
+    {
+      "strategyVersion": "NOVARA-SMART-MONEY-AI-V2.8.5-STRUCTURE-FIRST-REPAIR-PREMIUM-CARDS",
+      "id": "SYRUP|SHORT|TREND_PULLBACK|1793047026580",
+      "coin": "SYRUP",
+      "side": "SHORT",
+      "pattern": "TREND_PULLBACK",
+      "score": 6.99,
+      "audience": "VIP",
+      "outcomeDelivered": [],
+      "entry": 0.17456,
+      "sl": 0.17631412857142856,
+      "tp": 0.17168412857142856,
+      "rr": 1.6394872504866143,
+      "suggestedLeverage": 3,
+      "btcRegime": "BEARISH",
+      "rsi15": 42.87246871921375,
+      "fibConfluence": true,
+      "openedAt": 1793047026580,
+      "lastCheckedAt": 1793047026580,
+      "status": "OPEN",
+      "pnlR": null,
+      "reasons": [
+        "Final-side evidence adjustment +0.29 (original=SHORT, final=SHORT; checks trend/flow/order-book/RSI/VWAP)",
+        "1H ASSET TREND AUTHORITY: SHORT->SHORT; 15m used for entry timing only; BTC SHORT is context, not a side override; source=1H + 15m live; SL/TP from repeated-touch 1H levels",
+        "Trend pullback + continuation",
+        "order-flow resumes with trend",
+        "VWAP alignment",
+        "1H Fibonacci confluence (0.174665)",
+        "15m RSI supports entry (42.9)",
+        "BTC 1H trend confirms SHORT (+0.10)",
+        "BTC 15m trend confirms SHORT (+0.10)"
+      ],
+      "archivedAt": 1793049294184,
+      "archiveReason": "V2.8.6_CLEAN_START"
+    },
+    {
+      "strategyVersion": "NOVARA-SMART-MONEY-AI-V2.8.5-STRUCTURE-FIRST-REPAIR-PREMIUM-CARDS",
+      "id": "AVNT|SHORT|TREND_PULLBACK|1793047029781",
+      "coin": "AVNT",
+      "side": "SHORT",
+      "pattern": "TREND_PULLBACK",
+      "score": 6.04,
+      "audience": "VIP",
+      "outcomeDelivered": [],
+      "entry": 0.11005,
+      "sl": 0.1110782,
+      "tp": 0.1083382,
+      "rr": 1.6648511962653063,
+      "suggestedLeverage": 5,
+      "btcRegime": "BEARISH",
+      "rsi15": 44.83828000625472,
+      "fibConfluence": false,
+      "openedAt": 1793047029781,
+      "lastCheckedAt": 1793047029781,
+      "status": "OPEN",
+      "pnlR": null,
+      "reasons": [
+        "Final-side evidence adjustment +0.09 (original=SHORT, final=SHORT; checks trend/flow/order-book/RSI/VWAP)",
+        "1H ASSET TREND AUTHORITY: SHORT->SHORT; 15m used for entry timing only; BTC SHORT is context, not a side override; source=1H + 15m live; SL/TP from repeated-touch 1H levels",
+        "Trend pullback + continuation",
+        "participation present",
+        "VWAP alignment",
+        "15m RSI supports entry (44.8)",
+        "BTC 1H trend confirms SHORT (+0.10)",
+        "BTC 15m trend confirms SHORT (+0.10)"
+      ],
+      "archivedAt": 1793049294184,
+      "archiveReason": "V2.8.6_CLEAN_START"
     }
   ],
   "pendingDailyReports": null,
-  "cleanStartId": "NOVARA-V2.8.5-CLEAN-START-2026-10-26",
-  "cleanStartAt": 1793039340741
+  "cleanStartId": "NOVARA-V2.8.6-CLEAN-START-2026-10-27",
+  "cleanStartAt": 1793049294184
 }
