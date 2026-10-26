@@ -2,7 +2,7 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 
 /*
- * NOVARA SMART MONEY AI V2.8.0 LIVE BTC DIRECTION GATE
+ * NOVARA SMART MONEY AI V2.8.1 LIVE BTC DIRECTION + PAPER AUDIT
  * READ-ONLY | NO ORDERS | NO AUTO-COPY | PAPER OUTCOME TRACKING
  * Final LONG/SHORT direction follows a fresh BTC 15m + 1h direction check at candidate time; altcoin structure sets SL/TP
  *
@@ -15,7 +15,9 @@ import path from 'node:path';
  * All eligible liquid perp markets are considered; the worker does not depend on wallet lists.
  */
 
-const VERSION = 'NOVARA-SMART-MONEY-AI-V2.8.0-LIVE-BTC-DIRECTION-ALL-PATTERNS';
+const VERSION = 'NOVARA-SMART-MONEY-AI-V2.8.2-CLEAN-START-PREMIUM-OUTCOME-CARDS';
+const CLEAN_START_ID = 'NOVARA-V2.8.2-CLEAN-START-2026-10-26';
+const PAPER_MARGIN_USD = Math.max(10, Number(process.env.NOVARA_PAPER_MARGIN_USD || 1000));
 const REVERSE_SWEEP_ONLY = false; // BTC live direction is authoritative; prevent any second inversion of SWEEP_RECLAIM.
 const API = (process.env.HYPERLIQUID_API_URL || 'https://api.hyperliquid.xyz/info').trim();
 const TOKEN = process.env.TELEGRAM_TOKEN || process.env.TELEGRAM_BOT_TOKEN || '';
@@ -36,7 +38,7 @@ const STRUCTURE_BUFFER_ATR = Math.max(0.1, Number(process.env.NOVARA_STRUCTURE_B
 const MAX_SPREAD_PCT = Math.max(0.03, Number(process.env.NOVARA_SMART_MAX_SPREAD_PCT || 0.25));
 const MAX_SIGNALS_PER_CYCLE = Math.max(1, Number(process.env.NOVARA_SMART_MAX_SIGNALS_PER_CYCLE || 8));
 const TELEGRAM_GAP_MS = Math.max(1000, Number(process.env.NOVARA_TELEGRAM_MIN_GAP_MS || 3200));
-const STATE_SCHEMA = 1; // Preserve existing state; tag V2 trades for isolated performance statistics
+const STATE_SCHEMA = 1; // State shape retained; one-time clean-start archives legacy trades before evaluation
 const now = () => Date.now();
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 const n = (v, d = 0) => { const x = Number(v); return Number.isFinite(x) ? x : d; };
@@ -487,11 +489,43 @@ function oppositeSide(side) { return side === 'LONG' ? 'SHORT' : side === 'SHORT
 function shouldReverseSignal(s) { return REVERSE_SWEEP_ONLY && s?.pattern === 'SWEEP_RECLAIM'; }
 function signalKey(s) { return `${s.coin}|${s.side}|${s.pattern}`; }
 function isCooldown(state, s) {
-  // Sweep-reclaim alerts are keyed by their original side; the other patterns keep their original side.
+  // A short cross-pattern cooldown prevents repeat alerts for the same coin/side
+  // when two pattern families trigger in adjacent runs. The longer per-pattern
+  // cooldown remains in place; opposite directions remain independent.
+  const globalKey = `${s.coin}|${s.side}|GLOBAL`;
+  const globalLast = n(state.alertHistory[globalKey]);
+  if (globalLast > 0 && now() - globalLast < 30 * 60_000) return true;
   const lookup = shouldReverseSignal(s) ? `${s.coin}|${oppositeSide(s.side)}|${s.pattern}` : signalKey(s);
   const last = n(state.alertHistory[lookup]);
-  // 90-minute per coin/side/pattern cooldown; opposite sides and other patterns remain independent.
   return last > 0 && now() - last < 90 * 60_000;
+}
+
+function finalSideEvidenceAdjustment(s, originalSide) {
+  // The original pattern score includes side-specific evidence. Once live BTC
+  // chooses the final side, make a modest, transparent adjustment using the
+  // final side's own trend/flow/book/RSI/VWAP evidence rather than carrying the
+  // original score forward unchanged. Keep the adjustment bounded so it does
+  // not turn into an excessively strict second filter.
+  const side = s.side;
+  let delta = originalSide === side ? 0 : -0.20;
+  const alignedTrend = s.trend === side;
+  delta += alignedTrend ? 0.15 : s.trend === oppositeSide(side) ? -0.15 : 0;
+  const flow = n(s.flowDelta), book = n(s.imbalance), rsiValue = n(s.rsi15, 50);
+  const flowAligned = side === 'LONG' ? flow >= 0.12 : flow <= -0.12;
+  const flowOpposed = side === 'LONG' ? flow <= -0.12 : flow >= 0.12;
+  const bookAligned = side === 'LONG' ? book >= 0.12 : book <= -0.12;
+  const bookOpposed = side === 'LONG' ? book <= -0.12 : book >= 0.12;
+  delta += flowAligned ? 0.12 : flowOpposed ? -0.12 : 0;
+  delta += bookAligned ? 0.10 : bookOpposed ? -0.10 : 0;
+  const rsiAligned = side === 'LONG' ? rsiValue >= 48 && rsiValue <= 70 : rsiValue >= 30 && rsiValue <= 52;
+  const rsiStretched = side === 'LONG' ? rsiValue >= 75 : rsiValue <= 25;
+  delta += rsiAligned ? 0.08 : rsiStretched ? -0.10 : 0;
+  const vwap = n(s.vwap), entry = n(s.entry);
+  if (vwap > 0 && entry > 0) {
+    const above = entry >= vwap;
+    delta += ((side === 'LONG' && above) || (side === 'SHORT' && !above)) ? 0.08 : -0.08;
+  }
+  return clamp(delta, -0.55, 0.45);
 }
 function countertrendEvidence(s) {
   // Count independent, observable confirmations rather than relying on a score alone.
@@ -669,14 +703,14 @@ async function updatePaperTrades(state, contexts) {
   for (const trade of openTrades) {
     const mark = n(contexts[trade.coin]?.markPx);
     const candleSet = candlesByCoin.get(trade.coin) || { bars: [], ok: false };
-    let result = null, exitMark = 0, hitAt = 0;
+    let result = null, exitMark = 0, hitAt = 0, exitDetection = null;
     const lastCheckedAt = n(trade.lastCheckedAt, n(trade.openedAt));
     const firstWholeMinute = Math.ceil(Math.max(lastCheckedAt, n(trade.openedAt)) / 60_000) * 60_000;
     for (const bar of candleSet.bars) {
       // Only use fully post-entry, post-check minute bars to avoid counting price action from before the signal/check.
       if (bar.t < firstWholeMinute) continue;
       const hit = candleHit(trade, bar);
-      if (hit) { result = hit; exitMark = bar.c; hitAt = bar.T || bar.t + 60_000; break; }
+      if (hit) { result = hit; exitMark = bar.c; hitAt = bar.T || bar.t + 60_000; exitDetection = '1m_candle_ohlc'; break; }
     }
     if (!result && mark > 0) {
       if (trade.side === 'LONG') {
@@ -684,7 +718,7 @@ async function updatePaperTrades(state, contexts) {
       } else {
         if (mark >= trade.sl) result = 'SL'; else if (mark <= trade.tp) result = 'TP';
       }
-      if (result) { exitMark = mark; hitAt = now(); }
+      if (result) { exitMark = mark; hitAt = now(); exitDetection = 'mark_price_snapshot'; }
     }
     if (candleSet.ok) trade.lastCheckedAt = now();
     if (!result) continue;
@@ -693,7 +727,8 @@ async function updatePaperTrades(state, contexts) {
     trade.closedAt = hitAt || now();
     trade.exitMark = exitMark || mark;
     trade.pnlR = result === 'TP' ? n(trade.rr) : result === 'SL' ? -1 : null;
-    trade.exitDetection = result === 'AMBIGUOUS' ? 'same_1m_candle_both_levels' : (exitMark && exitMark !== mark ? '1m_candle_ohlc' : 'mark_price');
+    trade.paperMarginUsd = PAPER_MARGIN_USD;
+    trade.exitDetection = result === 'AMBIGUOUS' ? 'same_1m_candle_both_levels' : (exitDetection || 'unknown_detection');
     closed.push(trade);
     if (result === 'TP' || result === 'SL') {
       const dk = dayKey(trade.closedAt);
@@ -708,21 +743,57 @@ async function updatePaperTrades(state, contexts) {
 }
 
 function formatOutcome(trade) {
-  const result = trade.status === 'TP' ? '🎯 TAKE PROFIT TOUCHED' : trade.status === 'SL' ? '🛑 STOP LOSS TOUCHED' : '⚠️ BOTH LEVELS IN SAME 1M CANDLE';
+  const isTp = trade.status === 'TP';
+  const isSl = trade.status === 'SL';
+  const ambiguous = !isTp && !isSl;
+  const side = String(trade.side || 'LONG').toUpperCase();
+  const long = side === 'LONG';
+  const lev = Math.max(1, n(trade.suggestedLeverage, 1));
+  const margin = Math.max(10, n(trade.paperMarginUsd, PAPER_MARGIN_USD));
+  const entry = n(trade.entry);
+  const targetExit = isTp ? n(trade.tp) : isSl ? n(trade.sl) : n(trade.exitMark, entry);
+  const movePct = entry > 0 ? ((targetExit - entry) / entry) * 100 * (long ? 1 : -1) : 0;
+  const grossPnl = margin * lev * (movePct / 100);
+  // Conservative isolated-margin display: never claim loss beyond the simulated margin.
+  const pnl = Math.max(-margin, grossPnl);
+  const pnlPct = margin > 0 ? pnl / margin * 100 : 0;
+  const notional = margin * lev;
+  const finalEquity = Math.max(0, margin + pnl);
   const durationMin = Math.max(0, Math.round((n(trade.closedAt) - n(trade.openedAt)) / 60_000));
-  const outcomeR = trade.status === 'AMBIGUOUS' ? 'undetermined' : `${trade.pnlR >= 0 ? '+' : ''}${n(trade.pnlR).toFixed(2)}R`;
-  return `${result}
+  const duration = durationMin >= 60 ? `${Math.floor(durationMin / 60)}H ${durationMin % 60}M` : `${durationMin}M`;
+  const outcomeR = ambiguous ? 'UNDETERMINED' : `${trade.pnlR >= 0 ? '+' : ''}${n(trade.pnlR).toFixed(2)}R`;
+  const header = ambiguous ? '⚠️ OUTCOME UNCERTAIN' : isTp
+    ? (long ? '🏁 LONG TAKE PROFIT HIT' : '🏁 SHORT TAKE PROFIT HIT')
+    : (long ? '🛑 LONG STOP LOSS HIT' : '🛑 SHORT STOP LOSS HIT');
+  const pnlLine = ambiguous ? 'P&L: UNDETERMINED' : `${pnl >= 0 ? '🟢' : '🔴'} <b>${pnl >= 0 ? '+' : '−'}$${Math.abs(pnl).toFixed(2)}</b>  (${pnlPct >= 0 ? '+' : ''}${pnlPct.toFixed(2)}% on margin)`;
+  const exitLabel = isTp ? 'TP reference' : isSl ? 'SL reference' : 'Exit/reference';
+  const accent = isTp ? '🟢 PROFIT CARD' : isSl ? '🔴 LOSS CARD' : '🟠 REVIEW CARD';
+  return `${accent}  |  <b>NOVARA AI</b>
 ━━━━━━━━━━━━━━━━━━
-<b>${trade.side} ${escapeHtml(trade.coin)} PERP</b>
-🧭 Setup: ${escapeHtml(String(trade.pattern || '').replaceAll('_', ' '))}
-📍 Entry: <code>${fmtPrice(trade.entry)}</code>
-🛑 SL: <code>${fmtPrice(trade.sl)}</code>
-🎯 TP: <code>${fmtPrice(trade.tp)}</code>
-💹 Exit/reference: <code>${fmtPrice(trade.exitMark)}</code>
-⚡ Suggested leverage: ${n(trade.suggestedLeverage) || '—'}x
-📊 Result: <b>${outcomeR}</b>
-⏱ Duration: ${durationMin} min
-🧪 Paper tracking only — no real order was placed.`;
+${header}
+<b>${long ? '🟩 LONG' : '🟥 SHORT'}  ${escapeHtml(trade.coin)} PERP</b>
+━━━━━━━━━━━━━━━━━━
+💵 <b>SIMULATED POSITION</b>
+• Margin: <b>$${margin.toFixed(2)}</b>
+• Leverage: <b>${lev}x</b>
+• Position notional: <b>$${notional.toLocaleString('en-US', { maximumFractionDigits: 2 })}</b>
+
+📍 Entry: <code>${fmtPrice(entry)}</code>
+🎯 Take Profit: <code>${fmtPrice(trade.tp)}</code>
+🛑 Stop Loss: <code>${fmtPrice(trade.sl)}</code>
+🏁 ${exitLabel}: <code>${fmtPrice(targetExit)}</code>
+📉 Price move (direction-adjusted): <b>${movePct >= 0 ? '+' : ''}${movePct.toFixed(2)}%</b>
+
+💰 <b>SIMULATED P&L</b>
+${pnlLine}
+💼 Margin after trade: <b>$${ambiguous ? '—' : finalEquity.toFixed(2)}</b>
+📊 Result in R: <b>${outcomeR}</b>
+⏱ Duration: <b>${duration}</b>
+🧩 Setup: ${escapeHtml(String(trade.pattern || '').replaceAll('_', ' '))}
+🧠 Strategy: ${escapeHtml(String(trade.strategyVersion || 'LEGACY/UNKNOWN'))}
+
+<b>HYPERLIQUID MARKET DATA • PAPER TRADING</b>
+No real order was placed. P&L is an estimate before fees, funding and slippage; leverage can cause liquidation before a stop is reached. ${ambiguous ? 'Both levels may have been touched in the same candle; no win/loss is assigned.' : ''}`;
 }
 
 function report24h(state, audience) {
@@ -743,26 +814,49 @@ function report24h(state, audience) {
   const successOfAll = cohort.length ? tp / cohort.length * 100 : 0;
   const lossOfAll = cohort.length ? sl / cohort.length * 100 : 0;
   const netR = cohort.filter(t => t.status === 'TP' || t.status === 'SL').reduce((sum,t) => sum + n(t.pnlR), 0);
+  // A separate closure-time cohort answers the distinct question: which trades
+  // actually closed during the last 24h? Include retained legacy-version trades
+  // here so an old OPEN trade closed by this run is not silently omitted.
+  const closedCohort = state.paperTrades.filter(t => {
+    if (!['TP', 'SL', 'AMBIGUOUS'].includes(t.status) || n(t.closedAt) < cutoff || n(t.closedAt) > now()) return false;
+    const deliveredTo = t.audience || 'VIP';
+    if (audience === 'FREE') return deliveredTo === 'FREE' || deliveredTo === 'BOTH';
+    if (audience === 'VIP') return deliveredTo === 'VIP' || deliveredTo === 'BOTH' || deliveredTo === 'LEGACY';
+    return deliveredTo === 'LEGACY';
+  });
+  const closedTP = closedCohort.filter(t => t.status === 'TP').length;
+  const closedSL = closedCohort.filter(t => t.status === 'SL').length;
+  const closedAmbiguous = closedCohort.filter(t => t.status === 'AMBIGUOUS').length;
+  const closedResolved = closedTP + closedSL;
+  const closedWinRate = closedResolved ? closedTP / closedResolved * 100 : 0;
+  const closedNetR = closedCohort.filter(t => t.status === 'TP' || t.status === 'SL').reduce((sum,t) => sum + n(t.pnlR), 0);
+  const closedLegacy = closedCohort.filter(t => t.strategyVersion !== VERSION).length;
   const details = [...cohort].sort((a,b) => n(b.openedAt)-n(a.openedAt)).slice(0, 12).map(t => {
     const status = t.status === 'OPEN' ? 'OPEN' : t.status === 'TP' ? 'TP ✅' : t.status === 'SL' ? 'SL ❌' : 'AMBIGUOUS ⚠️';
     return `• ${escapeHtml(t.coin)} ${t.side} | ${status} | score ${n(t.score).toFixed(2)}/10 | ${n(t.suggestedLeverage) || '—'}x | ${t.status === 'TP' || t.status === 'SL' ? `${n(t.pnlR) > 0 ? '+' : ''}${n(t.pnlR).toFixed(2)}R` : 'pending'}`;
   });
   return `📊 <b>NOVARA — 24H ${audience === 'FREE' ? 'PUBLIC' : audience === 'VIP' ? 'VIP' : 'CHANNEL'} SIGNAL PERFORMANCE</b>
 ━━━━━━━━━━━━━━━━━━
-🔐 Coverage: all NOVARA signals tracked in the last 24 hours
+🔐 Coverage: separate entry-time and closure-time reporting windows
 🕒 Window: last 24 hours (UTC)
-🔔 Signals sent/tracked: <b>${cohort.length}</b>
+🔔 Signals opened in this version/window: <b>${cohort.length}</b>
 🎯 TP reached: <b>${tp}</b> (${successOfAll.toFixed(1)}% of all signals)
 🛑 SL reached: <b>${sl}</b> (${lossOfAll.toFixed(1)}% of all signals)
 📈 Win rate of resolved signals: <b>${resolved ? `${winRate.toFixed(1)}%` : 'N/A — no resolved signals'}</b> (${tp}/${resolved})
 ⏳ Still open/pending: <b>${open}</b>
 ⚠️ Ambiguous 1m candles: <b>${ambiguous}</b> (excluded from win rate)
-🧮 Net realized result: <b>${netR >= 0 ? '+' : ''}${netR.toFixed(2)}R</b> (paper estimate, before fees/slippage)
+🧮 Net realized result (entry cohort): <b>${netR >= 0 ? '+' : ''}${netR.toFixed(2)}R</b> (paper estimate, before fees/slippage)
+
+<b>Trades CLOSED in the last 24h (all retained versions):</b>
+🔒 Closed: <b>${closedCohort.length}</b> | TP ${closedTP} | SL ${closedSL} | ambiguous ${closedAmbiguous}
+📈 Closed-trade win rate: <b>${closedResolved ? `${closedWinRate.toFixed(1)}%` : 'N/A'}</b> (${closedTP}/${closedResolved})
+🧮 Closed-cohort net result: <b>${closedNetR >= 0 ? '+' : ''}${closedNetR.toFixed(2)}R</b>
+🧾 Older-version trades included in closure cohort: <b>${closedLegacy}</b>
 
 <b>Signal details (up to 12 most recent):</b>
 ${details.length ? details.join('\n') : 'No tracked signals were opened in this 24-hour window.'}
 
-ℹ️ Win rate = TP ÷ (TP + SL). TP% of all signals also includes open/ambiguous signals in its denominator. Paper tracking only; no real orders.`;
+ℹ️ Entry cohort is filtered by openedAt and this strategy version; closure cohort is filtered by closedAt and includes retained older versions. Win rate = TP ÷ (TP + SL). Paper estimates exclude fees/slippage and do not represent actual fills. No real orders.`;
 }
 
 function dailySummary(state) {
@@ -824,19 +918,27 @@ function directionalBias(candlesIn) {
   return momentumPct >= 0 ? 'LONG' : 'SHORT';
 }
 
+function recentMovePct(rows, lookbackBars) {
+  const usable = Array.isArray(rows) ? rows.filter(c => n(c.c) > 0) : [];
+  if (usable.length < lookbackBars + 1) return null;
+  const start = n(usable[usable.length - lookbackBars - 1]?.c);
+  const end = n(usable.at(-1)?.c);
+  return start > 0 && end > 0 ? (end - start) / start * 100 : null;
+}
+
 async function refreshBtcDirection(fallbackRegime) {
   const refreshedAt = now();
   const out = { ...(fallbackRegime || {}), timeframes: { ...(fallbackRegime?.timeframes || {}) }, refreshedAt };
   const specs = [
-    { key: '15m', interval: '15m', hours: 36, barsPer24h: 96 },
-    { key: '1H', interval: '1h', hours: 72, barsPer24h: 24 },
+    { key: '15m', interval: '15m', hours: 36, barsPer24h: 96, recentLookback: 4 },
+    { key: '1H', interval: '1h', hours: 72, barsPer24h: 24, recentLookback: 1 },
   ];
   for (const spec of specs) {
     try {
       const rows = await candles('BTC', spec.interval, spec.hours);
       const regime = marketRegime(rows, spec.barsPer24h, spec.key);
       const bias = directionalBias(rows);
-      out.timeframes[spec.key] = { ...regime, trend: bias || regime.trend, label: bias === 'LONG' ? 'BULLISH' : bias === 'SHORT' ? 'BEARISH' : regime.label };
+      out.timeframes[spec.key] = { ...regime, trend: bias || regime.trend, label: bias === 'LONG' ? 'BULLISH' : bias === 'SHORT' ? 'BEARISH' : regime.label, recentMovePct: recentMovePct(rows, spec.recentLookback) };
       console.log(`[BTC][LIVE-CHECK] ${spec.key}=${out.timeframes[spec.key].label}/${out.timeframes[spec.key].trend} change24h=${Number.isFinite(regime.change24hPct) ? regime.change24hPct.toFixed(2) + '%' : 'NA'} candles=${rows.length}`);
     } catch (e) {
       console.warn(`[BTC][LIVE-CHECK][WARN] ${spec.key} refresh failed: ${e?.message || e}`);
@@ -852,10 +954,15 @@ async function refreshBtcDirection(fallbackRegime) {
   // disagree, prefer 1H unless 15m has a clearly stronger short-term impulse.
   let direction = d1h || d15;
   if (d1h && d15 && d1h !== d15) {
-    const m15 = n(b15?.change24hPct);
-    const m1h = n(b1h?.change24hPct);
-    direction = Math.abs(m15) >= Math.max(0.35, Math.abs(m1h) * 0.65) ? d15 : d1h;
-    console.log(`[BTC][LIVE-CHECK] 15m/1h conflict: 15m=${d15} (${m15.toFixed(2)}%/24h), 1h=${d1h} (${m1h.toFixed(2)}%/24h), chosen=${direction}`);
+    // Compare approximately equal one-hour windows: four completed 15m bars
+    // versus one completed 1h bar. Do not compare two 24h changes as if they
+    // represented the strength of each timeframe's immediate impulse.
+    const m15 = b15?.recentMovePct;
+    const m1h = b1h?.recentMovePct;
+    const recent15Strong = Number.isFinite(m15) && Math.sign(m15) === (d15 === 'LONG' ? 1 : -1)
+      && Math.abs(m15) >= Math.max(0.35, Number.isFinite(m1h) ? Math.abs(m1h) * 1.25 : 0.35);
+    direction = recent15Strong ? d15 : d1h;
+    console.log(`[BTC][LIVE-CHECK] 15m/1h conflict: 15m=${d15} recent~1h=${Number.isFinite(m15) ? m15.toFixed(2) + '%' : 'NA'}, 1h=${d1h} recent1h=${Number.isFinite(m1h) ? m1h.toFixed(2) + '%' : 'NA'}, chosen=${direction}`);
   }
   if (!direction && ['LONG', 'SHORT'].includes(fallbackRegime?.trend)) direction = fallbackRegime.trend;
   out.trend = direction || 'UNAVAILABLE';
@@ -899,11 +1006,38 @@ async function analyzeAsset(asset, previous, btcRegime) {
 async function main() {
   const started = now();
   const state = await readState();
+
+  // One-time clean start: preserve legacy records for audit, but remove them
+  // from active paper tracking so old trades cannot close, notify, or affect
+  // V2.8.1 performance statistics. The stable marker prevents repeated resets.
+  if (state.cleanStartId !== CLEAN_START_ID) {
+    const legacyTrades = Array.isArray(state.paperTrades) ? state.paperTrades : [];
+    state.archivedPaperTrades = [
+      ...(Array.isArray(state.archivedPaperTrades) ? state.archivedPaperTrades : []),
+      ...legacyTrades.map(t => ({ ...t, archivedAt: now(), archiveReason: 'V2.8.1_CLEAN_START' }))
+    ];
+    state.paperTrades = [];
+    state.alertHistory = {};
+    state.dailyStats = {};
+    state.dailyFreeCount = {};
+    state.previousMarketContext = {};
+    state.pendingDailyReports = null;
+    delete state.pendingDailyReportCreatedAt;
+    delete state.pendingDailyReportText;
+    delete state.pendingDailyReportDelivered;
+    state.lastDailyReportAt = now();
+    state.cleanStartId = CLEAN_START_ID;
+    state.cleanStartAt = now();
+    console.log(`[CLEAN-START] Archived ${legacyTrades.length} legacy paper trades; active paper history, cooldowns, and pending reports reset.`);
+  } else {
+    console.log(`[CLEAN-START] Already initialized at ${new Date(n(state.cleanStartAt, 0)).toISOString()}; continuing current V2.8.1 evaluation.`);
+  }
   state.version = VERSION;
   console.log(`\n${VERSION} — START`);
-  console.log(`Mode: READ-ONLY / NO ORDERS / PAPER TRACKING`);
+  console.log(`Mode: READ-ONLY / NO ORDERS / NO AUTO-COPY / PAPER TRACKING`);
+  console.log(`[CLEAN-START] Evaluation cohort begins ${new Date(n(state.cleanStartAt, started)).toISOString()} (UTC); only newly recorded V2.8.1 trades count.`);
   console.log(`Time: ${new Date().toISOString()}`);
-  console.log(`Strategy: LIVE BTC 15m+1H direction overrides all three patterns; altcoin 1H structure sets SL/TP; range fallback enabled | Signal threshold: ${MIN_SCORE}/10 | min R:R: 1:${MIN_RR.toFixed(2)} | BTC countertrend: ${BTC_COUNTERTREND_HARD_MOVE_PCT.toFixed(1)}% impulse requires score >= ${BTC_COUNTERTREND_MIN_SCORE.toFixed(1)} and ${BTC_COUNTERTREND_MIN_EVIDENCE} confirmations | structure-first SL/TP | 24h volume floor: NONE | market cap: NONE (all active listed perps)`);
+  console.log(`Strategy: LIVE BTC 15m+1H direction overrides all three patterns; conflict compares recent ~1h moves; final-side evidence adjustment; 30m cross-pattern cooldown; altcoin 1H structure sets SL/TP; range fallback enabled | Signal threshold: ${MIN_SCORE}/10 | min R:R: 1:${MIN_RR.toFixed(2)} | BTC countertrend: ${BTC_COUNTERTREND_HARD_MOVE_PCT.toFixed(1)}% impulse requires score >= ${BTC_COUNTERTREND_MIN_SCORE.toFixed(1)} and ${BTC_COUNTERTREND_MIN_EVIDENCE} confirmations | structure-first SL/TP | 24h volume floor: NONE | market cap: NONE (all active listed perps)`);
   console.log(`[API][POLICY] requestGap=${SCAN_GAP_MS}ms retries429=${MAX_429_RETRIES} backoff=${RATE_LIMIT_BASE_MS}-${RATE_LIMIT_MAX_MS}ms globalCooldown=yes`);
   console.log(`[TELEGRAM][CONFIG] token=${TOKEN ? 'configured' : 'MISSING'} vipChat=${VIP_CHAT ? 'configured' : (LEGACY_CHAT ? 'legacy-fallback' : 'MISSING')} freeChat=${FREE_CHAT ? 'configured' : 'MISSING'} legacyChat=${LEGACY_CHAT ? 'configured' : 'MISSING'}`);
   if (!TOKEN || (!VIP_CHAT && !LEGACY_CHAT && !FREE_CHAT)) {
@@ -972,8 +1106,10 @@ async function main() {
           candidate.side = btcSide;
           candidate.btcRegime = liveBtc;
           candidate.reasons = [`${liveBtc.trend === 'LONG' || liveBtc.trend === 'SHORT' ? 'LIVE BTC direction override' : 'BTC live data unavailable; retained alt setup direction'}: ${originalSide}->${btcSide}; source=${liveBtc.directionSource}; altcoin entry/1H support-resistance retained`, ...candidate.reasons];
-          if (originalSide !== btcSide) candidate.score = clamp(candidate.score - 0.10, 0, 9.5);
-          console.log(`[BTC][DIRECTION-OVERRIDE] ${candidate.coin} ${candidate.pattern}: ${originalSide}->${btcSide}; entry=${fmtPrice(candidate.entry)} altSupport=${fmtPrice(candidate.support)} altResistance=${fmtPrice(candidate.resistance)}`);
+          const sideAdjustment = finalSideEvidenceAdjustment(candidate, originalSide);
+          candidate.score = clamp(candidate.score + sideAdjustment, 0, 9.5);
+          candidate.reasons = [`Final-side evidence adjustment ${sideAdjustment >= 0 ? '+' : ''}${sideAdjustment.toFixed(2)} (original=${originalSide}, final=${btcSide}; checks trend/flow/order-book/RSI/VWAP)`, ...candidate.reasons];
+          console.log(`[BTC][DIRECTION-OVERRIDE] ${candidate.coin} ${candidate.pattern}: ${originalSide}->${btcSide}; finalSideAdjustment=${sideAdjustment.toFixed(2)}; score=${candidate.score.toFixed(2)}; entry=${fmtPrice(candidate.entry)} altSupport=${fmtPrice(candidate.support)} altResistance=${fmtPrice(candidate.resistance)}`);
         }
       }
       for (const s of found) {
@@ -1022,7 +1158,7 @@ async function main() {
           }
           console.log(`[FILTER][BTC-COUNTERTREND][PASS] ${s.coin} ${s.side}: BTC ${s.btcRegime.label} ${n(s.btcRegime.change24hPct).toFixed(2)}%/24h; score=${s.score.toFixed(2)} evidence=${evidence.count} [${evidence.passed.join(',')}]`);
         }
-        if (isCooldown(state, s)) { noteReject('cooldown', s, '90-minute cooldown'); continue; }
+        if (isCooldown(state, s)) { noteReject('cooldown', s, '30-minute cross-pattern / 90-minute per-pattern cooldown'); continue; }
         const risk = buildRisk(s);
         if (!risk.valid) console.log(`[FILTER][RISK] ${s.coin} ${s.side} rejected: ${risk.reason} | entry=${fmtPrice(risk.entry || s.entry)} SL=${fmtPrice(risk.sl)} TP=${fmtPrice(risk.tp)} risk=${pct(risk.riskPct)} reward=${pct(risk.rewardPct)} support=${fmtPrice(s.support)}(${s.supportSource || '?'}) resistance=${fmtPrice(s.resistance)}(${s.resistanceSource || '?'}) rawSupport=${fmtPrice(s.rawSupport)} rawResistance=${fmtPrice(s.rawResistance)} ATR=${fmtPrice(s.atr)} R:R=${n(risk.rr).toFixed(2)} required=1:${MIN_RR.toFixed(2)}`);
         if (!risk.valid || risk.rr < MIN_RR || !(risk.sl > 0) || !(risk.tp > 0)) {
@@ -1104,6 +1240,7 @@ async function main() {
     if (anySent) {
       sentSignals++;
       state.alertHistory[signalKey(s)] = now();
+      state.alertHistory[`${s.coin}|${s.side}|GLOBAL`] = now();
       const audience = deliveredNames.includes('VIP') && deliveredNames.includes('FREE') ? 'BOTH' : deliveredNames[0];
       state.paperTrades.push({ strategyVersion: VERSION, id: `${s.coin}|${s.side}|${s.pattern}|${now()}`, coin: s.coin, side: s.side, pattern: s.pattern, score: Number(s.score.toFixed(2)), audience, outcomeDelivered: [], entry: s.risk.entry, sl: s.risk.sl, tp: s.risk.tp, rr: s.risk.rr, suggestedLeverage: s.leverageInfo?.leverage ?? null, btcRegime: s.btcRegime?.label || 'NEUTRAL', rsi15: s.rsi15, fibConfluence: Boolean(s.fibConfluence), openedAt: now(), lastCheckedAt: now(), status: 'OPEN', pnlR: null, reasons: s.reasons });
     } else {
