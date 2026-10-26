@@ -2,9 +2,9 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 
 /*
- * NOVARA SMART MONEY AI V2.7.1 SELECTIVE REVERSE EXPERIMENT
+ * NOVARA SMART MONEY AI V2.7.0 REVERSE EXPERIMENT
  * READ-ONLY | NO ORDERS | NO AUTO-COPY | PAPER OUTCOME TRACKING
- * EXPERIMENT: reverse only SWEEP_RECLAIM; keep BREAKOUT_RETEST and TREND_PULLBACK original
+ * EXPERIMENT: reverse LONG/SHORT and swap original numeric SL/TP levels
  *
  * Combines three entry families:
  *  1) Liquidity sweep + reclaim
@@ -15,8 +15,8 @@ import path from 'node:path';
  * All eligible liquid perp markets are considered; the worker does not depend on wallet lists.
  */
 
-const VERSION = 'NOVARA-SMART-MONEY-AI-V2.7.1-SELECTIVE-REVERSE-SWEEP-ONLY';
-const REVERSE_SWEEP_ONLY = true; // PAPER ONLY: reverse SWEEP_RECLAIM; other patterns retain original direction and SL/TP.
+const VERSION = 'NOVARA-SMART-MONEY-AI-V2.7.0-REVERSE-SIDE-SLTP-EXPERIMENT';
+const REVERSE_EXPERIMENT = true; // PAPER ONLY: invert side and swap numeric SL/TP levels.
 const API = (process.env.HYPERLIQUID_API_URL || 'https://api.hyperliquid.xyz/info').trim();
 const TOKEN = process.env.TELEGRAM_TOKEN || process.env.TELEGRAM_BOT_TOKEN || '';
 const LEGACY_CHAT = process.env.TELEGRAM_CHAT_ID || '';
@@ -484,11 +484,10 @@ function buildRisk(candidate) {
   return { entry, sl, tp, riskPct: riskDist / entry * 100, rewardPct: targetDist / entry * 100, rr, valid: true, targetUsesStructure: true };
 }
 function oppositeSide(side) { return side === 'LONG' ? 'SHORT' : side === 'SHORT' ? 'LONG' : side; }
-function shouldReverseSignal(s) { return REVERSE_SWEEP_ONLY && s?.pattern === 'SWEEP_RECLAIM'; }
 function signalKey(s) { return `${s.coin}|${s.side}|${s.pattern}`; }
 function isCooldown(state, s) {
-  // Sweep-reclaim alerts are keyed by their original side; the other patterns keep their original side.
-  const lookup = shouldReverseSignal(s) ? `${s.coin}|${oppositeSide(s.side)}|${s.pattern}` : signalKey(s);
+  // Stored alert keys use the emitted (reversed) side during this experiment.
+  const lookup = REVERSE_EXPERIMENT ? `${s.coin}|${oppositeSide(s.side)}|${s.pattern}` : signalKey(s);
   const last = n(state.alertHistory[lookup]);
   // 90-minute per coin/side/pattern cooldown; opposite sides and other patterns remain independent.
   return last > 0 && now() - last < 90 * 60_000;
@@ -558,10 +557,7 @@ function formatSignal(s, risk) {
     if (!r || r.status !== 'OK' || !Number.isFinite(Number(r.change24hPct))) return `${tf}: UNAVAILABLE`;
     return `${tf}: ${r.label}/${r.trend} (${Number(r.change24hPct).toFixed(2)}%/24h)`;
   };
-  const reversed = Boolean(risk.reverseExperiment);
-  const modeLabel = reversed ? 'SWEEP REVERSE EXPERIMENT' : 'ORIGINAL DIRECTION';
-  const modeNote = reversed ? '🧪 SWEEP_RECLAIM ONLY: side + SL/TP inverted' : '📌 BREAKOUT_RETEST / TREND_PULLBACK: original side + SL/TP';
-  return `${emoji} <b>NOVARA SMART MONEY AI — SELECTIVE EXPERIMENT</b>\n${modeNote}\n━━━━━━━━━━━━━━━━━━\n<b>${s.side} ${escapeHtml(s.coin)} PERP</b>\n🧭 Setup: ${escapeHtml(s.pattern.replaceAll('_', ' '))}\n📍 Entry (reference): <code>${fmtPrice(risk.entry)}</code>\n🛑 Stop Loss: <code>${fmtPrice(risk.sl)}</code> (${pct(risk.riskPct)})\n🎯 Take Profit: <code>${fmtPrice(risk.tp)}</code> (${pct(risk.rewardPct)})\n⚖️ Planned R:R: 1:${risk.rr.toFixed(2)}\n⚡ Suggested Leverage: ${lev.leverage}x${lev.cappedBelowRequestedRange ? ` (exchange max: ${Math.floor(lev.exchangeMax)}x)` : ''}\n🧠 Setup score: ${s.score.toFixed(2)}/10 (not a win-probability estimate)\n📊 Asset 1H trend: ${s.trend}\n₿ <b>BTC MARKET CHECK</b>\n${tfLine('4H', '4H')}\n${tfLine('1H', '1H')}\n${tfLine('15m', '15m')}\n📉 Alt 15m RSI: ${n(s.rsi15, 50).toFixed(1)} | Fib: ${s.fibConfluence ? 'YES' : 'NO'} | Volume: ${s.volRatio.toFixed(2)}x\n🌊 Trade delta: ${(s.flowDelta * 100).toFixed(1)}% | Book imbalance: ${(s.imbalance * 100).toFixed(1)}%\n📈 OI change: ${s.oiChange >= 0 ? '+' : ''}${s.oiChange.toFixed(2)}% | Funding: ${s.fundingPct.toFixed(4)}%\n🧩 Evidence:\n${reasons}\n\n🧪 Mode: ${modeLabel}. Paper tracking only — no real orders.`;
+  return `${emoji} <b>NOVARA SMART MONEY AI — REVERSE EXPERIMENT</b>\n🧪 PAPER TEST ONLY | SIDE + SL/TP INVERTED\n━━━━━━━━━━━━━━━━━━\n<b>${s.side} ${escapeHtml(s.coin)} PERP</b>\n🧭 Setup: ${escapeHtml(s.pattern.replaceAll('_', ' '))}\n📍 Entry (reference): <code>${fmtPrice(risk.entry)}</code>\n🛑 Stop Loss: <code>${fmtPrice(risk.sl)}</code> (${pct(risk.riskPct)})\n🎯 Take Profit: <code>${fmtPrice(risk.tp)}</code> (${pct(risk.rewardPct)})\n⚖️ Planned R:R: 1:${risk.rr.toFixed(2)}\n⚡ Suggested Leverage: ${lev.leverage}x${lev.cappedBelowRequestedRange ? ` (exchange max: ${Math.floor(lev.exchangeMax)}x)` : ''}\n🧠 Setup score: ${s.score.toFixed(2)}/10 (not a win-probability estimate)\n📊 Asset 1H trend: ${s.trend}\n₿ <b>BTC MARKET CHECK</b>\n${tfLine('4H', '4H')}\n${tfLine('1H', '1H')}\n${tfLine('15m', '15m')}\n📉 Alt 15m RSI: ${n(s.rsi15, 50).toFixed(1)} | Fib: ${s.fibConfluence ? 'YES' : 'NO'} | Volume: ${s.volRatio.toFixed(2)}x\n🌊 Trade delta: ${(s.flowDelta * 100).toFixed(1)}% | Book imbalance: ${(s.imbalance * 100).toFixed(1)}%\n📈 OI change: ${s.oiChange >= 0 ? '+' : ''}${s.oiChange.toFixed(2)}% | Funding: ${s.fundingPct.toFixed(4)}%\n🧩 Evidence:\n${reasons}\n\n🧪 REVERSE EXPERIMENT: direction inverted; original SL/TP values swapped. Paper tracking only — no real orders.`;
 }
 
 let telegramNextAt = 0;
@@ -838,7 +834,7 @@ async function main() {
   console.log(`\n${VERSION} — START`);
   console.log(`Mode: READ-ONLY / NO ORDERS / PAPER TRACKING`);
   console.log(`Time: ${new Date().toISOString()}`);
-  console.log(`Strategy: SWEEP_RECLAIM=REVERSED+SLTP-SWAPPED; BREAKOUT_RETEST/TREND_PULLBACK=ORIGINAL | Signal threshold: ${MIN_SCORE}/10 | min R:R: 1:${MIN_RR.toFixed(2)} | BTC countertrend: ${BTC_COUNTERTREND_HARD_MOVE_PCT.toFixed(1)}% impulse requires score >= ${BTC_COUNTERTREND_MIN_SCORE.toFixed(1)} and ${BTC_COUNTERTREND_MIN_EVIDENCE} confirmations | structure-first SL/TP | 24h volume floor: NONE | market cap: NONE (all active listed perps)`);
+  console.log(`Signal threshold: ${MIN_SCORE}/10 | min R:R: 1:${MIN_RR.toFixed(2)} | BTC countertrend: ${BTC_COUNTERTREND_HARD_MOVE_PCT.toFixed(1)}% impulse requires score >= ${BTC_COUNTERTREND_MIN_SCORE.toFixed(1)} and ${BTC_COUNTERTREND_MIN_EVIDENCE} confirmations | structure-first SL/TP | 24h volume floor: NONE | market cap: NONE (all active listed perps)`);
   console.log(`[API][POLICY] requestGap=${SCAN_GAP_MS}ms retries429=${MAX_429_RETRIES} backoff=${RATE_LIMIT_BASE_MS}-${RATE_LIMIT_MAX_MS}ms globalCooldown=yes`);
   console.log(`[TELEGRAM][CONFIG] token=${TOKEN ? 'configured' : 'MISSING'} vipChat=${VIP_CHAT ? 'configured' : (LEGACY_CHAT ? 'legacy-fallback' : 'MISSING')} freeChat=${FREE_CHAT ? 'configured' : 'MISSING'} legacyChat=${LEGACY_CHAT ? 'configured' : 'MISSING'}`);
   if (!TOKEN || (!VIP_CHAT && !LEGACY_CHAT && !FREE_CHAT)) {
@@ -955,9 +951,10 @@ async function main() {
         // Avoid chasing a move that has already travelled too far from its 15m mean.
         const distanceToVwap = Math.abs((s.entry - s.vwap) / s.entry) * 100;
         if (distanceToVwap > Math.max(2.2, s.atr / s.entry * 100 * 2.8)) { noteReject('vwap', s, `distance ${distanceToVwap.toFixed(2)}%`); continue; }
-        if (shouldReverseSignal(s)) {
-          // Only SWEEP_RECLAIM is inverted: LONG <-> SHORT, and original numeric TP becomes SL while original numeric SL becomes TP.
-          // BREAKOUT_RETEST and TREND_PULLBACK keep their original side and SL/TP.
+        if (REVERSE_EXPERIMENT) {
+          // Literal inversion requested for the experiment:
+          // LONG <-> SHORT, and the original numeric TP becomes SL while
+          // the original numeric SL becomes TP. Entry stays unchanged.
           const originalSide = s.side;
           const originalSL = risk.sl;
           const originalTP = risk.tp;
@@ -969,7 +966,7 @@ async function main() {
           risk.rr = Math.abs(risk.entry - risk.tp) / Math.max(1e-12, Math.abs(risk.sl - risk.entry));
           risk.reverseExperiment = true;
           s.reasons = [`REVERSE EXPERIMENT: original ${originalSide} inverted to ${s.side}; SL/TP numeric levels swapped`, ...s.reasons];
-          console.log(`[REVERSE-EXPERIMENT][SWEEP_RECLAIM] ${s.coin}: ${originalSide}->${s.side} entry=${fmtPrice(risk.entry)} swappedSL=${fmtPrice(risk.sl)} swappedTP=${fmtPrice(risk.tp)} reversedRR=1:${risk.rr.toFixed(2)}`);
+          console.log(`[REVERSE-EXPERIMENT] ${s.coin}: ${originalSide}->${s.side} entry=${fmtPrice(risk.entry)} swappedSL=${fmtPrice(risk.sl)} swappedTP=${fmtPrice(risk.tp)} reversedRR=1:${risk.rr.toFixed(2)}`);
         }
         s.risk = risk;
         s.leverageInfo = suggestLeverage(s);
