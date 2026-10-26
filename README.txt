@@ -1,35 +1,16 @@
-NOVARA V2.8.5 — STRUCTURE-FIRST REPAIR + PREMIUM GRAPHIC OUTCOME CARDS
+NOVARA V2.8.6 — LEVEL PROXIMITY / EARLY ENTRY
 
-Mode: READ-ONLY / NO ORDERS / NO AUTO-COPY / PAPER TRACKING
-Market data: Hyperliquid public Info API
+Contents:
+- novara_smart_money_ai.mjs : replace the existing main JS file in the repository.
+- novara_outcome_card.py    : keep beside the JS file for graphic TP/SL outcome cards.
 
-FILES
-- novara_smart_money_ai.mjs : main worker; replace the existing file with this exact filename.
-- novara_outcome_card.py    : required companion script for TP/SL PNG outcome cards.
+Core changes:
+- SHORT requires price near a repeated-touch 1H resistance and a completed 15m bearish rejection.
+- LONG requires price near a repeated-touch 1H support and a completed 15m bullish reclaim.
+- Distance limit adapts to 1H ATR, bounded between 0.35% and 1.00%.
+- New ENTRY-LOCATION diagnostics explain why a candidate is rejected.
+- Maintains READ-ONLY / NO ORDERS / NO AUTO-COPY / PAPER TRACKING.
+- New clean-start ID archives old paper trades so the V2.8.6 evaluation cohort is independent.
 
-IMPORTANT INSTALLATION
-1. Replace the repository's novara_smart_money_ai.mjs with this version.
-2. Add novara_outcome_card.py to the SAME directory as the JavaScript file.
-3. Keep existing workflow filename, schedule, secrets, and Telegram configuration unchanged.
-4. Run GitHub Actions manually once and inspect the logs.
-
-STRUCTURE-FIRST REPAIR
-- Candidates carry the full list of confirmed repeated-touch 1H support/resistance levels.
-- Risk selection tests combinations of these levels rather than forcing the nearest level to be both the stop anchor and target constraint.
-- LONG: stop below repeated-touch support; target before repeated-touch resistance.
-- SHORT: stop above repeated-touch resistance; target before repeated-touch support.
-- Target must be on the profitable side of entry and planned R:R must be at least 1:1.50.
-- Structural stop risk is bounded from 0.50% to 5.00% of entry, with an ATR-aware buffer. If no valid structure exists, the signal is rejected; no synthetic target is invented.
-- The chosen support/resistance are the same levels shown in the alert and paper record.
-
-CLEAN EVALUATION COHORT
-The one-time marker is advanced to V2.8.5. On the first run, currently active paper trades and cooldown/report state are archived/reset to begin a distinct V2.8.5 evaluation cohort. Archived trades remain in state for audit but are excluded from active paper tracking.
-
-GRAPHIC OUTCOME CARDS
-When a tracked paper trade reaches TP or SL, the worker generates and sends a PNG card using the companion Python script and Pillow. The worker attempts to install Pillow if missing; GitHub runner network/pip policy can affect this step. A failed photo send is logged and does not mean a real trade occurred.
-
-VALIDATION PERFORMED
-- Node.js syntax check passed.
-- Python compilation check passed.
-- Isolated structural-risk test passed for both LONG and SHORT using alternative repeated-touch levels.
-- No live GitHub Actions run or Telegram photo delivery has been verified from this environment.
+Install both files in the same folder as the current main JS file. Keep workflow and secrets unchanged.
+This package passed Node.js syntax validation and Python syntax validation; a live GitHub Actions + Telegram run has not yet been verified.

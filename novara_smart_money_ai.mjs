@@ -5,7 +5,7 @@ import { spawn } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 
 /*
- * NOVARA SMART MONEY AI V2.8.5 STRUCTURE-FIRST REPAIR + PREMIUM GRAPHIC OUTCOME CARDS
+ * NOVARA SMART MONEY AI V2.8.6 STRUCTURE-FIRST REPAIR + PREMIUM GRAPHIC OUTCOME CARDS
  * READ-ONLY | NO ORDERS | NO AUTO-COPY | PAPER OUTCOME TRACKING
  * Final LONG/SHORT direction follows a fresh BTC 15m + 1h direction check at candidate time; altcoin structure sets SL/TP
  *
@@ -18,8 +18,8 @@ import { fileURLToPath } from 'node:url';
  * All eligible liquid perp markets are considered; the worker does not depend on wallet lists.
  */
 
-const VERSION = 'NOVARA-SMART-MONEY-AI-V2.8.5-STRUCTURE-FIRST-REPAIR-PREMIUM-CARDS';
-const CLEAN_START_ID = 'NOVARA-V2.8.5-CLEAN-START-2026-10-26';
+const VERSION = 'NOVARA-SMART-MONEY-AI-V2.8.6-LEVEL-PROXIMITY-EARLY-ENTRY';
+const CLEAN_START_ID = 'NOVARA-V2.8.6-CLEAN-START-2026-10-27';
 const PAPER_MARGIN_USD = Math.max(10, Number(process.env.NOVARA_PAPER_MARGIN_USD || 1000));
 const REVERSE_SWEEP_ONLY = false; // BTC live direction is authoritative; prevent any second inversion of SWEEP_RECLAIM.
 const API = (process.env.HYPERLIQUID_API_URL || 'https://api.hyperliquid.xyz/info').trim();
@@ -449,6 +449,22 @@ function detectPatterns({ coin, c15, c1h, ctx, prevCtx, mid, spread, imbalance, 
     results.push({ coin, side, pattern: 'TREND_PULLBACK', rawSupport, rawResistance, minLevelGap, score: clamp(score, 0, 9.5), reasons, entry: mid, atr: atr15, atr1h, support, resistance, supportSource, resistanceSource, supportTouches: selectedSupport?.touches || 0, resistanceTouches: selectedResistance?.touches || 0, supportLevels: supportCandidates.map(x => ({ price: x.price, touches: x.touches, source: x.source })), resistanceLevels: resistanceCandidates.map(x => ({ price: x.price, touches: x.touches, source: x.source })), trend, btcRegime: btcRegime || { label: 'NEUTRAL', change24hPct: 0 }, rsi15, fibConfluence: fib.confluence, volRatio, oiChange, fundingPct, flowDelta: flow.delta, imbalance, vwap: vwap15, spreadPct: spread, atrPct, dayVolume: n(ctx?.dayVolume), maxLeverage: n(ctx?.maxLeverage) });
   }
 
+  // V2.8.6: attach location/rejection diagnostics. A directional pattern alone
+  // is not enough: entries must occur near the relevant 1H boundary and show
+  // a completed 15m rejection/reclaim, rather than chasing the middle of a range.
+  const upperWick = last.h - Math.max(last.o, last.c);
+  const lowerWick = Math.min(last.o, last.c) - last.l;
+  for (const candidate of results) {
+    const level = candidate.side === 'SHORT' ? resistance : support;
+    const distPct = level > 0 ? Math.abs(mid - level) / mid * 100 : Infinity;
+    const atr1hPct = atr1h / mid * 100;
+    candidate.entryLevel = level;
+    candidate.entryLevelDistancePct = distPct;
+    candidate.entryProximityMaxPct = Math.min(1.0, Math.max(0.35, atr1hPct * 0.70));
+    candidate.entryReactionConfirmed = candidate.side === 'SHORT'
+      ? (level > 0 && last.c < level && last.c < last.o && upperWick >= Math.max(atr15 * 0.10, mid * 0.0005))
+      : (level > 0 && last.c > level && last.c > last.o && lowerWick >= Math.max(atr15 * 0.10, mid * 0.0005));
+  }
   return results;
 }
 
@@ -459,7 +475,7 @@ function buildRisk(candidate) {
     return { entry, sl: 0, tp: 0, riskPct: 0, rewardPct: 0, rr: 0, valid: false, reason: 'invalid entry/side/ATR' };
   }
 
-  // V2.8.5: choose among all confirmed multi-touch 1H levels instead of forcing
+  // V2.8.6: choose among all confirmed multi-touch 1H levels instead of forcing
   // one nearest level to serve both risk and target. This avoids SL buffers pushing
   // a TP through entry, and avoids rejecting a valid farther structural level.
   const atr1h = n(candidate.atr1h, atrValue * 4);
@@ -1104,7 +1120,7 @@ async function main() {
     const legacyTrades = Array.isArray(state.paperTrades) ? state.paperTrades : [];
     state.archivedPaperTrades = [
       ...(Array.isArray(state.archivedPaperTrades) ? state.archivedPaperTrades : []),
-      ...legacyTrades.map(t => ({ ...t, archivedAt: now(), archiveReason: 'V2.8.5_CLEAN_START' }))
+      ...legacyTrades.map(t => ({ ...t, archivedAt: now(), archiveReason: 'V2.8.6_CLEAN_START' }))
     ];
     state.paperTrades = [];
     state.alertHistory = {};
@@ -1120,12 +1136,12 @@ async function main() {
     state.cleanStartAt = now();
     console.log(`[CLEAN-START] Archived ${legacyTrades.length} legacy paper trades; active paper history, cooldowns, and pending reports reset.`);
   } else {
-    console.log(`[CLEAN-START] Already initialized at ${new Date(n(state.cleanStartAt, 0)).toISOString()}; continuing current V2.8.5 evaluation.`);
+    console.log(`[CLEAN-START] Already initialized at ${new Date(n(state.cleanStartAt, 0)).toISOString()}; continuing current V2.8.6 evaluation.`);
   }
   state.version = VERSION;
   console.log(`\n${VERSION} — START`);
   console.log(`Mode: READ-ONLY / NO ORDERS / NO AUTO-COPY / PAPER TRACKING`);
-  console.log(`[CLEAN-START] Evaluation cohort begins ${new Date(n(state.cleanStartAt, started)).toISOString()} (UTC); only newly recorded V2.8.5 trades count.`);
+  console.log(`[CLEAN-START] Evaluation cohort begins ${new Date(n(state.cleanStartAt, started)).toISOString()} (UTC); only newly recorded V2.8.6 trades count.`);
   console.log(`Time: ${new Date().toISOString()}`);
   console.log(`Strategy: asset 1H trend is authoritative for LONG/SHORT; 15m is entry timing only; BTC 1H/15m is contextual confirmation, not a side override; final-side evidence adjustment; 30m cross-pattern cooldown; 1H multi-touch support/resistance sets SL/TP; risk bounds 0.50%-5.00% with ATR-aware buffer; selects among repeated-touch 1H levels to preserve valid TP/SL geometry; single-touch levels rejected | Signal threshold: ${MIN_SCORE}/10 | min R:R: 1:${MIN_RR.toFixed(2)} | BTC countertrend: ${BTC_COUNTERTREND_HARD_MOVE_PCT.toFixed(1)}% impulse requires score >= ${BTC_COUNTERTREND_MIN_SCORE.toFixed(1)} and ${BTC_COUNTERTREND_MIN_EVIDENCE} confirmations | structure-first SL/TP | 24h volume floor: NONE | market cap: NONE (all active listed perps)`);
   console.log(`[API][POLICY] requestGap=${SCAN_GAP_MS}ms retries429=${MAX_429_RETRIES} backoff=${RATE_LIMIT_BASE_MS}-${RATE_LIMIT_MAX_MS}ms globalCooldown=yes`);
@@ -1177,7 +1193,7 @@ async function main() {
 
   const candidates = [];
   let checked = 0, failed = 0;
-  const rejects = { stale: 0, regime: 0, regimeSoft: 0, score: 0, cooldown: 0, risk: 0, vwap: 0, spread: 0, accepted: 0 };
+  const rejects = { stale: 0, regime: 0, regimeSoft: 0, score: 0, cooldown: 0, risk: 0, location: 0, vwap: 0, spread: 0, accepted: 0 };
   const rejectionSamples = [];
   const noteReject = (kind, s, reason) => { rejects[kind]++; if (rejectionSamples.length < 18) rejectionSamples.push(`${s.coin} ${s.side} ${s.pattern}: ${reason}`); };
   for (const asset of eligible) {
@@ -1208,6 +1224,24 @@ async function main() {
           noteReject('spread', s, s.spreadPct == null ? 'order-book spread unavailable' : `spread ${s.spreadPct.toFixed(3)}% > ${MAX_SPREAD_PCT}%`);
           continue;
         }
+        // V2.8.6 LOCATION GATE: SHORTs must trigger near a repeatedly tested 1H
+        // resistance after a completed 15m bearish rejection; LONGs must trigger
+        // near a repeatedly tested 1H support after a completed 15m bullish reclaim.
+        // This prevents late entries after most of the move toward the opposite level.
+        const entryLevel = n(s.entryLevel);
+        const levelDistancePct = n(s.entryLevelDistancePct, Infinity);
+        const maxEntryLevelDistancePct = n(s.entryProximityMaxPct, 0.45);
+        const levelTouches = s.side === 'SHORT' ? n(s.resistanceTouches) : n(s.supportTouches);
+        if (!(entryLevel > 0) || levelTouches < 2 || levelDistancePct > maxEntryLevelDistancePct || !s.entryReactionConfirmed) {
+          const reason = !(entryLevel > 0) ? 'no repeated-touch 1H level on entry side'
+            : levelTouches < 2 ? `entry level has only ${levelTouches} independent touches`
+            : levelDistancePct > maxEntryLevelDistancePct ? `late entry: ${levelDistancePct.toFixed(2)}% from ${s.side === 'SHORT' ? 'resistance' : 'support'}; max ${maxEntryLevelDistancePct.toFixed(2)}%`
+            : `15m ${s.side === 'SHORT' ? 'bearish resistance rejection' : 'bullish support reclaim'} not confirmed`;
+          console.log(`[FILTER][ENTRY-LOCATION] ${s.coin} ${s.side} ${s.pattern} rejected: ${reason}; entry=${fmtPrice(s.entry)} level=${fmtPrice(entryLevel)} distance=${Number.isFinite(levelDistancePct) ? levelDistancePct.toFixed(2)+'%' : 'NA'} max=${maxEntryLevelDistancePct.toFixed(2)}% touches=${levelTouches}`);
+          noteReject('location', s, reason);
+          continue;
+        }
+        console.log(`[ENTRY][LOCATION-PASS] ${s.coin} ${s.side}: near ${s.side === 'SHORT' ? '1H resistance' : '1H support'} (${levelDistancePct.toFixed(2)}%, ${levelTouches} touches), 15m rejection confirmed`);
         // Adaptive regime gate: trend disagreement is a warning, not an automatic
         // rejection. Hard-block only when BOTH the asset trend and BTC oppose the
         // setup and BTC itself has a material 24h impulse. Structure/R:R gates below
