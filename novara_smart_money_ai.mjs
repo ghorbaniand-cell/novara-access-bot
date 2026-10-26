@@ -1,8 +1,11 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
+import os from 'node:os';
+import { spawn } from 'node:child_process';
+import { fileURLToPath } from 'node:url';
 
 /*
- * NOVARA SMART MONEY AI V2.8.3 1H MULTI-TOUCH STRUCTURE + PREMIUM OUTCOMES
+ * NOVARA SMART MONEY AI V2.8.4 PREMIUM GRAPHIC OUTCOME CARDS + 1H STRUCTURE
  * READ-ONLY | NO ORDERS | NO AUTO-COPY | PAPER OUTCOME TRACKING
  * Final LONG/SHORT direction follows a fresh BTC 15m + 1h direction check at candidate time; altcoin structure sets SL/TP
  *
@@ -15,7 +18,7 @@ import path from 'node:path';
  * All eligible liquid perp markets are considered; the worker does not depend on wallet lists.
  */
 
-const VERSION = 'NOVARA-SMART-MONEY-AI-V2.8.3-1H-MULTITOUCH-STRUCTURE-PREMIUM-OUTCOMES';
+const VERSION = 'NOVARA-SMART-MONEY-AI-V2.8.4-PREMIUM-GRAPHIC-OUTCOME-CARDS';
 const CLEAN_START_ID = 'NOVARA-V2.8.2-CLEAN-START-2026-10-26';
 const PAPER_MARGIN_USD = Math.max(10, Number(process.env.NOVARA_PAPER_MARGIN_USD || 1000));
 const REVERSE_SWEEP_ONLY = false; // BTC live direction is authoritative; prevent any second inversion of SWEEP_RECLAIM.
@@ -672,16 +675,55 @@ async function sendSignalToAudience(state, message, audience) {
 }
 
 // Outcome updates and 24-hour performance reports are broadcast to both configured channels.
-async function sendUpdateToAudience(message, audience, alreadySent = []) {
+async function sendUpdateToAudience(message, audience, alreadySent = [], trade = null) {
   const names = audience === 'BOTH' ? ['VIP', 'FREE'] : [audience];
   const results = [];
   for (const name of names) {
     const destination = configuredAudience(name);
     if (!destination || alreadySent.includes(name)) continue;
-    try { results.push({ name, ...(await sendTelegram(destination.id, message)) }); }
-    catch (e) { results.push({ name, sent: false, reason: e.message }); }
+    try {
+      if (trade && ['TP','SL'].includes(trade.status)) results.push({ name, ...(await sendOutcomePhoto(destination.id, trade)) });
+      else results.push({ name, ...(await sendTelegram(destination.id, message)) });
+    } catch (e) { results.push({ name, sent: false, reason: e.message }); }
   }
   return results;
+}
+
+async function sendOutcomePhoto(chatId, trade) {
+  if (!TOKEN || !chatId) return { sent: false, reason: !TOKEN ? 'telegram_token_not_configured' : 'telegram_chat_not_configured' };
+  const isTp = trade.status === 'TP';
+  const long = String(trade.side || 'LONG').toUpperCase() === 'LONG';
+  const lev = Math.max(1, n(trade.suggestedLeverage, 1));
+  const margin = Math.max(10, n(trade.paperMarginUsd, PAPER_MARGIN_USD));
+  const entry = n(trade.entry), exit = isTp ? n(trade.tp) : n(trade.sl);
+  const movePct = entry > 0 ? ((exit-entry)/entry)*100*(long?1:-1) : 0;
+  const pnl = Math.max(-margin, margin*lev*movePct/100);
+  const payload = { status: trade.status, side: trade.side, coin: trade.coin, leverage: lev, margin,
+    notional: margin*lev, entryText: fmtPrice(trade.entry), tpText: fmtPrice(trade.tp), slText: fmtPrice(trade.sl),
+    exitText: fmtPrice(exit), movePct, pnl, pnlPct: margin ? pnl/margin*100 : 0,
+    duration: (()=>{const m=Math.max(0,Math.round((n(trade.closedAt)-n(trade.openedAt))/60000));return m>=60?`${Math.floor(m/60)}H ${m%60}M`:`${m}M`;})(),
+    pattern: trade.pattern || '', strategy: trade.strategyVersion || VERSION };
+  const temp = path.join(os.tmpdir(), `novara-outcome-${process.pid}-${now()}.png`);
+  const script = path.join(path.dirname(fileURLToPath(import.meta.url)), 'novara_outcome_card.py');
+  const run = (cmd, args, input) => new Promise((resolve, reject) => {
+    const child = spawn(cmd, args, { stdio: ['pipe','ignore','pipe'] }); let err='';
+    child.stderr.on('data', d => err += d.toString()); child.on('error', reject);
+    child.on('close', code => code===0 ? resolve() : reject(new Error(`${cmd} exited ${code}: ${err.slice(-400)}`)));
+    child.stdin.end(input);
+  });
+  try {
+    try { await run(process.env.PYTHON || 'python3', ['-c', 'from PIL import Image'], ''); }
+    catch { await run(process.env.PYTHON || 'python3', ['-m','pip','install','--user','Pillow'], ''); }
+    await run(process.env.PYTHON || 'python3', [script, temp], JSON.stringify(payload));
+    const bytes = await fs.readFile(temp);
+    const form = new FormData(); form.append('chat_id', chatId); form.append('caption', `${trade.status==='TP'?'🟢 TAKE PROFIT':'🔴 STOP LOSS'} • ${trade.side} ${trade.coin} • PAPER TRADING — no real order was placed.`);
+    form.append('photo', new Blob([bytes], { type: 'image/png' }), 'novara-outcome.png');
+    const wait = Math.max(0, telegramNextAt-now()); if (wait) await sleep(wait); telegramNextAt = now()+TELEGRAM_GAP_MS;
+    const response = await fetch(`https://api.telegram.org/bot${TOKEN}/sendPhoto`, { method:'POST', body:form });
+    const raw = await response.text(); let data={}; try { data=JSON.parse(raw); } catch {}
+    if (!response.ok || !data.ok) throw new Error(`Telegram sendPhoto ${response.status}: ${raw.slice(0,180)}`);
+    return { sent:true, type:'photo' };
+  } finally { try { await fs.unlink(temp); } catch {} }
 }
 
 function reportAudiences() {
@@ -1102,7 +1144,7 @@ async function main() {
   for (const t of state.paperTrades.filter(x => x.status !== 'OPEN' && !x.outcomeNotifiedAt)) {
     t.audience = audienceForTrade(t);
     t.outcomeDelivered ||= [];
-    const updateResults = await sendUpdateToAudience(formatOutcome(t), t.audience, t.outcomeDelivered);
+    const updateResults = await sendUpdateToAudience(formatOutcome(t), t.audience, t.outcomeDelivered, t);
     for (const r of updateResults) if (r.sent && !t.outcomeDelivered.includes(r.name)) t.outcomeDelivered.push(r.name);
     const required = t.audience === 'BOTH' ? ['VIP', 'FREE'] : [t.audience];
     if (required.length && required.every(name => t.outcomeDelivered.includes(name))) t.outcomeNotifiedAt = now();
