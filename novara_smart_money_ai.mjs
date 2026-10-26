@@ -5,7 +5,7 @@ import { spawn } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 
 /*
- * NOVARA SMART MONEY AI V2.8.4 PREMIUM GRAPHIC OUTCOME CARDS + 1H STRUCTURE
+ * NOVARA SMART MONEY AI V2.8.5 STRUCTURE-FIRST REPAIR + PREMIUM GRAPHIC OUTCOME CARDS
  * READ-ONLY | NO ORDERS | NO AUTO-COPY | PAPER OUTCOME TRACKING
  * Final LONG/SHORT direction follows a fresh BTC 15m + 1h direction check at candidate time; altcoin structure sets SL/TP
  *
@@ -18,8 +18,8 @@ import { fileURLToPath } from 'node:url';
  * All eligible liquid perp markets are considered; the worker does not depend on wallet lists.
  */
 
-const VERSION = 'NOVARA-SMART-MONEY-AI-V2.8.4-PREMIUM-GRAPHIC-OUTCOME-CARDS';
-const CLEAN_START_ID = 'NOVARA-V2.8.2-CLEAN-START-2026-10-26';
+const VERSION = 'NOVARA-SMART-MONEY-AI-V2.8.5-STRUCTURE-FIRST-REPAIR-PREMIUM-CARDS';
+const CLEAN_START_ID = 'NOVARA-V2.8.5-CLEAN-START-2026-10-26';
 const PAPER_MARGIN_USD = Math.max(10, Number(process.env.NOVARA_PAPER_MARGIN_USD || 1000));
 const REVERSE_SWEEP_ONLY = false; // BTC live direction is authoritative; prevent any second inversion of SWEEP_RECLAIM.
 const API = (process.env.HYPERLIQUID_API_URL || 'https://api.hyperliquid.xyz/info').trim();
@@ -408,7 +408,7 @@ function detectPatterns({ coin, c15, c1h, ctx, prevCtx, mid, spread, imbalance, 
     if (side === 'LONG' && fundingPct < 0.035 || side === 'SHORT' && fundingPct > -0.035) score += 0.15;
     if (spread !== null && spread > MAX_SPREAD_PCT) score -= 1.5;
     score = addContext(side, score, reasons);
-    results.push({ coin, side, pattern: 'SWEEP_RECLAIM', rawSupport, rawResistance, minLevelGap, score: clamp(score, 0, 9.5), reasons, entry: mid, atr: atr15, atr1h, support, resistance, supportSource, resistanceSource, supportTouches: selectedSupport?.touches || 0, resistanceTouches: selectedResistance?.touches || 0, trend, btcRegime: btcRegime || { label: 'NEUTRAL', change24hPct: 0 }, rsi15, fibConfluence: fib.confluence, volRatio, oiChange, fundingPct, flowDelta: flow.delta, imbalance, vwap: vwap15, spreadPct: spread, atrPct, dayVolume: n(ctx?.dayVolume), maxLeverage: n(ctx?.maxLeverage) });
+    results.push({ coin, side, pattern: 'SWEEP_RECLAIM', rawSupport, rawResistance, minLevelGap, score: clamp(score, 0, 9.5), reasons, entry: mid, atr: atr15, atr1h, support, resistance, supportSource, resistanceSource, supportTouches: selectedSupport?.touches || 0, resistanceTouches: selectedResistance?.touches || 0, supportLevels: supportCandidates.map(x => ({ price: x.price, touches: x.touches, source: x.source })), resistanceLevels: resistanceCandidates.map(x => ({ price: x.price, touches: x.touches, source: x.source })), trend, btcRegime: btcRegime || { label: 'NEUTRAL', change24hPct: 0 }, rsi15, fibConfluence: fib.confluence, volRatio, oiChange, fundingPct, flowDelta: flow.delta, imbalance, vwap: vwap15, spreadPct: spread, atrPct, dayVolume: n(ctx?.dayVolume), maxLeverage: n(ctx?.maxLeverage) });
   }
 
   // Pattern 2: close beyond a recent structure level, then retest within tolerance.
@@ -428,7 +428,7 @@ function detectPatterns({ coin, c15, c1h, ctx, prevCtx, mid, spread, imbalance, 
     if (side === 'LONG' && oiConfirmsLong || side === 'SHORT' && oiConfirmsShort) { score += 0.3; reasons.push('OI confirms participation'); }
     if (spread !== null && spread > MAX_SPREAD_PCT) score -= 1.5;
     score = addContext(side, score, reasons);
-    results.push({ coin, side, pattern: 'BREAKOUT_RETEST', rawSupport, rawResistance, minLevelGap, score: clamp(score, 0, 9.5), reasons, entry: mid, atr: atr15, atr1h, support, resistance, supportSource, resistanceSource, supportTouches: selectedSupport?.touches || 0, resistanceTouches: selectedResistance?.touches || 0, trend, btcRegime: btcRegime || { label: 'NEUTRAL', change24hPct: 0 }, rsi15, fibConfluence: fib.confluence, volRatio, oiChange, fundingPct, flowDelta: flow.delta, imbalance, vwap: vwap15, spreadPct: spread, atrPct, dayVolume: n(ctx?.dayVolume), maxLeverage: n(ctx?.maxLeverage) });
+    results.push({ coin, side, pattern: 'BREAKOUT_RETEST', rawSupport, rawResistance, minLevelGap, score: clamp(score, 0, 9.5), reasons, entry: mid, atr: atr15, atr1h, support, resistance, supportSource, resistanceSource, supportTouches: selectedSupport?.touches || 0, resistanceTouches: selectedResistance?.touches || 0, supportLevels: supportCandidates.map(x => ({ price: x.price, touches: x.touches, source: x.source })), resistanceLevels: resistanceCandidates.map(x => ({ price: x.price, touches: x.touches, source: x.source })), trend, btcRegime: btcRegime || { label: 'NEUTRAL', change24hPct: 0 }, rsi15, fibConfluence: fib.confluence, volRatio, oiChange, fundingPct, flowDelta: flow.delta, imbalance, vwap: vwap15, spreadPct: spread, atrPct, dayVolume: n(ctx?.dayVolume), maxLeverage: n(ctx?.maxLeverage) });
   }
 
   // Pattern 3: 1H trend with a 15m pullback into fast mean and a directional recovery candle.
@@ -446,7 +446,7 @@ function detectPatterns({ coin, c15, c1h, ctx, prevCtx, mid, spread, imbalance, 
     if (side === 'LONG' && fundingPct > 0.08 || side === 'SHORT' && fundingPct < -0.08) { score -= 0.25; reasons.push('crowded funding slightly penalized'); }
     if (spread !== null && spread > MAX_SPREAD_PCT) score -= 1.5;
     score = addContext(side, score, reasons);
-    results.push({ coin, side, pattern: 'TREND_PULLBACK', rawSupport, rawResistance, minLevelGap, score: clamp(score, 0, 9.5), reasons, entry: mid, atr: atr15, atr1h, support, resistance, supportSource, resistanceSource, supportTouches: selectedSupport?.touches || 0, resistanceTouches: selectedResistance?.touches || 0, trend, btcRegime: btcRegime || { label: 'NEUTRAL', change24hPct: 0 }, rsi15, fibConfluence: fib.confluence, volRatio, oiChange, fundingPct, flowDelta: flow.delta, imbalance, vwap: vwap15, spreadPct: spread, atrPct, dayVolume: n(ctx?.dayVolume), maxLeverage: n(ctx?.maxLeverage) });
+    results.push({ coin, side, pattern: 'TREND_PULLBACK', rawSupport, rawResistance, minLevelGap, score: clamp(score, 0, 9.5), reasons, entry: mid, atr: atr15, atr1h, support, resistance, supportSource, resistanceSource, supportTouches: selectedSupport?.touches || 0, resistanceTouches: selectedResistance?.touches || 0, supportLevels: supportCandidates.map(x => ({ price: x.price, touches: x.touches, source: x.source })), resistanceLevels: resistanceCandidates.map(x => ({ price: x.price, touches: x.touches, source: x.source })), trend, btcRegime: btcRegime || { label: 'NEUTRAL', change24hPct: 0 }, rsi15, fibConfluence: fib.confluence, volRatio, oiChange, fundingPct, flowDelta: flow.delta, imbalance, vwap: vwap15, spreadPct: spread, atrPct, dayVolume: n(ctx?.dayVolume), maxLeverage: n(ctx?.maxLeverage) });
   }
 
   return results;
@@ -459,58 +459,82 @@ function buildRisk(candidate) {
     return { entry, sl: 0, tp: 0, riskPct: 0, rewardPct: 0, rr: 0, valid: false, reason: 'invalid entry/side/ATR' };
   }
 
-  // Structure-first risk: do not fabricate ATR-only SL/TP when a usable swing level is missing.
+  // V2.8.5: choose among all confirmed multi-touch 1H levels instead of forcing
+  // one nearest level to serve both risk and target. This avoids SL buffers pushing
+  // a TP through entry, and avoids rejecting a valid farther structural level.
   const atr1h = n(candidate.atr1h, atrValue * 4);
-  const buffer = Math.max(atr1h * 0.35, atrValue * STRUCTURE_BUFFER_ATR, entry * 0.0015);
-  // Reject tight stops rather than forcing a stop close to the entry.
-  const minRisk = Math.max(entry * 0.0050, atr1h * 0.50);
-  const maxRisk = entry * 0.025;
-  const support = n(candidate.support);
-  const resistance = n(candidate.resistance);
-  let sl = 0, tp = 0, riskDist = 0, targetDist = 0;
+  const buffer = Math.max(atr1h * 0.22, atrValue * 0.20, entry * 0.0015);
+  const minRisk = Math.max(entry * 0.0050, atr1h * 0.35);
+  // Allow genuine 1H structure to define a wider stop, but never accept an
+  // unbounded stop; require a valid R:R after choosing the level combination.
+  const maxRisk = entry * 0.05;
+  const fallbackSupport = n(candidate.support) > 0 ? [{ price: n(candidate.support), touches: n(candidate.supportTouches), source: candidate.supportSource || 'selected-1h-level' }] : [];
+  const fallbackResistance = n(candidate.resistance) > 0 ? [{ price: n(candidate.resistance), touches: n(candidate.resistanceTouches), source: candidate.resistanceSource || 'selected-1h-level' }] : [];
+  const supports = (Array.isArray(candidate.supportLevels) && candidate.supportLevels.length ? candidate.supportLevels : fallbackSupport)
+    .filter(x => n(x.price) > 0 && n(x.price) < entry && n(x.touches, 2) >= 2)
+    .map(x => ({ ...x, price: n(x.price), stop: n(x.price) - buffer }))
+    .filter(x => x.stop > 0 && entry - x.stop >= minRisk && entry - x.stop <= maxRisk)
+    .sort((a,b) => (entry-a.stop) - (entry-b.stop));
+  const resistances = (Array.isArray(candidate.resistanceLevels) && candidate.resistanceLevels.length ? candidate.resistanceLevels : fallbackResistance)
+    .filter(x => n(x.price) > entry && n(x.touches, 2) >= 2)
+    .map(x => ({ ...x, price: n(x.price), stop: n(x.price) + buffer }))
+    .filter(x => x.stop > entry && x.stop-entry >= minRisk && x.stop-entry <= maxRisk)
+    .sort((a,b) => (a.stop-entry) - (b.stop-entry));
+
+  const targetResistances = (Array.isArray(candidate.resistanceLevels) && candidate.resistanceLevels.length ? candidate.resistanceLevels : fallbackResistance)
+    .filter(x => n(x.price) > entry && n(x.touches, 2) >= 2)
+    .map(x => ({ ...x, price: n(x.price), tp: n(x.price) - buffer }))
+    .filter(x => x.tp > entry)
+    .sort((a,b) => a.price-b.price);
+  const targetSupports = (Array.isArray(candidate.supportLevels) && candidate.supportLevels.length ? candidate.supportLevels : fallbackSupport)
+    .filter(x => n(x.price) > 0 && n(x.price) < entry && n(x.touches, 2) >= 2)
+    .map(x => ({ ...x, price: n(x.price), tp: n(x.price) + buffer }))
+    .filter(x => x.tp < entry)
+    .sort((a,b) => b.price-a.price);
 
   if (candidate.side === 'LONG') {
-    if (!(support > 0 && support < entry)) {
-      return { entry, sl: 0, tp: 0, riskPct: 0, rewardPct: 0, rr: 0, valid: false, reason: 'no valid structural support for long' };
+    if (!supports.length) {
+      const support = n(candidate.support);
+      const sl = support > 0 ? support-buffer : 0;
+      const riskDist = entry-sl;
+      return { entry, sl, tp: 0, riskPct: riskDist > 0 ? riskDist/entry*100 : 0, rewardPct: 0, rr: 0, valid: false,
+        reason: support > 0 ? 'no confirmed 1H support gives a stop within 0.50%-5.00% structural risk bounds' : 'no valid repeated-touch 1H support for long' };
     }
-    sl = support - buffer;
-    riskDist = entry - sl;
-    if (!(sl < support && sl < entry) || riskDist < minRisk || riskDist > maxRisk) {
-      return { entry, sl, tp: 0, riskPct: riskDist / entry * 100, rewardPct: 0, rr: 0, valid: false, reason: 'long structural stop invalid or outside risk bounds' };
+    for (const sup of supports) {
+      const riskDist = entry-sup.stop;
+      const target = targetResistances.find(r => (r.tp-entry)/riskDist >= MIN_RR);
+      if (!target) continue;
+      const targetDist = target.tp-entry;
+      return { entry, sl: sup.stop, tp: target.tp, riskPct: riskDist/entry*100, rewardPct: targetDist/entry*100,
+        rr: targetDist/riskDist, valid: true, targetUsesStructure: true,
+        selectedSupport: sup.price, selectedResistance: target.price, supportTouches: sup.touches, resistanceTouches: target.touches };
     }
-    if (!(resistance > entry)) {
-      return { entry, sl, tp: 0, riskPct: riskDist / entry * 100, rewardPct: 0, rr: 0, valid: false, reason: 'no overhead resistance target for long' };
-    }
-    // Conservative target: take profit BEFORE the overhead 1H resistance zone.
-    // If the level is too close to provide the required R:R, reject instead of
-    // assuming price will cleanly break through resistance.
-    tp = resistance - buffer;
-    targetDist = tp - entry;
-    if (!(tp > entry) || targetDist / riskDist < MIN_RR) {
-      return { entry, sl, tp, riskPct: riskDist / entry * 100, rewardPct: Math.max(0, targetDist) / entry * 100, rr: targetDist / riskDist, valid: false, reason: 'insufficient room to take profit before resistance at required R:R' };
-    }
-  } else {
-    if (!(resistance > entry)) {
-      return { entry, sl: 0, tp: 0, riskPct: 0, rewardPct: 0, rr: 0, valid: false, reason: 'no valid structural resistance for short' };
-    }
-    sl = resistance + buffer;
-    riskDist = sl - entry;
-    if (!(sl > resistance && sl > entry) || riskDist < minRisk || riskDist > maxRisk) {
-      return { entry, sl, tp: 0, riskPct: riskDist / entry * 100, rewardPct: 0, rr: 0, valid: false, reason: 'short structural stop invalid or outside risk bounds' };
-    }
-    if (!(support > 0 && support < entry)) {
-      return { entry, sl, tp: 0, riskPct: riskDist / entry * 100, rewardPct: 0, rr: 0, valid: false, reason: 'no downside support target for short' };
-    }
-    // Conservative target: take profit BEFORE the downside 1H support zone.
-    tp = support + buffer;
-    targetDist = entry - tp;
-    if (!(tp < entry) || targetDist / riskDist < MIN_RR) {
-      return { entry, sl, tp, riskPct: riskDist / entry * 100, rewardPct: Math.max(0, targetDist) / entry * 100, rr: targetDist / riskDist, valid: false, reason: 'insufficient room to take profit before support at required R:R' };
-    }
+    const sup=supports[0], nearestTarget=targetResistances[0];
+    const riskDist=entry-sup.stop, targetDist=nearestTarget ? nearestTarget.tp-entry : 0;
+    return { entry, sl: sup.stop, tp: nearestTarget?.tp || 0, riskPct: riskDist/entry*100, rewardPct: Math.max(0,targetDist)/entry*100,
+      rr: riskDist>0 ? targetDist/riskDist : 0, valid: false, reason: 'no overhead repeated-touch 1H resistance provides the required R:R before the resistance zone' };
   }
 
-  const rr = targetDist / riskDist;
-  return { entry, sl, tp, riskPct: riskDist / entry * 100, rewardPct: targetDist / entry * 100, rr, valid: true, targetUsesStructure: true };
+  if (!resistances.length) {
+    const resistance = n(candidate.resistance);
+    const sl = resistance > 0 ? resistance+buffer : 0;
+    const riskDist = sl-entry;
+    return { entry, sl, tp: 0, riskPct: riskDist > 0 ? riskDist/entry*100 : 0, rewardPct: 0, rr: 0, valid: false,
+      reason: resistance > 0 ? 'no confirmed 1H resistance gives a stop within 0.50%-5.00% structural risk bounds' : 'no valid repeated-touch 1H resistance for short' };
+  }
+  for (const res of resistances) {
+    const riskDist = res.stop-entry;
+    const target = targetSupports.find(s => (entry-s.tp)/riskDist >= MIN_RR);
+    if (!target) continue;
+    const targetDist = entry-target.tp;
+    return { entry, sl: res.stop, tp: target.tp, riskPct: riskDist/entry*100, rewardPct: targetDist/entry*100,
+      rr: targetDist/riskDist, valid: true, targetUsesStructure: true,
+      selectedSupport: target.price, selectedResistance: res.price, supportTouches: target.touches, resistanceTouches: res.touches };
+  }
+  const res=resistances[0], nearestTarget=targetSupports[0];
+  const riskDist=res.stop-entry, targetDist=nearestTarget ? entry-nearestTarget.tp : 0;
+  return { entry, sl: res.stop, tp: nearestTarget?.tp || 0, riskPct: riskDist/entry*100, rewardPct: Math.max(0,targetDist)/entry*100,
+    rr: riskDist>0 ? targetDist/riskDist : 0, valid: false, reason: 'no downside repeated-touch 1H support provides the required R:R before the support zone' };
 }
 function oppositeSide(side) { return side === 'LONG' ? 'SHORT' : side === 'SHORT' ? 'LONG' : side; }
 function shouldReverseSignal(s) { return REVERSE_SWEEP_ONLY && s?.pattern === 'SWEEP_RECLAIM'; }
@@ -1080,7 +1104,7 @@ async function main() {
     const legacyTrades = Array.isArray(state.paperTrades) ? state.paperTrades : [];
     state.archivedPaperTrades = [
       ...(Array.isArray(state.archivedPaperTrades) ? state.archivedPaperTrades : []),
-      ...legacyTrades.map(t => ({ ...t, archivedAt: now(), archiveReason: 'V2.8.3_CLEAN_START' }))
+      ...legacyTrades.map(t => ({ ...t, archivedAt: now(), archiveReason: 'V2.8.5_CLEAN_START' }))
     ];
     state.paperTrades = [];
     state.alertHistory = {};
@@ -1096,14 +1120,14 @@ async function main() {
     state.cleanStartAt = now();
     console.log(`[CLEAN-START] Archived ${legacyTrades.length} legacy paper trades; active paper history, cooldowns, and pending reports reset.`);
   } else {
-    console.log(`[CLEAN-START] Already initialized at ${new Date(n(state.cleanStartAt, 0)).toISOString()}; continuing current V2.8.3 evaluation.`);
+    console.log(`[CLEAN-START] Already initialized at ${new Date(n(state.cleanStartAt, 0)).toISOString()}; continuing current V2.8.5 evaluation.`);
   }
   state.version = VERSION;
   console.log(`\n${VERSION} — START`);
   console.log(`Mode: READ-ONLY / NO ORDERS / NO AUTO-COPY / PAPER TRACKING`);
-  console.log(`[CLEAN-START] Evaluation cohort begins ${new Date(n(state.cleanStartAt, started)).toISOString()} (UTC); only newly recorded V2.8.3 trades count.`);
+  console.log(`[CLEAN-START] Evaluation cohort begins ${new Date(n(state.cleanStartAt, started)).toISOString()} (UTC); only newly recorded V2.8.5 trades count.`);
   console.log(`Time: ${new Date().toISOString()}`);
-  console.log(`Strategy: asset 1H trend is authoritative for LONG/SHORT; 15m is entry timing only; BTC 1H/15m is contextual confirmation, not a side override; final-side evidence adjustment; 30m cross-pattern cooldown; 1H multi-touch support/resistance sets SL/TP; minimum stop distance >= 0.50%; single-touch levels rejected | Signal threshold: ${MIN_SCORE}/10 | min R:R: 1:${MIN_RR.toFixed(2)} | BTC countertrend: ${BTC_COUNTERTREND_HARD_MOVE_PCT.toFixed(1)}% impulse requires score >= ${BTC_COUNTERTREND_MIN_SCORE.toFixed(1)} and ${BTC_COUNTERTREND_MIN_EVIDENCE} confirmations | structure-first SL/TP | 24h volume floor: NONE | market cap: NONE (all active listed perps)`);
+  console.log(`Strategy: asset 1H trend is authoritative for LONG/SHORT; 15m is entry timing only; BTC 1H/15m is contextual confirmation, not a side override; final-side evidence adjustment; 30m cross-pattern cooldown; 1H multi-touch support/resistance sets SL/TP; risk bounds 0.50%-5.00% with ATR-aware buffer; selects among repeated-touch 1H levels to preserve valid TP/SL geometry; single-touch levels rejected | Signal threshold: ${MIN_SCORE}/10 | min R:R: 1:${MIN_RR.toFixed(2)} | BTC countertrend: ${BTC_COUNTERTREND_HARD_MOVE_PCT.toFixed(1)}% impulse requires score >= ${BTC_COUNTERTREND_MIN_SCORE.toFixed(1)} and ${BTC_COUNTERTREND_MIN_EVIDENCE} confirmations | structure-first SL/TP | 24h volume floor: NONE | market cap: NONE (all active listed perps)`);
   console.log(`[API][POLICY] requestGap=${SCAN_GAP_MS}ms retries429=${MAX_429_RETRIES} backoff=${RATE_LIMIT_BASE_MS}-${RATE_LIMIT_MAX_MS}ms globalCooldown=yes`);
   console.log(`[TELEGRAM][CONFIG] token=${TOKEN ? 'configured' : 'MISSING'} vipChat=${VIP_CHAT ? 'configured' : (LEGACY_CHAT ? 'legacy-fallback' : 'MISSING')} freeChat=${FREE_CHAT ? 'configured' : 'MISSING'} legacyChat=${LEGACY_CHAT ? 'configured' : 'MISSING'}`);
   if (!TOKEN || (!VIP_CHAT && !LEGACY_CHAT && !FREE_CHAT)) {
@@ -1234,6 +1258,9 @@ async function main() {
           }
           continue;
         }
+        // Use the exact structural anchors selected by buildRisk() in the alert and paper record.
+        if (risk.selectedSupport > 0) { s.support = risk.selectedSupport; s.supportTouches = risk.supportTouches || s.supportTouches; }
+        if (risk.selectedResistance > 0) { s.resistance = risk.selectedResistance; s.resistanceTouches = risk.resistanceTouches || s.resistanceTouches; }
         // Avoid chasing a move that has already travelled too far from its 15m mean.
         const distanceToVwap = Math.abs((s.entry - s.vwap) / s.entry) * 100;
         if (distanceToVwap > Math.max(2.2, s.atr / s.entry * 100 * 2.8)) { noteReject('vwap', s, `distance ${distanceToVwap.toFixed(2)}%`); continue; }
