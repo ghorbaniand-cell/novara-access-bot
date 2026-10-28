@@ -5,23 +5,27 @@ import { spawn } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 
 /*
- * NOVARA SMART MONEY AI V2.8.8 REVERSE-ENTRY FAILURE PATTERNS + STRUCTURE-FIRST RISK
+ * NOVARA SMART MONEY AI V2.9.0 SELECTIVE-SWEEP-REVERSE + STRUCTURE / PAPER-TRACKING REPAIR
  * READ-ONLY | NO ORDERS | NO AUTO-COPY | PAPER OUTCOME TRACKING
  * Final LONG/SHORT direction follows a fresh BTC 15m + 1h direction check at candidate time; altcoin structure sets SL/TP
  *
  * Combines three entry families:
- *  1) Liquidity sweep + reclaim
- *  2) Breakout + retest
- *  3) Trend pullback + continuation
+ *  1) Liquidity sweep + reclaim (selective reversed-side paper experiment only)
+ *  2) Breakout + successful retest (normal direction)
+ *  3) Trend pullback + continuation (normal direction)
  *
  * Data: Hyperliquid public Info API (no paid data API required).
  * All eligible liquid perp markets are considered; the worker does not depend on wallet lists.
  */
 
-const VERSION = 'NOVARA-SMART-MONEY-AI-V2.8.9-REVERSE-FAILURE-LOCATION-COHORT-FIX';
-const CLEAN_START_ID = 'NOVARA-V2.8.9-REVERSE-FAILURE-COHORT-2026-10-28';
+const VERSION = 'NOVARA-SMART-MONEY-AI-V2.9.0-SELECTIVE-SWEEP-REVERSE-STRUCTURE-PAPER-FIX';
+const CLEAN_START_ID = 'NOVARA-V2.9.0-SELECTIVE-SWEEP-COHORT-2026-10-29';
 const PAPER_MARGIN_USD = Math.max(10, Number(process.env.NOVARA_PAPER_MARGIN_USD || 1000));
-const REVERSE_SWEEP_ONLY = false; // V2.8.8 changes entry detection to failed-pattern logic; no post-hoc side flip.
+// Transparent conservative paper estimate only; configure to match your fee tier. Round-trip cost includes entry+exit fee and slippage assumptions.
+const PAPER_FEE_BPS_PER_SIDE = Math.max(0, Number(process.env.NOVARA_PAPER_FEE_BPS_PER_SIDE || 5));
+const PAPER_SLIPPAGE_BPS_PER_SIDE = Math.max(0, Number(process.env.NOVARA_PAPER_SLIPPAGE_BPS_PER_SIDE || 3));
+const PAPER_ROUND_TRIP_COST_PCT = 2 * (PAPER_FEE_BPS_PER_SIDE + PAPER_SLIPPAGE_BPS_PER_SIDE) / 100;
+const REVERSE_SWEEP_ONLY = true; // Only SWEEP_RECLAIM reverses the original sweep/reclaim side; other patterns retain normal direction.
 const API = (process.env.HYPERLIQUID_API_URL || 'https://api.hyperliquid.xyz/info').trim();
 const TOKEN = process.env.TELEGRAM_TOKEN || process.env.TELEGRAM_BOT_TOKEN || '';
 const LEGACY_CHAT = process.env.TELEGRAM_CHAT_ID || '';
@@ -311,10 +315,12 @@ function detectPatterns({ coin, c15, c1h, ctx, prevCtx, mid, spread, imbalance, 
     rows.forEach((c, i) => {
       if (Math.abs((kind === 'support' ? c.l : c.h) - price) <= touchTolerance) hitIndices.push(i);
     });
-    // Count separate reaction episodes, not several adjacent candles in one visit.
-    let episodes = 0, lastTouch = -999;
+    // Cluster all hits separated by fewer than 3 completed 1H candles into one visit.
+    // Crucially update lastHit on EVERY hit; otherwise a long cluster can be counted twice.
+    let episodes = 0, lastHit = -999;
     for (const i of hitIndices) {
-      if (i - lastTouch >= 3) { episodes++; lastTouch = i; }
+      if (i - lastHit >= 3) episodes++;
+      lastHit = i;
     }
     return episodes;
   };
@@ -392,63 +398,60 @@ function detectPatterns({ coin, c15, c1h, ctx, prevCtx, mid, spread, imbalance, 
     return score;
   };
 
-  // Pattern 1 (REVERSED ENTRY): trade failed sweeps, not successful reclaims.
-  // Swept low that fails to reclaim -> SHORT; swept high that fails to reject -> LONG.
+  // Pattern 1: classic liquidity sweep + reclaim, with ONLY this pattern's side reversed
+  // for the explicitly requested paper experiment. A low sweep/reclaim normally LONGs,
+  // so the experiment records SHORT; a high sweep/rejection normally SHORTs, so it records LONG.
   const priorLow = Math.min(...c15.slice(-10, -1).map(c => c.l));
   const priorHigh = Math.max(...c15.slice(-10, -1).map(c => c.h));
-  const failedLowSweepShort = last.l < priorLow && last.c < priorLow && last.c < last.o;
-  const failedHighSweepLong = last.h > priorHigh && last.c > priorHigh && last.c > last.o;
-  if (failedLowSweepShort || failedHighSweepLong) {
-    const side = failedHighSweepLong ? 'LONG' : 'SHORT';
-    const failureLevel = side === 'SHORT' ? priorLow : priorHigh;
+  const sweepLongOriginal = last.l < priorLow && last.c > priorLow && last.c > last.o;
+  const sweepShortOriginal = last.h > priorHigh && last.c < priorHigh && last.c < last.o;
+  if (sweepLongOriginal || sweepShortOriginal) {
+    const originalSide = sweepLongOriginal ? 'LONG' : 'SHORT';
+    const side = oppositeSide(originalSide);
+    const failureLevel = originalSide === 'LONG' ? priorLow : priorHigh;
     let score = 5.0;
-    const reasons = ['REVERSED ENTRY: failed liquidity sweep / failed reclaim'];
-    if (side === 'LONG' && bullishFlow || side === 'SHORT' && bearishFlow) { score += 0.9; reasons.push('order-flow supports reversal'); }
-    if (volRatio >= 1.15) { score += 0.45; reasons.push('relative volume expansion'); }
-    if (side === 'LONG' && trend === 'LONG' || side === 'SHORT' && trend === 'SHORT') { score += 0.4; reasons.push('aligned 1H trend'); }
-    if (side === 'LONG' && oiConfirmsLong || side === 'SHORT' && oiConfirmsShort) { score += 0.25; reasons.push('OI rising with directional move'); }
-    if (side === 'LONG' && fundingPct < 0.035 || side === 'SHORT' && fundingPct > -0.035) score += 0.15;
-    if (spread !== null && spread > MAX_SPREAD_PCT) score -= 1.5;
+    const reasons = [`SWEEP_RECLAIM selective reverse experiment: original=${originalSide}, recorded=${side}`];
+    if (side === 'LONG' && bullishFlow || side === 'SHORT' && bearishFlow) { score += 0.75; reasons.push('flow supports reversed-side hypothesis'); }
+    if (volRatio >= 1.15) { score += 0.40; reasons.push('relative volume expansion'); }
+    if (side === 'LONG' && trend === 'LONG' || side === 'SHORT' && trend === 'SHORT') { score += 0.35; reasons.push('1H trend aligns with tested side'); }
+    if (side === 'LONG' && oiConfirmsLong || side === 'SHORT' && oiConfirmsShort) { score += 0.20; reasons.push('OI participation supports tested side'); }
+    if (side === 'LONG' && fundingPct < 0.035 || side === 'SHORT' && fundingPct > -0.035) score += 0.10;
     score = addContext(side, score, reasons);
-    results.push({ coin, side, pattern: 'SWEEP_RECLAIM', failureLevel, rawSupport, rawResistance, minLevelGap, score: clamp(score, 0, 9.5), reasons, entry: mid, atr: atr15, atr1h, support, resistance, supportSource, resistanceSource, supportTouches: selectedSupport?.touches || 0, resistanceTouches: selectedResistance?.touches || 0, supportLevels: supportCandidates.map(x => ({ price: x.price, touches: x.touches, source: x.source })), resistanceLevels: resistanceCandidates.map(x => ({ price: x.price, touches: x.touches, source: x.source })), trend, btcRegime: btcRegime || { label: 'NEUTRAL', change24hPct: 0 }, rsi15, fibConfluence: fib.confluence, volRatio, oiChange, fundingPct, flowDelta: flow.delta, imbalance, vwap: vwap15, spreadPct: spread, atrPct, dayVolume: n(ctx?.dayVolume), maxLeverage: n(ctx?.maxLeverage) });
+    results.push({ coin, side, originalSide, pattern: 'SWEEP_RECLAIM', failureLevel, rawSupport, rawResistance, minLevelGap, score: clamp(score, 0, 9.5), reasons, entry: mid, atr: atr15, atr1h, support, resistance, supportSource, resistanceSource, supportTouches: selectedSupport?.touches || 0, resistanceTouches: selectedResistance?.touches || 0, supportLevels: supportCandidates.map(x => ({ price: x.price, touches: x.touches, source: x.source })), resistanceLevels: resistanceCandidates.map(x => ({ price: x.price, touches: x.touches, source: x.source })), trend, btcRegime: btcRegime || { label: 'NEUTRAL', change24hPct: 0 }, rsi15, fibConfluence: fib.confluence, volRatio, oiChange, fundingPct, flowDelta: flow.delta, imbalance, vwap: vwap15, spreadPct: spread, atrPct, dayVolume: n(ctx?.dayVolume), maxLeverage: n(ctx?.maxLeverage) });
   }
 
-  // Pattern 2 (REVERSED ENTRY): failed breakout retest / return inside range.
+  // Pattern 2: NORMAL direction — breakout close followed by a successful retest/hold.
   const breakoutHigh = Math.max(...c15.slice(-14, -2).map(c => c.h));
   const breakoutLow = Math.min(...c15.slice(-14, -2).map(c => c.l));
   const tolerance = Math.max(atr15 * 0.25, mid * 0.0015);
-  const failedBullBreakoutShort = prev.c > breakoutHigh && last.h >= breakoutHigh - tolerance && last.c < breakoutHigh && last.c < last.o;
-  const failedBearBreakdownLong = prev.c < breakoutLow && last.l <= breakoutLow + tolerance && last.c > breakoutLow && last.c > last.o;
-  if (failedBullBreakoutShort || failedBearBreakdownLong) {
-    const side = failedBearBreakdownLong ? 'LONG' : 'SHORT';
-    const failedBreakoutLevel = side === 'SHORT' ? breakoutHigh : breakoutLow;
+  const retestLong = prev.c > breakoutHigh && last.l <= breakoutHigh + tolerance && last.c >= breakoutHigh && last.c > last.o;
+  const retestShort = prev.c < breakoutLow && last.h >= breakoutLow - tolerance && last.c <= breakoutLow && last.c < last.o;
+  if (retestLong || retestShort) {
+    const side = retestLong ? 'LONG' : 'SHORT';
     let score = 5.05;
-    const reasons = ['REVERSED ENTRY: failed breakout / price returned inside range'];
+    const reasons = ['Breakout + successful retest (normal direction)'];
     if (side === 'LONG' && bullishFlow || side === 'SHORT' && bearishFlow) { score += 0.7; reasons.push('order-flow confirms continuation'); }
     if (volRatio >= 1.1) { score += 0.45; reasons.push('volume supports level break'); }
-    if (side === 'LONG' && trend === 'LONG' || side === 'SHORT' && trend === 'SHORT') { score += 0.65; reasons.push('aligned 1H trend'); }
+    if (side === trend) { score += 0.65; reasons.push('aligned 1H trend'); }
     if (side === 'LONG' && mid >= vwap15 || side === 'SHORT' && mid <= vwap15) { score += 0.25; reasons.push('VWAP alignment'); }
     if (side === 'LONG' && oiConfirmsLong || side === 'SHORT' && oiConfirmsShort) { score += 0.3; reasons.push('OI confirms participation'); }
-    if (spread !== null && spread > MAX_SPREAD_PCT) score -= 1.5;
     score = addContext(side, score, reasons);
-    results.push({ coin, side, pattern: 'BREAKOUT_RETEST', breakoutLevel: failedBreakoutLevel, rawSupport, rawResistance, minLevelGap, score: clamp(score, 0, 9.5), reasons, entry: mid, atr: atr15, atr1h, support, resistance, supportSource, resistanceSource, supportTouches: selectedSupport?.touches || 0, resistanceTouches: selectedResistance?.touches || 0, supportLevels: supportCandidates.map(x => ({ price: x.price, touches: x.touches, source: x.source })), resistanceLevels: resistanceCandidates.map(x => ({ price: x.price, touches: x.touches, source: x.source })), trend, btcRegime: btcRegime || { label: 'NEUTRAL', change24hPct: 0 }, rsi15, fibConfluence: fib.confluence, volRatio, oiChange, fundingPct, flowDelta: flow.delta, imbalance, vwap: vwap15, spreadPct: spread, atrPct, dayVolume: n(ctx?.dayVolume), maxLeverage: n(ctx?.maxLeverage) });
+    results.push({ coin, side, pattern: 'BREAKOUT_RETEST', breakoutLevel: retestLong ? breakoutHigh : breakoutLow, rawSupport, rawResistance, minLevelGap, score: clamp(score, 0, 9.5), reasons, entry: mid, atr: atr15, atr1h, support, resistance, supportSource, resistanceSource, supportTouches: selectedSupport?.touches || 0, resistanceTouches: selectedResistance?.touches || 0, supportLevels: supportCandidates.map(x => ({ price: x.price, touches: x.touches, source: x.source })), resistanceLevels: resistanceCandidates.map(x => ({ price: x.price, touches: x.touches, source: x.source })), trend, btcRegime: btcRegime || { label: 'NEUTRAL', change24hPct: 0 }, rsi15, fibConfluence: fib.confluence, volRatio, oiChange, fundingPct, flowDelta: flow.delta, imbalance, vwap: vwap15, spreadPct: spread, atrPct, dayVolume: n(ctx?.dayVolume), maxLeverage: n(ctx?.maxLeverage) });
   }
 
-  // Pattern 3 (REVERSED ENTRY): failed continuation through EMA20, with a completed candle crossing against the prior 15m close.
-  // A mere pullback is not reversed; a confirmed loss of the mean is required.
+  // Pattern 3: NORMAL direction — 1H trend pullback into EMA20 and recovery candle.
   const ema20_15 = ema(c15.slice(-60).map(c => c.c), 20);
-  const failedLongContinuationShort = trend === 'LONG' && prev.c >= ema20_15 && last.c < ema20_15 && last.c < last.o && last.c < prev.c;
-  const failedShortContinuationLong = trend === 'SHORT' && prev.c <= ema20_15 && last.c > ema20_15 && last.c > last.o && last.c > prev.c;
-  if (failedLongContinuationShort || failedShortContinuationLong) {
-    const side = failedShortContinuationLong ? 'LONG' : 'SHORT';
+  const pullbackLong = trend === 'LONG' && last.l <= ema20_15 + atr15 * 0.25 && last.c > ema20_15 && last.c > last.o && last.c > prev.c;
+  const pullbackShort = trend === 'SHORT' && last.h >= ema20_15 - atr15 * 0.25 && last.c < ema20_15 && last.c < last.o && last.c < prev.c;
+  if (pullbackLong || pullbackShort) {
+    const side = pullbackLong ? 'LONG' : 'SHORT';
     let score = 4.95;
-    const reasons = ['REVERSED ENTRY: trend continuation failed across 15m EMA20'];
+    const reasons = ['Trend pullback + continuation (normal direction)'];
     if (side === 'LONG' && bullishFlow || side === 'SHORT' && bearishFlow) { score += 0.75; reasons.push('order-flow resumes with trend'); }
     if (volRatio >= 0.9) { score += 0.25; reasons.push('participation present'); }
     if (side === 'LONG' && mid >= vwap15 || side === 'SHORT' && mid <= vwap15) { score += 0.4; reasons.push('VWAP alignment'); }
     if (side === 'LONG' && oiConfirmsLong || side === 'SHORT' && oiConfirmsShort) { score += 0.3; reasons.push('OI rising with trend'); }
     if (side === 'LONG' && fundingPct > 0.08 || side === 'SHORT' && fundingPct < -0.08) { score -= 0.25; reasons.push('crowded funding slightly penalized'); }
-    if (spread !== null && spread > MAX_SPREAD_PCT) score -= 1.5;
     score = addContext(side, score, reasons);
     results.push({ coin, side, pattern: 'TREND_PULLBACK', pullbackMean: ema20_15, rawSupport, rawResistance, minLevelGap, score: clamp(score, 0, 9.5), reasons, entry: mid, atr: atr15, atr1h, support, resistance, supportSource, resistanceSource, supportTouches: selectedSupport?.touches || 0, resistanceTouches: selectedResistance?.touches || 0, supportLevels: supportCandidates.map(x => ({ price: x.price, touches: x.touches, source: x.source })), resistanceLevels: resistanceCandidates.map(x => ({ price: x.price, touches: x.touches, source: x.source })), trend, btcRegime: btcRegime || { label: 'NEUTRAL', change24hPct: 0 }, rsi15, fibConfluence: fib.confluence, volRatio, oiChange, fundingPct, flowDelta: flow.delta, imbalance, vwap: vwap15, spreadPct: spread, atrPct, dayVolume: n(ctx?.dayVolume), maxLeverage: n(ctx?.maxLeverage) });
   }
@@ -483,7 +486,7 @@ function buildRisk(candidate) {
   // one nearest level to serve both risk and target. This avoids SL buffers pushing
   // a TP through entry, and avoids rejecting a valid farther structural level.
   const atr1h = n(candidate.atr1h, atrValue * 4);
-  const buffer = Math.max(atr1h * 0.22, atrValue * 0.20, entry * 0.0015);
+  const buffer = Math.max(atr1h * STRUCTURE_BUFFER_ATR, atrValue * 0.20, entry * 0.0015);
   const minRisk = Math.max(entry * 0.0050, atr1h * 0.35);
   // Allow genuine 1H structure to define a wider stop, but never accept an
   // unbounded stop; require a valid R:R after choosing the level combination.
@@ -822,7 +825,7 @@ async function updatePaperTrades(state, contexts) {
       const hit = candleHit(trade, bar);
       if (hit) { result = hit; exitMark = bar.c; hitAt = bar.T || bar.t + 60_000; exitDetection = '1m_candle_ohlc'; break; }
     }
-    if (!result && mark > 0) {
+    if (!result && candleSet.ok && mark > 0) {
       if (trade.side === 'LONG') {
         if (mark <= trade.sl) result = 'SL'; else if (mark >= trade.tp) result = 'TP';
       } else {
@@ -836,7 +839,12 @@ async function updatePaperTrades(state, contexts) {
     trade.status = result;
     trade.closedAt = hitAt || now();
     trade.exitMark = exitMark || mark;
-    trade.pnlR = result === 'TP' ? n(trade.rr) : result === 'SL' ? -1 : null;
+    trade.grossPnlR = result === 'TP' ? n(trade.rr) : result === 'SL' ? -1 : null;
+    const riskPct = Math.max(0.01, n(trade.riskPct));
+    const estimatedCostR = PAPER_ROUND_TRIP_COST_PCT / riskPct;
+    trade.estimatedRoundTripCostPct = PAPER_ROUND_TRIP_COST_PCT;
+    trade.estimatedCostR = estimatedCostR;
+    trade.pnlR = result === 'TP' || result === 'SL' ? trade.grossPnlR - estimatedCostR : null;
     trade.paperMarginUsd = PAPER_MARGIN_USD;
     trade.exitDetection = result === 'AMBIGUOUS' ? 'same_1m_candle_both_levels' : (exitDetection || 'unknown_detection');
     closed.push(trade);
@@ -863,11 +871,13 @@ function formatOutcome(trade) {
   const entry = n(trade.entry);
   const targetExit = isTp ? n(trade.tp) : isSl ? n(trade.sl) : n(trade.exitMark, entry);
   const movePct = entry > 0 ? ((targetExit - entry) / entry) * 100 * (long ? 1 : -1) : 0;
-  const grossPnl = margin * lev * (movePct / 100);
-  // Conservative isolated-margin display: never claim loss beyond the simulated margin.
-  const pnl = Math.max(-margin, grossPnl);
-  const pnlPct = margin > 0 ? pnl / margin * 100 : 0;
   const notional = margin * lev;
+  const grossPnl = notional * (movePct / 100);
+  const estimatedCostsUsd = notional * (n(trade.estimatedRoundTripCostPct, PAPER_ROUND_TRIP_COST_PCT) / 100);
+  // Net simulated P&L deducts the same round-trip fee/slippage assumption used in R statistics.
+  // Conservative isolated-margin display: never claim loss beyond the simulated margin.
+  const pnl = Math.max(-margin, grossPnl - estimatedCostsUsd);
+  const pnlPct = margin > 0 ? pnl / margin * 100 : 0;
   const finalEquity = Math.max(0, margin + pnl);
   const durationMin = Math.max(0, Math.round((n(trade.closedAt) - n(trade.openedAt)) / 60_000));
   const duration = durationMin >= 60 ? `${Math.floor(durationMin / 60)}H ${durationMin % 60}M` : `${durationMin}M`;
@@ -894,8 +904,9 @@ ${header}
 🏁 ${exitLabel}: <code>${fmtPrice(targetExit)}</code>
 📉 Price move (direction-adjusted): <b>${movePct >= 0 ? '+' : ''}${movePct.toFixed(2)}%</b>
 
-💰 <b>SIMULATED P&L</b>
+💰 <b>SIMULATED NET P&L</b>
 ${pnlLine}
+🧾 Assumed round-trip costs: <b>$${estimatedCostsUsd.toFixed(2)}</b> (${n(trade.estimatedRoundTripCostPct, PAPER_ROUND_TRIP_COST_PCT).toFixed(3)}% of notional)
 💼 Margin after trade: <b>$${ambiguous ? '—' : finalEquity.toFixed(2)}</b>
 📊 Result in R: <b>${outcomeR}</b>
 ⏱ Duration: <b>${duration}</b>
@@ -903,7 +914,7 @@ ${pnlLine}
 🧠 Strategy: ${escapeHtml(String(trade.strategyVersion || 'LEGACY/UNKNOWN'))}
 
 <b>HYPERLIQUID MARKET DATA • PAPER TRADING</b>
-No real order was placed. P&L is an estimate before fees, funding and slippage; leverage can cause liquidation before a stop is reached. ${ambiguous ? 'Both levels may have been touched in the same candle; no win/loss is assigned.' : ''}`;
+No real order was placed. P&L/R includes configurable estimated round-trip fees and slippage, but excludes funding and liquidation modeling; leverage can cause liquidation before a stop is reached. ${ambiguous ? 'Both levels may have been touched in the same candle; no win/loss is assigned.' : ''}`;
 }
 
 function report24h(state, audience) {
@@ -955,7 +966,7 @@ function report24h(state, audience) {
 📈 Win rate of resolved signals: <b>${resolved ? `${winRate.toFixed(1)}%` : 'N/A — no resolved signals'}</b> (${tp}/${resolved})
 ⏳ Still open/pending: <b>${open}</b>
 ⚠️ Ambiguous 1m candles: <b>${ambiguous}</b> (excluded from win rate)
-🧮 Net realized result (entry cohort): <b>${netR >= 0 ? '+' : ''}${netR.toFixed(2)}R</b> (paper estimate, before fees/slippage)
+🧮 Net realized result (entry cohort): <b>${netR >= 0 ? '+' : ''}${netR.toFixed(2)}R</b> (paper estimate, after assumed fees/slippage; funding excluded)
 
 <b>Trades CLOSED in the last 24h (all retained versions):</b>
 🔒 Closed: <b>${closedCohort.length}</b> | TP ${closedTP} | SL ${closedSL} | ambiguous ${closedAmbiguous}
@@ -966,7 +977,7 @@ function report24h(state, audience) {
 <b>Signal details (up to 12 most recent):</b>
 ${details.length ? details.join('\n') : 'No tracked signals were opened in this 24-hour window.'}
 
-ℹ️ Entry cohort is filtered by openedAt and this strategy version; closure cohort is filtered by closedAt and includes retained older versions. Win rate = TP ÷ (TP + SL). Paper estimates exclude fees/slippage and do not represent actual fills. No real orders.`;
+ℹ️ Entry cohort is filtered by openedAt and this strategy version; closure cohort is filtered by closedAt and includes retained older versions. Win rate = TP ÷ (TP + SL). Net R subtracts an estimated ${PAPER_ROUND_TRIP_COST_PCT.toFixed(3)}% round-trip fee/slippage cost from each resolved trade; funding and real fills are not modeled. No real orders.`;
 }
 
 function dailySummary(state) {
@@ -1124,7 +1135,7 @@ async function main() {
     const legacyTrades = Array.isArray(state.paperTrades) ? state.paperTrades : [];
     state.archivedPaperTrades = [
       ...(Array.isArray(state.archivedPaperTrades) ? state.archivedPaperTrades : []),
-      ...legacyTrades.map(t => ({ ...t, archivedAt: now(), archiveReason: 'V2.8.9_REVERSE_FAILURE_COHORT_RESET' }))
+      ...legacyTrades.map(t => ({ ...t, archivedAt: now(), archiveReason: 'V2.9.0_SELECTIVE_SWEEP_COHORT_RESET' }))
     ];
     state.paperTrades = [];
     state.alertHistory = {};
@@ -1140,14 +1151,16 @@ async function main() {
     state.cleanStartAt = now();
     console.log(`[CLEAN-START] Archived ${legacyTrades.length} legacy paper trades; active paper history, cooldowns, and pending reports reset.`);
   } else {
-    console.log(`[CLEAN-START] Already initialized at ${new Date(n(state.cleanStartAt, 0)).toISOString()}; continuing current V2.8.6 evaluation.`);
+    console.log(`[CLEAN-START] Already initialized at ${new Date(n(state.cleanStartAt, 0)).toISOString()}; continuing current V2.9.0 evaluation.`);
   }
   state.version = VERSION;
   console.log(`\n${VERSION} — START`);
   console.log(`Mode: READ-ONLY / NO ORDERS / NO AUTO-COPY / PAPER TRACKING`);
+  console.log(`[STRATEGY][PATTERNS] SWEEP_RECLAIM=REVERSED SIDE ONLY | BREAKOUT_RETEST=NORMAL | TREND_PULLBACK=NORMAL`);
+  console.log(`[PAPER][COST MODEL] roundTrip=${PAPER_ROUND_TRIP_COST_PCT.toFixed(3)}% (fees ${PAPER_FEE_BPS_PER_SIDE}bps/side; slippage ${PAPER_SLIPPAGE_BPS_PER_SIDE}bps/side); funding excluded`);
   console.log(`[CLEAN-START] Evaluation cohort begins ${new Date(n(state.cleanStartAt, started)).toISOString()} (UTC); only newly recorded ${VERSION} trades count.`);
   console.log(`Time: ${new Date().toISOString()}`);
-  console.log(`Strategy: REVERSED ENTRY FAILURE EXPERIMENT; failed sweeps, failed breakouts and failed EMA20 continuation only; no post-hoc side flip; corrected pattern-specific trigger gate; 1H multi-touch support/resistance independently sets fresh SL/TP; LONG stop below support and target before resistance; SHORT stop above resistance and target before support; minimum structural R:R 1:1.5; PAPER TRACKING only | Signal threshold: ${MIN_SCORE}/10 | min R:R: 1:${MIN_RR.toFixed(2)} | BTC countertrend: ${BTC_COUNTERTREND_HARD_MOVE_PCT.toFixed(1)}% impulse requires score >= ${BTC_COUNTERTREND_MIN_SCORE.toFixed(1)} and ${BTC_COUNTERTREND_MIN_EVIDENCE} confirmations | structure-first SL/TP | 24h volume floor: NONE | market cap: NONE (all active listed perps)`);
+  console.log(`Strategy: selective reverse experiment (SWEEP_RECLAIM only); BREAKOUT_RETEST and TREND_PULLBACK normal direction; pattern-specific trigger gates; 1H multi-touch support/resistance independently sets fresh SL/TP; LONG stop below support and target before resistance; SHORT stop above resistance and target before support; minimum structural R:R 1:1.5; estimated paper round-trip cost=${PAPER_ROUND_TRIP_COST_PCT.toFixed(3)}% (fee ${PAPER_FEE_BPS_PER_SIDE} bps/side + slippage ${PAPER_SLIPPAGE_BPS_PER_SIDE} bps/side); PAPER TRACKING only | Signal threshold: ${MIN_SCORE}/10 | min R:R: 1:${MIN_RR.toFixed(2)} | BTC countertrend: ${BTC_COUNTERTREND_HARD_MOVE_PCT.toFixed(1)}% impulse requires score >= ${BTC_COUNTERTREND_MIN_SCORE.toFixed(1)} and ${BTC_COUNTERTREND_MIN_EVIDENCE} confirmations | structure-first SL/TP | 24h volume floor: NONE | market cap: NONE (all active listed perps)`);
   console.log(`[API][POLICY] requestGap=${SCAN_GAP_MS}ms retries429=${MAX_429_RETRIES} backoff=${RATE_LIMIT_BASE_MS}-${RATE_LIMIT_MAX_MS}ms globalCooldown=yes`);
   console.log(`[TELEGRAM][CONFIG] token=${TOKEN ? 'configured' : 'MISSING'} vipChat=${VIP_CHAT ? 'configured' : (LEGACY_CHAT ? 'legacy-fallback' : 'MISSING')} freeChat=${FREE_CHAT ? 'configured' : 'MISSING'} legacyChat=${LEGACY_CHAT ? 'configured' : 'MISSING'}`);
   if (!TOKEN || (!VIP_CHAT && !LEGACY_CHAT && !FREE_CHAT)) {
@@ -1219,8 +1232,8 @@ async function main() {
           const sideAdjustment = finalSideEvidenceAdjustment(candidate, patternSide);
           candidate.score = clamp(candidate.score + sideAdjustment, 0, 9.5);
           const trendRelation = candidate.trend === patternSide ? 'aligned' : 'countertrend';
-          candidate.reasons = [`REVERSED ENTRY FAILURE EXPERIMENT: ${patternSide}; asset 1H trend=${candidate.trend} (${trendRelation}) is context; BTC ${liveBtc.trend || 'UNAVAILABLE'} is context; fresh SL/TP recalculated from 1H structure`, `Same-side evidence adjustment ${sideAdjustment >= 0 ? '+' : ''}${sideAdjustment.toFixed(2)} (flow/order-book/RSI/VWAP)`, ...candidate.reasons];
-          console.log(`[DIRECTION][REVERSE-FAILURE-ENTRY] ${candidate.coin} ${candidate.pattern}: side=${patternSide}; 1H=${candidate.trend}; BTC=${liveBtc.trend}; evidenceAdjustment=${sideAdjustment.toFixed(2)}; score=${candidate.score.toFixed(2)}; entry=${fmtPrice(candidate.entry)} support=${fmtPrice(candidate.support)} resistance=${fmtPrice(candidate.resistance)}`);
+          candidate.reasons = [`${candidate.pattern === 'SWEEP_RECLAIM' ? 'SELECTIVE REVERSED SWEEP' : 'NORMAL-DIRECTION SETUP'}: side=${patternSide}; asset 1H trend=${candidate.trend} (${trendRelation}) is context; BTC ${liveBtc.trend || 'UNAVAILABLE'} is context; fresh SL/TP recalculated from 1H structure`, `Same-side evidence adjustment ${sideAdjustment >= 0 ? '+' : ''}${sideAdjustment.toFixed(2)} (flow/order-book/RSI/VWAP)`, ...candidate.reasons];
+          console.log(`[DIRECTION][SELECTIVE-PATTERN-SIDE] ${candidate.coin} ${candidate.pattern}: side=${patternSide}; 1H=${candidate.trend}; BTC=${liveBtc.trend}; evidenceAdjustment=${sideAdjustment.toFixed(2)}; score=${candidate.score.toFixed(2)}; entry=${fmtPrice(candidate.entry)} support=${fmtPrice(candidate.support)} resistance=${fmtPrice(candidate.resistance)}`);
         }
       }
       for (const s of found) {
@@ -1229,37 +1242,34 @@ async function main() {
           noteReject('spread', s, s.spreadPct == null ? 'order-book spread unavailable' : `spread ${s.spreadPct.toFixed(3)}% > ${MAX_SPREAD_PCT}%`);
           continue;
         }
-        // PATTERN-AWARE LOCATION GATE: each setup must be judged against its own
-        // actual trigger. Sweep/reclaim uses 1H S/R; breakout-retest uses the broken
-        // level; trend-pullback uses its 15m EMA20 mean and the original 1H trend.
-        // Do not force every pattern to pretend it entered at support/resistance.
+        // PATTERN-AWARE LOCATION GATE: sweep uses the swept 15m swing; breakout uses
+        // its successful retest level; trend pullback must remain on the recovery side
+        // of EMA20 with the 1H trend aligned. Every pattern still needs independent 1H S/R risk.
         const maxEntryLevelDistancePct = Math.min(1.25, Math.max(0.35, n(s.atr1h) / Math.max(n(s.entry), 1) * 100 * 0.70));
         let entryLevel = 0, levelDistancePct = Infinity, locationPass = false, locationReason = '';
         if (s.pattern === 'SWEEP_RECLAIM') {
-          // Inverse sweep is only valid when price stays beyond the swept swing level.
           entryLevel = n(s.failureLevel);
           levelDistancePct = entryLevel > 0 ? Math.abs(s.entry - entryLevel) / s.entry * 100 : Infinity;
-          // A failed sweep is validated against the swept 15m swing itself.
-          // Do NOT additionally require price to be beyond the 1H support/resistance:
-          // that was an accidental second breakout condition and rejected valid
-          // failure setups (35 location rejects in the prior run). The independent
-          // 1H structure and R:R checks still happen in buildRisk() below.
-          const failedClose = s.side === 'SHORT' ? s.entry < entryLevel : s.entry > entryLevel;
-          locationPass = entryLevel > 0 && levelDistancePct <= Math.max(maxEntryLevelDistancePct, 0.25) && failedClose;
-          locationReason = `failed sweep must remain beyond swept swing ${fmtPrice(entryLevel)}; distance=${Number.isFinite(levelDistancePct) ? levelDistancePct.toFixed(2)+'%' : 'NA'}, side=${s.side}`;
+          // The original candle must reclaim/reject the swing; only the tested trade side is inverted.
+          const originalSide = s.originalSide;
+          const candleConfirmed = originalSide === 'LONG'
+            ? s.entry > entryLevel && s.side === 'SHORT'
+            : originalSide === 'SHORT' && s.entry < entryLevel && s.side === 'LONG';
+          locationPass = entryLevel > 0 && levelDistancePct <= Math.max(maxEntryLevelDistancePct, 0.25) && candleConfirmed;
+          locationReason = `reversed sweep must stay near reclaimed/rejected swing ${fmtPrice(entryLevel)}; original=${originalSide}, tested=${s.side}, distance=${Number.isFinite(levelDistancePct) ? levelDistancePct.toFixed(2)+'%' : 'NA'}`;
         } else if (s.pattern === 'BREAKOUT_RETEST') {
           entryLevel = n(s.breakoutLevel);
           levelDistancePct = entryLevel > 0 ? Math.abs(s.entry - entryLevel) / s.entry * 100 : Infinity;
           const retestTolerancePct = Math.max(n(s.atr) * 0.60 / Math.max(n(s.entry), 1) * 100, 0.20);
           locationPass = entryLevel > 0 && levelDistancePct <= Math.max(maxEntryLevelDistancePct, retestTolerancePct) &&
-            (s.side === 'SHORT' ? s.entry < entryLevel : s.entry > entryLevel);
-          locationReason = `failed breakout must return across level ${fmtPrice(entryLevel)}; distance=${Number.isFinite(levelDistancePct) ? levelDistancePct.toFixed(2)+'%' : 'NA'}`;
+            (s.side === 'LONG' ? s.entry >= entryLevel - n(s.atr) * 0.25 : s.entry <= entryLevel + n(s.atr) * 0.25);
+          locationReason = `successful breakout retest must remain near held level ${fmtPrice(entryLevel)}; distance=${Number.isFinite(levelDistancePct) ? levelDistancePct.toFixed(2)+'%' : 'NA'}`;
         } else if (s.pattern === 'TREND_PULLBACK') {
           entryLevel = n(s.pullbackMean);
           levelDistancePct = entryLevel > 0 ? Math.abs(s.entry - entryLevel) / s.entry * 100 : Infinity;
-          locationPass = entryLevel > 0 && s.trend !== s.side && levelDistancePct <= Math.max(0.90, n(s.atrPct) * 1.8) &&
-            (s.side === 'LONG' ? s.entry > entryLevel : s.entry < entryLevel);
-          locationReason = `failed continuation requires price near EMA20 on reversal side; distance=${Number.isFinite(levelDistancePct) ? levelDistancePct.toFixed(2)+'%' : 'NA'}, 1H trend=${s.trend}`;
+          locationPass = entryLevel > 0 && s.trend === s.side && levelDistancePct <= Math.max(0.90, n(s.atrPct) * 1.8) &&
+            (s.side === 'LONG' ? s.entry >= entryLevel : s.entry <= entryLevel);
+          locationReason = `trend continuation requires 1H trend aligned and entry near recovery side of EMA20; distance=${Number.isFinite(levelDistancePct) ? levelDistancePct.toFixed(2)+'%' : 'NA'}, 1H trend=${s.trend}`;
         }
         if (!locationPass) {
           console.log(`[FILTER][ENTRY-LOCATION] ${s.coin} ${s.side} ${s.pattern} rejected: ${locationReason || 'no valid pattern-specific trigger level'}; entry=${fmtPrice(s.entry)} level=${fmtPrice(entryLevel)} max=${maxEntryLevelDistancePct.toFixed(2)}%`);
@@ -1325,7 +1335,7 @@ async function main() {
         // Avoid chasing a move that has already travelled too far from its 15m mean.
         const distanceToVwap = Math.abs((s.entry - s.vwap) / s.entry) * 100;
         if (distanceToVwap > Math.max(2.2, s.atr / s.entry * 100 * 2.8)) { noteReject('vwap', s, `distance ${distanceToVwap.toFixed(2)}%`); continue; }
-        // No reverse experiment: risk levels and direction remain independently structure-validated.
+        // Direction has already been resolved per pattern; risk levels are independently structure-validated.
         s.risk = risk;
         s.leverageInfo = suggestLeverage(s);
         candidates.push(s); rejects.accepted++;
@@ -1381,7 +1391,7 @@ async function main() {
       state.alertHistory[signalKey(s)] = now();
       state.alertHistory[`${s.coin}|${s.side}|GLOBAL`] = now();
       const audience = deliveredNames.includes('VIP') && deliveredNames.includes('FREE') ? 'BOTH' : deliveredNames[0];
-      state.paperTrades.push({ strategyVersion: VERSION, id: `${s.coin}|${s.side}|${s.pattern}|${now()}`, coin: s.coin, side: s.side, pattern: s.pattern, score: Number(s.score.toFixed(2)), audience, outcomeDelivered: [], entry: s.risk.entry, sl: s.risk.sl, tp: s.risk.tp, rr: s.risk.rr, suggestedLeverage: s.leverageInfo?.leverage ?? null, btcRegime: s.btcRegime?.label || 'NEUTRAL', rsi15: s.rsi15, fibConfluence: Boolean(s.fibConfluence), openedAt: now(), lastCheckedAt: now(), status: 'OPEN', pnlR: null, reasons: s.reasons });
+      state.paperTrades.push({ strategyVersion: VERSION, id: `${s.coin}|${s.side}|${s.pattern}|${now()}`, coin: s.coin, side: s.side, pattern: s.pattern, score: Number(s.score.toFixed(2)), audience, outcomeDelivered: [], entry: s.risk.entry, sl: s.risk.sl, tp: s.risk.tp, rr: s.risk.rr, riskPct: s.risk.riskPct, estimatedRoundTripCostPct: PAPER_ROUND_TRIP_COST_PCT, suggestedLeverage: s.leverageInfo?.leverage ?? null, btcRegime: s.btcRegime?.label || 'NEUTRAL', rsi15: s.rsi15, fibConfluence: Boolean(s.fibConfluence), openedAt: now(), lastCheckedAt: now(), status: 'OPEN', pnlR: null, reasons: s.reasons });
     } else {
       sendErrors++;
       console.warn(`[DELIVERY][FAIL] ${s.coin} ${s.side}: no destination confirmed delivery`);
