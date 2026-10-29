@@ -5,7 +5,7 @@ import { spawn } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 
 /*
- * NOVARA SMART MONEY AI V2.10.0 ADAPTIVE BTC REGIME ENGINE
+ * NOVARA SMART MONEY AI V2.10.1 ADAPTIVE BTC REGIME HOTFIX
  * READ-ONLY | NO ORDERS | NO AUTO-COPY | PAPER OUTCOME TRACKING
  * BTC direction is inferred from weighted multi-timeframe structure, momentum, EMA alignment and candle behavior; neutral BTC does not automatically suppress every qualified setup
  *
@@ -18,8 +18,8 @@ import { fileURLToPath } from 'node:url';
  * All eligible liquid perp markets are considered; the worker does not depend on wallet lists.
  */
 
-const VERSION = 'NOVARA-SMART-MONEY-AI-V2.10.0-ADAPTIVE-BTC-REGIME-ENGINE';
-const CLEAN_START_ID = 'NOVARA-V2.10.0-ADAPTIVE-BTC-REGIME-COHORT-2026-10-30';
+const VERSION = 'NOVARA-SMART-MONEY-AI-V2.10.1-ADAPTIVE-BTC-REGIME-HOTFIX';
+const CLEAN_START_ID = 'NOVARA-V2.10.1-ADAPTIVE-BTC-REGIME-COHORT-2026-10-30';
 const PAPER_MARGIN_USD = Math.max(10, Number(process.env.NOVARA_PAPER_MARGIN_USD || 1000));
 // Transparent conservative paper estimate only; configure to match your fee tier. Round-trip cost includes entry+exit fee and slippage assumptions.
 const PAPER_FEE_BPS_PER_SIDE = Math.max(0, Number(process.env.NOVARA_PAPER_FEE_BPS_PER_SIDE || 5));
@@ -1090,7 +1090,7 @@ async function refreshBtcDirection(fallbackRegime) {
       const rows = await candles('BTC', spec.interval, spec.hours);
       const regime = marketRegime(rows, spec.barsPer24h, spec.key);
       const ev = timeframeEvidence(rows);
-      timeframes[spec.key] = { ...regime, evidence: ev, recentMovePct: recentMovePct(rows, spec.key === '5m' ? 3 : 4) };
+      timeframes[spec.key] = { ...regime, evidence: ev };
       console.log(`[BTC][EVIDENCE] ${spec.key}=${ev.available ? ev.score.toFixed(2) : 'NA'} ${ev.details || ''} candles=${rows.length}`);
     } catch (e) {
       timeframes[spec.key] = { timeframe: spec.key, status: 'UNAVAILABLE', trend: 'UNAVAILABLE', label: 'UNAVAILABLE', change24hPct: null, candles: 0, evidence: { available: false, score: 0, details: e?.message || 'fetch failed' } };
@@ -1143,7 +1143,7 @@ async function main() {
     const legacyTrades = Array.isArray(state.paperTrades) ? state.paperTrades : [];
     state.archivedPaperTrades = [
       ...(Array.isArray(state.archivedPaperTrades) ? state.archivedPaperTrades : []),
-      ...legacyTrades.map(t => ({ ...t, archivedAt: now(), archiveReason: 'V2.10.0_ADAPTIVE_BTC_REGIME_COHORT_RESET' }))
+      ...legacyTrades.map(t => ({ ...t, archivedAt: now(), archiveReason: 'V2.10.1_ADAPTIVE_BTC_REGIME_COHORT_RESET' }))
     ];
     state.paperTrades = [];
     state.alertHistory = {};
@@ -1159,7 +1159,7 @@ async function main() {
     state.cleanStartAt = now();
     console.log(`[CLEAN-START] Archived ${legacyTrades.length} legacy paper trades; active paper history, cooldowns, and pending reports reset.`);
   } else {
-    console.log(`[CLEAN-START] Already initialized at ${new Date(n(state.cleanStartAt, 0)).toISOString()}; continuing current V2.10.0 evaluation.`);
+    console.log(`[CLEAN-START] Already initialized at ${new Date(n(state.cleanStartAt, 0)).toISOString()}; continuing current V2.10.1 evaluation.`);
   }
   state.version = VERSION;
   console.log(`\n${VERSION} — START`);
