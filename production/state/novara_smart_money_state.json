@@ -1,1081 +1,1081 @@
 {
   "schema": 1,
-  "version": "NOVARA-SMART-MONEY-AI-V2.9.1-BTC-CONSENSUS-GATE-REGIME-REPORT-FIX",
-  "lastRunAt": 1793311812282,
+  "version": "NOVARA-SMART-MONEY-AI-V2.10.0-ADAPTIVE-BTC-REGIME-ENGINE",
+  "lastRunAt": 1793313967875,
   "previousMarketContext": {
     "BTC": {
-      "markPx": 78800,
-      "openInterest": 44291.92674,
+      "markPx": 79118,
+      "openInterest": 43722.16732,
       "funding": 0.0000125,
-      "at": 1793311812282
+      "at": 1793313967875
     },
     "HYPE": {
-      "markPx": 92.3652,
-      "openInterest": 22147291.76000001,
-      "funding": 0.000026635,
-      "at": 1793311812282
+      "markPx": 91.999,
+      "openInterest": 22053837.920000006,
+      "funding": 0.0001327728,
+      "at": 1793313967875
     },
     "ETH": {
-      "markPx": 2257.7,
-      "openInterest": 1103376.0940000033,
-      "funding": -0.0000513646,
-      "at": 1793311812282
+      "markPx": 2277.2,
+      "openInterest": 1100995.783000003,
+      "funding": -0.0000276273,
+      "at": 1793313967875
     },
     "ZEC": {
-      "markPx": 1257.8,
-      "openInterest": 514549.1600000001,
+      "markPx": 1257.6,
+      "openInterest": 503479.0400000001,
       "funding": 0.0000125,
-      "at": 1793311812282
+      "at": 1793313967875
     },
     "SOL": {
-      "markPx": 96.761,
-      "openInterest": 5666842.659999996,
-      "funding": 0.0000028894,
-      "at": 1793311812282
+      "markPx": 97.542,
+      "openInterest": 5659802.860000004,
+      "funding": 0.0000125,
+      "at": 1793313967875
     },
     "BNB": {
-      "markPx": 700.96,
-      "openInterest": 128070.746,
-      "funding": -0.000150903,
-      "at": 1793311812282
+      "markPx": 702.482,
+      "openInterest": 132182.7,
+      "funding": -0.0001421044,
+      "at": 1793313967875
     },
     "NEAR": {
-      "markPx": 4.12,
-      "openInterest": 56818198.79999996,
+      "markPx": 4.1321,
+      "openInterest": 55364452.40000002,
       "funding": 0.0000125,
-      "at": 1793311812282
+      "at": 1793313967875
     },
     "kPEPE": {
-      "markPx": 0.004495,
-      "openInterest": 13268540192,
-      "funding": -0.0004842307,
-      "at": 1793311812282
+      "markPx": 0.004565,
+      "openInterest": 15526390642,
+      "funding": -0.0003947113,
+      "at": 1793313967875
     },
     "XRP": {
-      "markPx": 1.2497,
-      "openInterest": 176429424,
+      "markPx": 1.2519,
+      "openInterest": 174832968,
       "funding": 0.0000125,
-      "at": 1793311812282
-    },
-    "PUMP": {
-      "markPx": 0.004058,
-      "openInterest": 25777090176,
-      "funding": 0.0000125,
-      "at": 1793311812282
-    },
-    "XMR": {
-      "markPx": 615.57,
-      "openInterest": 233359.066,
-      "funding": 0.0002449045,
-      "at": 1793311812282
+      "at": 1793313967875
     },
     "ENA": {
-      "markPx": 0.179988,
-      "openInterest": 518494412,
-      "funding": -0.0000372665,
-      "at": 1793311812282
+      "markPx": 0.18094,
+      "openInterest": 501266312,
+      "funding": -0.0000342319,
+      "at": 1793313967875
+    },
+    "PUMP": {
+      "markPx": 0.004099,
+      "openInterest": 25952338862,
+      "funding": 0.0000125,
+      "at": 1793313967875
+    },
+    "XMR": {
+      "markPx": 614.5,
+      "openInterest": 232369.1840000001,
+      "funding": 0.0002288371,
+      "at": 1793313967875
     },
     "LIT": {
-      "markPx": 2.90755,
-      "openInterest": 37942234,
+      "markPx": 2.82425,
+      "openInterest": 37792990,
       "funding": 0.0000125,
-      "at": 1793311812282
+      "at": 1793313967875
     },
     "UNI": {
-      "markPx": 6.2837,
-      "openInterest": 12443297.599999998,
-      "funding": -0.00016281,
-      "at": 1793311812282
+      "markPx": 6.5198,
+      "openInterest": 12325193.999999994,
+      "funding": 0.0000125,
+      "at": 1793313967875
     },
     "WLD": {
-      "markPx": 0.3869,
-      "openInterest": 133078446,
-      "funding": -0.000024083,
-      "at": 1793311812282
-    },
-    "ZRO": {
-      "markPx": 1.5814,
-      "openInterest": 38578670.59999999,
-      "funding": 0.0000125,
-      "at": 1793311812282
-    },
-    "XPL": {
-      "markPx": 0.071596,
-      "openInterest": 872299874,
-      "funding": 0.0000304423,
-      "at": 1793311812282
-    },
-    "SUI": {
-      "markPx": 0.87669,
-      "openInterest": 32606570.000000004,
-      "funding": -0.0000181353,
-      "at": 1793311812282
+      "markPx": 0.39271,
+      "openInterest": 132649163.39999999,
+      "funding": -0.0000224853,
+      "at": 1793313967875
     },
     "TRX": {
-      "markPx": 0.35798,
-      "openInterest": 54329908,
-      "funding": -0.0022778684,
-      "at": 1793311812282
+      "markPx": 0.34945,
+      "openInterest": 48097814,
+      "funding": -0.0008080464,
+      "at": 1793313967875
+    },
+    "ZRO": {
+      "markPx": 1.5888,
+      "openInterest": 38707272.599999994,
+      "funding": 0.0000125,
+      "at": 1793313967875
+    },
+    "XPL": {
+      "markPx": 0.07293,
+      "openInterest": 896096922,
+      "funding": 0.000077195,
+      "at": 1793313967875
     },
     "AAVE": {
-      "markPx": 124.1247,
-      "openInterest": 406903.2199999999,
-      "funding": 0.0000033739,
-      "at": 1793311812282
+      "markPx": 123.375,
+      "openInterest": 436214.42,
+      "funding": -0.0000297074,
+      "at": 1793313967875
+    },
+    "SUI": {
+      "markPx": 0.88668,
+      "openInterest": 32508208,
+      "funding": -8.862e-7,
+      "at": 1793313967875
     },
     "LINK": {
-      "markPx": 10.928,
-      "openInterest": 4572322.000000003,
+      "markPx": 10.86,
+      "openInterest": 4606904.3999999985,
       "funding": 0.0000125,
-      "at": 1793311812282
+      "at": 1793313967875
     },
     "VVV": {
-      "markPx": 22.791,
-      "openInterest": 2954578.7600000007,
+      "markPx": 22.989,
+      "openInterest": 2967108.8599999994,
       "funding": 0.0000125,
-      "at": 1793311812282
-    },
-    "DOGE": {
-      "markPx": 0.075795,
-      "openInterest": 1008227252,
-      "funding": -0.0000059553,
-      "at": 1793311812282
+      "at": 1793313967875
     },
     "TAO": {
-      "markPx": 235.43,
-      "openInterest": 154344.052,
+      "markPx": 239.42,
+      "openInterest": 155155.366,
       "funding": 0.0000125,
-      "at": 1793311812282
+      "at": 1793313967875
+    },
+    "DOGE": {
+      "markPx": 0.076359,
+      "openInterest": 1006301230,
+      "funding": -8.212e-7,
+      "at": 1793313967875
     },
     "ONDO": {
-      "markPx": 0.388707,
-      "openInterest": 51635888,
-      "funding": -0.0000165121,
-      "at": 1793311812282
+      "markPx": 0.39207,
+      "openInterest": 52332454,
+      "funding": -0.0000433636,
+      "at": 1793313967875
     },
     "PONS": {
-      "markPx": 0.236854,
-      "openInterest": 80969848,
+      "markPx": 0.239337,
+      "openInterest": 81501414,
       "funding": 0.0000125,
-      "at": 1793311812282
+      "at": 1793313967875
     },
     "STRK": {
-      "markPx": 0.04212,
-      "openInterest": 710425233.0000001,
+      "markPx": 0.04248,
+      "openInterest": 703812685.4,
       "funding": 0.0000125,
-      "at": 1793311812282
-    },
-    "CRV": {
-      "markPx": 0.3066,
-      "openInterest": 63306529,
-      "funding": 0.0000125,
-      "at": 1793311812282
+      "at": 1793313967875
     },
     "ARB": {
-      "markPx": 0.15417,
-      "openInterest": 82340544.00000003,
-      "funding": 0.0000066238,
-      "at": 1793311812282
+      "markPx": 0.15605,
+      "openInterest": 80877784.80000001,
+      "funding": 0.0000125,
+      "at": 1793313967875
+    },
+    "CRV": {
+      "markPx": 0.31078,
+      "openInterest": 63391159.60000001,
+      "funding": 0.0000125,
+      "at": 1793313967875
     },
     "ADA": {
-      "markPx": 0.19082,
-      "openInterest": 145752796,
-      "funding": -0.0000015942,
-      "at": 1793311812282
+      "markPx": 0.19296,
+      "openInterest": 146231378,
+      "funding": 0.0000024279,
+      "at": 1793313967875
     },
     "PURR": {
-      "markPx": 0.118105,
-      "openInterest": 111973614,
-      "funding": 0.0001441521,
-      "at": 1793311812282
+      "markPx": 0.12108,
+      "openInterest": 111005132,
+      "funding": 0.0000125,
+      "at": 1793313967875
     },
     "FARTCOIN": {
-      "markPx": 0.11974,
-      "openInterest": 183322547.99999997,
-      "funding": 0.0000044823,
-      "at": 1793311812282
-    },
-    "CASHCAT": {
-      "markPx": 0.093102,
-      "openInterest": 218970374,
+      "markPx": 0.12101,
+      "openInterest": 183679349.79999998,
       "funding": 0.0000125,
-      "at": 1793311812282
+      "at": 1793313967875
     },
     "AVAX": {
-      "markPx": 8.3674,
-      "openInterest": 1971180.1200000003,
-      "funding": -0.0000101645,
-      "at": 1793311812282
+      "markPx": 8.385,
+      "openInterest": 1975487.2800000003,
+      "funding": 0.0000020344,
+      "at": 1793313967875
+    },
+    "CASHCAT": {
+      "markPx": 0.093111,
+      "openInterest": 217054858,
+      "funding": 0.0000125,
+      "at": 1793313967875
     },
     "ASTER": {
-      "markPx": 0.69053,
-      "openInterest": 33611442,
+      "markPx": 0.69481,
+      "openInterest": 33564556,
       "funding": 0.0000125,
-      "at": 1793311812282
+      "at": 1793313967875
     },
     "INJ": {
-      "markPx": 7.3955,
-      "openInterest": 679850.3999999999,
+      "markPx": 7.4813,
+      "openInterest": 680720.3999999999,
       "funding": 0.0000125,
-      "at": 1793311812282
+      "at": 1793313967875
     },
     "INIT": {
-      "markPx": 0.21351,
-      "openInterest": 16881346,
-      "funding": -0.0000212569,
-      "at": 1793311812282
-    },
-    "CHIP": {
-      "markPx": 0.043267,
-      "openInterest": 214120296,
-      "funding": -0.0000123157,
-      "at": 1793311812282
-    },
-    "GRASS": {
-      "markPx": 0.60022,
-      "openInterest": 48512297.20000001,
-      "funding": 0.0000125,
-      "at": 1793311812282
+      "markPx": 0.2177,
+      "openInterest": 16525364,
+      "funding": 0.0000065482,
+      "at": 1793313967875
     },
     "HBAR": {
-      "markPx": 0.069475,
-      "openInterest": 145914320,
-      "funding": -0.0000744578,
-      "at": 1793311812282
+      "markPx": 0.07027,
+      "openInterest": 134121004,
+      "funding": -0.0000125953,
+      "at": 1793313967875
     },
-    "PAXG": {
-      "markPx": 4022.7,
-      "openInterest": 6124.11,
+    "GRASS": {
+      "markPx": 0.60552,
+      "openInterest": 48240503.2,
       "funding": 0.0000125,
-      "at": 1793311812282
+      "at": 1793313967875
+    },
+    "CHIP": {
+      "markPx": 0.04362,
+      "openInterest": 213197060,
+      "funding": -0.0000021875,
+      "at": 1793313967875
     },
     "AERO": {
-      "markPx": 0.64455,
-      "openInterest": 38154024,
+      "markPx": 0.64334,
+      "openInterest": 38574590,
       "funding": 0.0000125,
-      "at": 1793311812282
+      "at": 1793313967875
+    },
+    "PAXG": {
+      "markPx": 4024.963,
+      "openInterest": 6123.02,
+      "funding": 0.0000115562,
+      "at": 1793313967875
     },
     "TIA": {
-      "markPx": 0.48929,
-      "openInterest": 14861837.000000002,
+      "markPx": 0.49631,
+      "openInterest": 14814941.200000001,
       "funding": 0.0000125,
-      "at": 1793311812282
+      "at": 1793313967875
     },
     "BCH": {
-      "markPx": 275.2,
-      "openInterest": 27310.588,
-      "funding": 0.0000088101,
-      "at": 1793311812282
-    },
-    "BSV": {
-      "markPx": 17.02,
-      "openInterest": 47510.06,
+      "markPx": 278.19,
+      "openInterest": 27277.286,
       "funding": 0.0000125,
-      "at": 1793311812282
-    },
-    "DOT": {
-      "markPx": 0.9198,
-      "openInterest": 5854705.600000001,
-      "funding": 0.0000125,
-      "at": 1793311812282
-    },
-    "JUP": {
-      "markPx": 0.25507,
-      "openInterest": 28666974,
-      "funding": 0.0000125,
-      "at": 1793311812282
+      "at": 1793313967875
     },
     "POL": {
-      "markPx": 0.088152,
-      "openInterest": 71297548,
-      "funding": -0.0000293411,
-      "at": 1793311812282
+      "markPx": 0.089582,
+      "openInterest": 65591632,
+      "funding": 0.0000036861,
+      "at": 1793313967875
+    },
+    "BSV": {
+      "markPx": 17.224,
+      "openInterest": 47169.3,
+      "funding": 0.0000125,
+      "at": 1793313967875
+    },
+    "DOT": {
+      "markPx": 0.93004,
+      "openInterest": 5870359.600000001,
+      "funding": 0.0000100237,
+      "at": 1793313967875
+    },
+    "JUP": {
+      "markPx": 0.25416,
+      "openInterest": 29051634,
+      "funding": 0.0000125,
+      "at": 1793313967875
     },
     "LTC": {
-      "markPx": 55.05,
-      "openInterest": 390026.78,
-      "funding": 0.0000099447,
-      "at": 1793311812282
+      "markPx": 55.713,
+      "openInterest": 391019.98,
+      "funding": 0.0000125,
+      "at": 1793313967875
     },
     "USELESS": {
-      "markPx": 0.1359,
-      "openInterest": 48799134,
+      "markPx": 0.13858,
+      "openInterest": 47737182,
       "funding": 0.0000125,
-      "at": 1793311812282
-    },
-    "TRUMP": {
-      "markPx": 1.5679,
-      "openInterest": 4394646.599999999,
-      "funding": 0.0000125,
-      "at": 1793311812282
-    },
-    "PYTH": {
-      "markPx": 0.063535,
-      "openInterest": 35902886,
-      "funding": 0.0000125,
-      "at": 1793311812282
+      "at": 1793313967875
     },
     "PENDLE": {
-      "markPx": 1.7736,
-      "openInterest": 4867946,
+      "markPx": 1.7824,
+      "openInterest": 4954132,
       "funding": 0.0000125,
-      "at": 1793311812282
+      "at": 1793313967875
+    },
+    "PYTH": {
+      "markPx": 0.064529,
+      "openInterest": 35564036,
+      "funding": 0.0000125,
+      "at": 1793313967875
+    },
+    "TRUMP": {
+      "markPx": 1.5851,
+      "openInterest": 4410989.199999999,
+      "funding": 0.0000125,
+      "at": 1793313967875
     },
     "BLUR": {
-      "markPx": 0.007554,
-      "openInterest": 114068328,
-      "funding": -0.0003870352,
-      "at": 1793311812282
+      "markPx": 0.007676,
+      "openInterest": 113089632,
+      "funding": -0.000383403,
+      "at": 1793313967875
     },
     "APT": {
-      "markPx": 0.6178,
-      "openInterest": 5823310.760000003,
+      "markPx": 0.6287,
+      "openInterest": 5747408.100000001,
       "funding": 0.0000125,
-      "at": 1793311812282
+      "at": 1793313967875
     },
     "MON": {
-      "markPx": 0.019218,
-      "openInterest": 1518055724,
+      "markPx": 0.019437,
+      "openInterest": 1520027502,
       "funding": 0.0000125,
-      "at": 1793311812282
-    },
-    "SKR": {
-      "markPx": 0.013516,
-      "openInterest": 23097488,
-      "funding": 0.0000125,
-      "at": 1793311812282
-    },
-    "PENGU": {
-      "markPx": 0.007108,
-      "openInterest": 700682494,
-      "funding": 0.0000122599,
-      "at": 1793311812282
-    },
-    "SPX": {
-      "markPx": 0.36218,
-      "openInterest": 12019828.200000001,
-      "funding": 0.0000125,
-      "at": 1793311812282
-    },
-    "XLM": {
-      "markPx": 0.1633,
-      "openInterest": 60943228,
-      "funding": 0.0000063042,
-      "at": 1793311812282
+      "at": 1793313967875
     },
     "ETHFI": {
-      "markPx": 0.61294,
-      "openInterest": 14917559.8,
+      "markPx": 0.62343,
+      "openInterest": 15026003.800000003,
       "funding": 0.0000125,
-      "at": 1793311812282
+      "at": 1793313967875
     },
-    "DASH": {
-      "markPx": 47.803,
-      "openInterest": 59277.96,
-      "funding": 0.0000087079,
-      "at": 1793311812282
-    },
-    "CC": {
-      "markPx": 0.095745,
-      "openInterest": 60166524,
-      "funding": 0.0000075829,
-      "at": 1793311812282
-    },
-    "MORPHO": {
-      "markPx": 2.1335,
-      "openInterest": 2894575.4,
+    "SKR": {
+      "markPx": 0.013568,
+      "openInterest": 23181562,
       "funding": 0.0000125,
-      "at": 1793311812282
+      "at": 1793313967875
     },
-    "GRAM": {
-      "markPx": 1.176289,
-      "openInterest": 18673834,
+    "PENGU": {
+      "markPx": 0.007195,
+      "openInterest": 699206104,
       "funding": 0.0000125,
-      "at": 1793311812282
+      "at": 1793313967875
+    },
+    "SPX": {
+      "markPx": 0.36152,
+      "openInterest": 11850300.6,
+      "funding": 0.0000125,
+      "at": 1793313967875
     },
     "FIL": {
-      "markPx": 0.8197,
-      "openInterest": 8800472.2,
+      "markPx": 0.83593,
+      "openInterest": 8310365.2,
       "funding": 0.0000125,
-      "at": 1793311812282
+      "at": 1793313967875
     },
-    "kBONK": {
-      "markPx": 0.002804,
-      "openInterest": 2549669040,
-      "funding": -0.0000444651,
-      "at": 1793311812282
+    "XLM": {
+      "markPx": 0.16437,
+      "openInterest": 60874724,
+      "funding": 0.0000121433,
+      "at": 1793313967875
     },
-    "FET": {
-      "markPx": 0.16412,
-      "openInterest": 40097726,
-      "funding": 0.0000078385,
-      "at": 1793311812282
+    "MORPHO": {
+      "markPx": 2.1537,
+      "openInterest": 2881549.3999999994,
+      "funding": 0.0000125,
+      "at": 1793313967875
     },
-    "RENDER": {
-      "markPx": 1.5547,
-      "openInterest": 1539775,
-      "funding": 0.0000041975,
-      "at": 1793311812282
+    "DASH": {
+      "markPx": 48.136,
+      "openInterest": 58547.04,
+      "funding": -0.0000088599,
+      "at": 1793313967875
+    },
+    "CC": {
+      "markPx": 0.09662,
+      "openInterest": 60143496,
+      "funding": 0.0000034802,
+      "at": 1793313967875
+    },
+    "GRAM": {
+      "markPx": 1.1808,
+      "openInterest": 18682288,
+      "funding": 0.0000125,
+      "at": 1793313967875
     },
     "WLFI": {
-      "markPx": 0.051061,
-      "openInterest": 214325224,
+      "markPx": 0.051204,
+      "openInterest": 211943908,
       "funding": 0.0000125,
-      "at": 1793311812282
+      "at": 1793313967875
     },
-    "MET": {
-      "markPx": 0.27701,
-      "openInterest": 10152240,
-      "funding": 0.0000125,
-      "at": 1793311812282
+    "FET": {
+      "markPx": 0.16685,
+      "openInterest": 40334118,
+      "funding": -0.0000127743,
+      "at": 1793313967875
     },
     "ZK": {
-      "markPx": 0.010649,
-      "openInterest": 340671756,
+      "markPx": 0.010738,
+      "openInterest": 328926396,
       "funding": 0.0000125,
-      "at": 1793311812282
+      "at": 1793313967875
     },
-    "SEI": {
-      "markPx": 0.048298,
-      "openInterest": 47977768,
+    "kBONK": {
+      "markPx": 0.002848,
+      "openInterest": 2547138856,
+      "funding": -0.0000016825,
+      "at": 1793313967875
+    },
+    "RENDER": {
+      "markPx": 1.5726,
+      "openInterest": 1548487.4,
       "funding": 0.0000125,
-      "at": 1793311812282
+      "at": 1793313967875
+    },
+    "MET": {
+      "markPx": 0.27798,
+      "openInterest": 10142814,
+      "funding": 0.0000125,
+      "at": 1793313967875
     },
     "ICP": {
-      "markPx": 2.4002,
-      "openInterest": 1176577,
-      "funding": -0.0000399776,
-      "at": 1793311812282
+      "markPx": 2.4414,
+      "openInterest": 1165661.4000000001,
+      "funding": -0.000016429,
+      "at": 1793313967875
     },
-    "EIGEN": {
-      "markPx": 0.1809,
-      "openInterest": 14268146.979999999,
-      "funding": 0.0000097803,
-      "at": 1793311812282
+    "SEI": {
+      "markPx": 0.048812,
+      "openInterest": 48077032,
+      "funding": 0.0000125,
+      "at": 1793313967875
     },
     "LDO": {
-      "markPx": 0.33022,
-      "openInterest": 25638772.40000001,
+      "markPx": 0.33595,
+      "openInterest": 25903138.6,
       "funding": 0.0000125,
-      "at": 1793311812282
+      "at": 1793313967875
     },
-    "SYRUP": {
-      "markPx": 0.15124,
-      "openInterest": 29544114,
-      "funding": 0.0000125,
-      "at": 1793311812282
-    },
-    "OP": {
-      "markPx": 0.1011,
-      "openInterest": 32557249.2,
-      "funding": -0.0000198158,
-      "at": 1793311812282
+    "EIGEN": {
+      "markPx": 0.1831,
+      "openInterest": 13316667.84,
+      "funding": 0.0000124123,
+      "at": 1793313967875
     },
     "RUNE": {
-      "markPx": 0.62933,
-      "openInterest": 4418183.4,
+      "markPx": 0.63921,
+      "openInterest": 4429032.8,
       "funding": 0.0000125,
-      "at": 1793311812282
+      "at": 1793313967875
     },
-    "ATOM": {
-      "markPx": 1.5077,
-      "openInterest": 2219251.38,
-      "funding": -0.0000251489,
-      "at": 1793311812282
+    "OP": {
+      "markPx": 0.10256,
+      "openInterest": 33965964.79999999,
+      "funding": -0.0000911264,
+      "at": 1793313967875
+    },
+    "SYRUP": {
+      "markPx": 0.1533,
+      "openInterest": 29482772,
+      "funding": 0.0000125,
+      "at": 1793313967875
     },
     "NIL": {
-      "markPx": 0.07045,
-      "openInterest": 36936124,
-      "funding": -0.0001196304,
-      "at": 1793311812282
+      "markPx": 0.07206,
+      "openInterest": 36541788,
+      "funding": -0.000155,
+      "at": 1793313967875
     },
-    "WIF": {
-      "markPx": 0.16759,
-      "openInterest": 24592346,
-      "funding": 0.0000125,
-      "at": 1793311812282
-    },
-    "SKY": {
-      "markPx": 0.06492,
-      "openInterest": 52129586,
-      "funding": 0.0000125,
-      "at": 1793311812282
+    "ATOM": {
+      "markPx": 1.5211,
+      "openInterest": 2214012.1199999996,
+      "funding": 0.0000012937,
+      "at": 1793313967875
     },
     "JTO": {
-      "markPx": 0.37703,
-      "openInterest": 6902474,
+      "markPx": 0.38267,
+      "openInterest": 6520018,
       "funding": 0.0000125,
-      "at": 1793311812282
+      "at": 1793313967875
+    },
+    "SKY": {
+      "markPx": 0.065952,
+      "openInterest": 52220074,
+      "funding": 0.0000125,
+      "at": 1793313967875
+    },
+    "WIF": {
+      "markPx": 0.169966,
+      "openInterest": 24450208,
+      "funding": 0.0000125,
+      "at": 1793313967875
     },
     "VIRTUAL": {
-      "markPx": 0.57054,
-      "openInterest": 9044119.4,
-      "funding": 1.234e-7,
-      "at": 1793311812282
+      "markPx": 0.57685,
+      "openInterest": 9074363,
+      "funding": 0.0000095962,
+      "at": 1793313967875
     },
     "MEGA": {
-      "markPx": 0.04325,
-      "openInterest": 158086670,
+      "markPx": 0.043676,
+      "openInterest": 158889616,
       "funding": 0.0000125,
-      "at": 1793311812282
+      "at": 1793313967875
     },
     "ZEN": {
-      "markPx": 5.3604,
-      "openInterest": 133551.9,
-      "funding": -0.000050631,
-      "at": 1793311812282
+      "markPx": 5.4608,
+      "openInterest": 134292.48,
+      "funding": -0.0000340287,
+      "at": 1793313967875
     },
     "CAKE": {
-      "markPx": 1.9366,
-      "openInterest": 744363,
+      "markPx": 1.9427,
+      "openInterest": 765407.8,
       "funding": 0.0000125,
-      "at": 1793311812282
-    },
-    "kSHIB": {
-      "markPx": 0.004653,
-      "openInterest": 588042142,
-      "funding": 0.0000125,
-      "at": 1793311812282
-    },
-    "ALGO": {
-      "markPx": 0.093355,
-      "openInterest": 30262622,
-      "funding": 0.00000796,
-      "at": 1793311812282
+      "at": 1793313967875
     },
     "AR": {
-      "markPx": 3.1801,
-      "openInterest": 371830.48,
+      "markPx": 3.1963,
+      "openInterest": 370635.2999999999,
+      "funding": 0.0000069438,
+      "at": 1793313967875
+    },
+    "ALGO": {
+      "markPx": 0.09457,
+      "openInterest": 30381002,
+      "funding": -0.0000080857,
+      "at": 1793313967875
+    },
+    "kSHIB": {
+      "markPx": 0.004695,
+      "openInterest": 589743818,
       "funding": 0.0000125,
-      "at": 1793311812282
+      "at": 1793313967875
     },
     "REZ": {
-      "markPx": 0.003986,
-      "openInterest": 318850656,
+      "markPx": 0.004057,
+      "openInterest": 319144912,
       "funding": 0.0000125,
-      "at": 1793311812282
+      "at": 1793313967875
     },
     "AVNT": {
-      "markPx": 0.094954,
-      "openInterest": 14895100,
+      "markPx": 0.095504,
+      "openInterest": 14951388,
       "funding": 0.0000125,
-      "at": 1793311812282
+      "at": 1793313967875
     },
     "W": {
-      "markPx": 0.01136,
-      "openInterest": 245486214,
+      "markPx": 0.01154,
+      "openInterest": 244863677.6,
       "funding": 0.0000125,
-      "at": 1793311812282
+      "at": 1793313967875
     },
     "2Z": {
-      "markPx": 0.025659,
-      "openInterest": 34061270,
+      "markPx": 0.026116,
+      "openInterest": 34057374,
       "funding": 0.0000125,
-      "at": 1793311812282
+      "at": 1793313967875
     },
     "STX": {
-      "markPx": 0.27969,
-      "openInterest": 5651942.2,
-      "funding": 0.0000050515,
-      "at": 1793311812282
+      "markPx": 0.28221,
+      "openInterest": 5635259.8,
+      "funding": -0.0000116396,
+      "at": 1793313967875
     },
     "MERL": {
-      "markPx": 0.027626,
-      "openInterest": 19379528,
+      "markPx": 0.027965,
+      "openInterest": 19135556,
       "funding": 0.0000125,
-      "at": 1793311812282
+      "at": 1793313967875
     },
     "ETC": {
-      "markPx": 7.1194,
-      "openInterest": 386334.48,
-      "funding": -0.0000292989,
-      "at": 1793311812282
+      "markPx": 7.1874,
+      "openInterest": 386063.3,
+      "funding": -0.0000358164,
+      "at": 1793313967875
     },
     "XTEN": {
-      "markPx": 0.2779,
-      "openInterest": 2851282,
+      "markPx": 0.27885,
+      "openInterest": 2860522,
       "funding": 0.0000125,
-      "at": 1793311812282
+      "at": 1793313967875
     },
     "STBL": {
-      "markPx": 0.026003,
-      "openInterest": 67703592,
+      "markPx": 0.026327,
+      "openInterest": 67596704,
       "funding": 0.0000125,
-      "at": 1793311812282
+      "at": 1793313967875
     },
     "MINA": {
-      "markPx": 0.058774,
-      "openInterest": 14407612,
-      "funding": 0.0000125,
-      "at": 1793311812282
+      "markPx": 0.059504,
+      "openInterest": 14447102,
+      "funding": -0.0000332142,
+      "at": 1793313967875
     },
     "IO": {
-      "markPx": 0.13475,
-      "openInterest": 4225779.800000001,
+      "markPx": 0.13547,
+      "openInterest": 4224604.600000001,
       "funding": 0.0000125,
-      "at": 1793311812282
+      "at": 1793313967875
     },
     "HEMI": {
-      "markPx": 0.004427,
-      "openInterest": 145243208,
+      "markPx": 0.004497,
+      "openInterest": 145130062,
       "funding": 0.0000125,
-      "at": 1793311812282
+      "at": 1793313967875
     },
     "ALT": {
-      "markPx": 0.005981,
-      "openInterest": 125553188,
-      "funding": -0.0000694308,
-      "at": 1793311812282
-    },
-    "AZTEC": {
-      "markPx": 0.015582,
-      "openInterest": 90916316,
-      "funding": 0.0000125,
-      "at": 1793311812282
-    },
-    "MNT": {
-      "markPx": 0.47702,
-      "openInterest": 9616022.8,
-      "funding": 0.0000125,
-      "at": 1793311812282
-    },
-    "0G": {
-      "markPx": 0.173195,
-      "openInterest": 8992964,
-      "funding": 0.0000125,
-      "at": 1793311812282
+      "markPx": 0.00609,
+      "openInterest": 124758708,
+      "funding": -0.0000456947,
+      "at": 1793313967875
     },
     "BABY": {
-      "markPx": 0.012646,
-      "openInterest": 16815462,
+      "markPx": 0.012557,
+      "openInterest": 16631878,
       "funding": 0.0000125,
-      "at": 1793311812282
+      "at": 1793313967875
     },
-    "KAS": {
-      "markPx": 0.034035,
-      "openInterest": 47459956,
+    "AZTEC": {
+      "markPx": 0.015781,
+      "openInterest": 90368694,
       "funding": 0.0000125,
-      "at": 1793311812282
+      "at": 1793313967875
+    },
+    "MNT": {
+      "markPx": 0.47775,
+      "openInterest": 9618616.2,
+      "funding": 0.0000125,
+      "at": 1793313967875
+    },
+    "0G": {
+      "markPx": 0.17497,
+      "openInterest": 8997090,
+      "funding": 0.0000125,
+      "at": 1793313967875
     },
     "KAITO": {
-      "markPx": 0.23689,
-      "openInterest": 5593386,
+      "markPx": 0.2404,
+      "openInterest": 5594032,
       "funding": 0.0000125,
-      "at": 1793311812282
+      "at": 1793313967875
     },
-    "SAND": {
-      "markPx": 0.04421,
-      "openInterest": 20030874,
-      "funding": 0.0000079701,
-      "at": 1793311812282
-    },
-    "CELO": {
-      "markPx": 0.072067,
-      "openInterest": 6517426,
+    "KAS": {
+      "markPx": 0.034776,
+      "openInterest": 47375550,
       "funding": 0.0000125,
-      "at": 1793311812282
-    },
-    "APE": {
-      "markPx": 0.11439,
-      "openInterest": 8187316.8,
-      "funding": 0.0000125,
-      "at": 1793311812282
-    },
-    "MELANIA": {
-      "markPx": 0.07853,
-      "openInterest": 13159259.8,
-      "funding": 0.0000125,
-      "at": 1793311812282
-    },
-    "BIO": {
-      "markPx": 0.020821,
-      "openInterest": 27816024,
-      "funding": -0.0000204178,
-      "at": 1793311812282
-    },
-    "ZORA": {
-      "markPx": 0.006181,
-      "openInterest": 106096712,
-      "funding": 0.0000125,
-      "at": 1793311812282
+      "at": 1793313967875
     },
     "SOPH": {
-      "markPx": 0.001419,
-      "openInterest": 240768200,
-      "funding": 0.0000079447,
-      "at": 1793311812282
+      "markPx": 0.001473,
+      "openInterest": 252582342,
+      "funding": -9.835e-7,
+      "at": 1793313967875
     },
-    "SUPER": {
-      "markPx": 0.16691,
-      "openInterest": 8557120,
+    "SAND": {
+      "markPx": 0.044751,
+      "openInterest": 19928386,
+      "funding": 0.0000030967,
+      "at": 1793313967875
+    },
+    "CELO": {
+      "markPx": 0.073685,
+      "openInterest": 6510318,
       "funding": 0.0000125,
-      "at": 1793311812282
+      "at": 1793313967875
+    },
+    "MELANIA": {
+      "markPx": 0.07948,
+      "openInterest": 13166398.4,
+      "funding": 0.0000125,
+      "at": 1793313967875
+    },
+    "APE": {
+      "markPx": 0.11582,
+      "openInterest": 8176610.4,
+      "funding": 0.0000125,
+      "at": 1793313967875
+    },
+    "BIO": {
+      "markPx": 0.021157,
+      "openInterest": 27054516,
+      "funding": 0.0000125,
+      "at": 1793313967875
+    },
+    "ZORA": {
+      "markPx": 0.006222,
+      "openInterest": 105248126,
+      "funding": 0.0000125,
+      "at": 1793313967875
     },
     "SNX": {
-      "markPx": 0.185,
-      "openInterest": 2489988.8,
+      "markPx": 0.18707,
+      "openInterest": 2607618.6,
+      "funding": -0.0000336483,
+      "at": 1793313967875
+    },
+    "SUPER": {
+      "markPx": 0.168845,
+      "openInterest": 8542060,
       "funding": 0.0000125,
-      "at": 1793311812282
+      "at": 1793313967875
     },
     "POPCAT": {
-      "markPx": 0.038882,
-      "openInterest": 35798180,
+      "markPx": 0.039615,
+      "openInterest": 35816554,
       "funding": 0.0000125,
-      "at": 1793311812282
-    },
-    "GMX": {
-      "markPx": 8.0675,
-      "openInterest": 101472.42,
-      "funding": 0.0000125,
-      "at": 1793311812282
+      "at": 1793313967875
     },
     "CFX": {
-      "markPx": 0.045027,
-      "openInterest": 65453894,
+      "markPx": 0.045797,
+      "openInterest": 65433644,
       "funding": 0.0000125,
-      "at": 1793311812282
+      "at": 1793313967875
+    },
+    "GMX": {
+      "markPx": 8.1038,
+      "openInterest": 101658.64,
+      "funding": 0.0000125,
+      "at": 1793313967875
     },
     "UMA": {
-      "markPx": 0.32438,
-      "openInterest": 694481.2,
+      "markPx": 0.32906,
+      "openInterest": 663409,
       "funding": 0.0000125,
-      "at": 1793311812282
+      "at": 1793313967875
     },
     "BRETT": {
-      "markPx": 0.004292,
-      "openInterest": 38379320,
+      "markPx": 0.004372,
+      "openInterest": 38049898,
       "funding": 0.0000125,
-      "at": 1793311812282
+      "at": 1793313967875
     },
     "S": {
-      "markPx": 0.041685,
-      "openInterest": 15786300,
-      "funding": -0.0000099678,
-      "at": 1793311812282
-    },
-    "DYDX": {
-      "markPx": 0.1074,
-      "openInterest": 13478713,
-      "funding": 0.0000125,
-      "at": 1793311812282
-    },
-    "PNUT": {
-      "markPx": 0.03868,
-      "openInterest": 24542586.4,
-      "funding": 0.0000125,
-      "at": 1793311812282
-    },
-    "ACE": {
-      "markPx": 0.133,
-      "openInterest": 1226460.46,
-      "funding": 0.0000125,
-      "at": 1793311812282
-    },
-    "ENS": {
-      "markPx": 4.9359,
-      "openInterest": 380600.68,
-      "funding": 0.0000125,
-      "at": 1793311812282
-    },
-    "TRB": {
-      "markPx": 15.926,
-      "openInterest": 30418.56,
-      "funding": 0.0000090078,
-      "at": 1793311812282
+      "markPx": 0.042124,
+      "openInterest": 15791806,
+      "funding": -0.0000139545,
+      "at": 1793313967875
     },
     "BERA": {
-      "markPx": 0.13873,
-      "openInterest": 7026210.2,
-      "funding": -0.0000442472,
-      "at": 1793311812282
+      "markPx": 0.13985,
+      "openInterest": 6983608.8,
+      "funding": 0.0000087012,
+      "at": 1793313967875
     },
-    "kFLOKI": {
-      "markPx": 0.022302,
-      "openInterest": 19053330,
-      "funding": -0.0000153583,
-      "at": 1793311812282
+    "DYDX": {
+      "markPx": 0.10822,
+      "openInterest": 13461237.6,
+      "funding": 0.0000125,
+      "at": 1793313967875
     },
-    "GALA": {
-      "markPx": 0.001625,
-      "openInterest": 265006752,
-      "funding": -0.0000021397,
-      "at": 1793311812282
+    "ACE": {
+      "markPx": 0.1356,
+      "openInterest": 1214360.1999999997,
+      "funding": 0.0000125,
+      "at": 1793313967875
+    },
+    "PNUT": {
+      "markPx": 0.03911,
+      "openInterest": 24412279.4,
+      "funding": 0.0000125,
+      "at": 1793313967875
+    },
+    "ENS": {
+      "markPx": 4.9863,
+      "openInterest": 379064.38,
+      "funding": 0.0000125,
+      "at": 1793313967875
+    },
+    "TRB": {
+      "markPx": 16.1295,
+      "openInterest": 30507.3,
+      "funding": -0.0000186352,
+      "at": 1793313967875
     },
     "ANIME": {
-      "markPx": 0.002711,
-      "openInterest": 138048954,
-      "funding": 0.0000122746,
-      "at": 1793311812282
+      "markPx": 0.002766,
+      "openInterest": 127243594,
+      "funding": -0.0000074552,
+      "at": 1793313967875
+    },
+    "kFLOKI": {
+      "markPx": 0.022567,
+      "openInterest": 19065980,
+      "funding": -0.0000298753,
+      "at": 1793313967875
     },
     "GRIFFAIN": {
-      "markPx": 0.013175,
-      "openInterest": 98407896,
+      "markPx": 0.013092,
+      "openInterest": 97866232,
       "funding": 0.0000125,
-      "at": 1793311812282
+      "at": 1793313967875
     },
-    "IMX": {
-      "markPx": 0.12947,
-      "openInterest": 27480808,
-      "funding": 0.0000125,
-      "at": 1793311812282
-    },
-    "USUAL": {
-      "markPx": 0.00973,
-      "openInterest": 67375701.2,
-      "funding": 0.0000125,
-      "at": 1793311812282
-    },
-    "TURBO": {
-      "markPx": 0.000766,
-      "openInterest": 208954042,
-      "funding": 0.0000125,
-      "at": 1793311812282
-    },
-    "AXS": {
-      "markPx": 0.86744,
-      "openInterest": 428774.2,
-      "funding": 0.0000125,
-      "at": 1793311812282
-    },
-    "LAYER": {
-      "markPx": 0.059893,
-      "openInterest": 5114494,
-      "funding": -0.0001760089,
-      "at": 1793311812282
-    },
-    "ZETA": {
-      "markPx": 0.03729,
-      "openInterest": 18420611.6,
-      "funding": 0.0000125,
-      "at": 1793311812282
-    },
-    "FOGO": {
-      "markPx": 0.00273,
-      "openInterest": 87112750,
-      "funding": 0.0000125,
-      "at": 1793311812282
-    },
-    "PEOPLE": {
-      "markPx": 0.007044,
-      "openInterest": 21777172,
-      "funding": 0.0000056634,
-      "at": 1793311812282
+    "GALA": {
+      "markPx": 0.001649,
+      "openInterest": 264181048,
+      "funding": -0.000002733,
+      "at": 1793313967875
     },
     "GOAT": {
-      "markPx": 0.013088,
-      "openInterest": 40330230,
+      "markPx": 0.01322,
+      "openInterest": 39581058,
       "funding": 0.0000125,
-      "at": 1793311812282
+      "at": 1793313967875
+    },
+    "TURBO": {
+      "markPx": 0.000776,
+      "openInterest": 238960242,
+      "funding": 0.0000125,
+      "at": 1793313967875
+    },
+    "IMX": {
+      "markPx": 0.13103,
+      "openInterest": 27468535.799999997,
+      "funding": 0.0000125,
+      "at": 1793313967875
+    },
+    "USUAL": {
+      "markPx": 0.00986,
+      "openInterest": 66730019.2,
+      "funding": 0.0000125,
+      "at": 1793313967875
+    },
+    "AXS": {
+      "markPx": 0.87814,
+      "openInterest": 433230.8,
+      "funding": 0.0000121846,
+      "at": 1793313967875
+    },
+    "PEOPLE": {
+      "markPx": 0.007083,
+      "openInterest": 21204538,
+      "funding": 0.0000048466,
+      "at": 1793313967875
+    },
+    "ZETA": {
+      "markPx": 0.03769,
+      "openInterest": 18427152.2,
+      "funding": 0.0000125,
+      "at": 1793313967875
+    },
+    "LAYER": {
+      "markPx": 0.060455,
+      "openInterest": 5118358,
+      "funding": -0.0001766991,
+      "at": 1793313967875
+    },
+    "FOGO": {
+      "markPx": 0.002777,
+      "openInterest": 86332504,
+      "funding": 0.0000125,
+      "at": 1793313967875
     },
     "DYM": {
-      "markPx": 0.01608,
-      "openInterest": 14098411.6,
+      "markPx": 0.01619,
+      "openInterest": 14091822.799999999,
       "funding": 0.0000125,
-      "at": 1793311812282
+      "at": 1793313967875
     },
     "COMP": {
-      "markPx": 20.861,
-      "openInterest": 52668.62,
+      "markPx": 20.95,
+      "openInterest": 52584.84,
       "funding": 0.0000125,
-      "at": 1793311812282
-    },
-    "YGG": {
-      "markPx": 0.023117,
-      "openInterest": 8418622,
-      "funding": -0.0000404204,
-      "at": 1793311812282
+      "at": 1793313967875
     },
     "IOTA": {
-      "markPx": 0.037828,
-      "openInterest": 29254426,
+      "markPx": 0.038459,
+      "openInterest": 29277786,
       "funding": 0.0000125,
-      "at": 1793311812282
+      "at": 1793313967875
+    },
+    "YGG": {
+      "markPx": 0.02352,
+      "openInterest": 8391290,
+      "funding": 0.0000068969,
+      "at": 1793313967875
     },
     "MANTA": {
-      "markPx": 0.05841,
-      "openInterest": 5672709.799999999,
+      "markPx": 0.05938,
+      "openInterest": 5575633.8,
       "funding": 0.0000125,
-      "at": 1793311812282
-    },
-    "LINEA": {
-      "markPx": 0.002348,
-      "openInterest": 929367280,
-      "funding": 0.0000125,
-      "at": 1793311812282
-    },
-    "BOME": {
-      "markPx": 0.000595,
-      "openInterest": 682091326,
-      "funding": -0.000067886,
-      "at": 1793311812282
-    },
-    "APEX": {
-      "markPx": 0.204599,
-      "openInterest": 7107508,
-      "funding": 0.0000125,
-      "at": 1793311812282
+      "at": 1793313967875
     },
     "RSR": {
-      "markPx": 0.001478,
-      "openInterest": 261886340,
-      "funding": -0.0000808841,
-      "at": 1793311812282
+      "markPx": 0.0015,
+      "openInterest": 268299886,
+      "funding": -0.0000491834,
+      "at": 1793313967875
     },
-    "kNEIRO": {
-      "markPx": 0.06319,
-      "openInterest": 1489334.6,
+    "LINEA": {
+      "markPx": 0.002372,
+      "openInterest": 928735958,
       "funding": 0.0000125,
-      "at": 1793311812282
+      "at": 1793313967875
+    },
+    "APEX": {
+      "markPx": 0.20237,
+      "openInterest": 7114946,
+      "funding": 0.0000125,
+      "at": 1793313967875
+    },
+    "BOME": {
+      "markPx": 0.000604,
+      "openInterest": 681591156,
+      "funding": -0.0001162539,
+      "at": 1793313967875
     },
     "HYPER": {
-      "markPx": 0.057707,
-      "openInterest": 839902,
+      "markPx": 0.058477,
+      "openInterest": 771226,
       "funding": 0.0000125,
-      "at": 1793311812282
+      "at": 1793313967875
+    },
+    "kNEIRO": {
+      "markPx": 0.06403,
+      "openInterest": 1520071,
+      "funding": 0.0000125,
+      "at": 1793313967875
     },
     "PROVE": {
-      "markPx": 0.19055,
-      "openInterest": 1182040,
-      "funding": -0.0000073224,
-      "at": 1793311812282
-    },
-    "POLYX": {
-      "markPx": 0.032054,
-      "openInterest": 2716556,
-      "funding": -0.0000337201,
-      "at": 1793311812282
+      "markPx": 0.1927,
+      "openInterest": 1160254,
+      "funding": 0.0000125,
+      "at": 1793313967875
     },
     "MOVE": {
-      "markPx": 0.006139,
-      "openInterest": 32607598,
-      "funding": 0.0000048453,
-      "at": 1793311812282
+      "markPx": 0.006201,
+      "openInterest": 32770534,
+      "funding": -0.0000214874,
+      "at": 1793313967875
+    },
+    "POLYX": {
+      "markPx": 0.032464,
+      "openInterest": 2668342,
+      "funding": -0.0000222126,
+      "at": 1793313967875
     },
     "NXPC": {
-      "markPx": 0.17023,
-      "openInterest": 834846,
+      "markPx": 0.17234,
+      "openInterest": 822918,
       "funding": 0.0000125,
-      "at": 1793311812282
-    },
-    "SUSHI": {
-      "markPx": 0.18931,
-      "openInterest": 1429081.8,
-      "funding": 0.0000125,
-      "at": 1793311812282
-    },
-    "ORDI": {
-      "markPx": 3.3916,
-      "openInterest": 97437.94,
-      "funding": 0.0000125,
-      "at": 1793311812282
-    },
-    "MOODENG": {
-      "markPx": 0.035177,
-      "openInterest": 8088860,
-      "funding": 0.0000125,
-      "at": 1793311812282
+      "at": 1793313967875
     },
     "STABLE": {
-      "markPx": 0.026066,
-      "openInterest": 31611996,
+      "markPx": 0.026295,
+      "openInterest": 31412978,
       "funding": 0.0000125,
-      "at": 1793311812282
+      "at": 1793313967875
+    },
+    "SUSHI": {
+      "markPx": 0.19181,
+      "openInterest": 1416702.2,
+      "funding": 0.0000125,
+      "at": 1793313967875
+    },
+    "MOODENG": {
+      "markPx": 0.035535,
+      "openInterest": 8136492,
+      "funding": 0.0000125,
+      "at": 1793313967875
+    },
+    "ORDI": {
+      "markPx": 3.4421,
+      "openInterest": 97111.72,
+      "funding": 0.0000125,
+      "at": 1793313967875
     },
     "AIXBT": {
-      "markPx": 0.016651,
-      "openInterest": 7915500,
+      "markPx": 0.01675,
+      "openInterest": 7888394,
       "funding": 0.0000125,
-      "at": 1793311812282
+      "at": 1793313967875
     },
     "GMT": {
-      "markPx": 0.006521,
-      "openInterest": 13273556,
-      "funding": 0.0000125,
-      "at": 1793311812282
+      "markPx": 0.00654,
+      "openInterest": 13086008,
+      "funding": -0.0000010859,
+      "at": 1793313967875
     },
     "ME": {
-      "markPx": 0.05729,
-      "openInterest": 3495457.4000000004,
-      "funding": 0.0000125,
-      "at": 1793311812282
+      "markPx": 0.05787,
+      "openInterest": 3506279.4000000004,
+      "funding": -0.0000450415,
+      "at": 1793313967875
     },
     "NEO": {
-      "markPx": 1.98,
-      "openInterest": 191206.58,
+      "markPx": 2.0036,
+      "openInterest": 191509.44,
       "funding": 0.0000125,
-      "at": 1793311812282
+      "at": 1793313967875
     },
     "WCT": {
-      "markPx": 0.033477,
-      "openInterest": 2871298,
+      "markPx": 0.033929,
+      "openInterest": 2881812,
       "funding": 0.0000125,
-      "at": 1793311812282
+      "at": 1793313967875
     },
     "XAI": {
-      "markPx": 0.00714,
-      "openInterest": 35594085.6,
+      "markPx": 0.00722,
+      "openInterest": 35463427.800000004,
       "funding": 0.0000125,
-      "at": 1793311812282
-    },
-    "BANANA": {
-      "markPx": 3.2361,
-      "openInterest": 34850.6,
-      "funding": 0.0000125,
-      "at": 1793311812282
-    },
-    "BIGTIME": {
-      "markPx": 0.006615,
-      "openInterest": 16189506,
-      "funding": 0.0000125,
-      "at": 1793311812282
-    },
-    "SAGA": {
-      "markPx": 0.01695,
-      "openInterest": 64763139.2,
-      "funding": 0.0000125,
-      "at": 1793311812282
-    },
-    "HMSTR": {
-      "markPx": 0.000133,
-      "openInterest": 8901534380,
-      "funding": 0.0000125,
-      "at": 1793311812282
+      "at": 1793313967875
     },
     "RESOLV": {
-      "markPx": 0.015051,
-      "openInterest": 68226326,
+      "markPx": 0.015206,
+      "openInterest": 68199020,
       "funding": 0.0000125,
-      "at": 1793311812282
+      "at": 1793313967875
+    },
+    "BANANA": {
+      "markPx": 3.2575,
+      "openInterest": 34898.8,
+      "funding": 0.0000125,
+      "at": 1793313967875
+    },
+    "BIGTIME": {
+      "markPx": 0.0067,
+      "openInterest": 16242642,
+      "funding": 0.0000125,
+      "at": 1793313967875
+    },
+    "SAGA": {
+      "markPx": 0.01722,
+      "openInterest": 64704799,
+      "funding": 0.0000125,
+      "at": 1793313967875
+    },
+    "HMSTR": {
+      "markPx": 0.000135,
+      "openInterest": 8895728662,
+      "funding": 0.0000125,
+      "at": 1793313967875
     },
     "GAS": {
-      "markPx": 1.1619,
-      "openInterest": 65705.4,
+      "markPx": 1.1626,
+      "openInterest": 67017.2,
       "funding": 0.0000125,
-      "at": 1793311812282
+      "at": 1793313967875
     },
     "kLUNC": {
-      "markPx": 0.042573,
-      "openInterest": 5955886,
+      "markPx": 0.043219,
+      "openInterest": 5910586,
       "funding": 0.0000125,
-      "at": 1793311812282
+      "at": 1793313967875
     },
     "MEME": {
-      "markPx": 0.000432,
-      "openInterest": 735877170,
+      "markPx": 0.000436,
+      "openInterest": 736102874,
       "funding": 0.0000125,
-      "at": 1793311812282
+      "at": 1793313967875
     },
     "NOT": {
-      "markPx": 0.000356,
-      "openInterest": 605816852,
+      "markPx": 0.000359,
+      "openInterest": 606976392,
       "funding": 0.0000125,
-      "at": 1793311812282
+      "at": 1793313967875
     },
     "TNSR": {
-      "markPx": 0.02774,
-      "openInterest": 4866737.600000001,
+      "markPx": 0.02795,
+      "openInterest": 4862365.8,
       "funding": 0.0000125,
-      "at": 1793311812282
+      "at": 1793313967875
     }
   },
   "alertHistory": {},
@@ -1083,17 +1083,17 @@
   "paperTrades": [],
   "dailyStats": {},
   "lastStatusAt": 1792650003809,
-  "lastDailyReportAt": 1793307454773,
+  "lastDailyReportAt": 1793313702649,
   "lastCycle": {
-    "at": 1793311812282,
+    "at": 1793313967875,
     "rejectionCounts": {
-      "stale": 26,
-      "regime": 2,
+      "stale": 2,
+      "regime": 7,
       "regimeSoft": 0,
       "score": 0,
       "cooldown": 0,
       "risk": 0,
-      "location": 0,
+      "location": 2,
       "vwap": 0,
       "spread": 0,
       "accepted": 0
@@ -16874,7 +16874,7 @@
       "archiveReason": "V2.9.0_SELECTIVE_SWEEP_COHORT_RESET"
     }
   ],
-  "cleanStartId": "NOVARA-V2.9.1-BTC-CONSENSUS-GATE-COHORT-2026-10-30",
-  "cleanStartAt": 1793307454773,
+  "cleanStartId": "NOVARA-V2.10.0-ADAPTIVE-BTC-REGIME-COHORT-2026-10-30",
+  "cleanStartAt": 1793313702649,
   "pendingDailyReports": null
 }
