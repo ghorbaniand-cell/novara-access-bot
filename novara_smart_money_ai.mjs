@@ -5,9 +5,9 @@ import { spawn } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 
 /*
- * NOVARA SMART MONEY AI V2.9.0 SELECTIVE-SWEEP-REVERSE + STRUCTURE / PAPER-TRACKING REPAIR
+ * NOVARA SMART MONEY AI V2.9.1 BTC-CONSENSUS-GATE + REGIME-REPORT FIX
  * READ-ONLY | NO ORDERS | NO AUTO-COPY | PAPER OUTCOME TRACKING
- * Final LONG/SHORT direction follows a fresh BTC 15m + 1h direction check at candidate time; altcoin structure sets SL/TP
+ * Final direction requires BTC 15m and 1h agreement: both bullish permits LONG only; both bearish permits SHORT only; conflict/unknown blocks signals
  *
  * Combines three entry families:
  *  1) Liquidity sweep + reclaim (selective reversed-side paper experiment only)
@@ -18,8 +18,8 @@ import { fileURLToPath } from 'node:url';
  * All eligible liquid perp markets are considered; the worker does not depend on wallet lists.
  */
 
-const VERSION = 'NOVARA-SMART-MONEY-AI-V2.9.0-SELECTIVE-SWEEP-REVERSE-STRUCTURE-PAPER-FIX';
-const CLEAN_START_ID = 'NOVARA-V2.9.0-SELECTIVE-SWEEP-COHORT-2026-10-29';
+const VERSION = 'NOVARA-SMART-MONEY-AI-V2.9.1-BTC-CONSENSUS-GATE-REGIME-REPORT-FIX';
+const CLEAN_START_ID = 'NOVARA-V2.9.1-BTC-CONSENSUS-GATE-COHORT-2026-10-30';
 const PAPER_MARGIN_USD = Math.max(10, Number(process.env.NOVARA_PAPER_MARGIN_USD || 1000));
 // Transparent conservative paper estimate only; configure to match your fee tier. Round-trip cost includes entry+exit fee and slippage assumptions.
 const PAPER_FEE_BPS_PER_SIDE = Math.max(0, Number(process.env.NOVARA_PAPER_FEE_BPS_PER_SIDE || 5));
@@ -240,9 +240,9 @@ function marketRegime(candles, barsPer24h = 6, timeframe = '4H') {
   const base = candles.at(-(barsPer24h + 1))?.c || last;
   if (!(last > 0 && base > 0)) return { timeframe, status: 'UNAVAILABLE', trend: 'UNAVAILABLE', change24hPct: null, label: 'UNAVAILABLE', candles: candles.length };
   const change24hPct = (last - base) / base * 100;
-  let label = trend === 'LONG' ? 'BULLISH' : trend === 'SHORT' ? 'BEARISH' : 'NEUTRAL';
-  if (change24hPct <= -2.5) label = 'BEARISH';
-  else if (change24hPct >= 2.5) label = 'BULLISH';
+  // Direction label reflects the actual timeframe trend calculation only.
+  // 24h change is reported separately and must never overwrite the trend label.
+  const label = trend === 'LONG' ? 'BULLISH' : trend === 'SHORT' ? 'BEARISH' : 'NEUTRAL';
   return { timeframe, status: 'OK', trend, change24hPct, label, candles: candles.length };
 }
 function trendBias(candles) {
@@ -668,7 +668,7 @@ function formatSignal(s, risk) {
   };
   const reversed = false;
   const modeLabel = 'LIVE BTC DIRECTION';
-  return `${emoji} <b>NOVARA SMART MONEY AI — LIVE BTC DIRECTION</b>\n🧭 Final direction follows BTC 15m+1H live check; altcoin structure retains SL/TP\n━━━━━━━━━━━━━━━━━━\n<b>${s.side} ${escapeHtml(s.coin)} PERP</b>\n🧭 Setup: ${escapeHtml(s.pattern.replaceAll('_', ' '))}\n📍 Entry (reference): <code>${fmtPrice(risk.entry)}</code>\n🛑 Stop Loss: <code>${fmtPrice(risk.sl)}</code> (${pct(risk.riskPct)})\n🎯 Take Profit: <code>${fmtPrice(risk.tp)}</code> (${pct(risk.rewardPct)})\n⚖️ Planned R:R: 1:${risk.rr.toFixed(2)}\n⚡ Suggested Leverage: ${lev.leverage}x${lev.cappedBelowRequestedRange ? ` (exchange max: ${Math.floor(lev.exchangeMax)}x)` : ''}\n🧠 Setup score: ${s.score.toFixed(2)}/10 (not a win-probability estimate)\n📊 Asset 1H trend: ${s.trend}\n₿ <b>BTC MARKET CHECK</b>\n${tfLine('4H', '4H')}\n${tfLine('1H', '1H')}\n${tfLine('15m', '15m')}\n📉 Alt 15m RSI: ${n(s.rsi15, 50).toFixed(1)} | Fib: ${s.fibConfluence ? 'YES' : 'NO'} | Volume: ${s.volRatio.toFixed(2)}x\n🌊 Trade delta: ${(s.flowDelta * 100).toFixed(1)}% | Book imbalance: ${(s.imbalance * 100).toFixed(1)}%\n📈 OI change: ${s.oiChange >= 0 ? '+' : ''}${s.oiChange.toFixed(2)}% | Funding: ${s.fundingPct.toFixed(4)}%\n🧱 1H Structure: Support ${fmtPrice(s.support)} (${s.supportTouches || 0} touches) | Resistance ${fmtPrice(s.resistance)} (${s.resistanceTouches || 0} touches)\n🧩 Evidence:\n${reasons}\n\n🧪 Mode: ${modeLabel}. Paper tracking only — no real orders.`;
+  return `${emoji} <b>NOVARA SMART MONEY AI — LIVE BTC DIRECTION</b>\n🧭 BTC gate: 15m + 1H must agree; LONG only in joint bullish trend, SHORT only in joint bearish trend\n━━━━━━━━━━━━━━━━━━\n<b>${s.side} ${escapeHtml(s.coin)} PERP</b>\n🧭 Setup: ${escapeHtml(s.pattern.replaceAll('_', ' '))}\n📍 Entry (reference): <code>${fmtPrice(risk.entry)}</code>\n🛑 Stop Loss: <code>${fmtPrice(risk.sl)}</code> (${pct(risk.riskPct)})\n🎯 Take Profit: <code>${fmtPrice(risk.tp)}</code> (${pct(risk.rewardPct)})\n⚖️ Planned R:R: 1:${risk.rr.toFixed(2)}\n⚡ Suggested Leverage: ${lev.leverage}x${lev.cappedBelowRequestedRange ? ` (exchange max: ${Math.floor(lev.exchangeMax)}x)` : ''}\n🧠 Setup score: ${s.score.toFixed(2)}/10 (not a win-probability estimate)\n📊 Asset 1H trend: ${s.trend}\n₿ <b>BTC MARKET CHECK</b>\n${tfLine('4H', '4H')}\n${tfLine('1H', '1H')}\n${tfLine('15m', '15m')}\n📉 Alt 15m RSI: ${n(s.rsi15, 50).toFixed(1)} | Fib: ${s.fibConfluence ? 'YES' : 'NO'} | Volume: ${s.volRatio.toFixed(2)}x\n🌊 Trade delta: ${(s.flowDelta * 100).toFixed(1)}% | Book imbalance: ${(s.imbalance * 100).toFixed(1)}%\n📈 OI change: ${s.oiChange >= 0 ? '+' : ''}${s.oiChange.toFixed(2)}% | Funding: ${s.fundingPct.toFixed(4)}%\n🧱 1H Structure: Support ${fmtPrice(s.support)} (${s.supportTouches || 0} touches) | Resistance ${fmtPrice(s.resistance)} (${s.resistanceTouches || 0} touches)\n🧩 Evidence:\n${reasons}\n\n🧪 Mode: ${modeLabel}. Paper tracking only — no real orders.`;
 }
 
 let telegramNextAt = 0;
@@ -1019,24 +1019,11 @@ async function candles(coin, interval, hours) {
 }
 
 function directionalBias(candlesIn) {
-  if (!Array.isArray(candlesIn) || candlesIn.length < 20) return null;
-  const structural = trendBias(candlesIn);
-  if (structural === 'LONG' || structural === 'SHORT') return structural;
-  // Range-aware fallback: even when EMA structure is neutral, use recent momentum,
-  // then EMA positioning, then the latest completed candle so a range does not
-  // automatically suppress a valid altcoin setup.
-  const closes = candlesIn.map(c => c.c).filter(x => x > 0);
-  const last = closes.at(-1), prev3 = closes.at(-4) || last;
-  const momentumPct = prev3 > 0 ? (last - prev3) / prev3 * 100 : 0;
-  if (momentumPct > 0.015) return 'LONG';
-  if (momentumPct < -0.015) return 'SHORT';
-  const fast = ema(closes.slice(-30), 10);
-  const slow = ema(closes.slice(-60), 20);
-  if (last > fast && fast >= slow) return 'LONG';
-  if (last < fast && fast <= slow) return 'SHORT';
-  const lastCandle = candlesIn.at(-1);
-  if (lastCandle && lastCandle.c !== lastCandle.o) return lastCandle.c > lastCandle.o ? 'LONG' : 'SHORT';
-  return momentumPct >= 0 ? 'LONG' : 'SHORT';
+  // Use completed-candle EMA structure only. Do not manufacture a directional
+  // label from a single candle or tiny momentum move when the trend is neutral.
+  if (!Array.isArray(candlesIn) || candlesIn.length < 60) return null;
+  const bias = trendBias(candlesIn);
+  return bias === 'LONG' || bias === 'SHORT' ? bias : null;
 }
 
 function recentMovePct(rows, lookbackBars) {
@@ -1059,7 +1046,7 @@ async function refreshBtcDirection(fallbackRegime) {
       const rows = await candles('BTC', spec.interval, spec.hours);
       const regime = marketRegime(rows, spec.barsPer24h, spec.key);
       const bias = directionalBias(rows);
-      out.timeframes[spec.key] = { ...regime, trend: bias || regime.trend, label: bias === 'LONG' ? 'BULLISH' : bias === 'SHORT' ? 'BEARISH' : regime.label, recentMovePct: recentMovePct(rows, spec.recentLookback) };
+      out.timeframes[spec.key] = { ...regime, trend: bias || 'NEUTRAL', label: bias === 'LONG' ? 'BULLISH' : bias === 'SHORT' ? 'BEARISH' : 'NEUTRAL', status: bias ? 'OK' : 'NEUTRAL', recentMovePct: recentMovePct(rows, spec.recentLookback) };
       console.log(`[BTC][LIVE-CHECK] ${spec.key}=${out.timeframes[spec.key].label}/${out.timeframes[spec.key].trend} change24h=${Number.isFinite(regime.change24hPct) ? regime.change24hPct.toFixed(2) + '%' : 'NA'} candles=${rows.length}`);
     } catch (e) {
       console.warn(`[BTC][LIVE-CHECK][WARN] ${spec.key} refresh failed: ${e?.message || e}`);
@@ -1069,30 +1056,20 @@ async function refreshBtcDirection(fallbackRegime) {
   }
   const b15 = out.timeframes['15m'];
   const b1h = out.timeframes['1H'];
-  const d15 = b15?.trend === 'LONG' || b15?.trend === 'SHORT' ? b15.trend : null;
-  const d1h = b1h?.trend === 'LONG' || b1h?.trend === 'SHORT' ? b1h.trend : null;
-  // The 1H direction has more weight; 15m captures the immediate move. If they
-  // disagree, prefer 1H unless 15m has a clearly stronger short-term impulse.
-  let direction = d1h || d15;
-  if (d1h && d15 && d1h !== d15) {
-    // Compare approximately equal one-hour windows: four completed 15m bars
-    // versus one completed 1h bar. Do not compare two 24h changes as if they
-    // represented the strength of each timeframe's immediate impulse.
-    const m15 = b15?.recentMovePct;
-    const m1h = b1h?.recentMovePct;
-    const recent15Strong = Number.isFinite(m15) && Math.sign(m15) === (d15 === 'LONG' ? 1 : -1)
-      && Math.abs(m15) >= Math.max(0.35, Number.isFinite(m1h) ? Math.abs(m1h) * 1.25 : 0.35);
-    direction = recent15Strong ? d15 : d1h;
-    console.log(`[BTC][LIVE-CHECK] 15m/1h conflict: 15m=${d15} recent~1h=${Number.isFinite(m15) ? m15.toFixed(2) + '%' : 'NA'}, 1h=${d1h} recent1h=${Number.isFinite(m1h) ? m1h.toFixed(2) + '%' : 'NA'}, chosen=${direction}`);
-  }
-  if (!direction && ['LONG', 'SHORT'].includes(fallbackRegime?.trend)) direction = fallbackRegime.trend;
+  const d15 = b15?.status === 'OK' && ['LONG', 'SHORT'].includes(b15?.trend) ? b15.trend : null;
+  const d1h = b1h?.status === 'OK' && ['LONG', 'SHORT'].includes(b1h?.trend) ? b1h.trend : null;
+  // Risk-first consensus: both completed BTC timeframes must agree.
+  // Mixed, neutral, or unavailable data is not permission to guess a direction.
+  const direction = d15 && d1h && d15 === d1h ? d15 : null;
   out.trend = direction || 'UNAVAILABLE';
-  out.label = direction === 'LONG' ? 'BULLISH' : direction === 'SHORT' ? 'BEARISH' : 'UNAVAILABLE';
-  out.timeframe = 'LIVE 15m+1H';
-  out.status = (d15 || d1h) ? 'OK' : (direction ? 'FALLBACK' : 'UNAVAILABLE');
-  out.directionSource = d15 && d1h && d15 !== d1h ? `weighted 1H/15m (${direction})` : (d1h ? '1H + 15m live' : d15 ? '15m live/fallback' : direction ? 'last known BTC direction' : 'BTC unavailable; retain alt setup side');
+  out.label = direction === 'LONG' ? 'BULLISH' : direction === 'SHORT' ? 'BEARISH' : 'CONFLICT_OR_UNAVAILABLE';
+  out.timeframe = 'BTC 15m + 1H CONSENSUS';
+  out.status = direction ? 'OK' : 'BLOCKED';
+  out.directionSource = direction
+    ? `strict consensus: 15m=${d15}, 1H=${d1h}`
+    : `blocked: 15m=${b15?.status === 'OK' ? b15.trend : (b15?.status || 'UNAVAILABLE')}, 1H=${b1h?.status === 'OK' ? b1h.trend : (b1h?.status || 'UNAVAILABLE')}`;
   if (Number.isFinite(b1h?.change24hPct)) out.change24hPct = b1h.change24hPct;
-  console.log(`[BTC][LIVE-DIRECTION] ${direction} source=${out.directionSource} | 15m=${b15?.label || 'UNAVAILABLE'} 1H=${b1h?.label || 'UNAVAILABLE'}`);
+  console.log(`[BTC][LIVE-DIRECTION] ${direction || 'BLOCKED'} source=${out.directionSource} | 15m=${b15?.label || 'UNAVAILABLE'}/${b15?.trend || 'UNAVAILABLE'} 1H=${b1h?.label || 'UNAVAILABLE'}/${b1h?.trend || 'UNAVAILABLE'}`);
   return out;
 }
 
@@ -1160,7 +1137,7 @@ async function main() {
   console.log(`[PAPER][COST MODEL] roundTrip=${PAPER_ROUND_TRIP_COST_PCT.toFixed(3)}% (fees ${PAPER_FEE_BPS_PER_SIDE}bps/side; slippage ${PAPER_SLIPPAGE_BPS_PER_SIDE}bps/side); funding excluded`);
   console.log(`[CLEAN-START] Evaluation cohort begins ${new Date(n(state.cleanStartAt, started)).toISOString()} (UTC); only newly recorded ${VERSION} trades count.`);
   console.log(`Time: ${new Date().toISOString()}`);
-  console.log(`Strategy: selective reverse experiment (SWEEP_RECLAIM only); BREAKOUT_RETEST and TREND_PULLBACK normal direction; pattern-specific trigger gates; 1H multi-touch support/resistance independently sets fresh SL/TP; LONG stop below support and target before resistance; SHORT stop above resistance and target before support; minimum structural R:R 1:1.5; estimated paper round-trip cost=${PAPER_ROUND_TRIP_COST_PCT.toFixed(3)}% (fee ${PAPER_FEE_BPS_PER_SIDE} bps/side + slippage ${PAPER_SLIPPAGE_BPS_PER_SIDE} bps/side); PAPER TRACKING only | Signal threshold: ${MIN_SCORE}/10 | min R:R: 1:${MIN_RR.toFixed(2)} | BTC countertrend: ${BTC_COUNTERTREND_HARD_MOVE_PCT.toFixed(1)}% impulse requires score >= ${BTC_COUNTERTREND_MIN_SCORE.toFixed(1)} and ${BTC_COUNTERTREND_MIN_EVIDENCE} confirmations | structure-first SL/TP | 24h volume floor: NONE | market cap: NONE (all active listed perps)`);
+  console.log(`Strategy: selective reverse experiment (SWEEP_RECLAIM only); BREAKOUT_RETEST and TREND_PULLBACK normal direction; pattern-specific trigger gates; 1H multi-touch support/resistance independently sets fresh SL/TP; LONG stop below support and target before resistance; SHORT stop above resistance and target before support; minimum structural R:R 1:1.5; estimated paper round-trip cost=${PAPER_ROUND_TRIP_COST_PCT.toFixed(3)}% (fee ${PAPER_FEE_BPS_PER_SIDE} bps/side + slippage ${PAPER_SLIPPAGE_BPS_PER_SIDE} bps/side); PAPER TRACKING only | Signal threshold: ${MIN_SCORE}/10 | min R:R: 1:${MIN_RR.toFixed(2)} | BTC hard gate: 15m+1H must agree; bullish=bullish LONG only, bearish=bearish SHORT only; mixed/neutral/unavailable=NO SIGNAL | structure-first SL/TP | 24h volume floor: NONE | market cap: NONE (all active listed perps)`);
   console.log(`[API][POLICY] requestGap=${SCAN_GAP_MS}ms retries429=${MAX_429_RETRIES} backoff=${RATE_LIMIT_BASE_MS}-${RATE_LIMIT_MAX_MS}ms globalCooldown=yes`);
   console.log(`[TELEGRAM][CONFIG] token=${TOKEN ? 'configured' : 'MISSING'} vipChat=${VIP_CHAT ? 'configured' : (LEGACY_CHAT ? 'legacy-fallback' : 'MISSING')} freeChat=${FREE_CHAT ? 'configured' : 'MISSING'} legacyChat=${LEGACY_CHAT ? 'configured' : 'MISSING'}`);
   if (!TOKEN || (!VIP_CHAT && !LEGACY_CHAT && !FREE_CHAT)) {
@@ -1189,7 +1166,7 @@ async function main() {
       console.warn(`[BTC][WARN] ${tf.key} regime unavailable; not silently treating missing data as neutral: ${e?.message || e}`);
     }
   }
-  // Keep the 4H regime as the primary directional gate, while attaching all timeframes for signal diagnostics.
+  // Keep 4H as context only. The hard directional gate is strict 15m + 1H consensus refreshed at candidate time.
   btcRegime.timeframes = { ...btcRegime.timeframes };
   console.log(`[BTC][SUMMARY] ${['4H', '1H', '15m'].map(tf => { const r = btcRegime.timeframes[tf]; return `${tf}=${r?.status === 'OK' ? `${r.label}/${r.trend} ${r.change24hPct.toFixed(2)}%` : 'UNAVAILABLE'}`; }).join(' | ')}`);
   if (!n(state.lastDailyReportAt)) state.lastDailyReportAt = now(); // first report is sent after one full 24-hour observation window
@@ -1232,11 +1209,31 @@ async function main() {
           const sideAdjustment = finalSideEvidenceAdjustment(candidate, patternSide);
           candidate.score = clamp(candidate.score + sideAdjustment, 0, 9.5);
           const trendRelation = candidate.trend === patternSide ? 'aligned' : 'countertrend';
-          candidate.reasons = [`${candidate.pattern === 'SWEEP_RECLAIM' ? 'SELECTIVE REVERSED SWEEP' : 'NORMAL-DIRECTION SETUP'}: side=${patternSide}; asset 1H trend=${candidate.trend} (${trendRelation}) is context; BTC ${liveBtc.trend || 'UNAVAILABLE'} is context; fresh SL/TP recalculated from 1H structure`, `Same-side evidence adjustment ${sideAdjustment >= 0 ? '+' : ''}${sideAdjustment.toFixed(2)} (flow/order-book/RSI/VWAP)`, ...candidate.reasons];
+          candidate.reasons = [`${candidate.pattern === 'SWEEP_RECLAIM' ? 'SELECTIVE REVERSED SWEEP' : 'NORMAL-DIRECTION SETUP'}: side=${patternSide}; asset 1H trend=${candidate.trend} (${trendRelation}) is context; BTC consensus ${liveBtc.label || 'BLOCKED'}; hard gate is applied before selection; fresh SL/TP recalculated from 1H structure`, `Same-side evidence adjustment ${sideAdjustment >= 0 ? '+' : ''}${sideAdjustment.toFixed(2)} (flow/order-book/RSI/VWAP)`, ...candidate.reasons];
           console.log(`[DIRECTION][SELECTIVE-PATTERN-SIDE] ${candidate.coin} ${candidate.pattern}: side=${patternSide}; 1H=${candidate.trend}; BTC=${liveBtc.trend}; evidenceAdjustment=${sideAdjustment.toFixed(2)}; score=${candidate.score.toFixed(2)}; entry=${fmtPrice(candidate.entry)} support=${fmtPrice(candidate.support)} resistance=${fmtPrice(candidate.resistance)}`);
         }
       }
       for (const s of found) {
+        // HARD BTC CONSENSUS GATE applies to every pattern, including reversed SWEEP_RECLAIM.
+        // Both BTC timeframes must be directional and agree. A mixed/neutral/missing
+        // regime blocks every signal rather than guessing or letting score override BTC.
+        const btc15 = s.btcRegime?.timeframes?.['15m'];
+        const btc1h = s.btcRegime?.timeframes?.['1H'];
+        const btc15Side = btc15?.status === 'OK' && ['LONG', 'SHORT'].includes(btc15?.trend) ? btc15.trend : null;
+        const btc1hSide = btc1h?.status === 'OK' && ['LONG', 'SHORT'].includes(btc1h?.trend) ? btc1h.trend : null;
+        if (!btc15Side || !btc1hSide || btc15Side !== btc1hSide) {
+          const reason = `BTC consensus unavailable/conflicted: 15m=${btc15Side || btc15?.status || 'UNAVAILABLE'}, 1H=${btc1hSide || btc1h?.status || 'UNAVAILABLE'}; all patterns blocked`;
+          console.log(`[FILTER][BTC-CONSENSUS] ${s.coin} ${s.side} ${s.pattern} rejected: ${reason}`);
+          noteReject('regime', s, reason);
+          continue;
+        }
+        if (s.side !== btc15Side) {
+          const reason = `BTC consensus ${btc15Side} (15m=${btc15Side}, 1H=${btc1hSide}) only permits ${btc15Side} setups; candidate side=${s.side}`;
+          console.log(`[FILTER][BTC-DIRECTION] ${s.coin} ${s.side} ${s.pattern} rejected: ${reason}`);
+          noteReject('regime', s, reason);
+          continue;
+        }
+        console.log(`[FILTER][BTC-CONSENSUS][PASS] ${s.coin} ${s.side} ${s.pattern}: BTC 15m=${btc15Side}, 1H=${btc1hSide}`);
         // Hard market-quality gate: unknown/wide spreads are not signal-worthy.
         if (s.spreadPct == null || !Number.isFinite(s.spreadPct) || s.spreadPct > MAX_SPREAD_PCT) {
           noteReject('spread', s, s.spreadPct == null ? 'order-book spread unavailable' : `spread ${s.spreadPct.toFixed(3)}% > ${MAX_SPREAD_PCT}%`);
