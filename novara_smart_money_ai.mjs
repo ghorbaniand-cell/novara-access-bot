@@ -5,7 +5,7 @@ import { spawn } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 
 /*
- * NOVARA SMART MONEY AI V2.13.0 PATTERN-AWARE ENTRY VALIDATION
+ * NOVARA SMART MONEY AI V2.14.0 ENTRY-SIDE AND BTC GATE REPAIR
  * READ-ONLY | NO ORDERS | NO AUTO-COPY | PAPER OUTCOME TRACKING
  * BTC direction is inferred from weighted multi-timeframe structure, momentum, EMA alignment and candle behavior; neutral BTC does not automatically suppress every qualified setup
  *
@@ -18,8 +18,8 @@ import { fileURLToPath } from 'node:url';
  * All eligible liquid perp markets are considered; the worker does not depend on wallet lists.
  */
 
-const VERSION = 'NOVARA-SMART-MONEY-AI-V2.13.0-PATTERN-AWARE-ENTRY-VALIDATION';
-const CLEAN_START_ID = 'NOVARA-V2.13.0-PATTERN-AWARE-ENTRY-VALIDATION-COHORT-2026-10-30';
+const VERSION = 'NOVARA-SMART-MONEY-AI-V2.14.0-ENTRY-SIDE-BTC-GATE-REPAIR';
+const CLEAN_START_ID = 'NOVARA-V2.14.0-ENTRY-SIDE-BTC-GATE-REPAIR-COHORT-2026-10-30';
 const PAPER_MARGIN_USD = Math.max(10, Number(process.env.NOVARA_PAPER_MARGIN_USD || 1000));
 // Transparent conservative paper estimate only; configure to match your fee tier. Round-trip cost includes entry+exit fee and slippage assumptions.
 const PAPER_FEE_BPS_PER_SIDE = Math.max(0, Number(process.env.NOVARA_PAPER_FEE_BPS_PER_SIDE || 5));
@@ -312,7 +312,7 @@ function detectPatterns({ coin, c15, c1h, ctx, prevCtx, mid, spread, imbalance, 
   const allHighs1h = [...pivotHighs1h, ...rangeHighs1h];
   // Use confirmed 1H levels only, and require repeated reactions near each level.
   // Count touches across completed 1H candles; a single pivot/range extreme is not enough.
-  const touchTolerance = Math.max(atr1h * 0.40, mid * 0.0025);
+  const touchTolerance = Math.max(atr1h * 0.50, mid * 0.0030);
   const countTouches = (price, kind) => {
     const rows = c1h.slice(-90);
     const hitIndices = [];
@@ -1151,7 +1151,7 @@ async function main() {
     const legacyTrades = Array.isArray(state.paperTrades) ? state.paperTrades : [];
     state.archivedPaperTrades = [
       ...(Array.isArray(state.archivedPaperTrades) ? state.archivedPaperTrades : []),
-      ...legacyTrades.map(t => ({ ...t, archivedAt: now(), archiveReason: 'V2.12.0_ADAPTIVE_SETUP_QUALITY_GATE_COHORT_RESET' }))
+      ...legacyTrades.map(t => ({ ...t, archivedAt: now(), archiveReason: 'V2.13.0_PATTERN_AWARE_ENTRY_VALIDATION_COHORT_RESET' }))
     ];
     state.paperTrades = [];
     state.alertHistory = {};
@@ -1241,10 +1241,19 @@ async function main() {
           : n(s.flowDelta) <= -0.08 || n(s.imbalance) <= -0.12;
         const assetTrendAligned = s.trend === s.side;
         if (btcDirection && s.side !== btcDirection) {
-          const reason = `confident BTC regime ${btcDirection} (${btcConfidence}% confidence; hard-gate threshold ${BTC_HARD_GATE_CONFIDENCE}%) opposes candidate ${s.side}`;
-          console.log(`[FILTER][BTC-DIRECTION] ${s.coin} ${s.side} ${s.pattern} rejected: ${reason}`);
-          noteReject('regime', s, reason);
-          continue;
+          // V2.14: do not make BTC direction an unconditional veto for a strongly
+          // confirmed independent asset setup. This exception requires all three:
+          // high final score, aligned 1H asset trend, and directional flow/book.
+          // The separate BTC impulse/countertrend evidence gate below remains active.
+          const countertrendException = s.score >= Math.max(7.0, MIN_SCORE + 1.0) && assetTrendAligned && flowAligned;
+          if (countertrendException) {
+            console.log(`[FILTER][BTC-DIRECTION][STRONG-COUNTERTREND-REVIEW] ${s.coin} ${s.side} ${s.pattern}: BTC=${btcDirection} confidence=${btcConfidence}%; score=${s.score.toFixed(2)}, assetTrendAligned=${assetTrendAligned}, flowAligned=${flowAligned}; proceeding to independent impulse, entry, and structural-risk gates`);
+          } else {
+            const reason = `confident BTC regime ${btcDirection} (${btcConfidence}% confidence; hard-gate threshold ${BTC_HARD_GATE_CONFIDENCE}%) opposes candidate ${s.side}; exception requires score>=${Math.max(7.0, MIN_SCORE + 1.0).toFixed(2)} plus aligned 1H trend and directional flow/book`;
+            console.log(`[FILTER][BTC-DIRECTION] ${s.coin} ${s.side} ${s.pattern} rejected: ${reason}`);
+            noteReject('regime', s, reason);
+            continue;
+          }
         }
         if (btcDirection) {
           console.log(`[FILTER][BTC-DIRECTION][PASS] ${s.coin} ${s.side} ${s.pattern}: BTC=${btcDirection} confidence=${btcConfidence}% (hard gate active)`);
@@ -1306,9 +1315,13 @@ async function main() {
         } else if (s.pattern === 'TREND_PULLBACK') {
           entryLevel = n(s.pullbackMean);
           levelDistancePct = entryLevel > 0 ? Math.abs(s.entry - entryLevel) / s.entry * 100 : Infinity;
-          locationPass = entryLevel > 0 && s.trend === s.side && levelDistancePct <= Math.max(0.90, n(s.atrPct) * 1.8) &&
-            (s.side === 'LONG' ? s.entry >= entryLevel : s.entry <= entryLevel);
-          locationReason = `trend continuation requires 1H trend aligned and entry near recovery side of EMA20; distance=${Number.isFinite(levelDistancePct) ? levelDistancePct.toFixed(2)+'%' : 'NA'}, 1H trend=${s.trend}`;
+          // Pullback side is directional: a LONG should retrace to/below its EMA20
+          // mean before continuation; a SHORT should recover to/above EMA20 before
+          // continuation down. The previous inequalities were inverted and rejected
+          // valid recovery-side entries (e.g. SHORT entry slightly above EMA20).
+          const onPullbackSide = s.side === 'LONG' ? s.entry <= entryLevel : s.entry >= entryLevel;
+          locationPass = entryLevel > 0 && s.trend === s.side && levelDistancePct <= Math.max(0.90, n(s.atrPct) * 1.8) && onPullbackSide;
+          locationReason = `trend continuation requires aligned 1H trend and correct pullback side of EMA20; distance=${Number.isFinite(levelDistancePct) ? levelDistancePct.toFixed(2)+'%' : 'NA'}, 1H trend=${s.trend}, pullbackSide=${onPullbackSide}`;
         }
         if (!locationPass) {
           console.log(`[FILTER][ENTRY-LOCATION] ${s.coin} ${s.side} ${s.pattern} rejected: ${locationReason || 'no valid pattern-specific trigger level'}; entry=${fmtPrice(s.entry)} level=${fmtPrice(entryLevel)} max=${maxEntryLevelDistancePct.toFixed(2)}%`);
