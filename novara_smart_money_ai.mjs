@@ -5,7 +5,7 @@ import { spawn } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 
 /*
- * NOVARA SMART MONEY AI V2.10.1 ADAPTIVE BTC REGIME HOTFIX
+ * NOVARA SMART MONEY AI V2.11.0 ADAPTIVE BTC CONFIDENCE GATE
  * READ-ONLY | NO ORDERS | NO AUTO-COPY | PAPER OUTCOME TRACKING
  * BTC direction is inferred from weighted multi-timeframe structure, momentum, EMA alignment and candle behavior; neutral BTC does not automatically suppress every qualified setup
  *
@@ -18,8 +18,8 @@ import { fileURLToPath } from 'node:url';
  * All eligible liquid perp markets are considered; the worker does not depend on wallet lists.
  */
 
-const VERSION = 'NOVARA-SMART-MONEY-AI-V2.10.1-ADAPTIVE-BTC-REGIME-HOTFIX';
-const CLEAN_START_ID = 'NOVARA-V2.10.1-ADAPTIVE-BTC-REGIME-COHORT-2026-10-30';
+const VERSION = 'NOVARA-SMART-MONEY-AI-V2.11.0-ADAPTIVE-BTC-CONFIDENCE-GATE';
+const CLEAN_START_ID = 'NOVARA-V2.11.0-ADAPTIVE-BTC-CONFIDENCE-GATE-COHORT-2026-10-30';
 const PAPER_MARGIN_USD = Math.max(10, Number(process.env.NOVARA_PAPER_MARGIN_USD || 1000));
 // Transparent conservative paper estimate only; configure to match your fee tier. Round-trip cost includes entry+exit fee and slippage assumptions.
 const PAPER_FEE_BPS_PER_SIDE = Math.max(0, Number(process.env.NOVARA_PAPER_FEE_BPS_PER_SIDE || 5));
@@ -41,6 +41,10 @@ const MIN_RR = Math.max(1.5, Number(process.env.NOVARA_SMART_MIN_RR || 1.5));
 const BTC_COUNTERTREND_HARD_MOVE_PCT = Math.max(1.0, Number(process.env.NOVARA_BTC_COUNTERTREND_HARD_MOVE_PCT || 2.0));
 const BTC_COUNTERTREND_MIN_SCORE = Math.max(MIN_SCORE, Math.min(8.8, Number(process.env.NOVARA_BTC_COUNTERTREND_MIN_SCORE || 7.0)));
 const BTC_COUNTERTREND_MIN_EVIDENCE = Math.max(1, Math.min(5, Number(process.env.NOVARA_BTC_COUNTERTREND_MIN_EVIDENCE || 2)));
+// BTC only becomes a hard directional gate when the weighted regime has material confidence.
+const BTC_HARD_GATE_CONFIDENCE = Math.max(35, Math.min(70, Number(process.env.NOVARA_BTC_HARD_GATE_CONFIDENCE || 45)));
+const BTC_LOW_CONFIDENCE_SCORE_BONUS = Math.max(0.10, Math.min(0.50, Number(process.env.NOVARA_BTC_LOW_CONFIDENCE_SCORE_BONUS || 0.25)));
+const BTC_NEUTRAL_SCORE_BONUS = Math.max(0.10, Math.min(0.50, Number(process.env.NOVARA_BTC_NEUTRAL_SCORE_BONUS || 0.25)));
 const STRUCTURE_BUFFER_ATR = Math.max(0.1, Number(process.env.NOVARA_STRUCTURE_BUFFER_ATR || 0.25));
 const MAX_SPREAD_PCT = Math.max(0.03, Number(process.env.NOVARA_SMART_MAX_SPREAD_PCT || 0.25));
 const MAX_SIGNALS_PER_CYCLE = Math.max(1, Number(process.env.NOVARA_SMART_MAX_SIGNALS_PER_CYCLE || 8));
@@ -615,10 +619,11 @@ function countertrendEvidence(s) {
 }
 function btcImpulseOpposes(s) {
   const regime = s.btcRegime || {};
+  // A 24h impulse can tighten a setup only when the multi-timeframe regime is itself
+  // sufficiently confident. A weak 20-30% BTC lean must not silently reintroduce a hard gate.
+  if (n(regime.confidence) < BTC_HARD_GATE_CONFIDENCE) return false;
   const move = n(regime.change24hPct);
   const label = regime.label || 'NEUTRAL';
-  // A directional BTC move of at least 2% only tightens the opposite side.
-  // It does not disable countertrend signals automatically.
   return (s.side === 'LONG' && label === 'BEARISH' && move <= -BTC_COUNTERTREND_HARD_MOVE_PCT) ||
     (s.side === 'SHORT' && label === 'BULLISH' && move >= BTC_COUNTERTREND_HARD_MOVE_PCT);
 }
@@ -662,9 +667,10 @@ function formatSignal(s, risk) {
   const reasons = s.reasons.slice(0, 4).map(x => `• ${escapeHtml(x)}`).join('\n');
   const btc = s.btcRegime || {};
   const tfLine = (tf, label) => {
-    const r = btc.timeframes?.[tf];
-    if (!r || r.status !== 'OK' || !Number.isFinite(Number(r.change24hPct))) return `${tf}: UNAVAILABLE`;
-    return `${tf}: ${r.label}/${r.trend} (${Number(r.change24hPct).toFixed(2)}%/24h)`;
+    const r = btc.timeframes?.[tf], ev = r?.evidence;
+    if (!r || !ev?.available) return `${tf}: UNAVAILABLE`;
+    const move = Number.isFinite(Number(r.change24hPct)) ? ` | 24h ${Number(r.change24hPct).toFixed(2)}%` : '';
+    return `${tf}: ${ev.label || 'NEUTRAL'} (evidence ${n(ev.score).toFixed(2)}, EMA ${ev.emaAligned || 'MIXED'}${move})`;
   };
   const reversed = false;
   const modeLabel = 'ADAPTIVE BTC REGIME';
@@ -1053,7 +1059,10 @@ function timeframeEvidence(rows) {
   const lowerWick = (Math.min(last.o, last.c) - last.l) / range;
   if (upperWick > 0.58 && last.c < last.o) score -= 0.25;
   if (lowerWick > 0.58 && last.c > last.o) score += 0.25;
-  return { score: clamp(score, -3.5, 3.5), available: true, movePct: move, emaAligned: last.c > fast && fast > slow ? 'LONG' : last.c < fast && fast < slow ? 'SHORT' : 'MIXED', details: `score=${score.toFixed(2)} move=${move.toFixed(2)}% ema=${last.c > fast && fast > slow ? 'LONG' : last.c < fast && fast < slow ? 'SHORT' : 'MIXED'}` };
+  const boundedScore = clamp(score, -3.5, 3.5);
+  const evidenceTrend = boundedScore >= 0.45 ? 'LONG' : boundedScore <= -0.45 ? 'SHORT' : 'NEUTRAL';
+  const emaAligned = last.c > fast && fast > slow ? 'LONG' : last.c < fast && fast < slow ? 'SHORT' : 'MIXED';
+  return { score: boundedScore, available: true, trend: evidenceTrend, label: evidenceTrend === 'LONG' ? 'BULLISH' : evidenceTrend === 'SHORT' ? 'BEARISH' : 'NEUTRAL', movePct: move, emaAligned, details: `score=${boundedScore.toFixed(2)} move=${move.toFixed(2)}% ema=${emaAligned}` };
 }
 
 function inferBtcRegime(timeframes) {
@@ -1100,7 +1109,7 @@ async function refreshBtcDirection(fallbackRegime) {
   const out = inferBtcRegime(timeframes);
   out.refreshedAt = now();
   console.log(`[BTC][ADAPTIVE-REGIME] direction=${out.trend} confidence=${out.confidence}% score=${out.directionScore.toFixed(3)} source=${out.directionSource}`);
-  console.log(`[BTC][SUMMARY] ${['4H','1H','15m','5m'].map(tf => { const r=timeframes[tf]; return `${tf}=${r?.label || 'UNAVAILABLE'}(${r?.evidence?.score?.toFixed?.(2) ?? 'NA'})`; }).join(' | ')}`);
+  console.log(`[BTC][SUMMARY] ${['4H','1H','15m','5m'].map(tf => { const r=timeframes[tf], ev=r?.evidence; return `${tf}=${ev?.available ? (ev.label || 'NEUTRAL') : 'UNAVAILABLE'}(${ev?.score?.toFixed?.(2) ?? 'NA'})`; }).join(' | ')}`);
   return out;
 }
 
@@ -1143,7 +1152,7 @@ async function main() {
     const legacyTrades = Array.isArray(state.paperTrades) ? state.paperTrades : [];
     state.archivedPaperTrades = [
       ...(Array.isArray(state.archivedPaperTrades) ? state.archivedPaperTrades : []),
-      ...legacyTrades.map(t => ({ ...t, archivedAt: now(), archiveReason: 'V2.10.1_ADAPTIVE_BTC_REGIME_COHORT_RESET' }))
+      ...legacyTrades.map(t => ({ ...t, archivedAt: now(), archiveReason: 'V2.11.0_ADAPTIVE_BTC_CONFIDENCE_GATE_COHORT_RESET' }))
     ];
     state.paperTrades = [];
     state.alertHistory = {};
@@ -1159,7 +1168,7 @@ async function main() {
     state.cleanStartAt = now();
     console.log(`[CLEAN-START] Archived ${legacyTrades.length} legacy paper trades; active paper history, cooldowns, and pending reports reset.`);
   } else {
-    console.log(`[CLEAN-START] Already initialized at ${new Date(n(state.cleanStartAt, 0)).toISOString()}; continuing current V2.10.1 evaluation.`);
+    console.log(`[CLEAN-START] Already initialized at ${new Date(n(state.cleanStartAt, 0)).toISOString()}; continuing current V2.11.0 evaluation.`);
   }
   state.version = VERSION;
   console.log(`\n${VERSION} — START`);
@@ -1168,7 +1177,7 @@ async function main() {
   console.log(`[PAPER][COST MODEL] roundTrip=${PAPER_ROUND_TRIP_COST_PCT.toFixed(3)}% (fees ${PAPER_FEE_BPS_PER_SIDE}bps/side; slippage ${PAPER_SLIPPAGE_BPS_PER_SIDE}bps/side); funding excluded`);
   console.log(`[CLEAN-START] Evaluation cohort begins ${new Date(n(state.cleanStartAt, started)).toISOString()} (UTC); only newly recorded ${VERSION} trades count.`);
   console.log(`Time: ${new Date().toISOString()}`);
-  console.log(`Strategy: selective reverse experiment (SWEEP_RECLAIM only); BREAKOUT_RETEST and TREND_PULLBACK normal direction; pattern-specific trigger gates; 1H multi-touch support/resistance independently sets fresh SL/TP; LONG stop below support and target before resistance; SHORT stop above resistance and target before support; minimum structural R:R 1:1.5; estimated paper round-trip cost=${PAPER_ROUND_TRIP_COST_PCT.toFixed(3)}% (fee ${PAPER_FEE_BPS_PER_SIDE} bps/side + slippage ${PAPER_SLIPPAGE_BPS_PER_SIDE} bps/side); PAPER TRACKING only | Signal threshold: ${MIN_SCORE}/10 | min R:R: 1:${MIN_RR.toFixed(2)} | BTC adaptive regime: weighted 4H/1H/15m/5m structure+momentum+EMA+rejection evidence; confident trend gates direction; neutral BTC permits only independently confirmed alt setups | structure-first SL/TP | 24h volume floor: NONE | market cap: NONE (all active listed perps)`);
+  console.log(`Strategy: selective reverse experiment (SWEEP_RECLAIM only); BREAKOUT_RETEST and TREND_PULLBACK normal direction; pattern-specific trigger gates; 1H multi-touch support/resistance independently sets fresh SL/TP; LONG stop below support and target before resistance; SHORT stop above resistance and target before support; minimum structural R:R 1:1.5; estimated paper round-trip cost=${PAPER_ROUND_TRIP_COST_PCT.toFixed(3)}% (fee ${PAPER_FEE_BPS_PER_SIDE} bps/side + slippage ${PAPER_SLIPPAGE_BPS_PER_SIDE} bps/side); PAPER TRACKING only | Signal threshold: ${MIN_SCORE}/10 | min R:R: 1:${MIN_RR.toFixed(2)} | BTC adaptive regime: weighted 4H/1H/15m/5m structure+momentum+EMA+rejection evidence; hard directional gate only above confidence threshold; weak BTC bias is a soft filter | structure-first SL/TP | 24h volume floor: NONE | market cap: NONE (all active listed perps)`);
   console.log(`[API][POLICY] requestGap=${SCAN_GAP_MS}ms retries429=${MAX_429_RETRIES} backoff=${RATE_LIMIT_BASE_MS}-${RATE_LIMIT_MAX_MS}ms globalCooldown=yes`);
   console.log(`[TELEGRAM][CONFIG] token=${TOKEN ? 'configured' : 'MISSING'} vipChat=${VIP_CHAT ? 'configured' : (LEGACY_CHAT ? 'legacy-fallback' : 'MISSING')} freeChat=${FREE_CHAT ? 'configured' : 'MISSING'} legacyChat=${LEGACY_CHAT ? 'configured' : 'MISSING'}`);
   if (!TOKEN || (!VIP_CHAT && !LEGACY_CHAT && !FREE_CHAT)) {
@@ -1223,28 +1232,44 @@ async function main() {
         }
       }
       for (const s of found) {
-        // Adaptive BTC gate: only a confident BTC direction is a hard directional
-        // filter. A neutral/choppy BTC regime does not zero out the entire cycle;
-        // in that case require the altcoin's own 1H trend and order-flow to support it.
-        const btcDirection = ['LONG', 'SHORT'].includes(s.btcRegime?.trend) ? s.btcRegime.trend : null;
+        // Confidence-aware BTC gate: weak BTC bias is context, not an automatic veto.
+        // A hard opposing-direction block applies only when weighted BTC confidence is material.
+        const rawBtcDirection = ['LONG', 'SHORT'].includes(s.btcRegime?.trend) ? s.btcRegime.trend : null;
         const btcConfidence = n(s.btcRegime?.confidence);
+        const btcDirection = rawBtcDirection && btcConfidence >= BTC_HARD_GATE_CONFIDENCE ? rawBtcDirection : null;
+        const flowAligned = s.side === 'LONG'
+          ? n(s.flowDelta) >= 0.08 || n(s.imbalance) >= 0.12
+          : n(s.flowDelta) <= -0.08 || n(s.imbalance) <= -0.12;
+        const assetTrendAligned = s.trend === s.side;
         if (btcDirection && s.side !== btcDirection) {
-          const reason = `BTC adaptive regime ${btcDirection} (${btcConfidence}% confidence) opposes candidate ${s.side}`;
+          const reason = `confident BTC regime ${btcDirection} (${btcConfidence}% confidence; hard-gate threshold ${BTC_HARD_GATE_CONFIDENCE}%) opposes candidate ${s.side}`;
           console.log(`[FILTER][BTC-DIRECTION] ${s.coin} ${s.side} ${s.pattern} rejected: ${reason}`);
           noteReject('regime', s, reason);
           continue;
         }
-        if (!btcDirection) {
-          const flowAligned = s.side === 'LONG' ? n(s.flowDelta) >= 0.08 || n(s.imbalance) >= 0.12 : n(s.flowDelta) <= -0.08 || n(s.imbalance) <= -0.12;
-          if (s.trend !== s.side || !flowAligned || s.score < MIN_SCORE + 0.25) {
-            const reason = `BTC regime neutral/low-confidence (score=${n(s.btcRegime?.directionScore).toFixed(3)}); require aligned asset 1H trend, directional flow/book, and score >= ${(MIN_SCORE + 0.25).toFixed(2)}`;
-            console.log(`[FILTER][BTC-NEUTRAL-QUALITY] ${s.coin} ${s.side} ${s.pattern} rejected: ${reason}`);
+        if (btcDirection) {
+          console.log(`[FILTER][BTC-DIRECTION][PASS] ${s.coin} ${s.side} ${s.pattern}: BTC=${btcDirection} confidence=${btcConfidence}% (hard gate active)`);
+        } else if (rawBtcDirection && s.side === rawBtcDirection) {
+          // When BTC has a weak directional lean in the same direction, normal setup score
+          // plus either aligned asset trend or directional flow/book is sufficient.
+          if (s.score < MIN_SCORE || (!assetTrendAligned && !flowAligned)) {
+            const reason = `weak BTC bias ${rawBtcDirection} (${btcConfidence}% confidence) aligns, but candidate lacks MIN_SCORE and trend/flow confirmation`;
+            console.log(`[FILTER][BTC-WEAK-BIAS] ${s.coin} ${s.side} ${s.pattern} rejected: ${reason}`);
             noteReject('regime', s, reason);
             continue;
           }
-          console.log(`[FILTER][BTC-NEUTRAL-QUALITY][PASS] ${s.coin} ${s.side}: strong independent asset confirmation while BTC is non-directional`);
+          console.log(`[FILTER][BTC-WEAK-BIAS][PASS] ${s.coin} ${s.side}: BTC lean aligns (${btcConfidence}% confidence); no hard gate`);
         } else {
-          console.log(`[FILTER][BTC-DIRECTION][PASS] ${s.coin} ${s.side} ${s.pattern}: BTC=${btcDirection} confidence=${btcConfidence}%`);
+          // Neutral BTC or a candidate counter to a weak BTC lean: demand independent
+          // altcoin confirmation, but never reject solely because BTC confidence is low.
+          const scoreFloor = MIN_SCORE + BTC_NEUTRAL_SCORE_BONUS;
+          if (!assetTrendAligned || !flowAligned || s.score < scoreFloor) {
+            const reason = `BTC ${rawBtcDirection ? `weak ${rawBtcDirection} bias (${btcConfidence}% confidence)` : 'neutral'}; independent setup requires aligned asset 1H trend, directional flow/book, and score >= ${scoreFloor.toFixed(2)}`;
+            console.log(`[FILTER][BTC-SOFT-COUNTERTREND] ${s.coin} ${s.side} ${s.pattern} rejected: ${reason}`);
+            noteReject('regime', s, reason);
+            continue;
+          }
+          console.log(`[FILTER][BTC-SOFT-COUNTERTREND][PASS] ${s.coin} ${s.side}: independent asset confirmation; BTC=${rawBtcDirection || 'NEUTRAL'} confidence=${btcConfidence}%`);
         }
         // Hard market-quality gate: unknown/wide spreads are not signal-worthy.
         if (s.spreadPct == null || !Number.isFinite(s.spreadPct) || s.spreadPct > MAX_SPREAD_PCT) {
