@@ -5,7 +5,7 @@ import { spawn } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 
 /*
- * NOVARA SMART MONEY AI V2.16.0 ADAPTIVE-ENTRY-REACTION-RATE-RESILIENCE
+ * NOVARA SMART MONEY AI V2.17.0 BTC-NEXT-MOVE-SCENARIO-ENGINE
  * READ-ONLY | NO ORDERS | NO AUTO-COPY | PAPER OUTCOME TRACKING
  * BTC direction is inferred from weighted multi-timeframe structure, momentum, EMA alignment and candle behavior; neutral BTC does not automatically suppress every qualified setup
  *
@@ -19,7 +19,7 @@ import { fileURLToPath } from 'node:url';
  * All eligible liquid perp markets are considered; the worker does not depend on wallet lists.
  */
 
-const VERSION = 'NOVARA-SMART-MONEY-AI-V2.16.0-ADAPTIVE-ENTRY-REACTION-RATE-RESILIENCE';
+const VERSION = 'NOVARA-SMART-MONEY-AI-V2.17.0-BTC-NEXT-MOVE-SCENARIO-ENGINE';
 const CLEAN_START_ID = 'NOVARA-V2.14.0-ENTRY-SIDE-BTC-GATE-REPAIR-COHORT-2026-10-30'; // Preserve existing paper cohort; no destructive reset on upgrade.
 const PAPER_MARGIN_USD = Math.max(10, Number(process.env.NOVARA_PAPER_MARGIN_USD || 1000));
 // Transparent conservative paper estimate only; configure to match your fee tier. Round-trip cost includes entry+exit fee and slippage assumptions.
@@ -673,7 +673,10 @@ function formatSignal(s, risk) {
     return `${tf}: ${ev.label || 'NEUTRAL'} (evidence ${n(ev.score).toFixed(2)}, EMA ${ev.emaAligned || 'MIXED'}${move})`;
   };
   const modeLabel = 'ADAPTIVE BTC REGIME';
-  return `${emoji} <b>NOVARA SMART MONEY AI — ADAPTIVE BTC REGIME</b>\n🧭 BTC regime: adaptive multi-timeframe structure + momentum + EMA + rejection analysis\n📐 BTC direction: ${btc.label || 'NEUTRAL'} | confidence: ${n(btc.confidence)}% | score: ${n(btc.directionScore).toFixed(3)}
+  return `${emoji} <b>NOVARA SMART MONEY AI — NEXT-MOVE SCENARIO ENGINE</b>\n🧭 BTC regime: adaptive multi-timeframe structure + momentum + EMA + rejection analysis\n📐 BTC direction: ${btc.label || 'NEUTRAL'} | regime confidence: ${n(btc.confidence)}% | score: ${n(btc.directionScore).toFixed(3)}
+🔮 Next-move scenario: ${escapeHtml(btc.nextMove?.state || 'UNAVAILABLE')}
+🧭 Scenario evidence: LONG ${n(btc.nextMove?.longScore)}/100 | SHORT ${n(btc.nextMove?.shortScore)}/100 (heuristic, NOT win probability)
+🧠 Scenario note: ${escapeHtml(btc.nextMove?.reason || 'Unavailable')}
 🧱 BTC support breakdown: ${btc.structure?.breakdown ? `CONFIRMED (${(btc.structure.confirmedBy || []).join('+')}) — LONG blocked` : 'not confirmed'}\n━━━━━━━━━━━━━━━━━━\n<b>${s.side} ${escapeHtml(s.coin)} PERP</b>\n🧭 Setup: ${escapeHtml(s.pattern.replaceAll('_', ' '))}\n📍 Entry (reference): <code>${fmtPrice(risk.entry)}</code>\n🛑 Stop Loss: <code>${fmtPrice(risk.sl)}</code> (${pct(risk.riskPct)})\n🎯 Take Profit: <code>${fmtPrice(risk.tp)}</code> (${pct(risk.rewardPct)})\n⚖️ Planned R:R: 1:${risk.rr.toFixed(2)} gross | 1:${n(risk.netRR, risk.rr).toFixed(2)} net\n⚡ Suggested Leverage: ${lev.leverage}x${lev.cappedBelowRequestedRange ? ` (exchange max: ${Math.floor(lev.exchangeMax)}x)` : ''}\n🧠 Setup score: ${s.score.toFixed(2)}/10 (not a win-probability estimate)\n📊 Asset 1H trend: ${s.trend}\n₿ <b>BTC MARKET CHECK</b>\n${tfLine('4H', '4H')}\n${tfLine('1H', '1H')}\n${tfLine('15m', '15m')}\n📉 Alt 15m RSI: ${n(s.rsi15, 50).toFixed(1)} | Fib: ${s.fibConfluence ? 'YES' : 'NO'} | Volume: ${s.volRatio.toFixed(2)}x\n🌊 Trade delta: ${(s.flowDelta * 100).toFixed(1)}% | Book imbalance: ${(s.imbalance * 100).toFixed(1)}%\n📈 OI change: ${s.oiChange >= 0 ? '+' : ''}${s.oiChange.toFixed(2)}% | Funding: ${s.fundingPct.toFixed(4)}%\n🧱 1H Structure: Support ${fmtPrice(s.support)} (${s.supportTouches || 0} touches) | Resistance ${fmtPrice(s.resistance)} (${s.resistanceTouches || 0} touches)\n🧩 Evidence:\n${reasons}\n\n🧪 Mode: ${modeLabel}. Paper tracking only — no real orders.`;
 }
 
@@ -1099,9 +1102,68 @@ function btcStructureState(rows, timeframe) {
   // Confirm breakdown only after two completed closes below the prior 20-bar swing low,
   // with the latest close at least 0.10 ATR beneath it. A wick alone is not a breakdown.
   const breakdown = last.c < swingLow - a * 0.10 && prev.c < swingLow;
-  const reclaim = last.c > swingLow + a * 0.10;
+  // Reclaim is an actual failed breakdown/recovery, not merely trading above an old low.
+  // Require a prior close below the level OR a sweep wick through it, followed by a close back above.
+  const reclaim = (prev.c < swingLow && last.c > swingLow + a * 0.10) ||
+    (last.l < swingLow - a * 0.10 && last.c > swingLow + a * 0.05);
   const resistanceBreak = last.c > swingHigh + a * 0.10 && prev.c > swingHigh;
   return { timeframe, available: true, breakdown, reclaim, resistanceBreak, swingLow, swingHigh, close: last.c, atr: a };
+}
+
+/**
+ * Scenario engine: ranks observable next-leg hypotheses from completed candles.
+ * Scores are evidence weights (0-100), NOT calibrated win probabilities.
+ * A directional scenario becomes actionable only when 1H + 15m structure agree;
+ * 5m is used for timing and cannot independently flip the higher-timeframe view.
+ */
+function buildBtcNextMoveScenario(timeframes, structure) {
+  const ev = tf => timeframes?.[tf]?.evidence || {};
+  const st = tf => structure?.[tf] || {};
+  const e4 = ev('4H'), e1 = ev('1H'), e15 = ev('15m'), e5 = ev('5m');
+  const s1 = st('1H'), s15 = st('15m'), s4 = st('4H');
+  const score = (side) => {
+    const sign = side === 'LONG' ? 1 : -1;
+    let v = 0;
+    for (const [e,w] of [[e4,18],[e1,30],[e15,30],[e5,8]]) {
+      if (e.available) v += clamp(n(e.score) * sign / 3.5, -1, 1) * w;
+    }
+    if (side === 'LONG') {
+      if (s1.reclaim) v += 12; if (s15.reclaim) v += 12;
+      if (s1.resistanceBreak) v += 10; if (s15.resistanceBreak) v += 8;
+      if (s4.breakdown) v -= 25;
+      if (s1.breakdown) v -= 18; if (s15.breakdown) v -= 15;
+    } else {
+      if (s4.breakdown) v += 22;
+      if (s1.breakdown) v += 16; if (s15.breakdown) v += 14;
+      if (s1.reclaim) v -= 18; if (s15.reclaim) v -= 15;
+      if (s1.resistanceBreak) v -= 12; if (s15.resistanceBreak) v -= 10;
+    }
+    return clamp(Math.round(50 + v / 1.15), 0, 100);
+  };
+  const longScore = score('LONG'), shortScore = score('SHORT');
+  const top = longScore >= shortScore ? 'LONG' : 'SHORT';
+  const topScore = Math.max(longScore, shortScore);
+  const lowerAligned = e1.available && e15.available && e1.trend === top && e15.trend === top;
+  const confirmedBreak = top === 'LONG'
+    ? Boolean(s1.resistanceBreak || (s1.reclaim && s15.reclaim))
+    : Boolean(s4.breakdown || (s1.breakdown && s15.breakdown));
+  const opposingReclaim = top === 'SHORT' && (s1.reclaim || s15.reclaim) || top === 'LONG' && (s1.breakdown || s15.breakdown);
+  let state = 'RANGE / WAIT';
+  let direction = 'NEUTRAL';
+  let reason = 'No sufficiently aligned 1H/15m scenario; wait for a completed-candle confirmation.';
+  if (opposingReclaim) {
+    state = top === 'SHORT' ? 'BEARISH EXHAUSTION / BULLISH RECLAIM WATCH' : 'BULLISH EXHAUSTION / BEARISH BREAKDOWN WATCH';
+    reason = 'A recent structural reclaim/breakdown conflicts with the leading directional score; avoid chasing the prior trend.';
+  } else if (topScore >= 64 && lowerAligned && confirmedBreak) {
+    direction = top;
+    state = top === 'LONG' ? 'UPSIDE CONTINUATION / RECLAIM CONFIRMED' : 'DOWNSIDE CONTINUATION / BREAKDOWN CONFIRMED';
+    reason = `1H and 15m evidence align with a completed-candle structural ${top === 'LONG' ? 'reclaim/break' : 'breakdown'}; 5m only refines timing.`;
+  } else if (topScore >= 58 && lowerAligned) {
+    direction = top;
+    state = top === 'LONG' ? 'UPSIDE SETUP DEVELOPING — WAIT FOR BREAK' : 'DOWNSIDE SETUP DEVELOPING — WAIT FOR BREAK';
+    reason = '1H and 15m lean together, but structural trigger is not yet confirmed.';
+  }
+  return { state, direction, longScore, shortScore, leadingScore: topScore, lowerTimeframesAligned: lowerAligned, structuralTriggerConfirmed: confirmedBreak, reason, scoreType: 'HEURISTIC_EVIDENCE_SCORE_NOT_STATISTICAL_PROBABILITY', evaluatedAt: now() };
 }
 
 async function refreshBtcDirection(fallbackRegime) {
@@ -1135,7 +1197,9 @@ async function refreshBtcDirection(fallbackRegime) {
     reclaimed: Boolean(s4h?.reclaim || (s1h?.reclaim && s15m?.reclaim)),
     fourHour: s4h || null, oneHour: s1h || null, fifteenMinute: s15m || null,
   };
+  out.nextMove = buildBtcNextMoveScenario(timeframes, structure);
   out.refreshedAt = now();
+  console.log(`[BTC][NEXT-MOVE] state=${out.nextMove.state} direction=${out.nextMove.direction} longScore=${out.nextMove.longScore} shortScore=${out.nextMove.shortScore} aligned=${out.nextMove.lowerTimeframesAligned} trigger=${out.nextMove.structuralTriggerConfirmed} | ${out.nextMove.reason}`);
   console.log(`[BTC][STRUCTURE] breakdown=${out.structure.breakdown} confirmedBy=${out.structure.confirmedBy.join('+') || 'none'} reclaimed=${out.structure.reclaimed} 4H-low=${fmtPrice(s4h?.swingLow)} 1H-low=${fmtPrice(s1h?.swingLow)}`);
   console.log(`[BTC][ADAPTIVE-REGIME] direction=${out.trend} confidence=${out.confidence}% score=${out.directionScore.toFixed(3)} source=${out.directionSource}`);
   console.log(`[BTC][SUMMARY] ${['4H','1H','15m','5m'].map(tf => { const r=timeframes[tf], ev=r?.evidence; return `${tf}=${ev?.available ? (ev.label || 'NEUTRAL') : 'UNAVAILABLE'}(${ev?.score?.toFixed?.(2) ?? 'NA'})`; }).join(' | ')}`);
@@ -1201,7 +1265,7 @@ async function main() {
   state.version = VERSION;
   console.log(`\n${VERSION} — START`);
   console.log(`Mode: READ-ONLY / NO ORDERS / NO AUTO-COPY / PAPER TRACKING`);
-  console.log(`[STRATEGY][PATTERNS] SWEEP_RECLAIM=STANDARD DIRECTION | BREAKOUT_RETEST=ATR-ADAPTIVE CONFIRMED RETEST | TREND_PULLBACK=EMA20 REACTION-CONFIRMED`);
+  console.log(`[STRATEGY][PATTERNS] SWEEP_RECLAIM=STANDARD DIRECTION | BREAKOUT_RETEST=ATR-ADAPTIVE CONFIRMED RETEST | TREND_PULLBACK=EMA20 REACTION-CONFIRMED | BTC NEXT-MOVE SCENARIO ENGINE=ON`);
   console.log(`[PAPER][COST MODEL] roundTrip=${PAPER_ROUND_TRIP_COST_PCT.toFixed(3)}% (fees ${PAPER_FEE_BPS_PER_SIDE}bps/side; slippage ${PAPER_SLIPPAGE_BPS_PER_SIDE}bps/side); funding excluded`);
   console.log(`[CLEAN-START] Evaluation cohort begins ${new Date(n(state.cleanStartAt, started)).toISOString()} (UTC); existing cohort retained; new trades are tagged ${VERSION}.`);
   console.log(`Time: ${new Date().toISOString()}`);
@@ -1270,6 +1334,24 @@ async function main() {
           : n(s.flowDelta) <= -0.08 || n(s.imbalance) <= -0.12;
         const assetTrendAligned = s.trend === s.side;
         const btcBreakdown = Boolean(s.btcRegime?.structure?.breakdown);
+        const nextMove = s.btcRegime?.nextMove || {};
+        // Do not fight a confirmed BTC next-leg scenario merely because a coin's
+        // local pattern fired. Developing scenarios apply a stricter score floor.
+        if (nextMove.direction && s.side !== nextMove.direction && nextMove.leadingScore >= 64 && nextMove.lowerTimeframesAligned && nextMove.structuralTriggerConfirmed) {
+          const reason = `BTC next-move scenario ${nextMove.state} leads ${nextMove.direction} (evidence ${nextMove.leadingScore}/100); opposing ${s.side} blocked`;
+          console.log(`[FILTER][BTC-NEXT-MOVE] ${s.coin} ${s.side} rejected: ${reason}`);
+          noteReject('regime', s, reason);
+          continue;
+        }
+        if (nextMove.direction && s.side !== nextMove.direction && nextMove.leadingScore >= 58 && nextMove.lowerTimeframesAligned) {
+          const required = Math.max(7.2, MIN_SCORE + 1.0);
+          if (s.score < required || !flowAligned || !assetTrendAligned) {
+            const reason = `BTC scenario developing toward ${nextMove.direction} (${nextMove.leadingScore}/100); countertrend requires score>=${required.toFixed(2)} plus aligned asset trend and flow/book`;
+            console.log(`[FILTER][BTC-NEXT-MOVE][DEVELOPING] ${s.coin} ${s.side} rejected: ${reason}`);
+            noteReject('regime', s, reason);
+            continue;
+          }
+        }
         if (s.side === 'LONG' && btcBreakdown) {
           const reason = `confirmed BTC support breakdown (${(s.btcRegime.structure.confirmedBy || []).join('+')}); LONG entries blocked until BTC structure is reclaimed`;
           console.log(`[FILTER][BTC-SUPPORT-BREAKDOWN] ${s.coin} LONG ${s.pattern} rejected: ${reason}`);
@@ -1499,7 +1581,7 @@ async function main() {
       state.alertHistory[signalKey(s)] = now();
       state.alertHistory[`${s.coin}|${s.side}|GLOBAL`] = now();
       const audience = deliveredNames.includes('VIP') && deliveredNames.includes('FREE') ? 'BOTH' : deliveredNames[0];
-      state.paperTrades.push({ strategyVersion: VERSION, id: `${s.coin}|${s.side}|${s.pattern}|${now()}`, coin: s.coin, side: s.side, pattern: s.pattern, score: Number(s.score.toFixed(2)), audience, outcomeDelivered: [], entry: s.risk.entry, sl: s.risk.sl, tp: s.risk.tp, rr: s.risk.rr, netRR: s.risk.netRR, riskPct: s.risk.riskPct, estimatedRoundTripCostPct: PAPER_ROUND_TRIP_COST_PCT, suggestedLeverage: s.leverageInfo?.leverage ?? null, btcRegime: s.btcRegime?.label || 'NEUTRAL', rsi15: s.rsi15, fibConfluence: Boolean(s.fibConfluence), openedAt: now(), lastCheckedAt: now(), status: 'OPEN', pnlR: null, reasons: s.reasons });
+      state.paperTrades.push({ strategyVersion: VERSION, id: `${s.coin}|${s.side}|${s.pattern}|${now()}`, coin: s.coin, side: s.side, pattern: s.pattern, score: Number(s.score.toFixed(2)), audience, outcomeDelivered: [], entry: s.risk.entry, sl: s.risk.sl, tp: s.risk.tp, rr: s.risk.rr, netRR: s.risk.netRR, riskPct: s.risk.riskPct, estimatedRoundTripCostPct: PAPER_ROUND_TRIP_COST_PCT, suggestedLeverage: s.leverageInfo?.leverage ?? null, btcRegime: s.btcRegime?.label || 'NEUTRAL', btcScenario: s.btcRegime?.nextMove ? { ...s.btcRegime.nextMove } : null, rsi15: s.rsi15, fibConfluence: Boolean(s.fibConfluence), openedAt: now(), lastCheckedAt: now(), status: 'OPEN', pnlR: null, reasons: s.reasons });
     } else {
       sendErrors++;
       console.warn(`[DELIVERY][FAIL] ${s.coin} ${s.side}: no destination confirmed delivery`);
