@@ -5,7 +5,7 @@ import { spawn } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 
 /*
- * NOVARA SMART MONEY AI V2.12.0 ADAPTIVE SETUP QUALITY GATE
+ * NOVARA SMART MONEY AI V2.13.0 PATTERN-AWARE ENTRY VALIDATION
  * READ-ONLY | NO ORDERS | NO AUTO-COPY | PAPER OUTCOME TRACKING
  * BTC direction is inferred from weighted multi-timeframe structure, momentum, EMA alignment and candle behavior; neutral BTC does not automatically suppress every qualified setup
  *
@@ -18,8 +18,8 @@ import { fileURLToPath } from 'node:url';
  * All eligible liquid perp markets are considered; the worker does not depend on wallet lists.
  */
 
-const VERSION = 'NOVARA-SMART-MONEY-AI-V2.12.0-ADAPTIVE-SETUP-QUALITY-GATE';
-const CLEAN_START_ID = 'NOVARA-V2.12.0-ADAPTIVE-SETUP-QUALITY-GATE-COHORT-2026-10-30';
+const VERSION = 'NOVARA-SMART-MONEY-AI-V2.13.0-PATTERN-AWARE-ENTRY-VALIDATION';
+const CLEAN_START_ID = 'NOVARA-V2.13.0-PATTERN-AWARE-ENTRY-VALIDATION-COHORT-2026-10-30';
 const PAPER_MARGIN_USD = Math.max(10, Number(process.env.NOVARA_PAPER_MARGIN_USD || 1000));
 // Transparent conservative paper estimate only; configure to match your fee tier. Round-trip cost includes entry+exit fee and slippage assumptions.
 const PAPER_FEE_BPS_PER_SIDE = Math.max(0, Number(process.env.NOVARA_PAPER_FEE_BPS_PER_SIDE || 5));
@@ -312,7 +312,7 @@ function detectPatterns({ coin, c15, c1h, ctx, prevCtx, mid, spread, imbalance, 
   const allHighs1h = [...pivotHighs1h, ...rangeHighs1h];
   // Use confirmed 1H levels only, and require repeated reactions near each level.
   // Count touches across completed 1H candles; a single pivot/range extreme is not enough.
-  const touchTolerance = Math.max(atr1h * 0.30, mid * 0.0020);
+  const touchTolerance = Math.max(atr1h * 0.40, mid * 0.0025);
   const countTouches = (price, kind) => {
     const rows = c1h.slice(-90);
     const hitIndices = [];
@@ -1119,17 +1119,16 @@ async function analyzeAsset(asset, previous, btcRegime) {
     candles(asset.coin, '1h', 90),
   ]);
   if (c15.length < 35 || c1h.length < 30) return [];
-  // Entry confirmation is based on a completed 15m candle. Do not send a signal
-  // if the live mark has already drifted too far from that confirmed close.
+  // V2.13: candle-close drift is diagnostic, not an early blanket veto.
+  // A large mark-vs-close gap can still be a valid entry if the live mark remains
+  // near the pattern's actual sweep/retest/pullback trigger. The pattern-aware
+  // ENTRY-LOCATION gate below is the authoritative anti-chase check.
   const lastClosed15m = c15.at(-1);
   const atr15ForTiming = atr(c15, 14) || asset.markPx * 0.006;
   const entryDriftPct = Math.abs(asset.markPx - lastClosed15m.c) / asset.markPx * 100;
   const maxEntryDriftPct = Math.max(0.35, (atr15ForTiming / asset.markPx) * 100 * 0.80);
   if (entryDriftPct > maxEntryDriftPct) {
-    console.log(`[ENTRY][STALE] ${asset.coin} mark/confirmed-close drift=${entryDriftPct.toFixed(3)}% > ${maxEntryDriftPct.toFixed(3)}%; skip chase`);
-    const skipped = [];
-    skipped.stale = true;
-    return skipped;
+    console.log(`[ENTRY][CANDLE-DRIFT][INFO] ${asset.coin} mark/confirmed-close drift=${entryDriftPct.toFixed(3)}% > reference=${maxEntryDriftPct.toFixed(3)}%; pattern-specific location validation still required`);
   }
   const [book, trades] = await Promise.all([
     request({ type: 'l2Book', coin: asset.coin }, `book ${asset.coin}`).catch(error => { console.warn(`[API][DEGRADED] book ${asset.coin}: ${error?.message || error}`); return null; }),
