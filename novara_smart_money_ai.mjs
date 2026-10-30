@@ -5,7 +5,7 @@ import { spawn } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 
 /*
- * NOVARA SMART MONEY AI V2.15.0 DIRECTIONAL-SWEEP-BTC-STRUCTURE-NET-RISK
+ * NOVARA SMART MONEY AI V2.16.0 ADAPTIVE-ENTRY-REACTION-RATE-RESILIENCE
  * READ-ONLY | NO ORDERS | NO AUTO-COPY | PAPER OUTCOME TRACKING
  * BTC direction is inferred from weighted multi-timeframe structure, momentum, EMA alignment and candle behavior; neutral BTC does not automatically suppress every qualified setup
  *
@@ -15,11 +15,11 @@ import { fileURLToPath } from 'node:url';
  *  3) Trend pullback + continuation (normal direction)
  *
  * Data: Hyperliquid public Info API (no paid data API required); TradingView is not yet connected.
- * V2.15 adds confirmed BTC swing-breakdown protection, standard sweep direction, conservative same-bar paper exits, and net-R:R gating.
+ * V2.16 adds ATR-adaptive breakout retest proximity, candle-confirmed trend pullback location, and preserves BTC/risk gates.
  * All eligible liquid perp markets are considered; the worker does not depend on wallet lists.
  */
 
-const VERSION = 'NOVARA-SMART-MONEY-AI-V2.15.0-DIRECTIONAL-SWEEP-BTC-STRUCTURE-NET-RISK';
+const VERSION = 'NOVARA-SMART-MONEY-AI-V2.16.0-ADAPTIVE-ENTRY-REACTION-RATE-RESILIENCE';
 const CLEAN_START_ID = 'NOVARA-V2.14.0-ENTRY-SIDE-BTC-GATE-REPAIR-COHORT-2026-10-30'; // Preserve existing paper cohort; no destructive reset on upgrade.
 const PAPER_MARGIN_USD = Math.max(10, Number(process.env.NOVARA_PAPER_MARGIN_USD || 1000));
 // Transparent conservative paper estimate only; configure to match your fee tier. Round-trip cost includes entry+exit fee and slippage assumptions.
@@ -440,7 +440,7 @@ function detectPatterns({ coin, c15, c1h, ctx, prevCtx, mid, spread, imbalance, 
     if (side === 'LONG' && mid >= vwap15 || side === 'SHORT' && mid <= vwap15) { score += 0.25; reasons.push('VWAP alignment'); }
     if (side === 'LONG' && oiConfirmsLong || side === 'SHORT' && oiConfirmsShort) { score += 0.3; reasons.push('OI confirms participation'); }
     score = addContext(side, score, reasons);
-    results.push({ coin, side, pattern: 'BREAKOUT_RETEST', breakoutLevel: retestLong ? breakoutHigh : breakoutLow, rawSupport, rawResistance, minLevelGap, score: clamp(score, 0, 9.5), reasons, entry: mid, atr: atr15, atr1h, support, resistance, supportSource, resistanceSource, supportTouches: selectedSupport?.touches || 0, resistanceTouches: selectedResistance?.touches || 0, supportLevels: supportCandidates.map(x => ({ price: x.price, touches: x.touches, source: x.source })), resistanceLevels: resistanceCandidates.map(x => ({ price: x.price, touches: x.touches, source: x.source })), trend, btcRegime: btcRegime || { label: 'NEUTRAL', change24hPct: 0 }, rsi15, fibConfluence: fib.confluence, volRatio, oiChange, fundingPct, flowDelta: flow.delta, imbalance, vwap: vwap15, spreadPct: spread, atrPct, dayVolume: n(ctx?.dayVolume), maxLeverage: n(ctx?.maxLeverage) });
+    results.push({ coin, side, pattern: 'BREAKOUT_RETEST', breakoutLevel: retestLong ? breakoutHigh : breakoutLow, retestConfirmed: true, rawSupport, rawResistance, minLevelGap, score: clamp(score, 0, 9.5), reasons, entry: mid, atr: atr15, atr1h, support, resistance, supportSource, resistanceSource, supportTouches: selectedSupport?.touches || 0, resistanceTouches: selectedResistance?.touches || 0, supportLevels: supportCandidates.map(x => ({ price: x.price, touches: x.touches, source: x.source })), resistanceLevels: resistanceCandidates.map(x => ({ price: x.price, touches: x.touches, source: x.source })), trend, btcRegime: btcRegime || { label: 'NEUTRAL', change24hPct: 0 }, rsi15, fibConfluence: fib.confluence, volRatio, oiChange, fundingPct, flowDelta: flow.delta, imbalance, vwap: vwap15, spreadPct: spread, atrPct, dayVolume: n(ctx?.dayVolume), maxLeverage: n(ctx?.maxLeverage) });
   }
 
   // Pattern 3: NORMAL direction — 1H trend pullback into EMA20 and recovery candle.
@@ -457,7 +457,7 @@ function detectPatterns({ coin, c15, c1h, ctx, prevCtx, mid, spread, imbalance, 
     if (side === 'LONG' && oiConfirmsLong || side === 'SHORT' && oiConfirmsShort) { score += 0.3; reasons.push('OI rising with trend'); }
     if (side === 'LONG' && fundingPct > 0.08 || side === 'SHORT' && fundingPct < -0.08) { score -= 0.25; reasons.push('crowded funding slightly penalized'); }
     score = addContext(side, score, reasons);
-    results.push({ coin, side, pattern: 'TREND_PULLBACK', pullbackMean: ema20_15, rawSupport, rawResistance, minLevelGap, score: clamp(score, 0, 9.5), reasons, entry: mid, atr: atr15, atr1h, support, resistance, supportSource, resistanceSource, supportTouches: selectedSupport?.touches || 0, resistanceTouches: selectedResistance?.touches || 0, supportLevels: supportCandidates.map(x => ({ price: x.price, touches: x.touches, source: x.source })), resistanceLevels: resistanceCandidates.map(x => ({ price: x.price, touches: x.touches, source: x.source })), trend, btcRegime: btcRegime || { label: 'NEUTRAL', change24hPct: 0 }, rsi15, fibConfluence: fib.confluence, volRatio, oiChange, fundingPct, flowDelta: flow.delta, imbalance, vwap: vwap15, spreadPct: spread, atrPct, dayVolume: n(ctx?.dayVolume), maxLeverage: n(ctx?.maxLeverage) });
+    results.push({ coin, side, pattern: 'TREND_PULLBACK', pullbackMean: ema20_15, pullbackReactionConfirmed: true, rawSupport, rawResistance, minLevelGap, score: clamp(score, 0, 9.5), reasons, entry: mid, atr: atr15, atr1h, support, resistance, supportSource, resistanceSource, supportTouches: selectedSupport?.touches || 0, resistanceTouches: selectedResistance?.touches || 0, supportLevels: supportCandidates.map(x => ({ price: x.price, touches: x.touches, source: x.source })), resistanceLevels: resistanceCandidates.map(x => ({ price: x.price, touches: x.touches, source: x.source })), trend, btcRegime: btcRegime || { label: 'NEUTRAL', change24hPct: 0 }, rsi15, fibConfluence: fib.confluence, volRatio, oiChange, fundingPct, flowDelta: flow.delta, imbalance, vwap: vwap15, spreadPct: spread, atrPct, dayVolume: n(ctx?.dayVolume), maxLeverage: n(ctx?.maxLeverage) });
   }
 
   // V2.8.6: attach location/rejection diagnostics. A directional pattern alone
@@ -1201,12 +1201,12 @@ async function main() {
   state.version = VERSION;
   console.log(`\n${VERSION} — START`);
   console.log(`Mode: READ-ONLY / NO ORDERS / NO AUTO-COPY / PAPER TRACKING`);
-  console.log(`[STRATEGY][PATTERNS] SWEEP_RECLAIM=STANDARD DIRECTION | BREAKOUT_RETEST=NORMAL | TREND_PULLBACK=NORMAL`);
+  console.log(`[STRATEGY][PATTERNS] SWEEP_RECLAIM=STANDARD DIRECTION | BREAKOUT_RETEST=ATR-ADAPTIVE CONFIRMED RETEST | TREND_PULLBACK=EMA20 REACTION-CONFIRMED`);
   console.log(`[PAPER][COST MODEL] roundTrip=${PAPER_ROUND_TRIP_COST_PCT.toFixed(3)}% (fees ${PAPER_FEE_BPS_PER_SIDE}bps/side; slippage ${PAPER_SLIPPAGE_BPS_PER_SIDE}bps/side); funding excluded`);
   console.log(`[CLEAN-START] Evaluation cohort begins ${new Date(n(state.cleanStartAt, started)).toISOString()} (UTC); existing cohort retained; new trades are tagged ${VERSION}.`);
   console.log(`Time: ${new Date().toISOString()}`);
-  console.log(`Strategy: standard-direction SWEEP_RECLAIM; BREAKOUT_RETEST and TREND_PULLBACK normal direction; pattern-specific trigger gates; 1H multi-touch support/resistance independently sets fresh SL/TP; LONG stop below support and target before resistance; SHORT stop above resistance and target before support; minimum net R:R after estimated fees/slippage 1:1.5; estimated paper round-trip cost=${PAPER_ROUND_TRIP_COST_PCT.toFixed(3)}% (fee ${PAPER_FEE_BPS_PER_SIDE} bps/side + slippage ${PAPER_SLIPPAGE_BPS_PER_SIDE} bps/side); PAPER TRACKING only | Signal threshold: ${MIN_SCORE}/10 | min R:R: 1:${MIN_RR.toFixed(2)} | BTC adaptive regime: weighted 4H/1H/15m/5m structure+momentum+EMA+rejection evidence; hard directional gate only above confidence threshold; weak BTC bias is a soft filter | structure-first SL/TP | 24h volume floor: NONE | market cap: NONE (all active listed perps)`);
-  console.log(`[API][POLICY] requestGap=${SCAN_GAP_MS}ms retries429=${MAX_429_RETRIES} backoff=${RATE_LIMIT_BASE_MS}-${RATE_LIMIT_MAX_MS}ms globalCooldown=yes`);
+  console.log(`Strategy: standard-direction SWEEP_RECLAIM; ATR-adaptive confirmed BREAKOUT_RETEST; EMA20 reaction-confirmed TREND_PULLBACK; pattern-specific trigger gates; 1H multi-touch support/resistance independently sets fresh SL/TP; LONG stop below support and target before resistance; SHORT stop above resistance and target before support; minimum net R:R after estimated fees/slippage 1:1.5; estimated paper round-trip cost=${PAPER_ROUND_TRIP_COST_PCT.toFixed(3)}% (fee ${PAPER_FEE_BPS_PER_SIDE} bps/side + slippage ${PAPER_SLIPPAGE_BPS_PER_SIDE} bps/side); PAPER TRACKING only | Signal threshold: ${MIN_SCORE}/10 | min R:R: 1:${MIN_RR.toFixed(2)} | BTC adaptive regime: weighted 4H/1H/15m/5m structure+momentum+EMA+rejection evidence; hard directional gate only above confidence threshold; weak BTC bias is a soft filter | structure-first SL/TP | 24h volume floor: NONE | market cap: NONE (all active listed perps)`);
+  console.log(`[API][POLICY] requestGap=${SCAN_GAP_MS}ms retries429=${MAX_429_RETRIES} backoff=${RATE_LIMIT_BASE_MS}-${RATE_LIMIT_MAX_MS}ms globalCooldown=yes (shared across concurrent calls)`);
   console.log(`[TELEGRAM][CONFIG] token=${TOKEN ? 'configured' : 'MISSING'} vipChat=${VIP_CHAT ? 'configured' : (LEGACY_CHAT ? 'legacy-fallback' : 'MISSING')} freeChat=${FREE_CHAT ? 'configured' : 'MISSING'} legacyChat=${LEGACY_CHAT ? 'configured' : 'MISSING'}`);
   if (!TOKEN || (!VIP_CHAT && !LEGACY_CHAT && !FREE_CHAT)) {
     console.warn('[TELEGRAM][ACTION REQUIRED] Signals may be generated but cannot be delivered until TELEGRAM_TOKEN and at least one chat ID are configured in the production environment.');
@@ -1329,7 +1329,12 @@ async function main() {
         // PATTERN-AWARE LOCATION GATE: sweep uses the swept 15m swing; breakout uses
         // its successful retest level; trend pullback must remain on the recovery side
         // of EMA20 with the 1H trend aligned. Every pattern still needs independent 1H S/R risk.
-        const maxEntryLevelDistancePct = Math.min(1.25, Math.max(0.35, n(s.atr1h) / Math.max(n(s.entry), 1) * 100 * 0.70));
+        const entryPrice = Math.max(n(s.entry), 1e-12);
+        const atr1hPct = n(s.atr1h) / entryPrice * 100;
+        const atr15Pct = n(s.atr) / entryPrice * 100;
+        // Adaptive anti-chase envelope: a little wider for genuinely volatile
+        // markets, but capped so a distant breakout is never treated as a retest.
+        const maxEntryLevelDistancePct = Math.min(0.90, Math.max(0.35, atr1hPct * 0.90));
         let entryLevel = 0, levelDistancePct = Infinity, locationPass = false, locationReason = '';
         if (s.pattern === 'SWEEP_RECLAIM') {
           entryLevel = n(s.failureLevel);
@@ -1344,20 +1349,26 @@ async function main() {
         } else if (s.pattern === 'BREAKOUT_RETEST') {
           entryLevel = n(s.breakoutLevel);
           levelDistancePct = entryLevel > 0 ? Math.abs(s.entry - entryLevel) / s.entry * 100 : Infinity;
-          const retestTolerancePct = Math.max(n(s.atr) * 0.60 / Math.max(n(s.entry), 1) * 100, 0.20);
-          locationPass = entryLevel > 0 && levelDistancePct <= Math.max(maxEntryLevelDistancePct, retestTolerancePct) &&
-            (s.side === 'LONG' ? s.entry >= entryLevel - n(s.atr) * 0.25 : s.entry <= entryLevel + n(s.atr) * 0.25);
-          locationReason = `successful breakout retest must remain near held level ${fmtPrice(entryLevel)}; distance=${Number.isFinite(levelDistancePct) ? levelDistancePct.toFixed(2)+'%' : 'NA'}`;
+          const retestTolerancePct = Math.min(0.90, Math.max(0.50, n(s.atr) * 0.85 / entryPrice * 100));
+          const heldSide = s.side === 'LONG' ? s.entry >= entryLevel - n(s.atr) * 0.25 : s.entry <= entryLevel + n(s.atr) * 0.25;
+          // retestConfirmed is set only after the closed 15m candle tested the
+          // breakout boundary and closed back on the breakout side.
+          locationPass = entryLevel > 0 && s.retestConfirmed === true &&
+            levelDistancePct <= Math.max(maxEntryLevelDistancePct, retestTolerancePct) && heldSide;
+          locationReason = `ATR-adaptive confirmed breakout retest near held level ${fmtPrice(entryLevel)}; distance=${Number.isFinite(levelDistancePct) ? levelDistancePct.toFixed(2)+'%' : 'NA'}, max=${Math.max(maxEntryLevelDistancePct, retestTolerancePct).toFixed(2)}%, heldSide=${heldSide}`;
         } else if (s.pattern === 'TREND_PULLBACK') {
           entryLevel = n(s.pullbackMean);
           levelDistancePct = entryLevel > 0 ? Math.abs(s.entry - entryLevel) / s.entry * 100 : Infinity;
-          // Pullback side is directional: a LONG should retrace to/below its EMA20
-          // mean before continuation; a SHORT should recover to/above EMA20 before
-          // continuation down. The previous inequalities were inverted and rejected
-          // valid recovery-side entries (e.g. SHORT entry slightly above EMA20).
-          const onPullbackSide = s.side === 'LONG' ? s.entry <= entryLevel : s.entry >= entryLevel;
-          locationPass = entryLevel > 0 && s.trend === s.side && levelDistancePct <= Math.max(0.90, n(s.atrPct) * 1.8) && onPullbackSide;
-          locationReason = `trend continuation requires aligned 1H trend and correct pullback side of EMA20; distance=${Number.isFinite(levelDistancePct) ? levelDistancePct.toFixed(2)+'%' : 'NA'}, 1H trend=${s.trend}, pullbackSide=${onPullbackSide}`;
+          // The pattern detector already verifies the completed 15m reaction:
+          // LONG wick touches the EMA area then closes bullish above it; SHORT
+          // wick tests the EMA area then closes bearish below it. The live mark
+          // may therefore be beyond EMA20 in the continuation direction. Requiring
+          // the live mark itself to remain on the retracement side rejects valid
+          // pullbacks after confirmation and is not a sound location test.
+          const pullbackReaction = s.pullbackReactionConfirmed === true;
+          const pullbackMaxPct = Math.min(1.10, Math.max(0.55, atr15Pct * 1.80, atr1hPct * 0.65));
+          locationPass = entryLevel > 0 && s.trend === s.side && pullbackReaction && levelDistancePct <= pullbackMaxPct;
+          locationReason = `EMA20 pullback requires aligned 1H trend plus confirmed 15m rejection/recovery; distance=${Number.isFinite(levelDistancePct) ? levelDistancePct.toFixed(2)+'%' : 'NA'}, max=${pullbackMaxPct.toFixed(2)}%, 1H trend=${s.trend}, reaction=${pullbackReaction}`;
         }
         if (!locationPass) {
           console.log(`[FILTER][ENTRY-LOCATION] ${s.coin} ${s.side} ${s.pattern} rejected: ${locationReason || 'no valid pattern-specific trigger level'}; entry=${fmtPrice(s.entry)} level=${fmtPrice(entryLevel)} max=${maxEntryLevelDistancePct.toFixed(2)}%`);
