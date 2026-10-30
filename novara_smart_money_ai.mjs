@@ -5,7 +5,7 @@ import { spawn } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 
 /*
- * NOVARA SMART MONEY AI V2.11.0 ADAPTIVE BTC CONFIDENCE GATE
+ * NOVARA SMART MONEY AI V2.12.0 ADAPTIVE SETUP QUALITY GATE
  * READ-ONLY | NO ORDERS | NO AUTO-COPY | PAPER OUTCOME TRACKING
  * BTC direction is inferred from weighted multi-timeframe structure, momentum, EMA alignment and candle behavior; neutral BTC does not automatically suppress every qualified setup
  *
@@ -18,8 +18,8 @@ import { fileURLToPath } from 'node:url';
  * All eligible liquid perp markets are considered; the worker does not depend on wallet lists.
  */
 
-const VERSION = 'NOVARA-SMART-MONEY-AI-V2.11.0-ADAPTIVE-BTC-CONFIDENCE-GATE';
-const CLEAN_START_ID = 'NOVARA-V2.11.0-ADAPTIVE-BTC-CONFIDENCE-GATE-COHORT-2026-10-30';
+const VERSION = 'NOVARA-SMART-MONEY-AI-V2.12.0-ADAPTIVE-SETUP-QUALITY-GATE';
+const CLEAN_START_ID = 'NOVARA-V2.12.0-ADAPTIVE-SETUP-QUALITY-GATE-COHORT-2026-10-30';
 const PAPER_MARGIN_USD = Math.max(10, Number(process.env.NOVARA_PAPER_MARGIN_USD || 1000));
 // Transparent conservative paper estimate only; configure to match your fee tier. Round-trip cost includes entry+exit fee and slippage assumptions.
 const PAPER_FEE_BPS_PER_SIDE = Math.max(0, Number(process.env.NOVARA_PAPER_FEE_BPS_PER_SIDE || 5));
@@ -1152,7 +1152,7 @@ async function main() {
     const legacyTrades = Array.isArray(state.paperTrades) ? state.paperTrades : [];
     state.archivedPaperTrades = [
       ...(Array.isArray(state.archivedPaperTrades) ? state.archivedPaperTrades : []),
-      ...legacyTrades.map(t => ({ ...t, archivedAt: now(), archiveReason: 'V2.11.0_ADAPTIVE_BTC_CONFIDENCE_GATE_COHORT_RESET' }))
+      ...legacyTrades.map(t => ({ ...t, archivedAt: now(), archiveReason: 'V2.12.0_ADAPTIVE_SETUP_QUALITY_GATE_COHORT_RESET' }))
     ];
     state.paperTrades = [];
     state.alertHistory = {};
@@ -1168,7 +1168,7 @@ async function main() {
     state.cleanStartAt = now();
     console.log(`[CLEAN-START] Archived ${legacyTrades.length} legacy paper trades; active paper history, cooldowns, and pending reports reset.`);
   } else {
-    console.log(`[CLEAN-START] Already initialized at ${new Date(n(state.cleanStartAt, 0)).toISOString()}; continuing current V2.11.0 evaluation.`);
+    console.log(`[CLEAN-START] Already initialized at ${new Date(n(state.cleanStartAt, 0)).toISOString()}; continuing current V2.12.0 evaluation.`);
   }
   state.version = VERSION;
   console.log(`\n${VERSION} — START`);
@@ -1260,16 +1260,22 @@ async function main() {
           }
           console.log(`[FILTER][BTC-WEAK-BIAS][PASS] ${s.coin} ${s.side}: BTC lean aligns (${btcConfidence}% confidence); no hard gate`);
         } else {
-          // Neutral BTC or a candidate counter to a weak BTC lean: demand independent
-          // altcoin confirmation, but never reject solely because BTC confidence is low.
+          // Adaptive soft gate: weak BTC lean must not veto every otherwise viable
+          // setup. Require a meaningful score plus at least one independent directional
+          // confirmation (asset 1H trend OR flow/order-book). Very strong setups may use
+          // either trend or order-flow confirmation; score alone is never sufficient.
           const scoreFloor = MIN_SCORE + BTC_NEUTRAL_SCORE_BONUS;
-          if (!assetTrendAligned || !flowAligned || s.score < scoreFloor) {
-            const reason = `BTC ${rawBtcDirection ? `weak ${rawBtcDirection} bias (${btcConfidence}% confidence)` : 'neutral'}; independent setup requires aligned asset 1H trend, directional flow/book, and score >= ${scoreFloor.toFixed(2)}`;
+          const veryStrongFloor = Math.max(6.50, MIN_SCORE + 0.50);
+          const hasIndependentConfirmation = assetTrendAligned || flowAligned;
+          const scorePass = s.score >= scoreFloor;
+          const strongCountertrendPass = s.score >= veryStrongFloor && hasIndependentConfirmation;
+          if (!scorePass || !hasIndependentConfirmation) {
+            const reason = `BTC ${rawBtcDirection ? `weak ${rawBtcDirection} bias (${btcConfidence}% confidence)` : 'neutral'}; setup requires score >= ${scoreFloor.toFixed(2)} and asset-trend OR directional-flow/book confirmation (score=${s.score.toFixed(2)}, trendAligned=${assetTrendAligned}, flowAligned=${flowAligned})`;
             console.log(`[FILTER][BTC-SOFT-COUNTERTREND] ${s.coin} ${s.side} ${s.pattern} rejected: ${reason}`);
             noteReject('regime', s, reason);
             continue;
           }
-          console.log(`[FILTER][BTC-SOFT-COUNTERTREND][PASS] ${s.coin} ${s.side}: independent asset confirmation; BTC=${rawBtcDirection || 'NEUTRAL'} confidence=${btcConfidence}%`);
+          console.log(`[FILTER][BTC-SOFT-COUNTERTREND][PASS] ${s.coin} ${s.side}: independent confirmation; strongSetup=${strongCountertrendPass}; trendAligned=${assetTrendAligned}; flowAligned=${flowAligned}; BTC=${rawBtcDirection || 'NEUTRAL'} confidence=${btcConfidence}%`);
         }
         // Hard market-quality gate: unknown/wide spreads are not signal-worthy.
         if (s.spreadPct == null || !Number.isFinite(s.spreadPct) || s.spreadPct > MAX_SPREAD_PCT) {
