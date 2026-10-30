@@ -5,27 +5,28 @@ import { spawn } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 
 /*
- * NOVARA SMART MONEY AI V2.14.0 ENTRY-SIDE AND BTC GATE REPAIR
+ * NOVARA SMART MONEY AI V2.15.0 DIRECTIONAL-SWEEP-BTC-STRUCTURE-NET-RISK
  * READ-ONLY | NO ORDERS | NO AUTO-COPY | PAPER OUTCOME TRACKING
  * BTC direction is inferred from weighted multi-timeframe structure, momentum, EMA alignment and candle behavior; neutral BTC does not automatically suppress every qualified setup
  *
  * Combines three entry families:
- *  1) Liquidity sweep + reclaim (selective reversed-side paper experiment only)
+ *  1) Liquidity sweep + reclaim (standard directional interpretation)
  *  2) Breakout + successful retest (normal direction)
  *  3) Trend pullback + continuation (normal direction)
  *
- * Data: Hyperliquid public Info API (no paid data API required).
+ * Data: Hyperliquid public Info API (no paid data API required); TradingView is not yet connected.
+ * V2.15 adds confirmed BTC swing-breakdown protection, standard sweep direction, conservative same-bar paper exits, and net-R:R gating.
  * All eligible liquid perp markets are considered; the worker does not depend on wallet lists.
  */
 
-const VERSION = 'NOVARA-SMART-MONEY-AI-V2.14.0-ENTRY-SIDE-BTC-GATE-REPAIR';
-const CLEAN_START_ID = 'NOVARA-V2.14.0-ENTRY-SIDE-BTC-GATE-REPAIR-COHORT-2026-10-30';
+const VERSION = 'NOVARA-SMART-MONEY-AI-V2.15.0-DIRECTIONAL-SWEEP-BTC-STRUCTURE-NET-RISK';
+const CLEAN_START_ID = 'NOVARA-V2.14.0-ENTRY-SIDE-BTC-GATE-REPAIR-COHORT-2026-10-30'; // Preserve existing paper cohort; no destructive reset on upgrade.
 const PAPER_MARGIN_USD = Math.max(10, Number(process.env.NOVARA_PAPER_MARGIN_USD || 1000));
 // Transparent conservative paper estimate only; configure to match your fee tier. Round-trip cost includes entry+exit fee and slippage assumptions.
 const PAPER_FEE_BPS_PER_SIDE = Math.max(0, Number(process.env.NOVARA_PAPER_FEE_BPS_PER_SIDE || 5));
 const PAPER_SLIPPAGE_BPS_PER_SIDE = Math.max(0, Number(process.env.NOVARA_PAPER_SLIPPAGE_BPS_PER_SIDE || 3));
 const PAPER_ROUND_TRIP_COST_PCT = 2 * (PAPER_FEE_BPS_PER_SIDE + PAPER_SLIPPAGE_BPS_PER_SIDE) / 100;
-const REVERSE_SWEEP_ONLY = true; // Only SWEEP_RECLAIM reverses the original sweep/reclaim side; other patterns retain normal direction.
+const REVERSE_SWEEP_ONLY = false; // V2.15 restores standard liquidity-sweep direction; retained only for legacy cooldown-key compatibility.
 const API = (process.env.HYPERLIQUID_API_URL || 'https://api.hyperliquid.xyz/info').trim();
 const TOKEN = process.env.TELEGRAM_TOKEN || process.env.TELEGRAM_BOT_TOKEN || '';
 const LEGACY_CHAT = process.env.TELEGRAM_CHAT_ID || '';
@@ -402,23 +403,22 @@ function detectPatterns({ coin, c15, c1h, ctx, prevCtx, mid, spread, imbalance, 
     return score;
   };
 
-  // Pattern 1: classic liquidity sweep + reclaim, with ONLY this pattern's side reversed
-  // for the explicitly requested paper experiment. A low sweep/reclaim normally LONGs,
-  // so the experiment records SHORT; a high sweep/rejection normally SHORTs, so it records LONG.
+  // Pattern 1: standard liquidity sweep + reclaim direction. A low sweep/reclaim is LONG;
+  // a high sweep/rejection is SHORT. No experimental side inversion is permitted.
   const priorLow = Math.min(...c15.slice(-10, -1).map(c => c.l));
   const priorHigh = Math.max(...c15.slice(-10, -1).map(c => c.h));
   const sweepLongOriginal = last.l < priorLow && last.c > priorLow && last.c > last.o;
   const sweepShortOriginal = last.h > priorHigh && last.c < priorHigh && last.c < last.o;
   if (sweepLongOriginal || sweepShortOriginal) {
     const originalSide = sweepLongOriginal ? 'LONG' : 'SHORT';
-    const side = oppositeSide(originalSide);
+    const side = originalSide;
     const failureLevel = originalSide === 'LONG' ? priorLow : priorHigh;
-    let score = 5.0;
-    const reasons = [`SWEEP_RECLAIM selective reverse experiment: original=${originalSide}, recorded=${side}`];
-    if (side === 'LONG' && bullishFlow || side === 'SHORT' && bearishFlow) { score += 0.75; reasons.push('flow supports reversed-side hypothesis'); }
+    let score = 5.15;
+    const reasons = [`SWEEP_RECLAIM standard direction: swept-side reclaim confirms ${side}`];
+    if (side === 'LONG' && bullishFlow || side === 'SHORT' && bearishFlow) { score += 0.75; reasons.push('directional flow confirms reclaim'); }
     if (volRatio >= 1.15) { score += 0.40; reasons.push('relative volume expansion'); }
-    if (side === 'LONG' && trend === 'LONG' || side === 'SHORT' && trend === 'SHORT') { score += 0.35; reasons.push('1H trend aligns with tested side'); }
-    if (side === 'LONG' && oiConfirmsLong || side === 'SHORT' && oiConfirmsShort) { score += 0.20; reasons.push('OI participation supports tested side'); }
+    if (side === 'LONG' && trend === 'LONG' || side === 'SHORT' && trend === 'SHORT') { score += 0.40; reasons.push('1H trend aligns with reclaim'); }
+    if (side === 'LONG' && oiConfirmsLong || side === 'SHORT' && oiConfirmsShort) { score += 0.20; reasons.push('OI participation supports reclaim direction'); }
     if (side === 'LONG' && fundingPct < 0.035 || side === 'SHORT' && fundingPct > -0.035) score += 0.10;
     score = addContext(side, score, reasons);
     results.push({ coin, side, originalSide, pattern: 'SWEEP_RECLAIM', failureLevel, rawSupport, rawResistance, minLevelGap, score: clamp(score, 0, 9.5), reasons, entry: mid, atr: atr15, atr1h, support, resistance, supportSource, resistanceSource, supportTouches: selectedSupport?.touches || 0, resistanceTouches: selectedResistance?.touches || 0, supportLevels: supportCandidates.map(x => ({ price: x.price, touches: x.touches, source: x.source })), resistanceLevels: resistanceCandidates.map(x => ({ price: x.price, touches: x.touches, source: x.source })), trend, btcRegime: btcRegime || { label: 'NEUTRAL', change24hPct: 0 }, rsi15, fibConfluence: fib.confluence, volRatio, oiChange, fundingPct, flowDelta: flow.delta, imbalance, vwap: vwap15, spreadPct: spread, atrPct, dayVolume: n(ctx?.dayVolume), maxLeverage: n(ctx?.maxLeverage) });
@@ -672,9 +672,9 @@ function formatSignal(s, risk) {
     const move = Number.isFinite(Number(r.change24hPct)) ? ` | 24h ${Number(r.change24hPct).toFixed(2)}%` : '';
     return `${tf}: ${ev.label || 'NEUTRAL'} (evidence ${n(ev.score).toFixed(2)}, EMA ${ev.emaAligned || 'MIXED'}${move})`;
   };
-  const reversed = false;
   const modeLabel = 'ADAPTIVE BTC REGIME';
-  return `${emoji} <b>NOVARA SMART MONEY AI — ADAPTIVE BTC REGIME</b>\n🧭 BTC regime: adaptive multi-timeframe structure + momentum + EMA + rejection analysis\n📐 BTC direction: ${btc.label || 'NEUTRAL'} | confidence: ${n(btc.confidence)}% | score: ${n(btc.directionScore).toFixed(3)}\n━━━━━━━━━━━━━━━━━━\n<b>${s.side} ${escapeHtml(s.coin)} PERP</b>\n🧭 Setup: ${escapeHtml(s.pattern.replaceAll('_', ' '))}\n📍 Entry (reference): <code>${fmtPrice(risk.entry)}</code>\n🛑 Stop Loss: <code>${fmtPrice(risk.sl)}</code> (${pct(risk.riskPct)})\n🎯 Take Profit: <code>${fmtPrice(risk.tp)}</code> (${pct(risk.rewardPct)})\n⚖️ Planned R:R: 1:${risk.rr.toFixed(2)}\n⚡ Suggested Leverage: ${lev.leverage}x${lev.cappedBelowRequestedRange ? ` (exchange max: ${Math.floor(lev.exchangeMax)}x)` : ''}\n🧠 Setup score: ${s.score.toFixed(2)}/10 (not a win-probability estimate)\n📊 Asset 1H trend: ${s.trend}\n₿ <b>BTC MARKET CHECK</b>\n${tfLine('4H', '4H')}\n${tfLine('1H', '1H')}\n${tfLine('15m', '15m')}\n📉 Alt 15m RSI: ${n(s.rsi15, 50).toFixed(1)} | Fib: ${s.fibConfluence ? 'YES' : 'NO'} | Volume: ${s.volRatio.toFixed(2)}x\n🌊 Trade delta: ${(s.flowDelta * 100).toFixed(1)}% | Book imbalance: ${(s.imbalance * 100).toFixed(1)}%\n📈 OI change: ${s.oiChange >= 0 ? '+' : ''}${s.oiChange.toFixed(2)}% | Funding: ${s.fundingPct.toFixed(4)}%\n🧱 1H Structure: Support ${fmtPrice(s.support)} (${s.supportTouches || 0} touches) | Resistance ${fmtPrice(s.resistance)} (${s.resistanceTouches || 0} touches)\n🧩 Evidence:\n${reasons}\n\n🧪 Mode: ${modeLabel}. Paper tracking only — no real orders.`;
+  return `${emoji} <b>NOVARA SMART MONEY AI — ADAPTIVE BTC REGIME</b>\n🧭 BTC regime: adaptive multi-timeframe structure + momentum + EMA + rejection analysis\n📐 BTC direction: ${btc.label || 'NEUTRAL'} | confidence: ${n(btc.confidence)}% | score: ${n(btc.directionScore).toFixed(3)}
+🧱 BTC support breakdown: ${btc.structure?.breakdown ? `CONFIRMED (${(btc.structure.confirmedBy || []).join('+')}) — LONG blocked` : 'not confirmed'}\n━━━━━━━━━━━━━━━━━━\n<b>${s.side} ${escapeHtml(s.coin)} PERP</b>\n🧭 Setup: ${escapeHtml(s.pattern.replaceAll('_', ' '))}\n📍 Entry (reference): <code>${fmtPrice(risk.entry)}</code>\n🛑 Stop Loss: <code>${fmtPrice(risk.sl)}</code> (${pct(risk.riskPct)})\n🎯 Take Profit: <code>${fmtPrice(risk.tp)}</code> (${pct(risk.rewardPct)})\n⚖️ Planned R:R: 1:${risk.rr.toFixed(2)} gross | 1:${n(risk.netRR, risk.rr).toFixed(2)} net\n⚡ Suggested Leverage: ${lev.leverage}x${lev.cappedBelowRequestedRange ? ` (exchange max: ${Math.floor(lev.exchangeMax)}x)` : ''}\n🧠 Setup score: ${s.score.toFixed(2)}/10 (not a win-probability estimate)\n📊 Asset 1H trend: ${s.trend}\n₿ <b>BTC MARKET CHECK</b>\n${tfLine('4H', '4H')}\n${tfLine('1H', '1H')}\n${tfLine('15m', '15m')}\n📉 Alt 15m RSI: ${n(s.rsi15, 50).toFixed(1)} | Fib: ${s.fibConfluence ? 'YES' : 'NO'} | Volume: ${s.volRatio.toFixed(2)}x\n🌊 Trade delta: ${(s.flowDelta * 100).toFixed(1)}% | Book imbalance: ${(s.imbalance * 100).toFixed(1)}%\n📈 OI change: ${s.oiChange >= 0 ? '+' : ''}${s.oiChange.toFixed(2)}% | Funding: ${s.fundingPct.toFixed(4)}%\n🧱 1H Structure: Support ${fmtPrice(s.support)} (${s.supportTouches || 0} touches) | Resistance ${fmtPrice(s.resistance)} (${s.resistanceTouches || 0} touches)\n🧩 Evidence:\n${reasons}\n\n🧪 Mode: ${modeLabel}. Paper tracking only — no real orders.`;
 }
 
 let telegramNextAt = 0;
@@ -789,7 +789,9 @@ function reportAudiences() {
 function candleHit(trade, candle) {
   const hitSL = trade.side === 'LONG' ? candle.l <= trade.sl : candle.h >= trade.sl;
   const hitTP = trade.side === 'LONG' ? candle.h >= trade.tp : candle.l <= trade.tp;
-  if (hitSL && hitTP) return 'AMBIGUOUS';
+  // OHLC cannot reveal which level was touched first inside the same 1m bar.
+  // Conservative accounting records the stop first to avoid optimistic paper results.
+  if (hitSL && hitTP) return 'SL';
   if (hitSL) return 'SL';
   if (hitTP) return 'TP';
   return null;
@@ -852,7 +854,7 @@ async function updatePaperTrades(state, contexts) {
     trade.estimatedCostR = estimatedCostR;
     trade.pnlR = result === 'TP' || result === 'SL' ? trade.grossPnlR - estimatedCostR : null;
     trade.paperMarginUsd = PAPER_MARGIN_USD;
-    trade.exitDetection = result === 'AMBIGUOUS' ? 'same_1m_candle_both_levels' : (exitDetection || 'unknown_detection');
+    trade.exitDetection = (result === 'SL' && exitDetection === '1m_candle_ohlc' && candleSet.bars.some(bar => bar.t >= firstWholeMinute && candleHit(trade, bar) === 'SL' && bar.l <= trade.sl && bar.h >= trade.tp)) ? 'same_1m_candle_both_levels_conservative_SL' : (exitDetection || 'unknown_detection');
     closed.push(trade);
     if (result === 'TP' || result === 'SL') {
       const dk = dayKey(trade.closedAt);
@@ -1086,6 +1088,22 @@ function inferBtcRegime(timeframes) {
   return { timeframe: 'ADAPTIVE BTC REGIME', status: direction ? 'OK' : 'NEUTRAL', trend: direction || 'NEUTRAL', label, directionScore: score, confidence, evidence, timeframes, change24hPct: Number.isFinite(change) ? change : null, directionSource: `weighted multi-timeframe score=${score.toFixed(3)} confidence=${confidence}%` };
 }
 
+function btcStructureState(rows, timeframe) {
+  const c = Array.isArray(rows) ? rows : [];
+  if (c.length < 30) return { timeframe, available: false, breakdown: false, reclaim: false, swingLow: 0, close: 0 };
+  const last = c.at(-1), prev = c.at(-2);
+  const prior = c.slice(-22, -2);
+  const swingLow = Math.min(...prior.map(x => x.l));
+  const swingHigh = Math.max(...prior.map(x => x.h));
+  const a = atr(c, 14) || last.c * 0.005;
+  // Confirm breakdown only after two completed closes below the prior 20-bar swing low,
+  // with the latest close at least 0.10 ATR beneath it. A wick alone is not a breakdown.
+  const breakdown = last.c < swingLow - a * 0.10 && prev.c < swingLow;
+  const reclaim = last.c > swingLow + a * 0.10;
+  const resistanceBreak = last.c > swingHigh + a * 0.10 && prev.c > swingHigh;
+  return { timeframe, available: true, breakdown, reclaim, resistanceBreak, swingLow, swingHigh, close: last.c, atr: a };
+}
+
 async function refreshBtcDirection(fallbackRegime) {
   const specs = [
     { key: '4H', interval: '4h', hours: 30 * 24, barsPer24h: 6 },
@@ -1094,12 +1112,14 @@ async function refreshBtcDirection(fallbackRegime) {
     { key: '5m', interval: '5m', hours: 18, barsPer24h: 288 },
   ];
   const timeframes = {};
+  const structure = {};
   for (const spec of specs) {
     try {
       const rows = await candles('BTC', spec.interval, spec.hours);
       const regime = marketRegime(rows, spec.barsPer24h, spec.key);
       const ev = timeframeEvidence(rows);
-      timeframes[spec.key] = { ...regime, evidence: ev };
+      structure[spec.key] = btcStructureState(rows, spec.key);
+      timeframes[spec.key] = { ...regime, evidence: ev, structure: structure[spec.key] };
       console.log(`[BTC][EVIDENCE] ${spec.key}=${ev.available ? ev.score.toFixed(2) : 'NA'} ${ev.details || ''} candles=${rows.length}`);
     } catch (e) {
       timeframes[spec.key] = { timeframe: spec.key, status: 'UNAVAILABLE', trend: 'UNAVAILABLE', label: 'UNAVAILABLE', change24hPct: null, candles: 0, evidence: { available: false, score: 0, details: e?.message || 'fetch failed' } };
@@ -1107,7 +1127,16 @@ async function refreshBtcDirection(fallbackRegime) {
     }
   }
   const out = inferBtcRegime(timeframes);
+  const s4h = structure['4H'], s1h = structure['1H'], s15m = structure['15m'];
+  // 4H confirmation is sufficient; otherwise require both 1H and 15m to break.
+  out.structure = {
+    breakdown: Boolean(s4h?.breakdown || (s1h?.breakdown && s15m?.breakdown)),
+    confirmedBy: s4h?.breakdown ? ['4H'] : (s1h?.breakdown && s15m?.breakdown ? ['1H','15m'] : []),
+    reclaimed: Boolean(s4h?.reclaim || (s1h?.reclaim && s15m?.reclaim)),
+    fourHour: s4h || null, oneHour: s1h || null, fifteenMinute: s15m || null,
+  };
   out.refreshedAt = now();
+  console.log(`[BTC][STRUCTURE] breakdown=${out.structure.breakdown} confirmedBy=${out.structure.confirmedBy.join('+') || 'none'} reclaimed=${out.structure.reclaimed} 4H-low=${fmtPrice(s4h?.swingLow)} 1H-low=${fmtPrice(s1h?.swingLow)}`);
   console.log(`[BTC][ADAPTIVE-REGIME] direction=${out.trend} confidence=${out.confidence}% score=${out.directionScore.toFixed(3)} source=${out.directionSource}`);
   console.log(`[BTC][SUMMARY] ${['4H','1H','15m','5m'].map(tf => { const r=timeframes[tf], ev=r?.evidence; return `${tf}=${ev?.available ? (ev.label || 'NEUTRAL') : 'UNAVAILABLE'}(${ev?.score?.toFixed?.(2) ?? 'NA'})`; }).join(' | ')}`);
   return out;
@@ -1167,16 +1196,16 @@ async function main() {
     state.cleanStartAt = now();
     console.log(`[CLEAN-START] Archived ${legacyTrades.length} legacy paper trades; active paper history, cooldowns, and pending reports reset.`);
   } else {
-    console.log(`[CLEAN-START] Already initialized at ${new Date(n(state.cleanStartAt, 0)).toISOString()}; continuing current V2.12.0 evaluation.`);
+    console.log(`[CLEAN-START] Already initialized at ${new Date(n(state.cleanStartAt, 0)).toISOString()}; continuing the existing paper cohort without resetting prior records.`);
   }
   state.version = VERSION;
   console.log(`\n${VERSION} — START`);
   console.log(`Mode: READ-ONLY / NO ORDERS / NO AUTO-COPY / PAPER TRACKING`);
-  console.log(`[STRATEGY][PATTERNS] SWEEP_RECLAIM=REVERSED SIDE ONLY | BREAKOUT_RETEST=NORMAL | TREND_PULLBACK=NORMAL`);
+  console.log(`[STRATEGY][PATTERNS] SWEEP_RECLAIM=STANDARD DIRECTION | BREAKOUT_RETEST=NORMAL | TREND_PULLBACK=NORMAL`);
   console.log(`[PAPER][COST MODEL] roundTrip=${PAPER_ROUND_TRIP_COST_PCT.toFixed(3)}% (fees ${PAPER_FEE_BPS_PER_SIDE}bps/side; slippage ${PAPER_SLIPPAGE_BPS_PER_SIDE}bps/side); funding excluded`);
-  console.log(`[CLEAN-START] Evaluation cohort begins ${new Date(n(state.cleanStartAt, started)).toISOString()} (UTC); only newly recorded ${VERSION} trades count.`);
+  console.log(`[CLEAN-START] Evaluation cohort begins ${new Date(n(state.cleanStartAt, started)).toISOString()} (UTC); existing cohort retained; new trades are tagged ${VERSION}.`);
   console.log(`Time: ${new Date().toISOString()}`);
-  console.log(`Strategy: selective reverse experiment (SWEEP_RECLAIM only); BREAKOUT_RETEST and TREND_PULLBACK normal direction; pattern-specific trigger gates; 1H multi-touch support/resistance independently sets fresh SL/TP; LONG stop below support and target before resistance; SHORT stop above resistance and target before support; minimum structural R:R 1:1.5; estimated paper round-trip cost=${PAPER_ROUND_TRIP_COST_PCT.toFixed(3)}% (fee ${PAPER_FEE_BPS_PER_SIDE} bps/side + slippage ${PAPER_SLIPPAGE_BPS_PER_SIDE} bps/side); PAPER TRACKING only | Signal threshold: ${MIN_SCORE}/10 | min R:R: 1:${MIN_RR.toFixed(2)} | BTC adaptive regime: weighted 4H/1H/15m/5m structure+momentum+EMA+rejection evidence; hard directional gate only above confidence threshold; weak BTC bias is a soft filter | structure-first SL/TP | 24h volume floor: NONE | market cap: NONE (all active listed perps)`);
+  console.log(`Strategy: standard-direction SWEEP_RECLAIM; BREAKOUT_RETEST and TREND_PULLBACK normal direction; pattern-specific trigger gates; 1H multi-touch support/resistance independently sets fresh SL/TP; LONG stop below support and target before resistance; SHORT stop above resistance and target before support; minimum net R:R after estimated fees/slippage 1:1.5; estimated paper round-trip cost=${PAPER_ROUND_TRIP_COST_PCT.toFixed(3)}% (fee ${PAPER_FEE_BPS_PER_SIDE} bps/side + slippage ${PAPER_SLIPPAGE_BPS_PER_SIDE} bps/side); PAPER TRACKING only | Signal threshold: ${MIN_SCORE}/10 | min R:R: 1:${MIN_RR.toFixed(2)} | BTC adaptive regime: weighted 4H/1H/15m/5m structure+momentum+EMA+rejection evidence; hard directional gate only above confidence threshold; weak BTC bias is a soft filter | structure-first SL/TP | 24h volume floor: NONE | market cap: NONE (all active listed perps)`);
   console.log(`[API][POLICY] requestGap=${SCAN_GAP_MS}ms retries429=${MAX_429_RETRIES} backoff=${RATE_LIMIT_BASE_MS}-${RATE_LIMIT_MAX_MS}ms globalCooldown=yes`);
   console.log(`[TELEGRAM][CONFIG] token=${TOKEN ? 'configured' : 'MISSING'} vipChat=${VIP_CHAT ? 'configured' : (LEGACY_CHAT ? 'legacy-fallback' : 'MISSING')} freeChat=${FREE_CHAT ? 'configured' : 'MISSING'} legacyChat=${LEGACY_CHAT ? 'configured' : 'MISSING'}`);
   if (!TOKEN || (!VIP_CHAT && !LEGACY_CHAT && !FREE_CHAT)) {
@@ -1226,8 +1255,8 @@ async function main() {
           const sideAdjustment = finalSideEvidenceAdjustment(candidate, patternSide);
           candidate.score = clamp(candidate.score + sideAdjustment, 0, 9.5);
           const trendRelation = candidate.trend === patternSide ? 'aligned' : 'countertrend';
-          candidate.reasons = [`${candidate.pattern === 'SWEEP_RECLAIM' ? 'SELECTIVE REVERSED SWEEP' : 'NORMAL-DIRECTION SETUP'}: side=${patternSide}; asset 1H trend=${candidate.trend} (${trendRelation}) is context; BTC adaptive regime ${liveBtc.label || 'NEUTRAL'} (${n(liveBtc.confidence)}% confidence); regime gate is applied before selection; fresh SL/TP recalculated from 1H structure`, `Same-side evidence adjustment ${sideAdjustment >= 0 ? '+' : ''}${sideAdjustment.toFixed(2)} (flow/order-book/RSI/VWAP)`, ...candidate.reasons];
-          console.log(`[DIRECTION][SELECTIVE-PATTERN-SIDE] ${candidate.coin} ${candidate.pattern}: side=${patternSide}; 1H=${candidate.trend}; BTC=${liveBtc.trend}; evidenceAdjustment=${sideAdjustment.toFixed(2)}; score=${candidate.score.toFixed(2)}; entry=${fmtPrice(candidate.entry)} support=${fmtPrice(candidate.support)} resistance=${fmtPrice(candidate.resistance)}`);
+          candidate.reasons = [`${candidate.pattern === 'SWEEP_RECLAIM' ? 'STANDARD-DIRECTION SWEEP' : 'NORMAL-DIRECTION SETUP'}: side=${patternSide}; asset 1H trend=${candidate.trend} (${trendRelation}) is context; BTC adaptive regime ${liveBtc.label || 'NEUTRAL'} (${n(liveBtc.confidence)}% confidence); regime gate is applied before selection; fresh SL/TP recalculated from 1H structure`, `Same-side evidence adjustment ${sideAdjustment >= 0 ? '+' : ''}${sideAdjustment.toFixed(2)} (flow/order-book/RSI/VWAP)`, ...candidate.reasons];
+          console.log(`[DIRECTION][PATTERN-SIDE] ${candidate.coin} ${candidate.pattern}: side=${patternSide}; 1H=${candidate.trend}; BTC=${liveBtc.trend}; evidenceAdjustment=${sideAdjustment.toFixed(2)}; score=${candidate.score.toFixed(2)}; entry=${fmtPrice(candidate.entry)} support=${fmtPrice(candidate.support)} resistance=${fmtPrice(candidate.resistance)}`);
         }
       }
       for (const s of found) {
@@ -1240,6 +1269,13 @@ async function main() {
           ? n(s.flowDelta) >= 0.08 || n(s.imbalance) >= 0.12
           : n(s.flowDelta) <= -0.08 || n(s.imbalance) <= -0.12;
         const assetTrendAligned = s.trend === s.side;
+        const btcBreakdown = Boolean(s.btcRegime?.structure?.breakdown);
+        if (s.side === 'LONG' && btcBreakdown) {
+          const reason = `confirmed BTC support breakdown (${(s.btcRegime.structure.confirmedBy || []).join('+')}); LONG entries blocked until BTC structure is reclaimed`;
+          console.log(`[FILTER][BTC-SUPPORT-BREAKDOWN] ${s.coin} LONG ${s.pattern} rejected: ${reason}`);
+          noteReject('regime', s, reason);
+          continue;
+        }
         if (btcDirection && s.side !== btcDirection) {
           // V2.14: do not make BTC direction an unconditional veto for a strongly
           // confirmed independent asset setup. This exception requires all three:
@@ -1298,13 +1334,13 @@ async function main() {
         if (s.pattern === 'SWEEP_RECLAIM') {
           entryLevel = n(s.failureLevel);
           levelDistancePct = entryLevel > 0 ? Math.abs(s.entry - entryLevel) / s.entry * 100 : Infinity;
-          // The original candle must reclaim/reject the swing; only the tested trade side is inverted.
+          // Entry must remain near the reclaimed/rejected swing in the same direction as the pattern.
           const originalSide = s.originalSide;
           const candleConfirmed = originalSide === 'LONG'
-            ? s.entry > entryLevel && s.side === 'SHORT'
-            : originalSide === 'SHORT' && s.entry < entryLevel && s.side === 'LONG';
+            ? s.entry > entryLevel && s.side === 'LONG'
+            : originalSide === 'SHORT' && s.entry < entryLevel && s.side === 'SHORT';
           locationPass = entryLevel > 0 && levelDistancePct <= Math.max(maxEntryLevelDistancePct, 0.25) && candleConfirmed;
-          locationReason = `reversed sweep must stay near reclaimed/rejected swing ${fmtPrice(entryLevel)}; original=${originalSide}, tested=${s.side}, distance=${Number.isFinite(levelDistancePct) ? levelDistancePct.toFixed(2)+'%' : 'NA'}`;
+          locationReason = `standard sweep reclaim must stay near reclaimed/rejected swing ${fmtPrice(entryLevel)}; original=${originalSide}, trade=${s.side}, distance=${Number.isFinite(levelDistancePct) ? levelDistancePct.toFixed(2)+'%' : 'NA'}`;
         } else if (s.pattern === 'BREAKOUT_RETEST') {
           entryLevel = n(s.breakoutLevel);
           levelDistancePct = entryLevel > 0 ? Math.abs(s.entry - entryLevel) / s.entry * 100 : Infinity;
@@ -1373,11 +1409,20 @@ async function main() {
         }
         if (isCooldown(state, s)) { noteReject('cooldown', s, '30-minute cross-pattern / 90-minute per-pattern cooldown'); continue; }
         const risk = buildRisk(s);
-        if (!risk.valid) console.log(`[FILTER][RISK] ${s.coin} ${s.side} rejected: ${risk.reason} | entry=${fmtPrice(risk.entry || s.entry)} SL=${fmtPrice(risk.sl)} TP=${fmtPrice(risk.tp)} risk=${pct(risk.riskPct)} reward=${pct(risk.rewardPct)} support=${fmtPrice(s.support)}(${s.supportSource || '?'}) resistance=${fmtPrice(s.resistance)}(${s.resistanceSource || '?'}) rawSupport=${fmtPrice(s.rawSupport)} rawResistance=${fmtPrice(s.rawResistance)} ATR=${fmtPrice(s.atr)} R:R=${n(risk.rr).toFixed(2)} required=1:${MIN_RR.toFixed(2)}`);
+        if (risk.valid) {
+          const estimatedCostR = PAPER_ROUND_TRIP_COST_PCT / Math.max(0.01, n(risk.riskPct));
+          risk.estimatedCostR = estimatedCostR;
+          risk.netRR = Math.max(0, n(risk.rr) - estimatedCostR);
+          if (risk.netRR < MIN_RR) {
+            risk.valid = false;
+            risk.reason = `net R:R after estimated round-trip fees/slippage is 1:${risk.netRR.toFixed(2)} < required 1:${MIN_RR.toFixed(2)} (gross 1:${n(risk.rr).toFixed(2)}, cost ${estimatedCostR.toFixed(2)}R)`;
+          }
+        }
+        if (!risk.valid) console.log(`[FILTER][RISK] ${s.coin} ${s.side} rejected: ${risk.reason} | entry=${fmtPrice(risk.entry || s.entry)} SL=${fmtPrice(risk.sl)} TP=${fmtPrice(risk.tp)} risk=${pct(risk.riskPct)} reward=${pct(risk.rewardPct)} support=${fmtPrice(s.support)}(${s.supportSource || '?'}) resistance=${fmtPrice(s.resistance)}(${s.resistanceSource || '?'}) rawSupport=${fmtPrice(s.rawSupport)} rawResistance=${fmtPrice(s.rawResistance)} ATR=${fmtPrice(s.atr)} grossR:R=${n(risk.rr).toFixed(2)} netR:R=${n(risk.netRR).toFixed(2)} required=1:${MIN_RR.toFixed(2)}`);
         if (!risk.valid || risk.rr < MIN_RR || !(risk.sl > 0) || !(risk.tp > 0)) {
           noteReject('risk', s, risk.reason || `R:R ${n(risk.rr).toFixed(2)} < ${MIN_RR}`);
           if (n(risk.rr) >= MIN_RR - 0.5 && n(risk.rr) < MIN_RR) {
-            console.log(`[NEAR-MISS][RISK] ${s.coin} ${s.side} ${s.pattern} R:R=1:${n(risk.rr).toFixed(2)} required=1:${MIN_RR.toFixed(2)} entry=${fmtPrice(risk.entry)} SL=${fmtPrice(risk.sl)} TP=${fmtPrice(risk.tp)} risk=${pct(risk.riskPct)} reward=${pct(risk.rewardPct)} support=${fmtPrice(s.support)} resistance=${fmtPrice(s.resistance)} bufferATR=${STRUCTURE_BUFFER_ATR}`);
+            console.log(`[NEAR-MISS][RISK] ${s.coin} ${s.side} ${s.pattern} R:R=1:${n(risk.rr).toFixed(2)} gross / 1:${n(risk.netRR, n(risk.rr)).toFixed(2)} net required=1:${MIN_RR.toFixed(2)} entry=${fmtPrice(risk.entry)} SL=${fmtPrice(risk.sl)} TP=${fmtPrice(risk.tp)} risk=${pct(risk.riskPct)} reward=${pct(risk.rewardPct)} support=${fmtPrice(s.support)} resistance=${fmtPrice(s.resistance)} bufferATR=${STRUCTURE_BUFFER_ATR}`);
           }
           continue;
         }
@@ -1443,7 +1488,7 @@ async function main() {
       state.alertHistory[signalKey(s)] = now();
       state.alertHistory[`${s.coin}|${s.side}|GLOBAL`] = now();
       const audience = deliveredNames.includes('VIP') && deliveredNames.includes('FREE') ? 'BOTH' : deliveredNames[0];
-      state.paperTrades.push({ strategyVersion: VERSION, id: `${s.coin}|${s.side}|${s.pattern}|${now()}`, coin: s.coin, side: s.side, pattern: s.pattern, score: Number(s.score.toFixed(2)), audience, outcomeDelivered: [], entry: s.risk.entry, sl: s.risk.sl, tp: s.risk.tp, rr: s.risk.rr, riskPct: s.risk.riskPct, estimatedRoundTripCostPct: PAPER_ROUND_TRIP_COST_PCT, suggestedLeverage: s.leverageInfo?.leverage ?? null, btcRegime: s.btcRegime?.label || 'NEUTRAL', rsi15: s.rsi15, fibConfluence: Boolean(s.fibConfluence), openedAt: now(), lastCheckedAt: now(), status: 'OPEN', pnlR: null, reasons: s.reasons });
+      state.paperTrades.push({ strategyVersion: VERSION, id: `${s.coin}|${s.side}|${s.pattern}|${now()}`, coin: s.coin, side: s.side, pattern: s.pattern, score: Number(s.score.toFixed(2)), audience, outcomeDelivered: [], entry: s.risk.entry, sl: s.risk.sl, tp: s.risk.tp, rr: s.risk.rr, netRR: s.risk.netRR, riskPct: s.risk.riskPct, estimatedRoundTripCostPct: PAPER_ROUND_TRIP_COST_PCT, suggestedLeverage: s.leverageInfo?.leverage ?? null, btcRegime: s.btcRegime?.label || 'NEUTRAL', rsi15: s.rsi15, fibConfluence: Boolean(s.fibConfluence), openedAt: now(), lastCheckedAt: now(), status: 'OPEN', pnlR: null, reasons: s.reasons });
     } else {
       sendErrors++;
       console.warn(`[DELIVERY][FAIL] ${s.coin} ${s.side}: no destination confirmed delivery`);
