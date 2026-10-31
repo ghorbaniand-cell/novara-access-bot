@@ -1,0 +1,27 @@
+V2.18.0 IMPLEMENTATION NOTES
+
+Base: V2.17.0 BTC-NEXT-MOVE-SCENARIO-ENGINE.
+Version: NOVARA-SMART-MONEY-AI-V2.18.0-BTC-ETH-HISTORICAL-REACTION-MEMORY.
+
+Changes:
+1) Added multi-year BTCUSD/BTCUSDT and ETHUSD/ETHUSDT public OHLCV retrieval from Binance.US.
+2) Fetches 1d, 1w, and 1M completed candles; paginates at 1000 rows per request.
+3) Builds pivot clusters using 3/3 daily, 2/2 weekly, and 1/1 monthly swing confirmation.
+4) Scores clusters from pivot count, separated candle interactions, wick rejections, timeframe confluence, and a 1800-day exponential recency half-life.
+5) Persists up to 80 levels per asset in the existing state JSON, with a 24-hour refresh cache.
+6) Detects historical resistance rejection and support reclaim from completed 4H BTC / 1H ETH candle behavior.
+7) Detects level role reversal only after both a completed daily close and completed short-term close beyond the zone; a wick alone does not flip a level.
+8) Applies BTC primary and ETH secondary context to candidate scores and adds a conservative unresolved-level wait gate.
+9) Adds historical context to Telegram signal text and paper trade records.
+10) Preserves CLEAN_START_ID, STATE_SCHEMA, existing paper trades, and all existing orderless/paper-only behavior.
+
+Validation performed:
+- `node --check novara_smart_money_ai.mjs` PASS.
+- Synthetic helper tests: level map generated; support reclaim detected; resistance rejection detected; opposing LONG correctly blocked at confirmed BTC resistance rejection.
+- No live Binance.US/Hyperliquid API execution was performed in this environment (network access unavailable).
+- No historical backtest or forward performance improvement is claimed.
+
+Important follow-up:
+- Confirm first GitHub Actions run logs [HISTORY][LEVEL-MEMORY][BTC] and [ETH] with adequate candle counts and [HISTORY][REACTION] with actual nearest zones.
+- Confirm workflow commits production/state/novara_smart_money_state.json; otherwise the level cache will be downloaded again on each ephemeral runner.
+- Keep paper-only until a sufficiently large forward cohort and out-of-sample walk-forward validation demonstrate positive net expectancy after costs.
