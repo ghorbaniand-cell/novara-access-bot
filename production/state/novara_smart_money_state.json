@@ -1,1081 +1,1081 @@
 {
   "schema": 1,
-  "version": "NOVARA-SMART-MONEY-AI-V2.17.0-BTC-NEXT-MOVE-SCENARIO-ENGINE",
-  "lastRunAt": 1793479399937,
+  "version": "NOVARA-SMART-MONEY-AI-V2.18.0-BTC-ETH-HISTORICAL-REACTION-MEMORY",
+  "lastRunAt": 1793480918192,
   "previousMarketContext": {
     "BTC": {
-      "markPx": 77557,
-      "openInterest": 41196.15406,
+      "markPx": 77443,
+      "openInterest": 40744.65052,
       "funding": 0.0000125,
-      "at": 1793479399937
+      "at": 1793480918192
     },
     "HYPE": {
-      "markPx": 87.7494,
-      "openInterest": 22033620,
-      "funding": 0.000027639,
-      "at": 1793479399937
+      "markPx": 87.794,
+      "openInterest": 21992690.36000003,
+      "funding": 0.0000283141,
+      "at": 1793480918192
     },
     "ETH": {
-      "markPx": 2251.86,
-      "openInterest": 978170.9244,
+      "markPx": 2251.43,
+      "openInterest": 978343.0887999996,
       "funding": 0.0000125,
-      "at": 1793479399937
+      "at": 1793480918192
     },
     "ZEC": {
-      "markPx": 1270.8,
-      "openInterest": 482788.9200000002,
+      "markPx": 1269.8,
+      "openInterest": 482837.6600000002,
       "funding": 0.0000125,
-      "at": 1793479399937
+      "at": 1793480918192
     },
     "SOL": {
-      "markPx": 95.57,
-      "openInterest": 5391604.419999999,
+      "markPx": 95.505,
+      "openInterest": 5393843.719999998,
       "funding": 0.0000125,
-      "at": 1793479399937
+      "at": 1793480918192
     },
     "NEAR": {
-      "markPx": 4.4145,
-      "openInterest": 54851650.399999976,
+      "markPx": 4.4163,
+      "openInterest": 54886241.4,
       "funding": 0.0000125,
-      "at": 1793479399937
+      "at": 1793480918192
     },
     "XMR": {
-      "markPx": 601.94,
-      "openInterest": 232211.224,
-      "funding": 0.0001100495,
-      "at": 1793479399937
+      "markPx": 600.908,
+      "openInterest": 232416.534,
+      "funding": 0.0000478145,
+      "at": 1793480918192
     },
     "kPEPE": {
-      "markPx": 0.004988,
-      "openInterest": 13132019690,
-      "funding": 0.0000125,
-      "at": 1793479399937
+      "markPx": 0.005004,
+      "openInterest": 13110532654,
+      "funding": 0.0000089161,
+      "at": 1793480918192
     },
     "LIT": {
-      "markPx": 3.1217,
-      "openInterest": 41928320,
+      "markPx": 3.1003,
+      "openInterest": 41977838,
       "funding": 0.0000125,
-      "at": 1793479399937
+      "at": 1793480918192
     },
     "PUMP": {
-      "markPx": 0.004193,
-      "openInterest": 23642122660,
+      "markPx": 0.004198,
+      "openInterest": 23787523738,
       "funding": 0.0000125,
-      "at": 1793479399937
+      "at": 1793480918192
     },
     "UNI": {
-      "markPx": 7.0877,
-      "openInterest": 11055924.000000004,
-      "funding": 0.0000450009,
-      "at": 1793479399937
+      "markPx": 7.1103,
+      "openInterest": 11053164.200000003,
+      "funding": 0.0000398338,
+      "at": 1793480918192
     },
     "ENA": {
-      "markPx": 0.18903,
-      "openInterest": 504173112,
+      "markPx": 0.18869,
+      "openInterest": 503408138,
       "funding": 0.0000125,
-      "at": 1793479399937
+      "at": 1793480918192
     },
     "WLD": {
-      "markPx": 0.3957,
-      "openInterest": 133728267.8,
+      "markPx": 0.39594,
+      "openInterest": 133724249.6,
       "funding": 0.0000125,
-      "at": 1793479399937
+      "at": 1793480918192
     },
     "ZRO": {
-      "markPx": 1.79485,
-      "openInterest": 40031535.4,
-      "funding": 0.0000374064,
-      "at": 1793479399937
+      "markPx": 1.8016,
+      "openInterest": 40014868.19999999,
+      "funding": 0.0000230966,
+      "at": 1793480918192
     },
     "XPL": {
-      "markPx": 0.082163,
-      "openInterest": 1221311042,
-      "funding": 0.0001287296,
-      "at": 1793479399937
+      "markPx": 0.082045,
+      "openInterest": 1218382674,
+      "funding": 0.000050899,
+      "at": 1793480918192
     },
     "XRP": {
-      "markPx": 1.2503,
-      "openInterest": 156340702,
+      "markPx": 1.2489,
+      "openInterest": 156518404,
       "funding": 0.0000125,
-      "at": 1793479399937
+      "at": 1793480918192
     },
     "TRX": {
-      "markPx": 0.304991,
-      "openInterest": 49466822,
-      "funding": -0.0000338,
-      "at": 1793479399937
+      "markPx": 0.30414,
+      "openInterest": 49341974,
+      "funding": -0.0000487459,
+      "at": 1793480918192
     },
     "BNB": {
-      "markPx": 704.73,
-      "openInterest": 89511.784,
-      "funding": 0.0000125,
-      "at": 1793479399937
+      "markPx": 702.95,
+      "openInterest": 89120.2,
+      "funding": -0.0000076795,
+      "at": 1793480918192
     },
     "AAVE": {
-      "markPx": 133.67,
-      "openInterest": 451675.16,
+      "markPx": 133.31,
+      "openInterest": 451848.3599999998,
       "funding": 0.0000125,
-      "at": 1793479399937
+      "at": 1793480918192
     },
     "SUI": {
-      "markPx": 0.89668,
-      "openInterest": 33823590.2,
+      "markPx": 0.89692,
+      "openInterest": 33809991.80000002,
       "funding": 0.0000125,
-      "at": 1793479399937
+      "at": 1793480918192
     },
     "ONDO": {
-      "markPx": 0.40754,
-      "openInterest": 52758504,
+      "markPx": 0.407549,
+      "openInterest": 52716452,
       "funding": 0.0000125,
-      "at": 1793479399937
+      "at": 1793480918192
     },
     "LINK": {
-      "markPx": 11.842,
-      "openInterest": 4974067.600000001,
+      "markPx": 11.7965,
+      "openInterest": 4972059.199999999,
       "funding": 0.0000125,
-      "at": 1793479399937
+      "at": 1793480918192
     },
     "PONS": {
-      "markPx": 0.2296,
-      "openInterest": 75034330,
-      "funding": 0.0000657626,
-      "at": 1793479399937
+      "markPx": 0.230772,
+      "openInterest": 74957770,
+      "funding": 0.0000578308,
+      "at": 1793480918192
     },
     "ORDI": {
-      "markPx": 3.4871,
-      "openInterest": 117291.2,
+      "markPx": 3.495,
+      "openInterest": 117246.4,
       "funding": 0.0000125,
-      "at": 1793479399937
+      "at": 1793480918192
     },
     "NIL": {
-      "markPx": 0.071571,
-      "openInterest": 43676000,
+      "markPx": 0.071497,
+      "openInterest": 43659868,
       "funding": 0.0000125,
-      "at": 1793479399937
+      "at": 1793480918192
     },
     "CRV": {
-      "markPx": 0.28285,
-      "openInterest": 53905781.00000001,
-      "funding": -0.0000027674,
-      "at": 1793479399937
+      "markPx": 0.28261,
+      "openInterest": 53970041.99999999,
+      "funding": 0.0000022818,
+      "at": 1793480918192
     },
     "VVV": {
-      "markPx": 23.046,
-      "openInterest": 2942836.6600000006,
+      "markPx": 23.0251,
+      "openInterest": 2949858.980000001,
       "funding": 0.0000125,
-      "at": 1793479399937
+      "at": 1793480918192
     },
     "ARB": {
-      "markPx": 0.16356,
-      "openInterest": 82755383,
+      "markPx": 0.1636,
+      "openInterest": 82869581.60000001,
       "funding": 0.0000125,
-      "at": 1793479399937
+      "at": 1793480918192
     },
     "STX": {
-      "markPx": 0.32657,
-      "openInterest": 5507046.2,
+      "markPx": 0.32243,
+      "openInterest": 5425102.4,
       "funding": 0.0000125,
-      "at": 1793479399937
+      "at": 1793480918192
     },
     "BCH": {
-      "markPx": 286.06,
-      "openInterest": 26425.398,
+      "markPx": 285.48,
+      "openInterest": 26430.936,
       "funding": 0.0000125,
-      "at": 1793479399937
+      "at": 1793480918192
     },
     "AERO": {
-      "markPx": 0.63704,
-      "openInterest": 41007754,
+      "markPx": 0.63553,
+      "openInterest": 41002060,
       "funding": 0.0000125,
-      "at": 1793479399937
+      "at": 1793480918192
     },
     "TAO": {
-      "markPx": 236.57,
-      "openInterest": 143137.644,
+      "markPx": 236.44,
+      "openInterest": 143039.926,
       "funding": 0.0000125,
-      "at": 1793479399937
+      "at": 1793480918192
     },
     "DOGE": {
-      "markPx": 0.075725,
-      "openInterest": 998879210,
+      "markPx": 0.075669,
+      "openInterest": 998639504,
       "funding": 0.0000125,
-      "at": 1793479399937
+      "at": 1793480918192
     },
     "XLM": {
-      "markPx": 0.16927,
-      "openInterest": 61832910,
+      "markPx": 0.16958,
+      "openInterest": 61805052,
       "funding": 0.0000125,
-      "at": 1793479399937
-    },
-    "FIL": {
-      "markPx": 0.86707,
-      "openInterest": 7992281.2,
-      "funding": 0.0000125,
-      "at": 1793479399937
+      "at": 1793480918192
     },
     "MORPHO": {
-      "markPx": 2.3646,
-      "openInterest": 2941391.8,
+      "markPx": 2.3867,
+      "openInterest": 2933376.2000000025,
       "funding": 0.0000125,
-      "at": 1793479399937
+      "at": 1793480918192
     },
     "USELESS": {
-      "markPx": 0.12818,
-      "openInterest": 59514122,
+      "markPx": 0.128083,
+      "openInterest": 59498688,
       "funding": 0.0000125,
-      "at": 1793479399937
+      "at": 1793480918192
     },
     "FARTCOIN": {
-      "markPx": 0.12039,
-      "openInterest": 173226617.20000002,
+      "markPx": 0.12028,
+      "openInterest": 173212768.99999997,
       "funding": 0.0000125,
-      "at": 1793479399937
+      "at": 1793480918192
     },
-    "OP": {
-      "markPx": 0.11227,
-      "openInterest": 34021590.99999999,
+    "FIL": {
+      "markPx": 0.86761,
+      "openInterest": 7990229.4,
       "funding": 0.0000125,
-      "at": 1793479399937
+      "at": 1793480918192
     },
     "INJ": {
-      "markPx": 7.21172,
-      "openInterest": 605071.8,
+      "markPx": 7.20617,
+      "openInterest": 604704.2000000002,
       "funding": 0.0000125,
-      "at": 1793479399937
+      "at": 1793480918192
     },
-    "LTC": {
-      "markPx": 55.69,
-      "openInterest": 396459.58,
+    "OP": {
+      "markPx": 0.11215,
+      "openInterest": 33953769.400000006,
       "funding": 0.0000125,
-      "at": 1793479399937
+      "at": 1793480918192
     },
     "CASHCAT": {
-      "markPx": 0.092103,
-      "openInterest": 220990128,
+      "markPx": 0.09275,
+      "openInterest": 221026148,
+      "funding": 0.000035856,
+      "at": 1793480918192
+    },
+    "LTC": {
+      "markPx": 55.657,
+      "openInterest": 396588.44,
       "funding": 0.0000125,
-      "at": 1793479399937
+      "at": 1793480918192
     },
     "PENDLE": {
-      "markPx": 1.8553,
-      "openInterest": 5397906,
-      "funding": 0.0000311086,
-      "at": 1793479399937
+      "markPx": 1.8603,
+      "openInterest": 5399950,
+      "funding": 0.0000281519,
+      "at": 1793480918192
     },
     "ADA": {
-      "markPx": 0.19249,
-      "openInterest": 150443918,
-      "funding": -0.000033436,
-      "at": 1793479399937
-    },
-    "GRAM": {
-      "markPx": 1.2032,
-      "openInterest": 20011222,
-      "funding": -0.000029728,
-      "at": 1793479399937
+      "markPx": 0.192365,
+      "openInterest": 150400906,
+      "funding": -0.0000124024,
+      "at": 1793480918192
     },
     "SOPH": {
-      "markPx": 0.001479,
-      "openInterest": 291446500,
+      "markPx": 0.001489,
+      "openInterest": 291417392,
       "funding": 0.0000125,
-      "at": 1793479399937
+      "at": 1793480918192
+    },
+    "GRAM": {
+      "markPx": 1.2021,
+      "openInterest": 20009220,
+      "funding": -0.0000336445,
+      "at": 1793480918192
     },
     "PURR": {
-      "markPx": 0.11871,
-      "openInterest": 112386254,
+      "markPx": 0.11785,
+      "openInterest": 112402340,
       "funding": 0.0000125,
-      "at": 1793479399937
-    },
-    "STRK": {
-      "markPx": 0.04423,
-      "openInterest": 653323612.8,
-      "funding": 0.0000125,
-      "at": 1793479399937
+      "at": 1793480918192
     },
     "RUNE": {
-      "markPx": 0.6779,
-      "openInterest": 4479865.6,
+      "markPx": 0.6754,
+      "openInterest": 4469753.800000001,
       "funding": 0.0000125,
-      "at": 1793479399937
+      "at": 1793480918192
+    },
+    "STRK": {
+      "markPx": 0.04416,
+      "openInterest": 653134266.7999998,
+      "funding": 0.0000125,
+      "at": 1793480918192
     },
     "ASTER": {
-      "markPx": 0.701432,
-      "openInterest": 33197554,
+      "markPx": 0.69855,
+      "openInterest": 33190822,
       "funding": 0.0000125,
-      "at": 1793479399937
+      "at": 1793480918192
     },
     "AVAX": {
-      "markPx": 8.5583,
-      "openInterest": 2021694.2400000002,
+      "markPx": 8.562,
+      "openInterest": 2022640.28,
       "funding": 0.0000125,
-      "at": 1793479399937
+      "at": 1793480918192
     },
     "REZ": {
-      "markPx": 0.004203,
-      "openInterest": 341283356,
+      "markPx": 0.004196,
+      "openInterest": 341974148,
       "funding": 0.0000125,
-      "at": 1793479399937
+      "at": 1793480918192
     },
     "TIA": {
-      "markPx": 0.47217,
-      "openInterest": 14950511,
-      "funding": -0.00001533,
-      "at": 1793479399937
+      "markPx": 0.4727,
+      "openInterest": 14951187.6,
+      "funding": -0.0000018255,
+      "at": 1793480918192
     },
     "ETHFI": {
-      "markPx": 0.62727,
-      "openInterest": 16861461.6,
+      "markPx": 0.62791,
+      "openInterest": 16860510.2,
       "funding": 0.0000125,
-      "at": 1793479399937
-    },
-    "VIRTUAL": {
-      "markPx": 0.5906,
-      "openInterest": 9425797,
-      "funding": 0.0000125,
-      "at": 1793479399937
-    },
-    "RSR": {
-      "markPx": 0.001525,
-      "openInterest": 570532604,
-      "funding": 0.0000125,
-      "at": 1793479399937
-    },
-    "PAXG": {
-      "markPx": 3895.7,
-      "openInterest": 6058.708,
-      "funding": 0.0000125,
-      "at": 1793479399937
-    },
-    "BLUR": {
-      "markPx": 0.008091,
-      "openInterest": 104069434,
-      "funding": -0.0006681866,
-      "at": 1793479399937
-    },
-    "SKR": {
-      "markPx": 0.013071,
-      "openInterest": 23628054,
-      "funding": 0.0000125,
-      "at": 1793479399937
-    },
-    "WLFI": {
-      "markPx": 0.050133,
-      "openInterest": 212121894,
-      "funding": 0.0000125,
-      "at": 1793479399937
+      "at": 1793480918192
     },
     "JUP": {
-      "markPx": 0.2576,
-      "openInterest": 26599170,
+      "markPx": 0.25738,
+      "openInterest": 27095702,
       "funding": 0.0000125,
-      "at": 1793479399937
+      "at": 1793480918192
+    },
+    "VIRTUAL": {
+      "markPx": 0.59086,
+      "openInterest": 9429883.4,
+      "funding": 0.0000125,
+      "at": 1793480918192
+    },
+    "RSR": {
+      "markPx": 0.00152,
+      "openInterest": 570166240,
+      "funding": 0.0000125,
+      "at": 1793480918192
+    },
+    "PAXG": {
+      "markPx": 3895.9,
+      "openInterest": 6059.518,
+      "funding": 0.0000125,
+      "at": 1793480918192
+    },
+    "SKR": {
+      "markPx": 0.013062,
+      "openInterest": 23619670,
+      "funding": 0.0000125,
+      "at": 1793480918192
+    },
+    "BLUR": {
+      "markPx": 0.008102,
+      "openInterest": 103665516,
+      "funding": -0.0005932107,
+      "at": 1793480918192
+    },
+    "WLFI": {
+      "markPx": 0.049947,
+      "openInterest": 212100130,
+      "funding": 0.0000125,
+      "at": 1793480918192
     },
     "SPX": {
-      "markPx": 0.35288,
-      "openInterest": 11713111,
+      "markPx": 0.35348,
+      "openInterest": 11705133.000000002,
       "funding": 0.0000125,
-      "at": 1793479399937
-    },
-    "XTEN": {
-      "markPx": 0.282898,
-      "openInterest": 2966186,
-      "funding": 0.0000125,
-      "at": 1793479399937
+      "at": 1793480918192
     },
     "MON": {
-      "markPx": 0.019139,
-      "openInterest": 1487972722,
+      "markPx": 0.019204,
+      "openInterest": 1487738344,
       "funding": 0.0000125,
-      "at": 1793479399937
+      "at": 1793480918192
     },
     "GRASS": {
-      "markPx": 0.57755,
-      "openInterest": 46898930.2,
+      "markPx": 0.57965,
+      "openInterest": 46897910.6,
       "funding": 0.0000125,
-      "at": 1793479399937
+      "at": 1793480918192
     },
     "INIT": {
-      "markPx": 0.17329,
-      "openInterest": 14733138,
-      "funding": 0.0000125,
-      "at": 1793479399937
+      "markPx": 0.17419,
+      "openInterest": 14728720,
+      "funding": -0.0000980937,
+      "at": 1793480918192
     },
     "MET": {
-      "markPx": 0.28356,
-      "openInterest": 9746248,
+      "markPx": 0.28464,
+      "openInterest": 9731460,
       "funding": 0.0000125,
-      "at": 1793479399937
+      "at": 1793480918192
     },
     "DOT": {
-      "markPx": 0.94662,
-      "openInterest": 6190941.6000000015,
+      "markPx": 0.94605,
+      "openInterest": 6192707.399999999,
       "funding": 0.0000125,
-      "at": 1793479399937
+      "at": 1793480918192
     },
     "APT": {
-      "markPx": 0.6308,
-      "openInterest": 5615467.92,
+      "markPx": 0.631,
+      "openInterest": 5617146.14,
       "funding": 0.0000125,
-      "at": 1793479399937
-    },
-    "HBAR": {
-      "markPx": 0.072162,
-      "openInterest": 126907244,
-      "funding": 0.0000125,
-      "at": 1793479399937
+      "at": 1793480918192
     },
     "ATOM": {
-      "markPx": 1.5001,
-      "openInterest": 2864442.94,
-      "funding": -0.0000626561,
-      "at": 1793479399937
+      "markPx": 1.5008,
+      "openInterest": 2865094.979999999,
+      "funding": -0.0000187943,
+      "at": 1793480918192
+    },
+    "HBAR": {
+      "markPx": 0.072035,
+      "openInterest": 126864836,
+      "funding": 0.0000125,
+      "at": 1793480918192
     },
     "TRUMP": {
-      "markPx": 1.5685,
-      "openInterest": 4276681.4,
-      "funding": -0.0000012168,
-      "at": 1793479399937
+      "markPx": 1.5695,
+      "openInterest": 4278053.8,
+      "funding": 0.0000125,
+      "at": 1793480918192
     },
     "POL": {
-      "markPx": 0.09238,
-      "openInterest": 55749748,
+      "markPx": 0.092202,
+      "openInterest": 55736798,
       "funding": 0.0000125,
-      "at": 1793479399937
+      "at": 1793480918192
     },
     "kBONK": {
-      "markPx": 0.00292,
-      "openInterest": 2473055810,
+      "markPx": 0.002921,
+      "openInterest": 2473230924,
       "funding": 0.0000125,
-      "at": 1793479399937
+      "at": 1793480918192
     },
     "CHIP": {
-      "markPx": 0.042284,
-      "openInterest": 218077162,
+      "markPx": 0.042351,
+      "openInterest": 218206914,
       "funding": 0.0000125,
-      "at": 1793479399937
+      "at": 1793480918192
     },
     "PYTH": {
-      "markPx": 0.0654,
-      "openInterest": 30360152,
+      "markPx": 0.065255,
+      "openInterest": 30339388,
       "funding": 0.0000125,
-      "at": 1793479399937
+      "at": 1793480918192
     },
     "CC": {
-      "markPx": 0.096774,
-      "openInterest": 57388080,
-      "funding": -6.329e-7,
-      "at": 1793479399937
+      "markPx": 0.097235,
+      "openInterest": 57362430,
+      "funding": 0.0000125,
+      "at": 1793480918192
+    },
+    "XTEN": {
+      "markPx": 0.28129,
+      "openInterest": 2963088,
+      "funding": 0.0000125,
+      "at": 1793480918192
     },
     "RENDER": {
-      "markPx": 1.56428,
-      "openInterest": 1621181.4000000001,
+      "markPx": 1.5623,
+      "openInterest": 1621624.7999999998,
       "funding": 0.0000125,
-      "at": 1793479399937
-    },
-    "0G": {
-      "markPx": 0.16688,
-      "openInterest": 7204668,
-      "funding": 0.0000125,
-      "at": 1793479399937
-    },
-    "MEGA": {
-      "markPx": 0.043901,
-      "openInterest": 169424640,
-      "funding": 0.0000125,
-      "at": 1793479399937
+      "at": 1793480918192
     },
     "SEI": {
-      "markPx": 0.047406,
-      "openInterest": 49795820,
-      "funding": -0.0000242143,
-      "at": 1793479399937
+      "markPx": 0.047464,
+      "openInterest": 49995350,
+      "funding": -0.0000195774,
+      "at": 1793480918192
+    },
+    "MEGA": {
+      "markPx": 0.043971,
+      "openInterest": 169285928,
+      "funding": 0.0000125,
+      "at": 1793480918192
     },
     "2Z": {
-      "markPx": 0.025688,
-      "openInterest": 41202852,
+      "markPx": 0.025874,
+      "openInterest": 41561310,
       "funding": 0.0000125,
-      "at": 1793479399937
+      "at": 1793480918192
+    },
+    "0G": {
+      "markPx": 0.16809,
+      "openInterest": 7189246,
+      "funding": 0.0000125,
+      "at": 1793480918192
     },
     "PENGU": {
-      "markPx": 0.007258,
-      "openInterest": 591161526,
+      "markPx": 0.007272,
+      "openInterest": 586999618,
       "funding": 0.0000125,
-      "at": 1793479399937
-    },
-    "kFLOKI": {
-      "markPx": 0.023344,
-      "openInterest": 27258386,
-      "funding": -0.0000260716,
-      "at": 1793479399937
+      "at": 1793480918192
     },
     "SKY": {
-      "markPx": 0.067098,
-      "openInterest": 48390686,
+      "markPx": 0.067062,
+      "openInterest": 48395112,
       "funding": 0.0000125,
-      "at": 1793479399937
+      "at": 1793480918192
+    },
+    "kFLOKI": {
+      "markPx": 0.023396,
+      "openInterest": 27262744,
+      "funding": -0.0000150247,
+      "at": 1793480918192
+    },
+    "ZORA": {
+      "markPx": 0.006071,
+      "openInterest": 103470812,
+      "funding": 0.0000125,
+      "at": 1793480918192
+    },
+    "STBL": {
+      "markPx": 0.025838,
+      "openInterest": 67010408,
+      "funding": 0.0000125,
+      "at": 1793480918192
+    },
+    "MERL": {
+      "markPx": 0.030098,
+      "openInterest": 19890640,
+      "funding": 0.0000125,
+      "at": 1793480918192
+    },
+    "PROVE": {
+      "markPx": 0.21267,
+      "openInterest": 1518008,
+      "funding": 0.0000125,
+      "at": 1793480918192
+    },
+    "HYPER": {
+      "markPx": 0.061751,
+      "openInterest": 1338064,
+      "funding": 0.0000125,
+      "at": 1793480918192
     },
     "kSHIB": {
       "markPx": 0.004677,
-      "openInterest": 633315772,
+      "openInterest": 632625158,
       "funding": 0.0000125,
-      "at": 1793479399937
-    },
-    "STBL": {
-      "markPx": 0.025806,
-      "openInterest": 66998212,
-      "funding": 0.0000125,
-      "at": 1793479399937
-    },
-    "MERL": {
-      "markPx": 0.030193,
-      "openInterest": 19963452,
-      "funding": 0.0000125,
-      "at": 1793479399937
-    },
-    "PROVE": {
-      "markPx": 0.21221,
-      "openInterest": 1510932,
-      "funding": 0.0000125,
-      "at": 1793479399937
-    },
-    "HYPER": {
-      "markPx": 0.061685,
-      "openInterest": 1378150,
-      "funding": 0.0000125,
-      "at": 1793479399937
-    },
-    "ZORA": {
-      "markPx": 0.005977,
-      "openInterest": 104447660,
-      "funding": 0.0000125,
-      "at": 1793479399937
+      "at": 1793480918192
     },
     "ICP": {
-      "markPx": 2.501,
-      "openInterest": 1008879.2,
+      "markPx": 2.5079,
+      "openInterest": 1006257.8,
       "funding": 0.0000125,
-      "at": 1793479399937
+      "at": 1793480918192
     },
     "EIGEN": {
-      "markPx": 0.1877,
-      "openInterest": 12107093.899999999,
-      "funding": 0.0000364636,
-      "at": 1793479399937
+      "markPx": 0.1881,
+      "openInterest": 12103140.5,
+      "funding": 0.0000125,
+      "at": 1793480918192
     },
     "AZTEC": {
-      "markPx": 0.014635,
-      "openInterest": 100653496,
+      "markPx": 0.014664,
+      "openInterest": 100545380,
       "funding": 0.0000125,
-      "at": 1793479399937
+      "at": 1793480918192
     },
     "ZK": {
-      "markPx": 0.010413,
-      "openInterest": 198795638,
+      "markPx": 0.010433,
+      "openInterest": 198802002,
       "funding": 0.0000125,
-      "at": 1793479399937
+      "at": 1793480918192
     },
     "FET": {
-      "markPx": 0.16025,
-      "openInterest": 39034170,
+      "markPx": 0.16008,
+      "openInterest": 39041140,
       "funding": 0.0000125,
-      "at": 1793479399937
+      "at": 1793480918192
     },
     "LDO": {
-      "markPx": 0.33195,
-      "openInterest": 25407909.799999997,
+      "markPx": 0.33367,
+      "openInterest": 25406977.2,
       "funding": 0.0000125,
-      "at": 1793479399937
+      "at": 1793480918192
     },
     "ACE": {
-      "markPx": 0.1362,
-      "openInterest": 1407485.8,
+      "markPx": 0.1363,
+      "openInterest": 1402025.48,
       "funding": 0.0000125,
-      "at": 1793479399937
+      "at": 1793480918192
     },
     "SUPER": {
-      "markPx": 0.16629,
-      "openInterest": 2978592,
-      "funding": -0.0000628008,
-      "at": 1793479399937
+      "markPx": 0.16747,
+      "openInterest": 2966600,
+      "funding": 0.0000092618,
+      "at": 1793480918192
     },
     "WIF": {
-      "markPx": 0.17583,
-      "openInterest": 23884318,
+      "markPx": 0.17573,
+      "openInterest": 23895622,
       "funding": 0.0000125,
-      "at": 1793479399937
+      "at": 1793480918192
     },
     "ALGO": {
-      "markPx": 0.094825,
-      "openInterest": 30327488,
-      "funding": -0.0000029335,
-      "at": 1793479399937
+      "markPx": 0.094754,
+      "openInterest": 30332372,
+      "funding": 0.0000125,
+      "at": 1793480918192
     },
     "KAITO": {
-      "markPx": 0.2395,
-      "openInterest": 5002172,
+      "markPx": 0.23999,
+      "openInterest": 5004380,
       "funding": 0.0000125,
-      "at": 1793479399937
+      "at": 1793480918192
     },
     "SYRUP": {
-      "markPx": 0.15912,
-      "openInterest": 30500904,
+      "markPx": 0.1603,
+      "openInterest": 30516552,
       "funding": 0.0000125,
-      "at": 1793479399937
+      "at": 1793480918192
     },
     "SAND": {
-      "markPx": 0.045855,
-      "openInterest": 18487318,
-      "funding": -0.000033461,
-      "at": 1793479399937
+      "markPx": 0.046022,
+      "openInterest": 18515744,
+      "funding": -0.0000564875,
+      "at": 1793480918192
     },
     "S": {
-      "markPx": 0.039611,
-      "openInterest": 15189308,
-      "funding": -0.0000500942,
-      "at": 1793479399937
+      "markPx": 0.039833,
+      "openInterest": 15125868,
+      "funding": -0.000042726,
+      "at": 1793480918192
     },
     "AVNT": {
-      "markPx": 0.093657,
-      "openInterest": 14502288,
+      "markPx": 0.093951,
+      "openInterest": 14499750,
       "funding": 0.0000125,
-      "at": 1793479399937
+      "at": 1793480918192
     },
     "GOAT": {
-      "markPx": 0.013895,
-      "openInterest": 89726098,
-      "funding": 0.0001071059,
-      "at": 1793479399937
+      "markPx": 0.013994,
+      "openInterest": 89551806,
+      "funding": 0.0000412621,
+      "at": 1793480918192
     },
     "KAS": {
-      "markPx": 0.032608,
-      "openInterest": 45525946,
+      "markPx": 0.032645,
+      "openInterest": 45441172,
       "funding": 0.0000125,
-      "at": 1793479399937
-    },
-    "DYDX": {
-      "markPx": 0.10623,
-      "openInterest": 13440600.799999999,
-      "funding": 0.0000125,
-      "at": 1793479399937
+      "at": 1793480918192
     },
     "DASH": {
-      "markPx": 47.8482,
-      "openInterest": 57363.62,
+      "markPx": 47.8495,
+      "openInterest": 57374.08,
       "funding": 0.0000125,
-      "at": 1793479399937
-    },
-    "W": {
-      "markPx": 0.01139,
-      "openInterest": 238567283.79999998,
-      "funding": 0.0000125,
-      "at": 1793479399937
-    },
-    "HEMI": {
-      "markPx": 0.004648,
-      "openInterest": 143826872,
-      "funding": 0.0000797807,
-      "at": 1793479399937
+      "at": 1793480918192
     },
     "JTO": {
-      "markPx": 0.36992,
-      "openInterest": 5650044,
+      "markPx": 0.37015,
+      "openInterest": 5660218,
       "funding": 0.0000125,
-      "at": 1793479399937
+      "at": 1793480918192
+    },
+    "DYDX": {
+      "markPx": 0.10643,
+      "openInterest": 13450669.199999997,
+      "funding": 0.0000125,
+      "at": 1793480918192
+    },
+    "W": {
+      "markPx": 0.01144,
+      "openInterest": 238297221.60000002,
+      "funding": 0.0000125,
+      "at": 1793480918192
+    },
+    "HEMI": {
+      "markPx": 0.004654,
+      "openInterest": 143720514,
+      "funding": 0.0000142402,
+      "at": 1793480918192
     },
     "IO": {
-      "markPx": 0.13348,
-      "openInterest": 4269588,
-      "funding": 0.0000125,
-      "at": 1793479399937
+      "markPx": 0.1336,
+      "openInterest": 4270798.800000001,
+      "funding": -0.0000227088,
+      "at": 1793480918192
     },
     "AR": {
-      "markPx": 3.1535,
-      "openInterest": 291512.4,
-      "funding": -0.0000267442,
-      "at": 1793479399937
+      "markPx": 3.1584,
+      "openInterest": 290519.76,
+      "funding": -0.0000108263,
+      "at": 1793480918192
     },
     "POPCAT": {
-      "markPx": 0.040717,
-      "openInterest": 34309244,
+      "markPx": 0.040995,
+      "openInterest": 34247800,
       "funding": 0.0000125,
-      "at": 1793479399937
+      "at": 1793480918192
     },
     "MINA": {
-      "markPx": 0.058162,
-      "openInterest": 14314448,
+      "markPx": 0.058348,
+      "openInterest": 14302818,
       "funding": 0.0000125,
-      "at": 1793479399937
+      "at": 1793480918192
     },
     "CELO": {
-      "markPx": 0.075559,
-      "openInterest": 6530394,
+      "markPx": 0.075713,
+      "openInterest": 6524376,
       "funding": 0.0000125,
-      "at": 1793479399937
+      "at": 1793480918192
     },
     "ETC": {
-      "markPx": 7.0731,
-      "openInterest": 372561.76,
-      "funding": -0.0000258927,
-      "at": 1793479399937
+      "markPx": 7.0786,
+      "openInterest": 372649.72,
+      "funding": 0.0000018964,
+      "at": 1793480918192
     },
     "COMP": {
-      "markPx": 20.4469,
-      "openInterest": 48684.82,
+      "markPx": 20.511,
+      "openInterest": 48649,
       "funding": 0.0000125,
-      "at": 1793479399937
-    },
-    "DYM": {
-      "markPx": 0.01572,
-      "openInterest": 14004867.4,
-      "funding": 0.0000125,
-      "at": 1793479399937
+      "at": 1793480918192
     },
     "CAKE": {
-      "markPx": 1.92914,
-      "openInterest": 723943.9999999999,
+      "markPx": 1.9278,
+      "openInterest": 724226.1999999998,
       "funding": 0.0000125,
-      "at": 1793479399937
+      "at": 1793480918192
     },
     "IMX": {
-      "markPx": 0.12292,
-      "openInterest": 27456850.8,
+      "markPx": 0.12285,
+      "openInterest": 27442977.400000002,
       "funding": 0.0000125,
-      "at": 1793479399937
+      "at": 1793480918192
+    },
+    "DYM": {
+      "markPx": 0.01573,
+      "openInterest": 14003616.8,
+      "funding": 0.0000125,
+      "at": 1793480918192
     },
     "BSV": {
-      "markPx": 17.153,
-      "openInterest": 41505.84,
+      "markPx": 17.175,
+      "openInterest": 41484.14,
       "funding": 0.0000125,
-      "at": 1793479399937
-    },
-    "MNT": {
-      "markPx": 0.47484,
-      "openInterest": 9488740.6,
-      "funding": 0.0000125,
-      "at": 1793479399937
+      "at": 1793480918192
     },
     "USUAL": {
-      "markPx": 0.0107,
-      "openInterest": 67452156,
+      "markPx": 0.01068,
+      "openInterest": 67789992.19999999,
       "funding": 0.0000125,
-      "at": 1793479399937
+      "at": 1793480918192
     },
-    "ZEN": {
-      "markPx": 5.2991,
-      "openInterest": 98872.66,
-      "funding": 0.0000113241,
-      "at": 1793479399937
+    "MNT": {
+      "markPx": 0.47495,
+      "openInterest": 9487330.4,
+      "funding": 0.0000125,
+      "at": 1793480918192
     },
     "TRB": {
-      "markPx": 16.369,
-      "openInterest": 32965.3,
+      "markPx": 16.425,
+      "openInterest": 32996.1,
       "funding": 0.0000125,
-      "at": 1793479399937
+      "at": 1793480918192
     },
     "GMX": {
-      "markPx": 8.214,
-      "openInterest": 103485.98,
+      "markPx": 8.2155,
+      "openInterest": 103623.68,
       "funding": 0.0000125,
-      "at": 1793479399937
+      "at": 1793480918192
+    },
+    "ZEN": {
+      "markPx": 5.3067,
+      "openInterest": 98881.24,
+      "funding": 0.0000125,
+      "at": 1793480918192
     },
     "IOTA": {
-      "markPx": 0.039978,
-      "openInterest": 28918490,
+      "markPx": 0.040025,
+      "openInterest": 28915770,
       "funding": 0.0000125,
-      "at": 1793479399937
+      "at": 1793480918192
     },
     "AXS": {
-      "markPx": 0.8607,
-      "openInterest": 295386,
+      "markPx": 0.8624,
+      "openInterest": 295207,
       "funding": 0.0000125,
-      "at": 1793479399937
+      "at": 1793480918192
     },
     "GALA": {
       "markPx": 0.001703,
-      "openInterest": 252231232,
-      "funding": -0.0000350608,
-      "at": 1793479399937
+      "openInterest": 252233590,
+      "funding": -0.0000340556,
+      "at": 1793480918192
     },
     "FOGO": {
-      "markPx": 0.002687,
-      "openInterest": 80999698,
+      "markPx": 0.002694,
+      "openInterest": 80881126,
       "funding": 0.0000125,
-      "at": 1793479399937
+      "at": 1793480918192
     },
     "BIO": {
-      "markPx": 0.021395,
-      "openInterest": 25862724,
+      "markPx": 0.021491,
+      "openInterest": 25861170,
       "funding": 0.0000125,
-      "at": 1793479399937
+      "at": 1793480918192
     },
     "BABY": {
-      "markPx": 0.01235,
-      "openInterest": 17470334,
+      "markPx": 0.012347,
+      "openInterest": 17483116,
       "funding": 0.0000125,
-      "at": 1793479399937
+      "at": 1793480918192
     },
     "CFX": {
-      "markPx": 0.046787,
-      "openInterest": 65557878,
+      "markPx": 0.046859,
+      "openInterest": 65547004,
       "funding": 0.0000125,
-      "at": 1793479399937
-    },
-    "MELANIA": {
-      "markPx": 0.07376,
-      "openInterest": 12023602.600000001,
-      "funding": -0.0000112572,
-      "at": 1793479399937
+      "at": 1793480918192
     },
     "PNUT": {
-      "markPx": 0.03988,
-      "openInterest": 23955792.599999994,
+      "markPx": 0.03996,
+      "openInterest": 23768965.799999997,
       "funding": 0.0000125,
-      "at": 1793479399937
+      "at": 1793480918192
+    },
+    "MELANIA": {
+      "markPx": 0.07384,
+      "openInterest": 12025992.8,
+      "funding": -0.0000551091,
+      "at": 1793480918192
     },
     "APE": {
-      "markPx": 0.11304,
-      "openInterest": 7609249.399999999,
+      "markPx": 0.1132,
+      "openInterest": 7610346.000000001,
       "funding": 0.0000125,
-      "at": 1793479399937
+      "at": 1793480918192
     },
     "SAGA": {
-      "markPx": 0.01688,
-      "openInterest": 95608784.8,
+      "markPx": 0.01691,
+      "openInterest": 95612573.4,
       "funding": 0.0000125,
-      "at": 1793479399937
+      "at": 1793480918192
     },
     "ZETA": {
-      "markPx": 0.03657,
-      "openInterest": 18370902.199999996,
+      "markPx": 0.03662,
+      "openInterest": 18379124.599999998,
       "funding": 0.0000125,
-      "at": 1793479399937
+      "at": 1793480918192
     },
     "BERA": {
-      "markPx": 0.13806,
-      "openInterest": 6846507.8,
+      "markPx": 0.13805,
+      "openInterest": 6850127.2,
       "funding": 0.0000125,
-      "at": 1793479399937
-    },
-    "BRETT": {
-      "markPx": 0.004344,
-      "openInterest": 37770444,
-      "funding": 0.0000125,
-      "at": 1793479399937
+      "at": 1793480918192
     },
     "LINEA": {
-      "markPx": 0.00237,
-      "openInterest": 939808430,
+      "markPx": 0.002377,
+      "openInterest": 939747020,
       "funding": 0.0000125,
-      "at": 1793479399937
+      "at": 1793480918192
+    },
+    "BRETT": {
+      "markPx": 0.004348,
+      "openInterest": 37730092,
+      "funding": 0.0000125,
+      "at": 1793480918192
     },
     "ALT": {
       "markPx": 0.006007,
-      "openInterest": 126675676,
-      "funding": -0.0000035521,
-      "at": 1793479399937
+      "openInterest": 126642138,
+      "funding": 0.0000064234,
+      "at": 1793480918192
     },
     "BIGTIME": {
-      "markPx": 0.00669,
-      "openInterest": 16701008,
+      "markPx": 0.006687,
+      "openInterest": 16642128,
       "funding": 0.0000125,
-      "at": 1793479399937
+      "at": 1793480918192
     },
     "TURBO": {
-      "markPx": 0.000775,
-      "openInterest": 428484856,
-      "funding": 0.0001089692,
-      "at": 1793479399937
+      "markPx": 0.000776,
+      "openInterest": 428757878,
+      "funding": 0.0000921486,
+      "at": 1793480918192
     },
     "YGG": {
-      "markPx": 0.023379,
-      "openInterest": 8762204,
+      "markPx": 0.02345,
+      "openInterest": 8728548,
       "funding": 0.0000125,
-      "at": 1793479399937
-    },
-    "MOVE": {
-      "markPx": 0.006288,
-      "openInterest": 36408428,
-      "funding": 0.0000018029,
-      "at": 1793479399937
-    },
-    "STABLE": {
-      "markPx": 0.026466,
-      "openInterest": 34474676,
-      "funding": 0.0000125,
-      "at": 1793479399937
+      "at": 1793480918192
     },
     "ENS": {
-      "markPx": 4.8999,
-      "openInterest": 353122.24,
+      "markPx": 4.901,
+      "openInterest": 353018.18,
       "funding": 0.0000125,
-      "at": 1793479399937
+      "at": 1793480918192
     },
     "ANIME": {
-      "markPx": 0.002761,
-      "openInterest": 111873850,
+      "markPx": 0.002772,
+      "openInterest": 111751110,
       "funding": 0.0000125,
-      "at": 1793479399937
+      "at": 1793480918192
     },
-    "GRIFFAIN": {
-      "markPx": 0.01196,
-      "openInterest": 96287372,
+    "STABLE": {
+      "markPx": 0.026422,
+      "openInterest": 34479492,
       "funding": 0.0000125,
-      "at": 1793479399937
+      "at": 1793480918192
     },
     "SUSHI": {
-      "markPx": 0.19275,
-      "openInterest": 1462308,
-      "funding": -0.0000120557,
-      "at": 1793479399937
+      "markPx": 0.19246,
+      "openInterest": 1466004.5999999999,
+      "funding": -0.0000202689,
+      "at": 1793480918192
     },
-    "POLYX": {
-      "markPx": 0.032914,
-      "openInterest": 1873082,
-      "funding": 0.0000023393,
-      "at": 1793479399937
+    "MOVE": {
+      "markPx": 0.006291,
+      "openInterest": 36539866,
+      "funding": -0.000011741,
+      "at": 1793480918192
+    },
+    "GRIFFAIN": {
+      "markPx": 0.012031,
+      "openInterest": 96352076,
+      "funding": 0.0000125,
+      "at": 1793480918192
     },
     "SNX": {
-      "markPx": 0.18278,
-      "openInterest": 2692717.8,
+      "markPx": 0.1832,
+      "openInterest": 2696942.6,
       "funding": 0.0000125,
-      "at": 1793479399937
+      "at": 1793480918192
+    },
+    "POLYX": {
+      "markPx": 0.033056,
+      "openInterest": 1887438,
+      "funding": -0.0000438134,
+      "at": 1793480918192
     },
     "PEOPLE": {
-      "markPx": 0.006777,
-      "openInterest": 19400404,
-      "funding": 0.0000125,
-      "at": 1793479399937
+      "markPx": 0.006782,
+      "openInterest": 19444536,
+      "funding": -0.0000368996,
+      "at": 1793480918192
     },
     "AIXBT": {
-      "markPx": 0.016685,
-      "openInterest": 9716218,
+      "markPx": 0.016682,
+      "openInterest": 9755238,
       "funding": 0.0000125,
-      "at": 1793479399937
-    },
-    "APEX": {
-      "markPx": 0.21005,
-      "openInterest": 7059442,
-      "funding": 0.000049464,
-      "at": 1793479399937
+      "at": 1793480918192
     },
     "WCT": {
-      "markPx": 0.034604,
-      "openInterest": 3096248,
+      "markPx": 0.034884,
+      "openInterest": 3107226,
       "funding": 0.0000125,
-      "at": 1793479399937
+      "at": 1793480918192
+    },
+    "APEX": {
+      "markPx": 0.21101,
+      "openInterest": 7059064,
+      "funding": 0.0000125,
+      "at": 1793480918192
     },
     "MANTA": {
-      "markPx": 0.05955,
-      "openInterest": 5359127.8,
+      "markPx": 0.05975,
+      "openInterest": 5361988.6,
       "funding": 0.0000125,
-      "at": 1793479399937
+      "at": 1793480918192
     },
     "GAS": {
-      "markPx": 1.2077,
-      "openInterest": 65885.6,
-      "funding": -0.0000533771,
-      "at": 1793479399937
-    },
-    "NEO": {
-      "markPx": 1.9889,
-      "openInterest": 182300,
-      "funding": 0.0000125,
-      "at": 1793479399937
+      "markPx": 1.21,
+      "openInterest": 65859.8,
+      "funding": -0.0000219942,
+      "at": 1793480918192
     },
     "XAI": {
-      "markPx": 0.00705,
-      "openInterest": 36422719.00000001,
-      "funding": 0.000003814,
-      "at": 1793479399937
+      "markPx": 0.00707,
+      "openInterest": 36406923.2,
+      "funding": 0.0000125,
+      "at": 1793480918192
     },
     "RESOLV": {
-      "markPx": 0.015275,
-      "openInterest": 67629598,
+      "markPx": 0.015322,
+      "openInterest": 67630004,
       "funding": 0.0000125,
-      "at": 1793479399937
+      "at": 1793480918192
+    },
+    "NEO": {
+      "markPx": 1.9906,
+      "openInterest": 182262.56,
+      "funding": 0.0000125,
+      "at": 1793480918192
     },
     "kNEIRO": {
-      "markPx": 0.06369,
-      "openInterest": 1280361.2,
-      "funding": -3.69e-8,
-      "at": 1793479399937
+      "markPx": 0.0637,
+      "openInterest": 1281232.8,
+      "funding": -0.0000049904,
+      "at": 1793480918192
     },
     "NXPC": {
-      "markPx": 0.17062,
-      "openInterest": 726454,
+      "markPx": 0.17135,
+      "openInterest": 727734,
       "funding": 0.0000125,
-      "at": 1793479399937
+      "at": 1793480918192
     },
     "ME": {
-      "markPx": 0.0562,
-      "openInterest": 3144500,
+      "markPx": 0.05618,
+      "openInterest": 3147882.8,
       "funding": 0.0000125,
-      "at": 1793479399937
+      "at": 1793480918192
     },
     "GMT": {
-      "markPx": 0.006594,
-      "openInterest": 13096136,
+      "markPx": 0.006607,
+      "openInterest": 13123056,
       "funding": 0.0000125,
-      "at": 1793479399937
+      "at": 1793480918192
     },
     "UMA": {
-      "markPx": 0.33745,
-      "openInterest": 409391,
+      "markPx": 0.33847,
+      "openInterest": 409496.8,
       "funding": 0.0000125,
-      "at": 1793479399937
+      "at": 1793480918192
     },
     "BOME": {
       "markPx": 0.000612,
-      "openInterest": 631023604,
+      "openInterest": 630736960,
       "funding": 0.0000125,
-      "at": 1793479399937
+      "at": 1793480918192
     },
     "LAYER": {
-      "markPx": 0.060339,
-      "openInterest": 4998372,
-      "funding": -0.0000414472,
-      "at": 1793479399937
+      "markPx": 0.060393,
+      "openInterest": 4999380,
+      "funding": -0.0000252805,
+      "at": 1793480918192
     },
     "BANANA": {
-      "markPx": 3.2168,
+      "markPx": 3.2189,
       "openInterest": 33626.4,
       "funding": 0.0000125,
-      "at": 1793479399937
+      "at": 1793480918192
     },
     "MOODENG": {
-      "markPx": 0.035332,
-      "openInterest": 7914962,
+      "markPx": 0.035423,
+      "openInterest": 7911036,
       "funding": 0.0000125,
-      "at": 1793479399937
+      "at": 1793480918192
     },
     "kLUNC": {
-      "markPx": 0.042806,
-      "openInterest": 5747780,
+      "markPx": 0.042876,
+      "openInterest": 5745654,
       "funding": 0.0000125,
-      "at": 1793479399937
+      "at": 1793480918192
     },
     "MEME": {
       "markPx": 0.000441,
       "openInterest": 737888138,
       "funding": 0.0000125,
-      "at": 1793479399937
+      "at": 1793480918192
     },
     "HMSTR": {
       "markPx": 0.000141,
       "openInterest": 11804579552,
       "funding": 0.0000125,
-      "at": 1793479399937
+      "at": 1793480918192
     },
     "NOT": {
-      "markPx": 0.000362,
-      "openInterest": 599436684,
+      "markPx": 0.000363,
+      "openInterest": 599429782,
       "funding": 0.0000125,
-      "at": 1793479399937
+      "at": 1793480918192
     },
     "TNSR": {
-      "markPx": 0.02843,
+      "markPx": 0.02851,
       "openInterest": 4706418.4,
       "funding": 0.0000125,
-      "at": 1793479399937
+      "at": 1793480918192
     }
   },
   "alertHistory": {
@@ -1246,7 +1246,7 @@
     "CAKE|LONG|GLOBAL": 1793444396781,
     "SAND|SHORT|SWEEP_RECLAIM": 1793444399983,
     "JUP|SHORT|SWEEP_RECLAIM": 1793444403210,
-    "JUP|SHORT|GLOBAL": 1793459104472,
+    "JUP|SHORT|GLOBAL": 1793480914989,
     "SKR|LONG|BREAKOUT_RETEST": 1793446477130,
     "SKR|LONG|GLOBAL": 1793446477130,
     "TRUMP|SHORT|TREND_PULLBACK": 1793446480313,
@@ -1269,8 +1269,8 @@
     "TAO|SHORT|SWEEP_RECLAIM": 1793451791667,
     "DOGE|LONG|BREAKOUT_RETEST": 1793451794894,
     "DOGE|LONG|GLOBAL": 1793451794894,
-    "kPEPE|LONG|TREND_PULLBACK": 1793451798091,
-    "kPEPE|LONG|GLOBAL": 1793451798091,
+    "kPEPE|LONG|TREND_PULLBACK": 1793480905330,
+    "kPEPE|LONG|GLOBAL": 1793480905330,
     "PROVE|SHORT|SWEEP_RECLAIM": 1793451801280,
     "PROVE|SHORT|GLOBAL": 1793451801280,
     "PNUT|LONG|SWEEP_RECLAIM": 1793454533397,
@@ -1288,7 +1288,7 @@
     "PENDLE|LONG|GLOBAL": 1793472647309,
     "BABY|SHORT|SWEEP_RECLAIM": 1793459096063,
     "BABY|SHORT|GLOBAL": 1793459096063,
-    "JUP|SHORT|TREND_PULLBACK": 1793459104472,
+    "JUP|SHORT|TREND_PULLBACK": 1793480914989,
     "ZK|SHORT|SWEEP_RECLAIM": 1793459105626,
     "ZK|SHORT|GLOBAL": 1793459105626,
     "XLM|LONG|TREND_PULLBACK": 1793459108830,
@@ -1368,7 +1368,17 @@
     "PENDLE|SHORT|BREAKOUT_RETEST": 1793479396740,
     "PENDLE|SHORT|GLOBAL": 1793479396740,
     "NEAR|SHORT|BREAKOUT_RETEST": 1793479399937,
-    "NEAR|SHORT|GLOBAL": 1793479399937
+    "NEAR|SHORT|GLOBAL": 1793479399937,
+    "XRP|SHORT|BREAKOUT_RETEST": 1793480898939,
+    "XRP|SHORT|GLOBAL": 1793480898939,
+    "OP|SHORT|BREAKOUT_RETEST": 1793480902134,
+    "OP|SHORT|GLOBAL": 1793480902134,
+    "ZEC|SHORT|BREAKOUT_RETEST": 1793480908535,
+    "ZEC|SHORT|GLOBAL": 1793480908535,
+    "GRAM|SHORT|BREAKOUT_RETEST": 1793480911768,
+    "GRAM|SHORT|GLOBAL": 1793480911768,
+    "ADA|SHORT|BREAKOUT_RETEST": 1793480918192,
+    "ADA|SHORT|GLOBAL": 1793480918192
   },
   "dailyFreeCount": {},
   "paperTrades": [
@@ -1437,7 +1447,7 @@
       "rsi15": 46.57540388757698,
       "fibConfluence": true,
       "openedAt": 1793371206732,
-      "lastCheckedAt": 1793479115754,
+      "lastCheckedAt": 1793480651133,
       "status": "OPEN",
       "pnlR": null,
       "reasons": [
@@ -1609,7 +1619,7 @@
       "rsi15": 45.98754522564789,
       "fibConfluence": true,
       "openedAt": 1793380606215,
-      "lastCheckedAt": 1793479115754,
+      "lastCheckedAt": 1793480651133,
       "status": "OPEN",
       "pnlR": null,
       "reasons": [
@@ -1929,7 +1939,7 @@
       "rsi15": 49.64346769680274,
       "fibConfluence": true,
       "openedAt": 1793391591774,
-      "lastCheckedAt": 1793479115754,
+      "lastCheckedAt": 1793480651133,
       "status": "OPEN",
       "pnlR": null,
       "reasons": [
@@ -2263,7 +2273,7 @@
       "rsi15": 47.889680076618895,
       "fibConfluence": false,
       "openedAt": 1793401153527,
-      "lastCheckedAt": 1793479115754,
+      "lastCheckedAt": 1793480651133,
       "status": "OPEN",
       "pnlR": null,
       "reasons": [
@@ -2530,7 +2540,7 @@
       "rsi15": 48.76945544246764,
       "fibConfluence": true,
       "openedAt": 1793405502293,
-      "lastCheckedAt": 1793479115754,
+      "lastCheckedAt": 1793480651133,
       "status": "OPEN",
       "pnlR": null,
       "reasons": [
@@ -2741,7 +2751,7 @@
       "rsi15": 62.11127167269432,
       "fibConfluence": false,
       "openedAt": 1793405515203,
-      "lastCheckedAt": 1793479115754,
+      "lastCheckedAt": 1793480651133,
       "status": "OPEN",
       "pnlR": null,
       "reasons": [
@@ -3218,7 +3228,7 @@
       "rsi15": 48.785486027883096,
       "fibConfluence": true,
       "openedAt": 1793412203196,
-      "lastCheckedAt": 1793479115754,
+      "lastCheckedAt": 1793480651133,
       "status": "OPEN",
       "pnlR": null,
       "reasons": [
@@ -3322,7 +3332,7 @@
       "rsi15": 55.416085627660394,
       "fibConfluence": false,
       "openedAt": 1793415080808,
-      "lastCheckedAt": 1793479115754,
+      "lastCheckedAt": 1793480651133,
       "status": "OPEN",
       "pnlR": null,
       "reasons": [
@@ -3369,7 +3379,7 @@
       "rsi15": 51.52203563415158,
       "fibConfluence": true,
       "openedAt": 1793415084036,
-      "lastCheckedAt": 1793479115754,
+      "lastCheckedAt": 1793480651133,
       "status": "OPEN",
       "pnlR": null,
       "reasons": [
@@ -3416,7 +3426,7 @@
       "rsi15": 56.00530855380386,
       "fibConfluence": false,
       "openedAt": 1793415087224,
-      "lastCheckedAt": 1793479115754,
+      "lastCheckedAt": 1793480651133,
       "status": "OPEN",
       "pnlR": null,
       "reasons": [
@@ -3627,7 +3637,7 @@
       "rsi15": 47.77554388227272,
       "fibConfluence": false,
       "openedAt": 1793415100018,
-      "lastCheckedAt": 1793479115755,
+      "lastCheckedAt": 1793480651133,
       "status": "OPEN",
       "pnlR": null,
       "reasons": [
@@ -3673,7 +3683,7 @@
       "rsi15": 41.440105222587064,
       "fibConfluence": false,
       "openedAt": 1793417526438,
-      "lastCheckedAt": 1793479115755,
+      "lastCheckedAt": 1793480651133,
       "status": "OPEN",
       "pnlR": null,
       "reasons": [
@@ -3719,7 +3729,7 @@
       "rsi15": 47.27628379256574,
       "fibConfluence": false,
       "openedAt": 1793417529633,
-      "lastCheckedAt": 1793479115755,
+      "lastCheckedAt": 1793480651133,
       "status": "OPEN",
       "pnlR": null,
       "reasons": [
@@ -3823,7 +3833,7 @@
       "rsi15": 44.970647838865574,
       "fibConfluence": false,
       "openedAt": 1793420537989,
-      "lastCheckedAt": 1793479115755,
+      "lastCheckedAt": 1793480651133,
       "status": "OPEN",
       "pnlR": null,
       "reasons": [
@@ -5250,7 +5260,7 @@
       "rsi15": 45.764825925502834,
       "fibConfluence": true,
       "openedAt": 1793434957820,
-      "lastCheckedAt": 1793479115755,
+      "lastCheckedAt": 1793480651133,
       "status": "OPEN",
       "pnlR": null,
       "reasons": [
@@ -5298,7 +5308,7 @@
       "rsi15": 39.38781180858457,
       "fibConfluence": true,
       "openedAt": 1793434961007,
-      "lastCheckedAt": 1793479115755,
+      "lastCheckedAt": 1793480651133,
       "status": "OPEN",
       "pnlR": null,
       "reasons": [
@@ -5345,7 +5355,7 @@
       "rsi15": 38.439005552821506,
       "fibConfluence": true,
       "openedAt": 1793437485133,
-      "lastCheckedAt": 1793479115755,
+      "lastCheckedAt": 1793480651133,
       "status": "OPEN",
       "pnlR": null,
       "reasons": [
@@ -5449,7 +5459,7 @@
       "rsi15": 50.92203753131884,
       "fibConfluence": true,
       "openedAt": 1793437491521,
-      "lastCheckedAt": 1793479115755,
+      "lastCheckedAt": 1793480651133,
       "status": "OPEN",
       "pnlR": null,
       "reasons": [
@@ -5661,7 +5671,7 @@
       "rsi15": 66.44137474912348,
       "fibConfluence": true,
       "openedAt": 1793439880876,
-      "lastCheckedAt": 1793479115755,
+      "lastCheckedAt": 1793480651133,
       "status": "OPEN",
       "pnlR": null,
       "reasons": [
@@ -5765,7 +5775,7 @@
       "rsi15": 55.5102640693746,
       "fibConfluence": false,
       "openedAt": 1793439887202,
-      "lastCheckedAt": 1793479115755,
+      "lastCheckedAt": 1793480651133,
       "status": "OPEN",
       "pnlR": null,
       "reasons": [
@@ -5924,7 +5934,7 @@
       "rsi15": 46.12169997141016,
       "fibConfluence": false,
       "openedAt": 1793442154675,
-      "lastCheckedAt": 1793479115755,
+      "lastCheckedAt": 1793480651133,
       "status": "OPEN",
       "pnlR": null,
       "reasons": [
@@ -5970,7 +5980,7 @@
       "rsi15": 42.59391584958423,
       "fibConfluence": false,
       "openedAt": 1793442157861,
-      "lastCheckedAt": 1793479115755,
+      "lastCheckedAt": 1793480651133,
       "status": "OPEN",
       "pnlR": null,
       "reasons": [
@@ -6128,7 +6138,7 @@
       "rsi15": 60.30334313095965,
       "fibConfluence": true,
       "openedAt": 1793444393666,
-      "lastCheckedAt": 1793479115755,
+      "lastCheckedAt": 1793480651133,
       "status": "OPEN",
       "pnlR": null,
       "reasons": [
@@ -6176,7 +6186,7 @@
       "rsi15": 64.21157105027628,
       "fibConfluence": true,
       "openedAt": 1793444396781,
-      "lastCheckedAt": 1793479115755,
+      "lastCheckedAt": 1793480651133,
       "status": "OPEN",
       "pnlR": null,
       "reasons": [
@@ -6391,7 +6401,7 @@
       "rsi15": 44.75930640281472,
       "fibConfluence": true,
       "openedAt": 1793446480313,
-      "lastCheckedAt": 1793479115755,
+      "lastCheckedAt": 1793480651133,
       "status": "OPEN",
       "pnlR": null,
       "reasons": [
@@ -6438,7 +6448,7 @@
       "rsi15": 45.84407692932553,
       "fibConfluence": false,
       "openedAt": 1793446483540,
-      "lastCheckedAt": 1793479115755,
+      "lastCheckedAt": 1793480651133,
       "status": "OPEN",
       "pnlR": null,
       "reasons": [
@@ -7312,7 +7322,7 @@
       "rsi15": 31.833510019476137,
       "fibConfluence": true,
       "openedAt": 1793454543007,
-      "lastCheckedAt": 1793479115755,
+      "lastCheckedAt": 1793480651133,
       "status": "OPEN",
       "pnlR": null,
       "reasons": [
@@ -7444,7 +7454,9 @@
       "pattern": "SWEEP_RECLAIM",
       "score": 6.69,
       "audience": "VIP",
-      "outcomeDelivered": [],
+      "outcomeDelivered": [
+        "VIP"
+      ],
       "entry": 0.1914,
       "sl": 0.18840642857142856,
       "tp": 0.19639642857142856,
@@ -7469,9 +7481,9 @@
       "rsi15": 46.736394922787376,
       "fibConfluence": true,
       "openedAt": 1793456790207,
-      "lastCheckedAt": 1793479115755,
-      "status": "OPEN",
-      "pnlR": null,
+      "lastCheckedAt": 1793480651133,
+      "status": "SL",
+      "pnlR": -1.1022992125984252,
       "reasons": [
         "STANDARD-DIRECTION SWEEP: side=LONG; asset 1H trend=SHORT (countertrend) is context; BTC adaptive regime NEUTRAL (15% confidence); regime gate is applied before selection; fresh SL/TP recalculated from 1H structure",
         "Same-side evidence adjustment -0.21 (flow/order-book/RSI/VWAP)",
@@ -7481,7 +7493,14 @@
         "1H Fibonacci confluence (0.191485)",
         "15m RSI supports entry (46.7)",
         "BTC 15m trend confirms LONG (+0.10)"
-      ]
+      ],
+      "closedAt": 1793480579999,
+      "exitMark": 0.18866,
+      "grossPnlR": -1,
+      "estimatedCostR": 0.1022992125984252,
+      "paperMarginUsd": 1000,
+      "exitDetection": "1m_candle_ohlc",
+      "outcomeNotifiedAt": 1793480654085
     },
     {
       "strategyVersion": "NOVARA-SMART-MONEY-AI-V2.17.0-BTC-NEXT-MOVE-SCENARIO-ENGINE",
@@ -7516,7 +7535,7 @@
       "rsi15": 60.356042201651505,
       "fibConfluence": true,
       "openedAt": 1793456793418,
-      "lastCheckedAt": 1793479115755,
+      "lastCheckedAt": 1793480651133,
       "status": "OPEN",
       "pnlR": null,
       "reasons": [
@@ -7563,7 +7582,7 @@
       "rsi15": 64.84359627946867,
       "fibConfluence": true,
       "openedAt": 1793459096063,
-      "lastCheckedAt": 1793479115755,
+      "lastCheckedAt": 1793480651133,
       "status": "OPEN",
       "pnlR": null,
       "reasons": [
@@ -7722,7 +7741,7 @@
       "rsi15": 75.51396917604768,
       "fibConfluence": false,
       "openedAt": 1793459105626,
-      "lastCheckedAt": 1793479115755,
+      "lastCheckedAt": 1793480651133,
       "status": "OPEN",
       "pnlR": null,
       "reasons": [
@@ -7823,7 +7842,7 @@
       "rsi15": 62.99810964988963,
       "fibConfluence": true,
       "openedAt": 1793459112013,
-      "lastCheckedAt": 1793479115755,
+      "lastCheckedAt": 1793480651133,
       "status": "OPEN",
       "pnlR": null,
       "reasons": [
@@ -7870,7 +7889,7 @@
       "rsi15": 63.56273399358356,
       "fibConfluence": true,
       "openedAt": 1793459115225,
-      "lastCheckedAt": 1793479115755,
+      "lastCheckedAt": 1793480651133,
       "status": "OPEN",
       "pnlR": null,
       "reasons": [
@@ -8004,7 +8023,9 @@
       "pattern": "SWEEP_RECLAIM",
       "score": 6.79,
       "audience": "VIP",
-      "outcomeDelivered": [],
+      "outcomeDelivered": [
+        "VIP"
+      ],
       "entry": 0.013363,
       "sl": 0.013534428571428572,
       "tp": 0.013055428571428572,
@@ -8029,9 +8050,9 @@
       "rsi15": 58.84160914145711,
       "fibConfluence": true,
       "openedAt": 1793461376494,
-      "lastCheckedAt": 1793479115755,
-      "status": "OPEN",
-      "pnlR": null,
+      "lastCheckedAt": 1793480651133,
+      "status": "TP",
+      "pnlR": 1.6694453333333201,
       "reasons": [
         "STANDARD-DIRECTION SWEEP: side=SHORT; asset 1H trend=NEUTRAL (countertrend) is context; BTC adaptive regime BEARISH (47% confidence); regime gate is applied before selection; fresh SL/TP recalculated from 1H structure",
         "Same-side evidence adjustment +0.14 (flow/order-book/RSI/VWAP)",
@@ -8040,7 +8061,14 @@
         "OI participation supports reclaim direction",
         "1H Fibonacci confluence (0.0133899)",
         "BTC 4H regime aligns (BEARISH)"
-      ]
+      ],
+      "closedAt": 1793480579999,
+      "exitMark": 0.013044,
+      "grossPnlR": 1.7941666666666527,
+      "estimatedCostR": 0.12472133333333264,
+      "paperMarginUsd": 1000,
+      "exitDetection": "1m_candle_ohlc",
+      "outcomeNotifiedAt": 1793480656950
     },
     {
       "strategyVersion": "NOVARA-SMART-MONEY-AI-V2.17.0-BTC-NEXT-MOVE-SCENARIO-ENGINE",
@@ -8133,7 +8161,7 @@
       "rsi15": 69.50853834772396,
       "fibConfluence": false,
       "openedAt": 1793463542993,
-      "lastCheckedAt": 1793479115755,
+      "lastCheckedAt": 1793480651133,
       "status": "OPEN",
       "pnlR": null,
       "reasons": [
@@ -8234,7 +8262,7 @@
       "rsi15": 67.85920404799394,
       "fibConfluence": true,
       "openedAt": 1793463549396,
-      "lastCheckedAt": 1793479115755,
+      "lastCheckedAt": 1793480651133,
       "status": "OPEN",
       "pnlR": null,
       "reasons": [
@@ -8281,7 +8309,7 @@
       "rsi15": 69.83190934709734,
       "fibConfluence": true,
       "openedAt": 1793463552629,
-      "lastCheckedAt": 1793479115755,
+      "lastCheckedAt": 1793480651133,
       "status": "OPEN",
       "pnlR": null,
       "reasons": [
@@ -8382,7 +8410,7 @@
       "rsi15": 79.07521538605809,
       "fibConfluence": false,
       "openedAt": 1793463559022,
-      "lastCheckedAt": 1793479115755,
+      "lastCheckedAt": 1793480651133,
       "status": "OPEN",
       "pnlR": null,
       "reasons": [
@@ -8428,7 +8456,7 @@
       "rsi15": 59.16468353058703,
       "fibConfluence": true,
       "openedAt": 1793466022284,
-      "lastCheckedAt": 1793479115755,
+      "lastCheckedAt": 1793480651133,
       "status": "OPEN",
       "pnlR": null,
       "reasons": [
@@ -8474,7 +8502,7 @@
       "rsi15": 56.13859695971382,
       "fibConfluence": false,
       "openedAt": 1793466025434,
-      "lastCheckedAt": 1793479115755,
+      "lastCheckedAt": 1793480651133,
       "status": "OPEN",
       "pnlR": null,
       "reasons": [
@@ -8519,7 +8547,7 @@
       "rsi15": 68.29183019894948,
       "fibConfluence": true,
       "openedAt": 1793466028711,
-      "lastCheckedAt": 1793479115755,
+      "lastCheckedAt": 1793480651133,
       "status": "OPEN",
       "pnlR": null,
       "reasons": [
@@ -8564,7 +8592,7 @@
       "rsi15": 33.8340793546685,
       "fibConfluence": true,
       "openedAt": 1793468001398,
-      "lastCheckedAt": 1793479115755,
+      "lastCheckedAt": 1793480651133,
       "status": "OPEN",
       "pnlR": null,
       "reasons": [
@@ -8613,7 +8641,7 @@
       "rsi15": 40.80748991496522,
       "fibConfluence": true,
       "openedAt": 1793470100274,
-      "lastCheckedAt": 1793479115755,
+      "lastCheckedAt": 1793480651133,
       "status": "OPEN",
       "pnlR": null,
       "reasons": [
@@ -8662,7 +8690,7 @@
       "rsi15": 55.14464479465908,
       "fibConfluence": false,
       "openedAt": 1793470103455,
-      "lastCheckedAt": 1793479115755,
+      "lastCheckedAt": 1793480651133,
       "status": "OPEN",
       "pnlR": null,
       "reasons": [
@@ -8709,7 +8737,7 @@
       "rsi15": 65.03785113840749,
       "fibConfluence": true,
       "openedAt": 1793470106653,
-      "lastCheckedAt": 1793479115755,
+      "lastCheckedAt": 1793480651133,
       "status": "OPEN",
       "pnlR": null,
       "reasons": [
@@ -8757,7 +8785,7 @@
       "rsi15": 39.44944045311099,
       "fibConfluence": false,
       "openedAt": 1793470110917,
-      "lastCheckedAt": 1793479115755,
+      "lastCheckedAt": 1793480651133,
       "status": "OPEN",
       "pnlR": null,
       "reasons": [
@@ -8805,7 +8833,7 @@
       "rsi15": 69.35711254952197,
       "fibConfluence": false,
       "openedAt": 1793470113062,
-      "lastCheckedAt": 1793479115755,
+      "lastCheckedAt": 1793480651133,
       "status": "OPEN",
       "pnlR": null,
       "reasons": [
@@ -8960,7 +8988,7 @@
       "rsi15": 43.60902287622095,
       "fibConfluence": false,
       "openedAt": 1793472640901,
-      "lastCheckedAt": 1793479115755,
+      "lastCheckedAt": 1793480651133,
       "status": "OPEN",
       "pnlR": null,
       "reasons": [
@@ -9008,7 +9036,7 @@
       "rsi15": 54.14301059088831,
       "fibConfluence": false,
       "openedAt": 1793472644196,
-      "lastCheckedAt": 1793479115755,
+      "lastCheckedAt": 1793480651133,
       "status": "OPEN",
       "pnlR": null,
       "reasons": [
@@ -9219,7 +9247,7 @@
       "rsi15": 46.96648842787041,
       "fibConfluence": true,
       "openedAt": 1793472656993,
-      "lastCheckedAt": 1793479115755,
+      "lastCheckedAt": 1793480651133,
       "status": "OPEN",
       "pnlR": null,
       "reasons": [
@@ -9265,7 +9293,7 @@
       "rsi15": 53.06458998331546,
       "fibConfluence": false,
       "openedAt": 1793472660138,
-      "lastCheckedAt": 1793479115755,
+      "lastCheckedAt": 1793480651133,
       "status": "OPEN",
       "pnlR": null,
       "reasons": [
@@ -9364,7 +9392,7 @@
       "rsi15": 41.78460936007342,
       "fibConfluence": true,
       "openedAt": 1793475025541,
-      "lastCheckedAt": 1793479115755,
+      "lastCheckedAt": 1793480651133,
       "status": "OPEN",
       "pnlR": null,
       "reasons": [
@@ -9411,7 +9439,7 @@
       "rsi15": 38.774040068395614,
       "fibConfluence": false,
       "openedAt": 1793475028713,
-      "lastCheckedAt": 1793479115755,
+      "lastCheckedAt": 1793480651133,
       "status": "OPEN",
       "pnlR": null,
       "reasons": [
@@ -9457,7 +9485,7 @@
       "rsi15": 32.35991847951459,
       "fibConfluence": true,
       "openedAt": 1793477248690,
-      "lastCheckedAt": 1793479115755,
+      "lastCheckedAt": 1793480651133,
       "status": "OPEN",
       "pnlR": null,
       "reasons": [
@@ -9505,7 +9533,7 @@
       "rsi15": 42.32028215039865,
       "fibConfluence": true,
       "openedAt": 1793477251874,
-      "lastCheckedAt": 1793479115755,
+      "lastCheckedAt": 1793480651133,
       "status": "OPEN",
       "pnlR": null,
       "reasons": [
@@ -9552,7 +9580,7 @@
       "rsi15": 46.22932297579313,
       "fibConfluence": true,
       "openedAt": 1793477255107,
-      "lastCheckedAt": 1793479115755,
+      "lastCheckedAt": 1793480651133,
       "status": "OPEN",
       "pnlR": null,
       "reasons": [
@@ -9599,7 +9627,7 @@
       "rsi15": 31.933103570737657,
       "fibConfluence": false,
       "openedAt": 1793477258291,
-      "lastCheckedAt": 1793479115755,
+      "lastCheckedAt": 1793480651133,
       "status": "OPEN",
       "pnlR": null,
       "reasons": [
@@ -9644,7 +9672,7 @@
       "rsi15": 35.96201988336237,
       "fibConfluence": true,
       "openedAt": 1793477261814,
-      "lastCheckedAt": 1793479115755,
+      "lastCheckedAt": 1793480651133,
       "status": "OPEN",
       "pnlR": null,
       "reasons": [
@@ -9691,7 +9719,7 @@
       "rsi15": 41.225785492093294,
       "fibConfluence": true,
       "openedAt": 1793477264689,
-      "lastCheckedAt": 1793479115755,
+      "lastCheckedAt": 1793480651133,
       "status": "OPEN",
       "pnlR": null,
       "reasons": [
@@ -9737,7 +9765,7 @@
       "rsi15": 37.41265854037586,
       "fibConfluence": true,
       "openedAt": 1793479377536,
-      "lastCheckedAt": 1793479377536,
+      "lastCheckedAt": 1793480651133,
       "status": "OPEN",
       "pnlR": null,
       "reasons": [
@@ -9786,7 +9814,7 @@
       "rsi15": 36.83685293963405,
       "fibConfluence": false,
       "openedAt": 1793479380725,
-      "lastCheckedAt": 1793479380725,
+      "lastCheckedAt": 1793480651133,
       "status": "OPEN",
       "pnlR": null,
       "reasons": [
@@ -9833,7 +9861,7 @@
       "rsi15": 37.594713646420345,
       "fibConfluence": false,
       "openedAt": 1793479383966,
-      "lastCheckedAt": 1793479383966,
+      "lastCheckedAt": 1793480651133,
       "status": "OPEN",
       "pnlR": null,
       "reasons": [
@@ -9880,7 +9908,7 @@
       "rsi15": 34.30797116435036,
       "fibConfluence": false,
       "openedAt": 1793479387139,
-      "lastCheckedAt": 1793479387139,
+      "lastCheckedAt": 1793480651133,
       "status": "OPEN",
       "pnlR": null,
       "reasons": [
@@ -9927,7 +9955,7 @@
       "rsi15": 33.78027173942333,
       "fibConfluence": false,
       "openedAt": 1793479390330,
-      "lastCheckedAt": 1793479390330,
+      "lastCheckedAt": 1793480651133,
       "status": "OPEN",
       "pnlR": null,
       "reasons": [
@@ -9974,7 +10002,7 @@
       "rsi15": 31.173585929945418,
       "fibConfluence": false,
       "openedAt": 1793479393535,
-      "lastCheckedAt": 1793479393535,
+      "lastCheckedAt": 1793480651133,
       "status": "OPEN",
       "pnlR": null,
       "reasons": [
@@ -10020,7 +10048,7 @@
       "rsi15": 35.88209288467752,
       "fibConfluence": false,
       "openedAt": 1793479396740,
-      "lastCheckedAt": 1793479396740,
+      "lastCheckedAt": 1793480651134,
       "status": "OPEN",
       "pnlR": null,
       "reasons": [
@@ -10067,7 +10095,7 @@
       "rsi15": 39.622396785320866,
       "fibConfluence": false,
       "openedAt": 1793479399937,
-      "lastCheckedAt": 1793479399937,
+      "lastCheckedAt": 1793480651134,
       "status": "OPEN",
       "pnlR": null,
       "reasons": [
@@ -10080,6 +10108,738 @@
         "15m RSI supports entry (39.6)",
         "BTC 4H regime aligns (BEARISH)"
       ]
+    },
+    {
+      "strategyVersion": "NOVARA-SMART-MONEY-AI-V2.18.0-BTC-ETH-HISTORICAL-REACTION-MEMORY",
+      "id": "XRP|SHORT|BREAKOUT_RETEST|1793480898939",
+      "coin": "XRP",
+      "side": "SHORT",
+      "pattern": "BREAKOUT_RETEST",
+      "score": 7.5,
+      "audience": "BOTH",
+      "outcomeDelivered": [],
+      "entry": 1.2489,
+      "sl": 1.25847335,
+      "tp": 1.2228733500000002,
+      "rr": 2.718656478662047,
+      "netRR": 2.5099270370350335,
+      "riskPct": 0.7665425574505683,
+      "estimatedRoundTripCostPct": 0.16,
+      "suggestedLeverage": 11,
+      "btcRegime": "BEARISH",
+      "btcScenario": {
+        "state": "RANGE / WAIT",
+        "direction": "NEUTRAL",
+        "longScore": 29,
+        "shortScore": 71,
+        "leadingScore": 71,
+        "lowerTimeframesAligned": false,
+        "structuralTriggerConfirmed": false,
+        "reason": "No sufficiently aligned 1H/15m scenario; wait for a completed-candle confirmation.",
+        "scoreType": "HEURISTIC_EVIDENCE_SCORE_NOT_STATISTICAL_PROBABILITY",
+        "evaluatedAt": 1793480632743
+      },
+      "btcHistoricalContext": {
+        "btc": {
+          "available": true,
+          "state": "BETWEEN_LEVELS",
+          "bias": "NEUTRAL",
+          "reason": "No high-confluence historical level is close enough for a directional reaction call.",
+          "support": {
+            "price": 76074.08,
+            "strength": 34.21,
+            "touches": 33,
+            "distancePct": 1.768
+          },
+          "resistance": {
+            "price": 78049.2,
+            "strength": 31.15,
+            "touches": 44,
+            "distancePct": 0.783
+          },
+          "nearSupport": false,
+          "nearResistance": false,
+          "supportBounce": false,
+          "resistanceReject": false,
+          "supportBreak": false,
+          "resistanceBreak": false,
+          "dailyClose": 77231.66,
+          "weeklyClose": 80040.8
+        },
+        "eth": {
+          "available": true,
+          "state": "RESISTANCE_BROKEN_AND_HOLDING",
+          "bias": "LONG",
+          "reason": "Completed daily and 4H/1H closes confirmed above former resistance; treat it as support on retest.",
+          "support": {
+            "price": 2197.725,
+            "strength": 42.56,
+            "touches": 65,
+            "distancePct": 2.385
+          },
+          "resistance": {
+            "price": 2261.735,
+            "strength": 43.88,
+            "touches": 67,
+            "distancePct": 0.458
+          },
+          "nearSupport": false,
+          "nearResistance": false,
+          "supportBounce": false,
+          "resistanceReject": false,
+          "supportBreak": false,
+          "resistanceBreak": true,
+          "dailyClose": 2241.84,
+          "weeklyClose": 2327.42
+        },
+        "reasons": [
+          "ETH former resistance held as support"
+        ]
+      },
+      "rsi15": 40.282039776269606,
+      "fibConfluence": true,
+      "openedAt": 1793480898939,
+      "lastCheckedAt": 1793480898939,
+      "status": "OPEN",
+      "pnlR": null,
+      "reasons": [
+        "NORMAL-DIRECTION SETUP: side=SHORT; asset 1H trend=SHORT (aligned) is context; BTC adaptive regime BEARISH (39% confidence); regime gate is applied before selection; fresh SL/TP recalculated from 1H structure",
+        "Same-side evidence adjustment +0.45 (flow/order-book/RSI/VWAP)",
+        "Breakout + successful retest (normal direction)",
+        "order-flow confirms continuation",
+        "aligned 1H trend",
+        "VWAP alignment",
+        "1H Fibonacci confluence (1.24511)",
+        "15m RSI supports entry (40.3)",
+        "BTC 4H regime aligns (BEARISH)",
+        "ETH former resistance held as support"
+      ]
+    },
+    {
+      "strategyVersion": "NOVARA-SMART-MONEY-AI-V2.18.0-BTC-ETH-HISTORICAL-REACTION-MEMORY",
+      "id": "OP|SHORT|BREAKOUT_RETEST|1793480902134",
+      "coin": "OP",
+      "side": "SHORT",
+      "pattern": "BREAKOUT_RETEST",
+      "score": 6.86,
+      "audience": "VIP",
+      "outcomeDelivered": [],
+      "entry": 0.11215,
+      "sl": 0.11340946428571429,
+      "tp": 0.10936946428571429,
+      "rr": 2.207713029916345,
+      "netRR": 2.06523975613214,
+      "riskPct": 1.1230176421883973,
+      "estimatedRoundTripCostPct": 0.16,
+      "suggestedLeverage": 5,
+      "btcRegime": "BEARISH",
+      "btcScenario": {
+        "state": "RANGE / WAIT",
+        "direction": "NEUTRAL",
+        "longScore": 29,
+        "shortScore": 71,
+        "leadingScore": 71,
+        "lowerTimeframesAligned": false,
+        "structuralTriggerConfirmed": false,
+        "reason": "No sufficiently aligned 1H/15m scenario; wait for a completed-candle confirmation.",
+        "scoreType": "HEURISTIC_EVIDENCE_SCORE_NOT_STATISTICAL_PROBABILITY",
+        "evaluatedAt": 1793480632743
+      },
+      "btcHistoricalContext": {
+        "btc": {
+          "available": true,
+          "state": "BETWEEN_LEVELS",
+          "bias": "NEUTRAL",
+          "reason": "No high-confluence historical level is close enough for a directional reaction call.",
+          "support": {
+            "price": 76074.08,
+            "strength": 34.21,
+            "touches": 33,
+            "distancePct": 1.768
+          },
+          "resistance": {
+            "price": 78049.2,
+            "strength": 31.15,
+            "touches": 44,
+            "distancePct": 0.783
+          },
+          "nearSupport": false,
+          "nearResistance": false,
+          "supportBounce": false,
+          "resistanceReject": false,
+          "supportBreak": false,
+          "resistanceBreak": false,
+          "dailyClose": 77231.66,
+          "weeklyClose": 80040.8
+        },
+        "eth": {
+          "available": true,
+          "state": "RESISTANCE_BROKEN_AND_HOLDING",
+          "bias": "LONG",
+          "reason": "Completed daily and 4H/1H closes confirmed above former resistance; treat it as support on retest.",
+          "support": {
+            "price": 2197.725,
+            "strength": 42.56,
+            "touches": 65,
+            "distancePct": 2.385
+          },
+          "resistance": {
+            "price": 2261.735,
+            "strength": 43.88,
+            "touches": 67,
+            "distancePct": 0.458
+          },
+          "nearSupport": false,
+          "nearResistance": false,
+          "supportBounce": false,
+          "resistanceReject": false,
+          "supportBreak": false,
+          "resistanceBreak": true,
+          "dailyClose": 2241.84,
+          "weeklyClose": 2327.42
+        },
+        "reasons": [
+          "ETH former resistance held as support"
+        ]
+      },
+      "rsi15": 36.374500365837456,
+      "fibConfluence": false,
+      "openedAt": 1793480902134,
+      "lastCheckedAt": 1793480902134,
+      "status": "OPEN",
+      "pnlR": null,
+      "reasons": [
+        "NORMAL-DIRECTION SETUP: side=SHORT; asset 1H trend=NEUTRAL (countertrend) is context; BTC adaptive regime BEARISH (39% confidence); regime gate is applied before selection; fresh SL/TP recalculated from 1H structure",
+        "Same-side evidence adjustment +0.26 (flow/order-book/RSI/VWAP)",
+        "Breakout + successful retest (normal direction)",
+        "order-flow confirms continuation",
+        "volume supports level break",
+        "VWAP alignment",
+        "15m RSI supports entry (36.4)",
+        "BTC 4H regime aligns (BEARISH)",
+        "ETH former resistance held as support"
+      ]
+    },
+    {
+      "strategyVersion": "NOVARA-SMART-MONEY-AI-V2.18.0-BTC-ETH-HISTORICAL-REACTION-MEMORY",
+      "id": "kPEPE|LONG|TREND_PULLBACK|1793480905330",
+      "coin": "kPEPE",
+      "side": "LONG",
+      "pattern": "TREND_PULLBACK",
+      "score": 6.59,
+      "audience": "VIP",
+      "outcomeDelivered": [],
+      "entry": 0.005004,
+      "sl": 0.004931142857142857,
+      "tp": 0.005138142857142858,
+      "rr": 1.841176470588248,
+      "netRR": 1.7312847058823655,
+      "riskPct": 1.4559780746831084,
+      "estimatedRoundTripCostPct": 0.16,
+      "suggestedLeverage": 10,
+      "btcRegime": "BEARISH",
+      "btcScenario": {
+        "state": "RANGE / WAIT",
+        "direction": "NEUTRAL",
+        "longScore": 29,
+        "shortScore": 71,
+        "leadingScore": 71,
+        "lowerTimeframesAligned": false,
+        "structuralTriggerConfirmed": false,
+        "reason": "No sufficiently aligned 1H/15m scenario; wait for a completed-candle confirmation.",
+        "scoreType": "HEURISTIC_EVIDENCE_SCORE_NOT_STATISTICAL_PROBABILITY",
+        "evaluatedAt": 1793480632743
+      },
+      "btcHistoricalContext": {
+        "btc": {
+          "available": true,
+          "state": "BETWEEN_LEVELS",
+          "bias": "NEUTRAL",
+          "reason": "No high-confluence historical level is close enough for a directional reaction call.",
+          "support": {
+            "price": 76074.08,
+            "strength": 34.21,
+            "touches": 33,
+            "distancePct": 1.768
+          },
+          "resistance": {
+            "price": 78049.2,
+            "strength": 31.15,
+            "touches": 44,
+            "distancePct": 0.783
+          },
+          "nearSupport": false,
+          "nearResistance": false,
+          "supportBounce": false,
+          "resistanceReject": false,
+          "supportBreak": false,
+          "resistanceBreak": false,
+          "dailyClose": 77231.66,
+          "weeklyClose": 80040.8
+        },
+        "eth": {
+          "available": true,
+          "state": "RESISTANCE_BROKEN_AND_HOLDING",
+          "bias": "LONG",
+          "reason": "Completed daily and 4H/1H closes confirmed above former resistance; treat it as support on retest.",
+          "support": {
+            "price": 2197.725,
+            "strength": 42.56,
+            "touches": 65,
+            "distancePct": 2.385
+          },
+          "resistance": {
+            "price": 2261.735,
+            "strength": 43.88,
+            "touches": 67,
+            "distancePct": 0.458
+          },
+          "nearSupport": false,
+          "nearResistance": false,
+          "supportBounce": false,
+          "resistanceReject": false,
+          "supportBreak": false,
+          "resistanceBreak": true,
+          "dailyClose": 2241.84,
+          "weeklyClose": 2327.42
+        },
+        "reasons": [
+          "ETH former resistance confirmed as support"
+        ]
+      },
+      "rsi15": 55.20479693299506,
+      "fibConfluence": false,
+      "openedAt": 1793480905330,
+      "lastCheckedAt": 1793480905330,
+      "status": "OPEN",
+      "pnlR": null,
+      "reasons": [
+        "NORMAL-DIRECTION SETUP: side=LONG; asset 1H trend=LONG (aligned) is context; BTC adaptive regime BEARISH (39% confidence); regime gate is applied before selection; fresh SL/TP recalculated from 1H structure",
+        "Same-side evidence adjustment +0.33 (flow/order-book/RSI/VWAP)",
+        "Trend pullback + continuation (normal direction)",
+        "order-flow resumes with trend",
+        "VWAP alignment",
+        "15m RSI supports entry (55.2)",
+        "BTC 4H regime opposes LONG (BEARISH; 0.80%/24h, score penalty -0.15)",
+        "ETH former resistance confirmed as support"
+      ]
+    },
+    {
+      "strategyVersion": "NOVARA-SMART-MONEY-AI-V2.18.0-BTC-ETH-HISTORICAL-REACTION-MEMORY",
+      "id": "ZEC|SHORT|BREAKOUT_RETEST|1793480908535",
+      "coin": "ZEC",
+      "side": "SHORT",
+      "pattern": "BREAKOUT_RETEST",
+      "score": 6.41,
+      "audience": "VIP",
+      "outcomeDelivered": [],
+      "entry": 1269.8,
+      "sl": 1282.8464285714285,
+      "tp": 1236.6464285714285,
+      "rr": 2.5411990145086247,
+      "netRR": 2.385472105119082,
+      "riskPct": 1.0274396417883587,
+      "estimatedRoundTripCostPct": 0.16,
+      "suggestedLeverage": 9,
+      "btcRegime": "BEARISH",
+      "btcScenario": {
+        "state": "RANGE / WAIT",
+        "direction": "NEUTRAL",
+        "longScore": 29,
+        "shortScore": 71,
+        "leadingScore": 71,
+        "lowerTimeframesAligned": false,
+        "structuralTriggerConfirmed": false,
+        "reason": "No sufficiently aligned 1H/15m scenario; wait for a completed-candle confirmation.",
+        "scoreType": "HEURISTIC_EVIDENCE_SCORE_NOT_STATISTICAL_PROBABILITY",
+        "evaluatedAt": 1793480632743
+      },
+      "btcHistoricalContext": {
+        "btc": {
+          "available": true,
+          "state": "BETWEEN_LEVELS",
+          "bias": "NEUTRAL",
+          "reason": "No high-confluence historical level is close enough for a directional reaction call.",
+          "support": {
+            "price": 76074.08,
+            "strength": 34.21,
+            "touches": 33,
+            "distancePct": 1.768
+          },
+          "resistance": {
+            "price": 78049.2,
+            "strength": 31.15,
+            "touches": 44,
+            "distancePct": 0.783
+          },
+          "nearSupport": false,
+          "nearResistance": false,
+          "supportBounce": false,
+          "resistanceReject": false,
+          "supportBreak": false,
+          "resistanceBreak": false,
+          "dailyClose": 77231.66,
+          "weeklyClose": 80040.8
+        },
+        "eth": {
+          "available": true,
+          "state": "RESISTANCE_BROKEN_AND_HOLDING",
+          "bias": "LONG",
+          "reason": "Completed daily and 4H/1H closes confirmed above former resistance; treat it as support on retest.",
+          "support": {
+            "price": 2197.725,
+            "strength": 42.56,
+            "touches": 65,
+            "distancePct": 2.385
+          },
+          "resistance": {
+            "price": 2261.735,
+            "strength": 43.88,
+            "touches": 67,
+            "distancePct": 0.458
+          },
+          "nearSupport": false,
+          "nearResistance": false,
+          "supportBounce": false,
+          "resistanceReject": false,
+          "supportBreak": false,
+          "resistanceBreak": true,
+          "dailyClose": 2241.84,
+          "weeklyClose": 2327.42
+        },
+        "reasons": [
+          "ETH former resistance held as support"
+        ]
+      },
+      "rsi15": 33.80969047527206,
+      "fibConfluence": false,
+      "openedAt": 1793480908535,
+      "lastCheckedAt": 1793480908535,
+      "status": "OPEN",
+      "pnlR": null,
+      "reasons": [
+        "NORMAL-DIRECTION SETUP: side=SHORT; asset 1H trend=NEUTRAL (countertrend) is context; BTC adaptive regime BEARISH (39% confidence); regime gate is applied before selection; fresh SL/TP recalculated from 1H structure",
+        "Same-side evidence adjustment +0.26 (flow/order-book/RSI/VWAP)",
+        "Breakout + successful retest (normal direction)",
+        "order-flow confirms continuation",
+        "VWAP alignment",
+        "15m RSI supports entry (33.8)",
+        "BTC 4H regime aligns (BEARISH)",
+        "ETH former resistance held as support"
+      ]
+    },
+    {
+      "strategyVersion": "NOVARA-SMART-MONEY-AI-V2.18.0-BTC-ETH-HISTORICAL-REACTION-MEMORY",
+      "id": "GRAM|SHORT|BREAKOUT_RETEST|1793480911768",
+      "coin": "GRAM",
+      "side": "SHORT",
+      "pattern": "BREAKOUT_RETEST",
+      "score": 6.29,
+      "audience": "VIP",
+      "outcomeDelivered": [],
+      "entry": 1.2021,
+      "sl": 1.2272571428571428,
+      "tp": 1.155157142857143,
+      "rr": 1.865985235661547,
+      "netRR": 1.7895314026121432,
+      "riskPct": 2.092766230525154,
+      "estimatedRoundTripCostPct": 0.16,
+      "suggestedLeverage": 5,
+      "btcRegime": "BEARISH",
+      "btcScenario": {
+        "state": "RANGE / WAIT",
+        "direction": "NEUTRAL",
+        "longScore": 29,
+        "shortScore": 71,
+        "leadingScore": 71,
+        "lowerTimeframesAligned": false,
+        "structuralTriggerConfirmed": false,
+        "reason": "No sufficiently aligned 1H/15m scenario; wait for a completed-candle confirmation.",
+        "scoreType": "HEURISTIC_EVIDENCE_SCORE_NOT_STATISTICAL_PROBABILITY",
+        "evaluatedAt": 1793480632743
+      },
+      "btcHistoricalContext": {
+        "btc": {
+          "available": true,
+          "state": "BETWEEN_LEVELS",
+          "bias": "NEUTRAL",
+          "reason": "No high-confluence historical level is close enough for a directional reaction call.",
+          "support": {
+            "price": 76074.08,
+            "strength": 34.21,
+            "touches": 33,
+            "distancePct": 1.768
+          },
+          "resistance": {
+            "price": 78049.2,
+            "strength": 31.15,
+            "touches": 44,
+            "distancePct": 0.783
+          },
+          "nearSupport": false,
+          "nearResistance": false,
+          "supportBounce": false,
+          "resistanceReject": false,
+          "supportBreak": false,
+          "resistanceBreak": false,
+          "dailyClose": 77231.66,
+          "weeklyClose": 80040.8
+        },
+        "eth": {
+          "available": true,
+          "state": "RESISTANCE_BROKEN_AND_HOLDING",
+          "bias": "LONG",
+          "reason": "Completed daily and 4H/1H closes confirmed above former resistance; treat it as support on retest.",
+          "support": {
+            "price": 2197.725,
+            "strength": 42.56,
+            "touches": 65,
+            "distancePct": 2.385
+          },
+          "resistance": {
+            "price": 2261.735,
+            "strength": 43.88,
+            "touches": 67,
+            "distancePct": 0.458
+          },
+          "nearSupport": false,
+          "nearResistance": false,
+          "supportBounce": false,
+          "resistanceReject": false,
+          "supportBreak": false,
+          "resistanceBreak": true,
+          "dailyClose": 2241.84,
+          "weeklyClose": 2327.42
+        },
+        "reasons": [
+          "ETH former resistance held as support"
+        ]
+      },
+      "rsi15": 45.321442704840635,
+      "fibConfluence": false,
+      "openedAt": 1793480911768,
+      "lastCheckedAt": 1793480911768,
+      "status": "OPEN",
+      "pnlR": null,
+      "reasons": [
+        "NORMAL-DIRECTION SETUP: side=SHORT; asset 1H trend=NEUTRAL (countertrend) is context; BTC adaptive regime BEARISH (39% confidence); regime gate is applied before selection; fresh SL/TP recalculated from 1H structure",
+        "Same-side evidence adjustment +0.14 (flow/order-book/RSI/VWAP)",
+        "Breakout + successful retest (normal direction)",
+        "order-flow confirms continuation",
+        "VWAP alignment",
+        "15m RSI supports entry (45.3)",
+        "BTC 4H regime aligns (BEARISH)",
+        "ETH former resistance held as support"
+      ]
+    },
+    {
+      "strategyVersion": "NOVARA-SMART-MONEY-AI-V2.18.0-BTC-ETH-HISTORICAL-REACTION-MEMORY",
+      "id": "JUP|SHORT|TREND_PULLBACK|1793480914989",
+      "coin": "JUP",
+      "side": "SHORT",
+      "pattern": "TREND_PULLBACK",
+      "score": 6.24,
+      "audience": "VIP",
+      "outcomeDelivered": [],
+      "entry": 0.25738,
+      "sl": 0.25894392857142856,
+      "tp": 0.2535339285714286,
+      "rr": 2.459237268782826,
+      "netRR": 2.195920895181546,
+      "riskPct": 0.607634070801369,
+      "estimatedRoundTripCostPct": 0.16,
+      "suggestedLeverage": 8,
+      "btcRegime": "BEARISH",
+      "btcScenario": {
+        "state": "RANGE / WAIT",
+        "direction": "NEUTRAL",
+        "longScore": 29,
+        "shortScore": 71,
+        "leadingScore": 71,
+        "lowerTimeframesAligned": false,
+        "structuralTriggerConfirmed": false,
+        "reason": "No sufficiently aligned 1H/15m scenario; wait for a completed-candle confirmation.",
+        "scoreType": "HEURISTIC_EVIDENCE_SCORE_NOT_STATISTICAL_PROBABILITY",
+        "evaluatedAt": 1793480632743
+      },
+      "btcHistoricalContext": {
+        "btc": {
+          "available": true,
+          "state": "BETWEEN_LEVELS",
+          "bias": "NEUTRAL",
+          "reason": "No high-confluence historical level is close enough for a directional reaction call.",
+          "support": {
+            "price": 76074.08,
+            "strength": 34.21,
+            "touches": 33,
+            "distancePct": 1.768
+          },
+          "resistance": {
+            "price": 78049.2,
+            "strength": 31.15,
+            "touches": 44,
+            "distancePct": 0.783
+          },
+          "nearSupport": false,
+          "nearResistance": false,
+          "supportBounce": false,
+          "resistanceReject": false,
+          "supportBreak": false,
+          "resistanceBreak": false,
+          "dailyClose": 77231.66,
+          "weeklyClose": 80040.8
+        },
+        "eth": {
+          "available": true,
+          "state": "RESISTANCE_BROKEN_AND_HOLDING",
+          "bias": "LONG",
+          "reason": "Completed daily and 4H/1H closes confirmed above former resistance; treat it as support on retest.",
+          "support": {
+            "price": 2197.725,
+            "strength": 42.56,
+            "touches": 65,
+            "distancePct": 2.385
+          },
+          "resistance": {
+            "price": 2261.735,
+            "strength": 43.88,
+            "touches": 67,
+            "distancePct": 0.458
+          },
+          "nearSupport": false,
+          "nearResistance": false,
+          "supportBounce": false,
+          "resistanceReject": false,
+          "supportBreak": false,
+          "resistanceBreak": true,
+          "dailyClose": 2241.84,
+          "weeklyClose": 2327.42
+        },
+        "reasons": [
+          "ETH former resistance held as support"
+        ]
+      },
+      "rsi15": 38.949044003868586,
+      "fibConfluence": false,
+      "openedAt": 1793480914989,
+      "lastCheckedAt": 1793480914989,
+      "status": "OPEN",
+      "pnlR": null,
+      "reasons": [
+        "NORMAL-DIRECTION SETUP: side=SHORT; asset 1H trend=SHORT (aligned) is context; BTC adaptive regime BEARISH (39% confidence); regime gate is applied before selection; fresh SL/TP recalculated from 1H structure",
+        "Same-side evidence adjustment +0.19 (flow/order-book/RSI/VWAP)",
+        "Trend pullback + continuation (normal direction)",
+        "participation present",
+        "VWAP alignment",
+        "OI rising with trend",
+        "15m RSI supports entry (38.9)",
+        "BTC 4H regime aligns (BEARISH)",
+        "ETH former resistance held as support"
+      ]
+    },
+    {
+      "strategyVersion": "NOVARA-SMART-MONEY-AI-V2.18.0-BTC-ETH-HISTORICAL-REACTION-MEMORY",
+      "id": "ADA|SHORT|BREAKOUT_RETEST|1793480918192",
+      "coin": "ADA",
+      "side": "SHORT",
+      "pattern": "BREAKOUT_RETEST",
+      "score": 6.19,
+      "audience": "VIP",
+      "outcomeDelivered": [],
+      "entry": 0.192365,
+      "sl": 0.19340854750000003,
+      "tp": 0.19006854750000002,
+      "rr": 2.2006209587967462,
+      "netRR": 1.9056808626343824,
+      "riskPct": 0.542483040054074,
+      "estimatedRoundTripCostPct": 0.16,
+      "suggestedLeverage": 7,
+      "btcRegime": "BEARISH",
+      "btcScenario": {
+        "state": "RANGE / WAIT",
+        "direction": "NEUTRAL",
+        "longScore": 29,
+        "shortScore": 71,
+        "leadingScore": 71,
+        "lowerTimeframesAligned": false,
+        "structuralTriggerConfirmed": false,
+        "reason": "No sufficiently aligned 1H/15m scenario; wait for a completed-candle confirmation.",
+        "scoreType": "HEURISTIC_EVIDENCE_SCORE_NOT_STATISTICAL_PROBABILITY",
+        "evaluatedAt": 1793480632743
+      },
+      "btcHistoricalContext": {
+        "btc": {
+          "available": true,
+          "state": "BETWEEN_LEVELS",
+          "bias": "NEUTRAL",
+          "reason": "No high-confluence historical level is close enough for a directional reaction call.",
+          "support": {
+            "price": 76074.08,
+            "strength": 34.21,
+            "touches": 33,
+            "distancePct": 1.768
+          },
+          "resistance": {
+            "price": 78049.2,
+            "strength": 31.15,
+            "touches": 44,
+            "distancePct": 0.783
+          },
+          "nearSupport": false,
+          "nearResistance": false,
+          "supportBounce": false,
+          "resistanceReject": false,
+          "supportBreak": false,
+          "resistanceBreak": false,
+          "dailyClose": 77231.66,
+          "weeklyClose": 80040.8
+        },
+        "eth": {
+          "available": true,
+          "state": "RESISTANCE_BROKEN_AND_HOLDING",
+          "bias": "LONG",
+          "reason": "Completed daily and 4H/1H closes confirmed above former resistance; treat it as support on retest.",
+          "support": {
+            "price": 2197.725,
+            "strength": 42.56,
+            "touches": 65,
+            "distancePct": 2.385
+          },
+          "resistance": {
+            "price": 2261.735,
+            "strength": 43.88,
+            "touches": 67,
+            "distancePct": 0.458
+          },
+          "nearSupport": false,
+          "nearResistance": false,
+          "supportBounce": false,
+          "resistanceReject": false,
+          "supportBreak": false,
+          "resistanceBreak": true,
+          "dailyClose": 2241.84,
+          "weeklyClose": 2327.42
+        },
+        "reasons": [
+          "ETH former resistance held as support"
+        ]
+      },
+      "rsi15": 35.60943667396671,
+      "fibConfluence": false,
+      "openedAt": 1793480918192,
+      "lastCheckedAt": 1793480918192,
+      "status": "OPEN",
+      "pnlR": null,
+      "reasons": [
+        "NORMAL-DIRECTION SETUP: side=SHORT; asset 1H trend=SHORT (aligned) is context; BTC adaptive regime BEARISH (39% confidence); regime gate is applied before selection; fresh SL/TP recalculated from 1H structure",
+        "Same-side evidence adjustment +0.09 (flow/order-book/RSI/VWAP)",
+        "Breakout + successful retest (normal direction)",
+        "aligned 1H trend",
+        "VWAP alignment",
+        "15m RSI supports entry (35.6)",
+        "BTC 4H regime aligns (BEARISH)",
+        "ETH former resistance held as support"
+      ]
     }
   ],
   "dailyStats": {
@@ -10090,37 +10850,37 @@
       "realizedR": -12.488052770709697
     },
     "2026-10-31": {
-      "tp": 21,
-      "sl": 67,
-      "closed": 88,
-      "realizedR": -24.303106787862554
+      "tp": 22,
+      "sl": 68,
+      "closed": 90,
+      "realizedR": -23.735960667127657
     }
   },
   "lastStatusAt": 1792650003809,
   "lastDailyReportAt": 1793448791147,
   "lastCycle": {
-    "at": 1793479399937,
+    "at": 1793480918192,
     "rejectionCounts": {
       "stale": 0,
-      "regime": 20,
+      "regime": 6,
       "regimeSoft": 0,
       "score": 0,
-      "cooldown": 0,
-      "risk": 12,
-      "location": 1,
-      "vwap": 1,
-      "spread": 1,
-      "accepted": 11
+      "cooldown": 2,
+      "risk": 7,
+      "location": 0,
+      "vwap": 0,
+      "spread": 0,
+      "accepted": 7
     },
     "eligible": 179,
     "totalEligible": 179,
     "checked": 179,
     "failed": 0,
-    "rawCandidates": 11,
-    "signalsSelected": 8,
-    "sentSignals": 8,
+    "rawCandidates": 7,
+    "signalsSelected": 7,
+    "sentSignals": 7,
     "sendErrors": 0,
-    "openPaperTrades": 67
+    "openPaperTrades": 72
   },
   "archivedPaperTrades": [
     {
@@ -25925,5 +26685,2719 @@
     }
   ],
   "cleanStartId": "NOVARA-V2.14.0-ENTRY-SIDE-BTC-GATE-REPAIR-COHORT-2026-10-30",
-  "cleanStartAt": 1793360963622
+  "cleanStartAt": 1793360963622,
+  "btcEthHistoricalMemory": {
+    "schema": 1,
+    "source": "Binance.US spot OHLCV",
+    "refreshedAt": 1793480635723,
+    "assets": {
+      "BTC": {
+        "symbol": "BTCUSD",
+        "dailyBars": 2016,
+        "weeklyBars": 288,
+        "monthlyBars": 67,
+        "latestDailyClose": 77231.66,
+        "latestWeeklyClose": 80040.8,
+        "levels": [
+          {
+            "price": 65189.08,
+            "strength": 47.2,
+            "pivotCount": 12,
+            "highPivotCount": 7,
+            "lowPivotCount": 5,
+            "role": "RESISTANCE_ORIGIN",
+            "interactions": 44,
+            "rejections": 18,
+            "timeframes": [
+              "1d",
+              "1w",
+              "1M"
+            ],
+            "lastTouchAt": 1787011200000,
+            "ageDays": 75,
+            "zonePct": 0.55
+          },
+          {
+            "price": 82690.73,
+            "strength": 46.44,
+            "pivotCount": 8,
+            "highPivotCount": 6,
+            "lowPivotCount": 2,
+            "role": "RESISTANCE_ORIGIN",
+            "interactions": 45,
+            "rejections": 22,
+            "timeframes": [
+              "1d",
+              "1w",
+              "1M"
+            ],
+            "lastTouchAt": 1792627200000,
+            "ageDays": 10,
+            "zonePct": 0.55
+          },
+          {
+            "price": 80721.3,
+            "strength": 43.9,
+            "pivotCount": 6,
+            "highPivotCount": 1,
+            "lowPivotCount": 5,
+            "role": "SUPPORT_ORIGIN",
+            "interactions": 44,
+            "rejections": 23,
+            "timeframes": [
+              "1d",
+              "1w",
+              "1M"
+            ],
+            "lastTouchAt": 1793232000000,
+            "ageDays": 3,
+            "zonePct": 0.55
+          },
+          {
+            "price": 87388.25,
+            "strength": 40.1,
+            "pivotCount": 7,
+            "highPivotCount": 5,
+            "lowPivotCount": 2,
+            "role": "RESISTANCE_ORIGIN",
+            "interactions": 43,
+            "rejections": 21,
+            "timeframes": [
+              "1d",
+              "1w"
+            ],
+            "lastTouchAt": 1790899200000,
+            "ageDays": 30,
+            "zonePct": 0.4
+          },
+          {
+            "price": 57894.73,
+            "strength": 39,
+            "pivotCount": 7,
+            "highPivotCount": 2,
+            "lowPivotCount": 5,
+            "role": "SUPPORT_ORIGIN",
+            "interactions": 46,
+            "rejections": 16,
+            "timeframes": [
+              "1d",
+              "1w",
+              "1M"
+            ],
+            "lastTouchAt": 1782864000000,
+            "ageDays": 123,
+            "zonePct": 0.55
+          },
+          {
+            "price": 62232.74,
+            "strength": 38.67,
+            "pivotCount": 9,
+            "highPivotCount": 2,
+            "lowPivotCount": 7,
+            "role": "SUPPORT_ORIGIN",
+            "interactions": 41,
+            "rejections": 17,
+            "timeframes": [
+              "1d",
+              "1w"
+            ],
+            "lastTouchAt": 1785715200000,
+            "ageDays": 90,
+            "zonePct": 0.4
+          },
+          {
+            "price": 60050,
+            "strength": 37.52,
+            "pivotCount": 5,
+            "highPivotCount": 1,
+            "lowPivotCount": 4,
+            "role": "SUPPORT_ORIGIN",
+            "interactions": 38,
+            "rejections": 22,
+            "timeframes": [
+              "1d",
+              "1w",
+              "1M"
+            ],
+            "lastTouchAt": 1782864000000,
+            "ageDays": 123,
+            "zonePct": 0.55
+          },
+          {
+            "price": 79468.29,
+            "strength": 34.86,
+            "pivotCount": 6,
+            "highPivotCount": 3,
+            "lowPivotCount": 3,
+            "role": "MIXED",
+            "interactions": 41,
+            "rejections": 19,
+            "timeframes": [
+              "1d"
+            ],
+            "lastTouchAt": 1793059200000,
+            "ageDays": 5,
+            "zonePct": 0.28
+          },
+          {
+            "price": 84825.32,
+            "strength": 34.54,
+            "pivotCount": 3,
+            "highPivotCount": 2,
+            "lowPivotCount": 1,
+            "role": "RESISTANCE_ORIGIN",
+            "interactions": 43,
+            "rejections": 24,
+            "timeframes": [
+              "1d"
+            ],
+            "lastTouchAt": 1792540800000,
+            "ageDays": 11,
+            "zonePct": 0.28
+          },
+          {
+            "price": 76074.08,
+            "strength": 34.21,
+            "pivotCount": 7,
+            "highPivotCount": 2,
+            "lowPivotCount": 5,
+            "role": "SUPPORT_ORIGIN",
+            "interactions": 33,
+            "rejections": 15,
+            "timeframes": [
+              "1d",
+              "1w"
+            ],
+            "lastTouchAt": 1793318400000,
+            "ageDays": 2,
+            "zonePct": 0.4
+          },
+          {
+            "price": 59247.36,
+            "strength": 33.39,
+            "pivotCount": 7,
+            "highPivotCount": 4,
+            "lowPivotCount": 3,
+            "role": "RESISTANCE_ORIGIN",
+            "interactions": 38,
+            "rejections": 15,
+            "timeframes": [
+              "1d",
+              "1w"
+            ],
+            "lastTouchAt": 1782864000000,
+            "ageDays": 123,
+            "zonePct": 0.4
+          },
+          {
+            "price": 74500,
+            "strength": 32.38,
+            "pivotCount": 9,
+            "highPivotCount": 1,
+            "lowPivotCount": 8,
+            "role": "SUPPORT_ORIGIN",
+            "interactions": 21,
+            "rejections": 11,
+            "timeframes": [
+              "1d",
+              "1w",
+              "1M"
+            ],
+            "lastTouchAt": 1787270400000,
+            "ageDays": 72,
+            "zonePct": 0.55
+          },
+          {
+            "price": 62987.975,
+            "strength": 32.2,
+            "pivotCount": 2,
+            "highPivotCount": 1,
+            "lowPivotCount": 1,
+            "role": "MIXED",
+            "interactions": 48,
+            "rejections": 22,
+            "timeframes": [
+              "1d"
+            ],
+            "lastTouchAt": 1786838400000,
+            "ageDays": 77,
+            "zonePct": 0.28
+          },
+          {
+            "price": 84036.83,
+            "strength": 32.2,
+            "pivotCount": 2,
+            "highPivotCount": 1,
+            "lowPivotCount": 1,
+            "role": "MIXED",
+            "interactions": 44,
+            "rejections": 22,
+            "timeframes": [
+              "1d"
+            ],
+            "lastTouchAt": 1792540800000,
+            "ageDays": 11,
+            "zonePct": 0.28
+          },
+          {
+            "price": 86408.9,
+            "strength": 31.48,
+            "pivotCount": 4,
+            "highPivotCount": 1,
+            "lowPivotCount": 3,
+            "role": "SUPPORT_ORIGIN",
+            "interactions": 40,
+            "rejections": 19,
+            "timeframes": [
+              "1d"
+            ],
+            "lastTouchAt": 1791158400000,
+            "ageDays": 27,
+            "zonePct": 0.28
+          },
+          {
+            "price": 66996.28,
+            "strength": 31.19,
+            "pivotCount": 6,
+            "highPivotCount": 5,
+            "lowPivotCount": 1,
+            "role": "RESISTANCE_ORIGIN",
+            "interactions": 36,
+            "rejections": 13,
+            "timeframes": [
+              "1d",
+              "1w"
+            ],
+            "lastTouchAt": 1787097600000,
+            "ageDays": 74,
+            "zonePct": 0.4
+          },
+          {
+            "price": 64464.76,
+            "strength": 31.16,
+            "pivotCount": 4,
+            "highPivotCount": 4,
+            "lowPivotCount": 0,
+            "role": "RESISTANCE_ORIGIN",
+            "interactions": 44,
+            "rejections": 18,
+            "timeframes": [
+              "1d"
+            ],
+            "lastTouchAt": 1786924800000,
+            "ageDays": 76,
+            "zonePct": 0.28
+          },
+          {
+            "price": 78049.2,
+            "strength": 31.15,
+            "pivotCount": 4,
+            "highPivotCount": 3,
+            "lowPivotCount": 1,
+            "role": "RESISTANCE_ORIGIN",
+            "interactions": 44,
+            "rejections": 16,
+            "timeframes": [
+              "1d"
+            ],
+            "lastTouchAt": 1793232000000,
+            "ageDays": 3,
+            "zonePct": 0.28
+          },
+          {
+            "price": 69025.05,
+            "strength": 30.35,
+            "pivotCount": 6,
+            "highPivotCount": 5,
+            "lowPivotCount": 1,
+            "role": "RESISTANCE_ORIGIN",
+            "interactions": 31,
+            "rejections": 10,
+            "timeframes": [
+              "1d",
+              "1w",
+              "1M"
+            ],
+            "lastTouchAt": 1787097600000,
+            "ageDays": 74,
+            "zonePct": 0.55
+          },
+          {
+            "price": 111500,
+            "strength": 28.19,
+            "pivotCount": 5,
+            "highPivotCount": 3,
+            "lowPivotCount": 2,
+            "role": "RESISTANCE_ORIGIN",
+            "interactions": 33,
+            "rejections": 15,
+            "timeframes": [
+              "1d",
+              "1w",
+              "1M"
+            ],
+            "lastTouchAt": 1762041600000,
+            "ageDays": 364,
+            "zonePct": 0.55
+          },
+          {
+            "price": 88928,
+            "strength": 27.73,
+            "pivotCount": 4,
+            "highPivotCount": 3,
+            "lowPivotCount": 1,
+            "role": "RESISTANCE_ORIGIN",
+            "interactions": 37,
+            "rejections": 17,
+            "timeframes": [
+              "1d",
+              "1w"
+            ],
+            "lastTouchAt": 1769644800000,
+            "ageDays": 276,
+            "zonePct": 0.4
+          },
+          {
+            "price": 98000,
+            "strength": 26.8,
+            "pivotCount": 9,
+            "highPivotCount": 4,
+            "lowPivotCount": 5,
+            "role": "SUPPORT_ORIGIN",
+            "interactions": 18,
+            "rejections": 9,
+            "timeframes": [
+              "1d",
+              "1w",
+              "1M"
+            ],
+            "lastTouchAt": 1768348800000,
+            "ageDays": 291,
+            "zonePct": 0.55
+          },
+          {
+            "price": 28810,
+            "strength": 25.66,
+            "pivotCount": 8,
+            "highPivotCount": 3,
+            "lowPivotCount": 5,
+            "role": "SUPPORT_ORIGIN",
+            "interactions": 52,
+            "rejections": 25,
+            "timeframes": [
+              "1d",
+              "1w",
+              "1M"
+            ],
+            "lastTouchAt": 1688601600000,
+            "ageDays": 1214,
+            "zonePct": 0.55
+          },
+          {
+            "price": 90438.97,
+            "strength": 23.84,
+            "pivotCount": 3,
+            "highPivotCount": 3,
+            "lowPivotCount": 0,
+            "role": "RESISTANCE_ORIGIN",
+            "interactions": 35,
+            "rejections": 17,
+            "timeframes": [
+              "1d"
+            ],
+            "lastTouchAt": 1769558400000,
+            "ageDays": 277,
+            "zonePct": 0.28
+          },
+          {
+            "price": 116270.96,
+            "strength": 23.55,
+            "pivotCount": 4,
+            "highPivotCount": 3,
+            "lowPivotCount": 1,
+            "role": "RESISTANCE_ORIGIN",
+            "interactions": 30,
+            "rejections": 15,
+            "timeframes": [
+              "1d",
+              "1w"
+            ],
+            "lastTouchAt": 1761523200000,
+            "ageDays": 370,
+            "zonePct": 0.4
+          },
+          {
+            "price": 107460.975,
+            "strength": 23.13,
+            "pivotCount": 4,
+            "highPivotCount": 2,
+            "lowPivotCount": 2,
+            "role": "MIXED",
+            "interactions": 34,
+            "rejections": 12,
+            "timeframes": [
+              "1d",
+              "1w"
+            ],
+            "lastTouchAt": 1762819200000,
+            "ageDays": 355,
+            "zonePct": 0.4
+          },
+          {
+            "price": 108680.01,
+            "strength": 22.99,
+            "pivotCount": 3,
+            "highPivotCount": 1,
+            "lowPivotCount": 2,
+            "role": "SUPPORT_ORIGIN",
+            "interactions": 34,
+            "rejections": 14,
+            "timeframes": [
+              "1d",
+              "1w"
+            ],
+            "lastTouchAt": 1762128000000,
+            "ageDays": 363,
+            "zonePct": 0.4
+          },
+          {
+            "price": 29256.82,
+            "strength": 22.86,
+            "pivotCount": 5,
+            "highPivotCount": 1,
+            "lowPivotCount": 4,
+            "role": "SUPPORT_ORIGIN",
+            "interactions": 55,
+            "rejections": 26,
+            "timeframes": [
+              "1d",
+              "1w"
+            ],
+            "lastTouchAt": 1688428800000,
+            "ageDays": 1216,
+            "zonePct": 0.4
+          },
+          {
+            "price": 94444.61,
+            "strength": 22.85,
+            "pivotCount": 6,
+            "highPivotCount": 6,
+            "lowPivotCount": 0,
+            "role": "RESISTANCE_ORIGIN",
+            "interactions": 27,
+            "rejections": 9,
+            "timeframes": [
+              "1d",
+              "1w"
+            ],
+            "lastTouchAt": 1768521600000,
+            "ageDays": 289,
+            "zonePct": 0.4
+          },
+          {
+            "price": 30085.635,
+            "strength": 21.03,
+            "pivotCount": 6,
+            "highPivotCount": 3,
+            "lowPivotCount": 3,
+            "role": "MIXED",
+            "interactions": 46,
+            "rejections": 23,
+            "timeframes": [
+              "1d",
+              "1w"
+            ],
+            "lastTouchAt": 1687305600000,
+            "ageDays": 1229,
+            "zonePct": 0.4
+          },
+          {
+            "price": 30422.43,
+            "strength": 20.85,
+            "pivotCount": 4,
+            "highPivotCount": 3,
+            "lowPivotCount": 1,
+            "role": "RESISTANCE_ORIGIN",
+            "interactions": 44,
+            "rejections": 23,
+            "timeframes": [
+              "1d",
+              "1w",
+              "1M"
+            ],
+            "lastTouchAt": 1687305600000,
+            "ageDays": 1229,
+            "zonePct": 0.55
+          },
+          {
+            "price": 31049.99,
+            "strength": 20.47,
+            "pivotCount": 5,
+            "highPivotCount": 3,
+            "lowPivotCount": 2,
+            "role": "RESISTANCE_ORIGIN",
+            "interactions": 40,
+            "rejections": 24,
+            "timeframes": [
+              "1d",
+              "1w",
+              "1M"
+            ],
+            "lastTouchAt": 1681430400000,
+            "ageDays": 1297,
+            "zonePct": 0.55
+          },
+          {
+            "price": 21479,
+            "strength": 20.19,
+            "pivotCount": 5,
+            "highPivotCount": 4,
+            "lowPivotCount": 1,
+            "role": "RESISTANCE_ORIGIN",
+            "interactions": 45,
+            "rejections": 22,
+            "timeframes": [
+              "1d",
+              "1w",
+              "1M"
+            ],
+            "lastTouchAt": 1678579200000,
+            "ageDays": 1330,
+            "zonePct": 0.55
+          },
+          {
+            "price": 19570,
+            "strength": 19.91,
+            "pivotCount": 5,
+            "highPivotCount": 2,
+            "lowPivotCount": 3,
+            "role": "SUPPORT_ORIGIN",
+            "interactions": 53,
+            "rejections": 22,
+            "timeframes": [
+              "1d",
+              "1w"
+            ],
+            "lastTouchAt": 1678406400000,
+            "ageDays": 1332,
+            "zonePct": 0.4
+          },
+          {
+            "price": 110125,
+            "strength": 19.9,
+            "pivotCount": 4,
+            "highPivotCount": 3,
+            "lowPivotCount": 1,
+            "role": "RESISTANCE_ORIGIN",
+            "interactions": 32,
+            "rejections": 11,
+            "timeframes": [
+              "1d"
+            ],
+            "lastTouchAt": 1762128000000,
+            "ageDays": 363,
+            "zonePct": 0.28
+          },
+          {
+            "price": 20457.67,
+            "strength": 19.81,
+            "pivotCount": 5,
+            "highPivotCount": 4,
+            "lowPivotCount": 1,
+            "role": "RESISTANCE_ORIGIN",
+            "interactions": 50,
+            "rejections": 23,
+            "timeframes": [
+              "1d",
+              "1w"
+            ],
+            "lastTouchAt": 1678579200000,
+            "ageDays": 1330,
+            "zonePct": 0.4
+          },
+          {
+            "price": 93000,
+            "strength": 19.67,
+            "pivotCount": 3,
+            "highPivotCount": 1,
+            "lowPivotCount": 2,
+            "role": "SUPPORT_ORIGIN",
+            "interactions": 30,
+            "rejections": 12,
+            "timeframes": [
+              "1d"
+            ],
+            "lastTouchAt": 1768780800000,
+            "ageDays": 286,
+            "zonePct": 0.28
+          },
+          {
+            "price": 25220,
+            "strength": 19.63,
+            "pivotCount": 11,
+            "highPivotCount": 6,
+            "lowPivotCount": 5,
+            "role": "RESISTANCE_ORIGIN",
+            "interactions": 25,
+            "rejections": 11,
+            "timeframes": [
+              "1d",
+              "1w",
+              "1M"
+            ],
+            "lastTouchAt": 1689292800000,
+            "ageDays": 1206,
+            "zonePct": 0.55
+          },
+          {
+            "price": 27951,
+            "strength": 17.99,
+            "pivotCount": 2,
+            "highPivotCount": 0,
+            "lowPivotCount": 2,
+            "role": "SUPPORT_ORIGIN",
+            "interactions": 47,
+            "rejections": 25,
+            "timeframes": [
+              "1d"
+            ],
+            "lastTouchAt": 1688860800000,
+            "ageDays": 1211,
+            "zonePct": 0.28
+          },
+          {
+            "price": 103900,
+            "strength": 17.92,
+            "pivotCount": 2,
+            "highPivotCount": 0,
+            "lowPivotCount": 2,
+            "role": "SUPPORT_ORIGIN",
+            "interactions": 24,
+            "rejections": 11,
+            "timeframes": [
+              "1d",
+              "1w"
+            ],
+            "lastTouchAt": 1762819200000,
+            "ageDays": 355,
+            "zonePct": 0.4
+          },
+          {
+            "price": 106514.67,
+            "strength": 17.85,
+            "pivotCount": 2,
+            "highPivotCount": 1,
+            "lowPivotCount": 1,
+            "role": "MIXED",
+            "interactions": 28,
+            "rejections": 13,
+            "timeframes": [
+              "1d"
+            ],
+            "lastTouchAt": 1762732800000,
+            "ageDays": 356,
+            "zonePct": 0.28
+          },
+          {
+            "price": 45665.92,
+            "strength": 17.66,
+            "pivotCount": 9,
+            "highPivotCount": 5,
+            "lowPivotCount": 4,
+            "role": "RESISTANCE_ORIGIN",
+            "interactions": 50,
+            "rejections": 19,
+            "timeframes": [
+              "1d",
+              "1w"
+            ],
+            "lastTouchAt": 1649203200000,
+            "ageDays": 1670,
+            "zonePct": 0.4
+          },
+          {
+            "price": 99460.04,
+            "strength": 17.61,
+            "pivotCount": 3,
+            "highPivotCount": 3,
+            "lowPivotCount": 0,
+            "role": "RESISTANCE_ORIGIN",
+            "interactions": 17,
+            "rejections": 7,
+            "timeframes": [
+              "1d",
+              "1w",
+              "1M"
+            ],
+            "lastTouchAt": 1762992000000,
+            "ageDays": 353,
+            "zonePct": 0.55
+          },
+          {
+            "price": 39587.55,
+            "strength": 17.44,
+            "pivotCount": 4,
+            "highPivotCount": 1,
+            "lowPivotCount": 3,
+            "role": "SUPPORT_ORIGIN",
+            "interactions": 61,
+            "rejections": 23,
+            "timeframes": [
+              "1d",
+              "1w"
+            ],
+            "lastTouchAt": 1651622400000,
+            "ageDays": 1642,
+            "zonePct": 0.4
+          },
+          {
+            "price": 117448,
+            "strength": 17.34,
+            "pivotCount": 2,
+            "highPivotCount": 2,
+            "lowPivotCount": 0,
+            "role": "RESISTANCE_ORIGIN",
+            "interactions": 25,
+            "rejections": 14,
+            "timeframes": [
+              "1d"
+            ],
+            "lastTouchAt": 1760054400000,
+            "ageDays": 387,
+            "zonePct": 0.28
+          },
+          {
+            "price": 18168,
+            "strength": 17.23,
+            "pivotCount": 5,
+            "highPivotCount": 0,
+            "lowPivotCount": 5,
+            "role": "SUPPORT_ORIGIN",
+            "interactions": 34,
+            "rejections": 18,
+            "timeframes": [
+              "1d",
+              "1w",
+              "1M"
+            ],
+            "lastTouchAt": 1675641600000,
+            "ageDays": 1364,
+            "zonePct": 0.55
+          },
+          {
+            "price": 48223.41,
+            "strength": 17.05,
+            "pivotCount": 4,
+            "highPivotCount": 4,
+            "lowPivotCount": 0,
+            "role": "RESISTANCE_ORIGIN",
+            "interactions": 53,
+            "rejections": 22,
+            "timeframes": [
+              "1d",
+              "1w",
+              "1M"
+            ],
+            "lastTouchAt": 1648425600000,
+            "ageDays": 1679,
+            "zonePct": 0.55
+          },
+          {
+            "price": 105135.38,
+            "strength": 16.84,
+            "pivotCount": 2,
+            "highPivotCount": 1,
+            "lowPivotCount": 1,
+            "role": "MIXED",
+            "interactions": 26,
+            "rejections": 12,
+            "timeframes": [
+              "1d"
+            ],
+            "lastTouchAt": 1762905600000,
+            "ageDays": 354,
+            "zonePct": 0.28
+          },
+          {
+            "price": 47011,
+            "strength": 16.75,
+            "pivotCount": 2,
+            "highPivotCount": 0,
+            "lowPivotCount": 2,
+            "role": "SUPPORT_ORIGIN",
+            "interactions": 60,
+            "rejections": 26,
+            "timeframes": [
+              "1d",
+              "1w"
+            ],
+            "lastTouchAt": 1649116800000,
+            "ageDays": 1671,
+            "zonePct": 0.4
+          },
+          {
+            "price": 27652,
+            "strength": 16.72,
+            "pivotCount": 3,
+            "highPivotCount": 2,
+            "lowPivotCount": 1,
+            "role": "RESISTANCE_ORIGIN",
+            "interactions": 45,
+            "rejections": 20,
+            "timeframes": [
+              "1d"
+            ],
+            "lastTouchAt": 1688947200000,
+            "ageDays": 1210,
+            "zonePct": 0.28
+          },
+          {
+            "price": 19950.88,
+            "strength": 16.65,
+            "pivotCount": 3,
+            "highPivotCount": 2,
+            "lowPivotCount": 1,
+            "role": "RESISTANCE_ORIGIN",
+            "interactions": 50,
+            "rejections": 21,
+            "timeframes": [
+              "1d"
+            ],
+            "lastTouchAt": 1678406400000,
+            "ageDays": 1332,
+            "zonePct": 0.28
+          },
+          {
+            "price": 27296.88,
+            "strength": 16.53,
+            "pivotCount": 2,
+            "highPivotCount": 1,
+            "lowPivotCount": 1,
+            "role": "MIXED",
+            "interactions": 46,
+            "rejections": 21,
+            "timeframes": [
+              "1d"
+            ],
+            "lastTouchAt": 1689033600000,
+            "ageDays": 1209,
+            "zonePct": 0.28
+          },
+          {
+            "price": 22782.515,
+            "strength": 16.43,
+            "pivotCount": 4,
+            "highPivotCount": 2,
+            "lowPivotCount": 2,
+            "role": "MIXED",
+            "interactions": 46,
+            "rejections": 16,
+            "timeframes": [
+              "1d",
+              "1w"
+            ],
+            "lastTouchAt": 1678665600000,
+            "ageDays": 1329,
+            "zonePct": 0.4
+          },
+          {
+            "price": 38607.225,
+            "strength": 16.38,
+            "pivotCount": 2,
+            "highPivotCount": 1,
+            "lowPivotCount": 1,
+            "role": "MIXED",
+            "interactions": 61,
+            "rejections": 27,
+            "timeframes": [
+              "1d"
+            ],
+            "lastTouchAt": 1651708800000,
+            "ageDays": 1641,
+            "zonePct": 0.28
+          },
+          {
+            "price": 120000,
+            "strength": 16.32,
+            "pivotCount": 5,
+            "highPivotCount": 5,
+            "lowPivotCount": 0,
+            "role": "RESISTANCE_ORIGIN",
+            "interactions": 16,
+            "rejections": 10,
+            "timeframes": [
+              "1d"
+            ],
+            "lastTouchAt": 1759968000000,
+            "ageDays": 388,
+            "zonePct": 0.28
+          },
+          {
+            "price": 28530.555,
+            "strength": 16.17,
+            "pivotCount": 2,
+            "highPivotCount": 1,
+            "lowPivotCount": 1,
+            "role": "MIXED",
+            "interactions": 44,
+            "rejections": 21,
+            "timeframes": [
+              "1d"
+            ],
+            "lastTouchAt": 1688515200000,
+            "ageDays": 1215,
+            "zonePct": 0.28
+          },
+          {
+            "price": 20738.355,
+            "strength": 16.03,
+            "pivotCount": 2,
+            "highPivotCount": 0,
+            "lowPivotCount": 2,
+            "role": "SUPPORT_ORIGIN",
+            "interactions": 50,
+            "rejections": 21,
+            "timeframes": [
+              "1d"
+            ],
+            "lastTouchAt": 1678579200000,
+            "ageDays": 1330,
+            "zonePct": 0.28
+          },
+          {
+            "price": 41999.5,
+            "strength": 15.96,
+            "pivotCount": 4,
+            "highPivotCount": 2,
+            "lowPivotCount": 2,
+            "role": "MIXED",
+            "interactions": 55,
+            "rejections": 20,
+            "timeframes": [
+              "1d",
+              "1w"
+            ],
+            "lastTouchAt": 1650412800000,
+            "ageDays": 1656,
+            "zonePct": 0.4
+          },
+          {
+            "price": 113950.1,
+            "strength": 15.94,
+            "pivotCount": 3,
+            "highPivotCount": 2,
+            "lowPivotCount": 1,
+            "role": "RESISTANCE_ORIGIN",
+            "interactions": 27,
+            "rejections": 8,
+            "timeframes": [
+              "1d"
+            ],
+            "lastTouchAt": 1761696000000,
+            "ageDays": 368,
+            "zonePct": 0.28
+          },
+          {
+            "price": 115000,
+            "strength": 15.83,
+            "pivotCount": 2,
+            "highPivotCount": 0,
+            "lowPivotCount": 2,
+            "role": "SUPPORT_ORIGIN",
+            "interactions": 29,
+            "rejections": 9,
+            "timeframes": [
+              "1d"
+            ],
+            "lastTouchAt": 1761436800000,
+            "ageDays": 371,
+            "zonePct": 0.28
+          },
+          {
+            "price": 34317.34,
+            "strength": 15.77,
+            "pivotCount": 2,
+            "highPivotCount": 0,
+            "lowPivotCount": 2,
+            "role": "SUPPORT_ORIGIN",
+            "interactions": 45,
+            "rejections": 28,
+            "timeframes": [
+              "1d",
+              "1w"
+            ],
+            "lastTouchAt": 1651968000000,
+            "ageDays": 1638,
+            "zonePct": 0.4
+          },
+          {
+            "price": 18435.485,
+            "strength": 15.76,
+            "pivotCount": 4,
+            "highPivotCount": 2,
+            "lowPivotCount": 2,
+            "role": "MIXED",
+            "interactions": 37,
+            "rejections": 19,
+            "timeframes": [
+              "1d",
+              "1w"
+            ],
+            "lastTouchAt": 1675641600000,
+            "ageDays": 1364,
+            "zonePct": 0.4
+          },
+          {
+            "price": 102000,
+            "strength": 15.69,
+            "pivotCount": 3,
+            "highPivotCount": 0,
+            "lowPivotCount": 3,
+            "role": "SUPPORT_ORIGIN",
+            "interactions": 19,
+            "rejections": 11,
+            "timeframes": [
+              "1d"
+            ],
+            "lastTouchAt": 1762905600000,
+            "ageDays": 354,
+            "zonePct": 0.28
+          },
+          {
+            "price": 32946.89,
+            "strength": 15.6,
+            "pivotCount": 3,
+            "highPivotCount": 0,
+            "lowPivotCount": 3,
+            "role": "SUPPORT_ORIGIN",
+            "interactions": 40,
+            "rejections": 23,
+            "timeframes": [
+              "1d",
+              "1w",
+              "1M"
+            ],
+            "lastTouchAt": 1652054400000,
+            "ageDays": 1637,
+            "zonePct": 0.55
+          },
+          {
+            "price": 37326.25,
+            "strength": 15.55,
+            "pivotCount": 3,
+            "highPivotCount": 0,
+            "lowPivotCount": 3,
+            "role": "SUPPORT_ORIGIN",
+            "interactions": 54,
+            "rejections": 25,
+            "timeframes": [
+              "1d"
+            ],
+            "lastTouchAt": 1651708800000,
+            "ageDays": 1641,
+            "zonePct": 0.28
+          },
+          {
+            "price": 40100,
+            "strength": 15.52,
+            "pivotCount": 3,
+            "highPivotCount": 2,
+            "lowPivotCount": 1,
+            "role": "RESISTANCE_ORIGIN",
+            "interactions": 56,
+            "rejections": 24,
+            "timeframes": [
+              "1d"
+            ],
+            "lastTouchAt": 1651622400000,
+            "ageDays": 1642,
+            "zonePct": 0.28
+          },
+          {
+            "price": 124784.99,
+            "strength": 15.4,
+            "pivotCount": 6,
+            "highPivotCount": 6,
+            "lowPivotCount": 0,
+            "role": "RESISTANCE_ORIGIN",
+            "interactions": 3,
+            "rejections": 2,
+            "timeframes": [
+              "1d",
+              "1w",
+              "1M"
+            ],
+            "lastTouchAt": 1759622400000,
+            "ageDays": 392,
+            "zonePct": 0.55
+          },
+          {
+            "price": 34781.625,
+            "strength": 15.35,
+            "pivotCount": 2,
+            "highPivotCount": 2,
+            "lowPivotCount": 0,
+            "role": "RESISTANCE_ORIGIN",
+            "interactions": 48,
+            "rejections": 29,
+            "timeframes": [
+              "1d"
+            ],
+            "lastTouchAt": 1651881600000,
+            "ageDays": 1639,
+            "zonePct": 0.28
+          },
+          {
+            "price": 37636.255,
+            "strength": 15.35,
+            "pivotCount": 2,
+            "highPivotCount": 0,
+            "lowPivotCount": 2,
+            "role": "SUPPORT_ORIGIN",
+            "interactions": 57,
+            "rejections": 25,
+            "timeframes": [
+              "1d"
+            ],
+            "lastTouchAt": 1651536000000,
+            "ageDays": 1643,
+            "zonePct": 0.28
+          },
+          {
+            "price": 26472.85,
+            "strength": 14.83,
+            "pivotCount": 2,
+            "highPivotCount": 0,
+            "lowPivotCount": 2,
+            "role": "SUPPORT_ORIGIN",
+            "interactions": 37,
+            "rejections": 20,
+            "timeframes": [
+              "1d"
+            ],
+            "lastTouchAt": 1689206400000,
+            "ageDays": 1207,
+            "zonePct": 0.28
+          },
+          {
+            "price": 32409.14,
+            "strength": 14.61,
+            "pivotCount": 3,
+            "highPivotCount": 2,
+            "lowPivotCount": 1,
+            "role": "RESISTANCE_ORIGIN",
+            "interactions": 38,
+            "rejections": 24,
+            "timeframes": [
+              "1d",
+              "1w"
+            ],
+            "lastTouchAt": 1653955200000,
+            "ageDays": 1615,
+            "zonePct": 0.4
+          },
+          {
+            "price": 17594.94,
+            "strength": 14.19,
+            "pivotCount": 4,
+            "highPivotCount": 0,
+            "lowPivotCount": 4,
+            "role": "SUPPORT_ORIGIN",
+            "interactions": 29,
+            "rejections": 13,
+            "timeframes": [
+              "1d",
+              "1w",
+              "1M"
+            ],
+            "lastTouchAt": 1675641600000,
+            "ageDays": 1364,
+            "zonePct": 0.55
+          },
+          {
+            "price": 25873,
+            "strength": 14.1,
+            "pivotCount": 3,
+            "highPivotCount": 0,
+            "lowPivotCount": 3,
+            "role": "SUPPORT_ORIGIN",
+            "interactions": 30,
+            "rejections": 15,
+            "timeframes": [
+              "1d",
+              "1w"
+            ],
+            "lastTouchAt": 1689206400000,
+            "ageDays": 1207,
+            "zonePct": 0.4
+          },
+          {
+            "price": 40841.415,
+            "strength": 14.04,
+            "pivotCount": 2,
+            "highPivotCount": 2,
+            "lowPivotCount": 0,
+            "role": "RESISTANCE_ORIGIN",
+            "interactions": 53,
+            "rejections": 22,
+            "timeframes": [
+              "1d"
+            ],
+            "lastTouchAt": 1650931200000,
+            "ageDays": 1650,
+            "zonePct": 0.28
+          },
+          {
+            "price": 22500.59,
+            "strength": 13.96,
+            "pivotCount": 3,
+            "highPivotCount": 1,
+            "lowPivotCount": 2,
+            "role": "SUPPORT_ORIGIN",
+            "interactions": 44,
+            "rejections": 15,
+            "timeframes": [
+              "1d"
+            ],
+            "lastTouchAt": 1678665600000,
+            "ageDays": 1329,
+            "zonePct": 0.28
+          },
+          {
+            "price": 42600,
+            "strength": 13.78,
+            "pivotCount": 3,
+            "highPivotCount": 2,
+            "lowPivotCount": 1,
+            "role": "RESISTANCE_ORIGIN",
+            "interactions": 51,
+            "rejections": 20,
+            "timeframes": [
+              "1d"
+            ],
+            "lastTouchAt": 1650499200000,
+            "ageDays": 1655,
+            "zonePct": 0.28
+          },
+          {
+            "price": 18638.045,
+            "strength": 13.71,
+            "pivotCount": 2,
+            "highPivotCount": 0,
+            "lowPivotCount": 2,
+            "role": "SUPPORT_ORIGIN",
+            "interactions": 40,
+            "rejections": 19,
+            "timeframes": [
+              "1d"
+            ],
+            "lastTouchAt": 1675641600000,
+            "ageDays": 1364,
+            "zonePct": 0.28
+          },
+          {
+            "price": 17020.33,
+            "strength": 13.7,
+            "pivotCount": 4,
+            "highPivotCount": 2,
+            "lowPivotCount": 2,
+            "role": "MIXED",
+            "interactions": 31,
+            "rejections": 15,
+            "timeframes": [
+              "1d",
+              "1w"
+            ],
+            "lastTouchAt": 1675641600000,
+            "ageDays": 1364,
+            "zonePct": 0.4
+          },
+          {
+            "price": 21895.38,
+            "strength": 13.59,
+            "pivotCount": 4,
+            "highPivotCount": 2,
+            "lowPivotCount": 2,
+            "role": "MIXED",
+            "interactions": 37,
+            "rejections": 15,
+            "timeframes": [
+              "1d"
+            ],
+            "lastTouchAt": 1678579200000,
+            "ageDays": 1330,
+            "zonePct": 0.28
+          },
+          {
+            "price": 9190.92,
+            "strength": 13.57,
+            "pivotCount": 3,
+            "highPivotCount": 2,
+            "lowPivotCount": 1,
+            "role": "RESISTANCE_ORIGIN",
+            "interactions": 57,
+            "rejections": 22,
+            "timeframes": [
+              "1d"
+            ],
+            "lastTouchAt": 1634774400000,
+            "ageDays": 1837,
+            "zonePct": 0.28
+          }
+        ],
+        "source": "Binance.US spot OHLCV"
+      },
+      "ETH": {
+        "symbol": "ETHUSD",
+        "dailyBars": 2015,
+        "weeklyBars": 288,
+        "monthlyBars": 67,
+        "latestDailyClose": 2241.84,
+        "latestWeeklyClose": 2327.42,
+        "levels": [
+          {
+            "price": 1743.99,
+            "strength": 78.58,
+            "pivotCount": 12,
+            "highPivotCount": 2,
+            "lowPivotCount": 10,
+            "role": "SUPPORT_ORIGIN",
+            "interactions": 101,
+            "rejections": 44,
+            "timeframes": [
+              "1d",
+              "1w",
+              "1M"
+            ],
+            "lastTouchAt": 1783900800000,
+            "ageDays": 111,
+            "zonePct": 0.55
+          },
+          {
+            "price": 1714.71,
+            "strength": 77.17,
+            "pivotCount": 17,
+            "highPivotCount": 2,
+            "lowPivotCount": 15,
+            "role": "SUPPORT_ORIGIN",
+            "interactions": 86,
+            "rejections": 38,
+            "timeframes": [
+              "1d",
+              "1w",
+              "1M"
+            ],
+            "lastTouchAt": 1783468800000,
+            "ageDays": 116,
+            "zonePct": 0.55
+          },
+          {
+            "price": 1800,
+            "strength": 74.21,
+            "pivotCount": 6,
+            "highPivotCount": 2,
+            "lowPivotCount": 4,
+            "role": "SUPPORT_ORIGIN",
+            "interactions": 110,
+            "rejections": 50,
+            "timeframes": [
+              "1d",
+              "1w"
+            ],
+            "lastTouchAt": 1784246400000,
+            "ageDays": 107,
+            "zonePct": 0.4
+          },
+          {
+            "price": 1777.78,
+            "strength": 72.31,
+            "pivotCount": 7,
+            "highPivotCount": 2,
+            "lowPivotCount": 5,
+            "role": "SUPPORT_ORIGIN",
+            "interactions": 107,
+            "rejections": 51,
+            "timeframes": [
+              "1d"
+            ],
+            "lastTouchAt": 1783900800000,
+            "ageDays": 111,
+            "zonePct": 0.28
+          },
+          {
+            "price": 1847.07,
+            "strength": 71.92,
+            "pivotCount": 9,
+            "highPivotCount": 6,
+            "lowPivotCount": 3,
+            "role": "RESISTANCE_ORIGIN",
+            "interactions": 111,
+            "rejections": 43,
+            "timeframes": [
+              "1d"
+            ],
+            "lastTouchAt": 1785715200000,
+            "ageDays": 90,
+            "zonePct": 0.28
+          },
+          {
+            "price": 1943.83,
+            "strength": 71.72,
+            "pivotCount": 8,
+            "highPivotCount": 7,
+            "lowPivotCount": 1,
+            "role": "RESISTANCE_ORIGIN",
+            "interactions": 91,
+            "rejections": 49,
+            "timeframes": [
+              "1d",
+              "1w"
+            ],
+            "lastTouchAt": 1787097600000,
+            "ageDays": 74,
+            "zonePct": 0.4
+          },
+          {
+            "price": 2030.6,
+            "strength": 69.06,
+            "pivotCount": 10,
+            "highPivotCount": 7,
+            "lowPivotCount": 3,
+            "role": "RESISTANCE_ORIGIN",
+            "interactions": 83,
+            "rejections": 38,
+            "timeframes": [
+              "1d",
+              "1w",
+              "1M"
+            ],
+            "lastTouchAt": 1787097600000,
+            "ageDays": 74,
+            "zonePct": 0.55
+          },
+          {
+            "price": 1826.61,
+            "strength": 68.23,
+            "pivotCount": 4,
+            "highPivotCount": 1,
+            "lowPivotCount": 3,
+            "role": "SUPPORT_ORIGIN",
+            "interactions": 110,
+            "rejections": 48,
+            "timeframes": [
+              "1d"
+            ],
+            "lastTouchAt": 1785542400000,
+            "ageDays": 92,
+            "zonePct": 0.28
+          },
+          {
+            "price": 2144.65,
+            "strength": 66.25,
+            "pivotCount": 12,
+            "highPivotCount": 7,
+            "lowPivotCount": 5,
+            "role": "RESISTANCE_ORIGIN",
+            "interactions": 76,
+            "rejections": 32,
+            "timeframes": [
+              "1d",
+              "1w",
+              "1M"
+            ],
+            "lastTouchAt": 1787097600000,
+            "ageDays": 74,
+            "zonePct": 0.55
+          },
+          {
+            "price": 2409.29,
+            "strength": 66.16,
+            "pivotCount": 6,
+            "highPivotCount": 4,
+            "lowPivotCount": 2,
+            "role": "RESISTANCE_ORIGIN",
+            "interactions": 90,
+            "rejections": 41,
+            "timeframes": [
+              "1d",
+              "1w"
+            ],
+            "lastTouchAt": 1792627200000,
+            "ageDays": 10,
+            "zonePct": 0.4
+          },
+          {
+            "price": 2383.89,
+            "strength": 65.48,
+            "pivotCount": 6,
+            "highPivotCount": 4,
+            "lowPivotCount": 2,
+            "role": "RESISTANCE_ORIGIN",
+            "interactions": 87,
+            "rejections": 41,
+            "timeframes": [
+              "1d",
+              "1w"
+            ],
+            "lastTouchAt": 1793145600000,
+            "ageDays": 4,
+            "zonePct": 0.4
+          },
+          {
+            "price": 1869.7,
+            "strength": 61.8,
+            "pivotCount": 5,
+            "highPivotCount": 5,
+            "lowPivotCount": 0,
+            "role": "RESISTANCE_ORIGIN",
+            "interactions": 105,
+            "rejections": 37,
+            "timeframes": [
+              "1d"
+            ],
+            "lastTouchAt": 1786838400000,
+            "ageDays": 77,
+            "zonePct": 0.28
+          },
+          {
+            "price": 2464.55,
+            "strength": 61.52,
+            "pivotCount": 4,
+            "highPivotCount": 3,
+            "lowPivotCount": 1,
+            "role": "RESISTANCE_ORIGIN",
+            "interactions": 89,
+            "rejections": 34,
+            "timeframes": [
+              "1d",
+              "1w",
+              "1M"
+            ],
+            "lastTouchAt": 1792454400000,
+            "ageDays": 12,
+            "zonePct": 0.55
+          },
+          {
+            "price": 1922.9,
+            "strength": 61.15,
+            "pivotCount": 5,
+            "highPivotCount": 3,
+            "lowPivotCount": 2,
+            "role": "RESISTANCE_ORIGIN",
+            "interactions": 96,
+            "rejections": 40,
+            "timeframes": [
+              "1d"
+            ],
+            "lastTouchAt": 1787011200000,
+            "ageDays": 75,
+            "zonePct": 0.28
+          },
+          {
+            "price": 2652.14,
+            "strength": 60.29,
+            "pivotCount": 9,
+            "highPivotCount": 5,
+            "lowPivotCount": 4,
+            "role": "RESISTANCE_ORIGIN",
+            "interactions": 78,
+            "rejections": 32,
+            "timeframes": [
+              "1d",
+              "1w"
+            ],
+            "lastTouchAt": 1791331200000,
+            "ageDays": 25,
+            "zonePct": 0.4
+          },
+          {
+            "price": 1678.57,
+            "strength": 58.53,
+            "pivotCount": 8,
+            "highPivotCount": 7,
+            "lowPivotCount": 1,
+            "role": "RESISTANCE_ORIGIN",
+            "interactions": 82,
+            "rejections": 30,
+            "timeframes": [
+              "1d",
+              "1w",
+              "1M"
+            ],
+            "lastTouchAt": 1782950400000,
+            "ageDays": 122,
+            "zonePct": 0.55
+          },
+          {
+            "price": 1998.59,
+            "strength": 58.38,
+            "pivotCount": 6,
+            "highPivotCount": 3,
+            "lowPivotCount": 3,
+            "role": "MIXED",
+            "interactions": 84,
+            "rejections": 35,
+            "timeframes": [
+              "1d",
+              "1w"
+            ],
+            "lastTouchAt": 1787097600000,
+            "ageDays": 74,
+            "zonePct": 0.4
+          },
+          {
+            "price": 1656.47,
+            "strength": 57.87,
+            "pivotCount": 9,
+            "highPivotCount": 4,
+            "lowPivotCount": 5,
+            "role": "SUPPORT_ORIGIN",
+            "interactions": 85,
+            "rejections": 30,
+            "timeframes": [
+              "1d",
+              "1w"
+            ],
+            "lastTouchAt": 1782950400000,
+            "ageDays": 122,
+            "zonePct": 0.4
+          },
+          {
+            "price": 1898.06,
+            "strength": 57.67,
+            "pivotCount": 4,
+            "highPivotCount": 1,
+            "lowPivotCount": 3,
+            "role": "SUPPORT_ORIGIN",
+            "interactions": 95,
+            "rejections": 37,
+            "timeframes": [
+              "1d"
+            ],
+            "lastTouchAt": 1786924800000,
+            "ageDays": 76,
+            "zonePct": 0.28
+          },
+          {
+            "price": 2600,
+            "strength": 56.54,
+            "pivotCount": 5,
+            "highPivotCount": 1,
+            "lowPivotCount": 4,
+            "role": "SUPPORT_ORIGIN",
+            "interactions": 80,
+            "rejections": 29,
+            "timeframes": [
+              "1d",
+              "1w",
+              "1M"
+            ],
+            "lastTouchAt": 1791331200000,
+            "ageDays": 25,
+            "zonePct": 0.55
+          },
+          {
+            "price": 2440.6,
+            "strength": 56.39,
+            "pivotCount": 3,
+            "highPivotCount": 1,
+            "lowPivotCount": 2,
+            "role": "SUPPORT_ORIGIN",
+            "interactions": 88,
+            "rejections": 37,
+            "timeframes": [
+              "1d"
+            ],
+            "lastTouchAt": 1792627200000,
+            "ageDays": 10,
+            "zonePct": 0.28
+          },
+          {
+            "price": 2357,
+            "strength": 54.68,
+            "pivotCount": 2,
+            "highPivotCount": 0,
+            "lowPivotCount": 2,
+            "role": "SUPPORT_ORIGIN",
+            "interactions": 84,
+            "rejections": 38,
+            "timeframes": [
+              "1d"
+            ],
+            "lastTouchAt": 1793145600000,
+            "ageDays": 4,
+            "zonePct": 0.28
+          },
+          {
+            "price": 1971.985,
+            "strength": 53.92,
+            "pivotCount": 4,
+            "highPivotCount": 3,
+            "lowPivotCount": 1,
+            "role": "RESISTANCE_ORIGIN",
+            "interactions": 84,
+            "rejections": 32,
+            "timeframes": [
+              "1d",
+              "1w"
+            ],
+            "lastTouchAt": 1787097600000,
+            "ageDays": 74,
+            "zonePct": 0.4
+          },
+          {
+            "price": 2302,
+            "strength": 53.68,
+            "pivotCount": 4,
+            "highPivotCount": 0,
+            "lowPivotCount": 4,
+            "role": "SUPPORT_ORIGIN",
+            "interactions": 74,
+            "rejections": 33,
+            "timeframes": [
+              "1d",
+              "1w"
+            ],
+            "lastTouchAt": 1793059200000,
+            "ageDays": 5,
+            "zonePct": 0.4
+          },
+          {
+            "price": 1579.76,
+            "strength": 52.8,
+            "pivotCount": 3,
+            "highPivotCount": 0,
+            "lowPivotCount": 3,
+            "role": "SUPPORT_ORIGIN",
+            "interactions": 82,
+            "rejections": 31,
+            "timeframes": [
+              "1d",
+              "1w",
+              "1M"
+            ],
+            "lastTouchAt": 1782864000000,
+            "ageDays": 123,
+            "zonePct": 0.55
+          },
+          {
+            "price": 2545.48,
+            "strength": 48.43,
+            "pivotCount": 4,
+            "highPivotCount": 4,
+            "lowPivotCount": 0,
+            "role": "RESISTANCE_ORIGIN",
+            "interactions": 86,
+            "rejections": 24,
+            "timeframes": [
+              "1d"
+            ],
+            "lastTouchAt": 1791676800000,
+            "ageDays": 21,
+            "zonePct": 0.28
+          },
+          {
+            "price": 1546.8,
+            "strength": 48.36,
+            "pivotCount": 8,
+            "highPivotCount": 0,
+            "lowPivotCount": 8,
+            "role": "SUPPORT_ORIGIN",
+            "interactions": 73,
+            "rejections": 22,
+            "timeframes": [
+              "1d",
+              "1w"
+            ],
+            "lastTouchAt": 1782864000000,
+            "ageDays": 123,
+            "zonePct": 0.4
+          },
+          {
+            "price": 2570.78,
+            "strength": 47.52,
+            "pivotCount": 2,
+            "highPivotCount": 2,
+            "lowPivotCount": 0,
+            "role": "RESISTANCE_ORIGIN",
+            "interactions": 81,
+            "rejections": 29,
+            "timeframes": [
+              "1d"
+            ],
+            "lastTouchAt": 1791763200000,
+            "ageDays": 20,
+            "zonePct": 0.28
+          },
+          {
+            "price": 2776.885,
+            "strength": 47.06,
+            "pivotCount": 6,
+            "highPivotCount": 3,
+            "lowPivotCount": 3,
+            "role": "MIXED",
+            "interactions": 71,
+            "rejections": 25,
+            "timeframes": [
+              "1d"
+            ],
+            "lastTouchAt": 1790899200000,
+            "ageDays": 30,
+            "zonePct": 0.28
+          },
+          {
+            "price": 3054.28,
+            "strength": 46.52,
+            "pivotCount": 9,
+            "highPivotCount": 5,
+            "lowPivotCount": 4,
+            "role": "RESISTANCE_ORIGIN",
+            "interactions": 71,
+            "rejections": 29,
+            "timeframes": [
+              "1d"
+            ],
+            "lastTouchAt": 1768867200000,
+            "ageDays": 285,
+            "zonePct": 0.28
+          },
+          {
+            "price": 2720,
+            "strength": 46.06,
+            "pivotCount": 5,
+            "highPivotCount": 3,
+            "lowPivotCount": 2,
+            "role": "RESISTANCE_ORIGIN",
+            "interactions": 74,
+            "rejections": 24,
+            "timeframes": [
+              "1d"
+            ],
+            "lastTouchAt": 1791158400000,
+            "ageDays": 27,
+            "zonePct": 0.28
+          },
+          {
+            "price": 2086.155,
+            "strength": 45.97,
+            "pivotCount": 2,
+            "highPivotCount": 1,
+            "lowPivotCount": 1,
+            "role": "MIXED",
+            "interactions": 74,
+            "rejections": 32,
+            "timeframes": [
+              "1d"
+            ],
+            "lastTouchAt": 1787097600000,
+            "ageDays": 74,
+            "zonePct": 0.28
+          },
+          {
+            "price": 2879.725,
+            "strength": 45.94,
+            "pivotCount": 8,
+            "highPivotCount": 3,
+            "lowPivotCount": 5,
+            "role": "SUPPORT_ORIGIN",
+            "interactions": 69,
+            "rejections": 26,
+            "timeframes": [
+              "1d",
+              "1w"
+            ],
+            "lastTouchAt": 1769644800000,
+            "ageDays": 276,
+            "zonePct": 0.4
+          },
+          {
+            "price": 1508.975,
+            "strength": 45.36,
+            "pivotCount": 8,
+            "highPivotCount": 0,
+            "lowPivotCount": 8,
+            "role": "SUPPORT_ORIGIN",
+            "interactions": 56,
+            "rejections": 20,
+            "timeframes": [
+              "1d",
+              "1w",
+              "1M"
+            ],
+            "lastTouchAt": 1782432000000,
+            "ageDays": 128,
+            "zonePct": 0.55
+          },
+          {
+            "price": 2261.735,
+            "strength": 43.88,
+            "pivotCount": 4,
+            "highPivotCount": 1,
+            "lowPivotCount": 3,
+            "role": "SUPPORT_ORIGIN",
+            "interactions": 67,
+            "rejections": 25,
+            "timeframes": [
+              "1d"
+            ],
+            "lastTouchAt": 1793232000000,
+            "ageDays": 3,
+            "zonePct": 0.28
+          },
+          {
+            "price": 2807,
+            "strength": 43.53,
+            "pivotCount": 3,
+            "highPivotCount": 2,
+            "lowPivotCount": 1,
+            "role": "RESISTANCE_ORIGIN",
+            "interactions": 67,
+            "rejections": 24,
+            "timeframes": [
+              "1d",
+              "1w"
+            ],
+            "lastTouchAt": 1789948800000,
+            "ageDays": 41,
+            "zonePct": 0.4
+          },
+          {
+            "price": 3284.66,
+            "strength": 42.76,
+            "pivotCount": 4,
+            "highPivotCount": 3,
+            "lowPivotCount": 1,
+            "role": "RESISTANCE_ORIGIN",
+            "interactions": 66,
+            "rejections": 31,
+            "timeframes": [
+              "1d",
+              "1w"
+            ],
+            "lastTouchAt": 1768780800000,
+            "ageDays": 286,
+            "zonePct": 0.4
+          },
+          {
+            "price": 2070.975,
+            "strength": 42.61,
+            "pivotCount": 2,
+            "highPivotCount": 1,
+            "lowPivotCount": 1,
+            "role": "MIXED",
+            "interactions": 71,
+            "rejections": 28,
+            "timeframes": [
+              "1d"
+            ],
+            "lastTouchAt": 1787097600000,
+            "ageDays": 74,
+            "zonePct": 0.28
+          },
+          {
+            "price": 2100.955,
+            "strength": 42.57,
+            "pivotCount": 2,
+            "highPivotCount": 2,
+            "lowPivotCount": 0,
+            "role": "RESISTANCE_ORIGIN",
+            "interactions": 73,
+            "rejections": 27,
+            "timeframes": [
+              "1d"
+            ],
+            "lastTouchAt": 1787097600000,
+            "ageDays": 74,
+            "zonePct": 0.28
+          },
+          {
+            "price": 2197.725,
+            "strength": 42.56,
+            "pivotCount": 2,
+            "highPivotCount": 2,
+            "lowPivotCount": 0,
+            "role": "RESISTANCE_ORIGIN",
+            "interactions": 65,
+            "rejections": 28,
+            "timeframes": [
+              "1d"
+            ],
+            "lastTouchAt": 1793318400000,
+            "ageDays": 2,
+            "zonePct": 0.28
+          },
+          {
+            "price": 2284.05,
+            "strength": 42.13,
+            "pivotCount": 2,
+            "highPivotCount": 1,
+            "lowPivotCount": 1,
+            "role": "MIXED",
+            "interactions": 68,
+            "rejections": 26,
+            "timeframes": [
+              "1d"
+            ],
+            "lastTouchAt": 1793232000000,
+            "ageDays": 3,
+            "zonePct": 0.28
+          },
+          {
+            "price": 3173.715,
+            "strength": 41.72,
+            "pivotCount": 2,
+            "highPivotCount": 2,
+            "lowPivotCount": 0,
+            "role": "RESISTANCE_ORIGIN",
+            "interactions": 73,
+            "rejections": 34,
+            "timeframes": [
+              "1d"
+            ],
+            "lastTouchAt": 1768780800000,
+            "ageDays": 286,
+            "zonePct": 0.28
+          },
+          {
+            "price": 2994,
+            "strength": 39.93,
+            "pivotCount": 2,
+            "highPivotCount": 1,
+            "lowPivotCount": 1,
+            "role": "MIXED",
+            "interactions": 74,
+            "rejections": 30,
+            "timeframes": [
+              "1d"
+            ],
+            "lastTouchAt": 1769472000000,
+            "ageDays": 278,
+            "zonePct": 0.28
+          },
+          {
+            "price": 2951,
+            "strength": 39.76,
+            "pivotCount": 3,
+            "highPivotCount": 1,
+            "lowPivotCount": 2,
+            "role": "SUPPORT_ORIGIN",
+            "interactions": 73,
+            "rejections": 28,
+            "timeframes": [
+              "1d"
+            ],
+            "lastTouchAt": 1769644800000,
+            "ageDays": 276,
+            "zonePct": 0.28
+          },
+          {
+            "price": 2834.86,
+            "strength": 39.44,
+            "pivotCount": 4,
+            "highPivotCount": 3,
+            "lowPivotCount": 1,
+            "role": "RESISTANCE_ORIGIN",
+            "interactions": 64,
+            "rejections": 21,
+            "timeframes": [
+              "1d",
+              "1w",
+              "1M"
+            ],
+            "lastTouchAt": 1769644800000,
+            "ageDays": 276,
+            "zonePct": 0.55
+          },
+          {
+            "price": 2925.71,
+            "strength": 37.06,
+            "pivotCount": 3,
+            "highPivotCount": 1,
+            "lowPivotCount": 2,
+            "role": "SUPPORT_ORIGIN",
+            "interactions": 69,
+            "rejections": 25,
+            "timeframes": [
+              "1d"
+            ],
+            "lastTouchAt": 1769644800000,
+            "ageDays": 276,
+            "zonePct": 0.28
+          },
+          {
+            "price": 3396.52,
+            "strength": 34.99,
+            "pivotCount": 5,
+            "highPivotCount": 4,
+            "lowPivotCount": 1,
+            "role": "RESISTANCE_ORIGIN",
+            "interactions": 51,
+            "rejections": 22,
+            "timeframes": [
+              "1d",
+              "1w"
+            ],
+            "lastTouchAt": 1768348800000,
+            "ageDays": 291,
+            "zonePct": 0.4
+          },
+          {
+            "price": 3205.195,
+            "strength": 34.94,
+            "pivotCount": 2,
+            "highPivotCount": 1,
+            "lowPivotCount": 1,
+            "role": "MIXED",
+            "interactions": 66,
+            "rejections": 25,
+            "timeframes": [
+              "1d"
+            ],
+            "lastTouchAt": 1768780800000,
+            "ageDays": 286,
+            "zonePct": 0.28
+          },
+          {
+            "price": 3676.19,
+            "strength": 32.51,
+            "pivotCount": 7,
+            "highPivotCount": 3,
+            "lowPivotCount": 4,
+            "role": "SUPPORT_ORIGIN",
+            "interactions": 44,
+            "rejections": 19,
+            "timeframes": [
+              "1d",
+              "1w"
+            ],
+            "lastTouchAt": 1762128000000,
+            "ageDays": 363,
+            "zonePct": 0.4
+          },
+          {
+            "price": 3581.49,
+            "strength": 31.53,
+            "pivotCount": 4,
+            "highPivotCount": 3,
+            "lowPivotCount": 1,
+            "role": "RESISTANCE_ORIGIN",
+            "interactions": 43,
+            "rejections": 19,
+            "timeframes": [
+              "1d",
+              "1w",
+              "1M"
+            ],
+            "lastTouchAt": 1762905600000,
+            "ageDays": 354,
+            "zonePct": 0.55
+          },
+          {
+            "price": 4032.53,
+            "strength": 30.61,
+            "pivotCount": 3,
+            "highPivotCount": 2,
+            "lowPivotCount": 1,
+            "role": "RESISTANCE_ORIGIN",
+            "interactions": 46,
+            "rejections": 23,
+            "timeframes": [
+              "1d",
+              "1w"
+            ],
+            "lastTouchAt": 1761609600000,
+            "ageDays": 369,
+            "zonePct": 0.4
+          },
+          {
+            "price": 1383.01,
+            "strength": 30.33,
+            "pivotCount": 7,
+            "highPivotCount": 1,
+            "lowPivotCount": 6,
+            "role": "SUPPORT_ORIGIN",
+            "interactions": 41,
+            "rejections": 17,
+            "timeframes": [
+              "1d",
+              "1w",
+              "1M"
+            ],
+            "lastTouchAt": 1744156800000,
+            "ageDays": 571,
+            "zonePct": 0.55
+          },
+          {
+            "price": 3489.48,
+            "strength": 30.28,
+            "pivotCount": 3,
+            "highPivotCount": 1,
+            "lowPivotCount": 2,
+            "role": "SUPPORT_ORIGIN",
+            "interactions": 48,
+            "rejections": 21,
+            "timeframes": [
+              "1d",
+              "1w"
+            ],
+            "lastTouchAt": 1762819200000,
+            "ageDays": 355,
+            "zonePct": 0.4
+          },
+          {
+            "price": 3445.8,
+            "strength": 29.14,
+            "pivotCount": 3,
+            "highPivotCount": 2,
+            "lowPivotCount": 1,
+            "role": "RESISTANCE_ORIGIN",
+            "interactions": 48,
+            "rejections": 18,
+            "timeframes": [
+              "1d",
+              "1w"
+            ],
+            "lastTouchAt": 1765324800000,
+            "ageDays": 326,
+            "zonePct": 0.4
+          },
+          {
+            "price": 3893.95,
+            "strength": 28.28,
+            "pivotCount": 3,
+            "highPivotCount": 1,
+            "lowPivotCount": 2,
+            "role": "SUPPORT_ORIGIN",
+            "interactions": 49,
+            "rejections": 21,
+            "timeframes": [
+              "1d"
+            ],
+            "lastTouchAt": 1762128000000,
+            "ageDays": 363,
+            "zonePct": 0.28
+          },
+          {
+            "price": 4382,
+            "strength": 28.06,
+            "pivotCount": 5,
+            "highPivotCount": 4,
+            "lowPivotCount": 1,
+            "role": "RESISTANCE_ORIGIN",
+            "interactions": 44,
+            "rejections": 11,
+            "timeframes": [
+              "1d",
+              "1w",
+              "1M"
+            ],
+            "lastTouchAt": 1759881600000,
+            "ageDays": 389,
+            "zonePct": 0.55
+          },
+          {
+            "price": 3960.11,
+            "strength": 26.93,
+            "pivotCount": 3,
+            "highPivotCount": 2,
+            "lowPivotCount": 1,
+            "role": "RESISTANCE_ORIGIN",
+            "interactions": 46,
+            "rejections": 20,
+            "timeframes": [
+              "1d"
+            ],
+            "lastTouchAt": 1761609600000,
+            "ageDays": 369,
+            "zonePct": 0.28
+          },
+          {
+            "price": 4240.68,
+            "strength": 23.82,
+            "pivotCount": 3,
+            "highPivotCount": 1,
+            "lowPivotCount": 2,
+            "role": "SUPPORT_ORIGIN",
+            "interactions": 42,
+            "rejections": 16,
+            "timeframes": [
+              "1d"
+            ],
+            "lastTouchAt": 1761523200000,
+            "ageDays": 370,
+            "zonePct": 0.28
+          },
+          {
+            "price": 4155.3,
+            "strength": 23.76,
+            "pivotCount": 2,
+            "highPivotCount": 1,
+            "lowPivotCount": 1,
+            "role": "MIXED",
+            "interactions": 42,
+            "rejections": 18,
+            "timeframes": [
+              "1d"
+            ],
+            "lastTouchAt": 1761436800000,
+            "ageDays": 371,
+            "zonePct": 0.28
+          },
+          {
+            "price": 1462.5,
+            "strength": 23.37,
+            "pivotCount": 3,
+            "highPivotCount": 1,
+            "lowPivotCount": 2,
+            "role": "SUPPORT_ORIGIN",
+            "interactions": 43,
+            "rejections": 16,
+            "timeframes": [
+              "1d",
+              "1w"
+            ],
+            "lastTouchAt": 1743984000000,
+            "ageDays": 573,
+            "zonePct": 0.4
+          },
+          {
+            "price": 3726.205,
+            "strength": 23.26,
+            "pivotCount": 2,
+            "highPivotCount": 0,
+            "lowPivotCount": 2,
+            "role": "SUPPORT_ORIGIN",
+            "interactions": 46,
+            "rejections": 15,
+            "timeframes": [
+              "1d"
+            ],
+            "lastTouchAt": 1762128000000,
+            "ageDays": 363,
+            "zonePct": 0.28
+          },
+          {
+            "price": 1491.26,
+            "strength": 22.66,
+            "pivotCount": 3,
+            "highPivotCount": 0,
+            "lowPivotCount": 3,
+            "role": "SUPPORT_ORIGIN",
+            "interactions": 46,
+            "rejections": 17,
+            "timeframes": [
+              "1d"
+            ],
+            "lastTouchAt": 1744243200000,
+            "ageDays": 570,
+            "zonePct": 0.28
+          },
+          {
+            "price": 4461,
+            "strength": 21.27,
+            "pivotCount": 3,
+            "highPivotCount": 2,
+            "lowPivotCount": 1,
+            "role": "RESISTANCE_ORIGIN",
+            "interactions": 39,
+            "rejections": 13,
+            "timeframes": [
+              "1d"
+            ],
+            "lastTouchAt": 1759881600000,
+            "ageDays": 389,
+            "zonePct": 0.28
+          },
+          {
+            "price": 1440,
+            "strength": 20.11,
+            "pivotCount": 3,
+            "highPivotCount": 2,
+            "lowPivotCount": 1,
+            "role": "RESISTANCE_ORIGIN",
+            "interactions": 41,
+            "rejections": 14,
+            "timeframes": [
+              "1d"
+            ],
+            "lastTouchAt": 1743984000000,
+            "ageDays": 573,
+            "zonePct": 0.28
+          },
+          {
+            "price": 1351.53,
+            "strength": 17.33,
+            "pivotCount": 7,
+            "highPivotCount": 5,
+            "lowPivotCount": 2,
+            "role": "RESISTANCE_ORIGIN",
+            "interactions": 43,
+            "rejections": 16,
+            "timeframes": [
+              "1d",
+              "1w"
+            ],
+            "lastTouchAt": 1673308800000,
+            "ageDays": 1391,
+            "zonePct": 0.4
+          },
+          {
+            "price": 4776.765,
+            "strength": 16.79,
+            "pivotCount": 4,
+            "highPivotCount": 4,
+            "lowPivotCount": 0,
+            "role": "RESISTANCE_ORIGIN",
+            "interactions": 17,
+            "rejections": 9,
+            "timeframes": [
+              "1d",
+              "1w"
+            ],
+            "lastTouchAt": 1757721600000,
+            "ageDays": 414,
+            "zonePct": 0.4
+          },
+          {
+            "price": 1290,
+            "strength": 16.41,
+            "pivotCount": 4,
+            "highPivotCount": 2,
+            "lowPivotCount": 2,
+            "role": "MIXED",
+            "interactions": 50,
+            "rejections": 16,
+            "timeframes": [
+              "1d",
+              "1w"
+            ],
+            "lastTouchAt": 1673136000000,
+            "ageDays": 1393,
+            "zonePct": 0.4
+          },
+          {
+            "price": 1235.285,
+            "strength": 15.67,
+            "pivotCount": 4,
+            "highPivotCount": 3,
+            "lowPivotCount": 1,
+            "role": "RESISTANCE_ORIGIN",
+            "interactions": 47,
+            "rejections": 19,
+            "timeframes": [
+              "1d"
+            ],
+            "lastTouchAt": 1672790400000,
+            "ageDays": 1397,
+            "zonePct": 0.28
+          },
+          {
+            "price": 1266.97,
+            "strength": 15.65,
+            "pivotCount": 2,
+            "highPivotCount": 0,
+            "lowPivotCount": 2,
+            "role": "SUPPORT_ORIGIN",
+            "interactions": 47,
+            "rejections": 23,
+            "timeframes": [
+              "1d"
+            ],
+            "lastTouchAt": 1673049600000,
+            "ageDays": 1394,
+            "zonePct": 0.28
+          },
+          {
+            "price": 1278.285,
+            "strength": 15.46,
+            "pivotCount": 2,
+            "highPivotCount": 2,
+            "lowPivotCount": 0,
+            "role": "RESISTANCE_ORIGIN",
+            "interactions": 50,
+            "rejections": 21,
+            "timeframes": [
+              "1d"
+            ],
+            "lastTouchAt": 1672963200000,
+            "ageDays": 1395,
+            "zonePct": 0.28
+          },
+          {
+            "price": 4719.53,
+            "strength": 15.03,
+            "pivotCount": 2,
+            "highPivotCount": 2,
+            "lowPivotCount": 0,
+            "role": "RESISTANCE_ORIGIN",
+            "interactions": 20,
+            "rejections": 8,
+            "timeframes": [
+              "1d",
+              "1w"
+            ],
+            "lastTouchAt": 1759708800000,
+            "ageDays": 391,
+            "zonePct": 0.4
+          },
+          {
+            "price": 1219.3,
+            "strength": 14.7,
+            "pivotCount": 3,
+            "highPivotCount": 0,
+            "lowPivotCount": 3,
+            "role": "SUPPORT_ORIGIN",
+            "interactions": 49,
+            "rejections": 13,
+            "timeframes": [
+              "1d",
+              "1w"
+            ],
+            "lastTouchAt": 1672617600000,
+            "ageDays": 1399,
+            "zonePct": 0.4
+          },
+          {
+            "price": 1253.76,
+            "strength": 13.71,
+            "pivotCount": 2,
+            "highPivotCount": 0,
+            "lowPivotCount": 2,
+            "role": "SUPPORT_ORIGIN",
+            "interactions": 44,
+            "rejections": 18,
+            "timeframes": [
+              "1d"
+            ],
+            "lastTouchAt": 1672790400000,
+            "ageDays": 1397,
+            "zonePct": 0.28
+          },
+          {
+            "price": 1190,
+            "strength": 13.11,
+            "pivotCount": 2,
+            "highPivotCount": 0,
+            "lowPivotCount": 2,
+            "role": "SUPPORT_ORIGIN",
+            "interactions": 42,
+            "rejections": 13,
+            "timeframes": [
+              "1d",
+              "1w"
+            ],
+            "lastTouchAt": 1672531200000,
+            "ageDays": 1400,
+            "zonePct": 0.4
+          },
+          {
+            "price": 1071.69,
+            "strength": 13.07,
+            "pivotCount": 4,
+            "highPivotCount": 0,
+            "lowPivotCount": 4,
+            "role": "SUPPORT_ORIGIN",
+            "interactions": 25,
+            "rejections": 13,
+            "timeframes": [
+              "1d",
+              "1w",
+              "1M"
+            ],
+            "lastTouchAt": 1669075200000,
+            "ageDays": 1440,
+            "zonePct": 0.55
+          },
+          {
+            "price": 1150.72,
+            "strength": 11.69,
+            "pivotCount": 3,
+            "highPivotCount": 0,
+            "lowPivotCount": 3,
+            "role": "SUPPORT_ORIGIN",
+            "interactions": 30,
+            "rejections": 12,
+            "timeframes": [
+              "1d",
+              "1w"
+            ],
+            "lastTouchAt": 1671408000000,
+            "ageDays": 1413,
+            "zonePct": 0.4
+          },
+          {
+            "price": 4867.67,
+            "strength": 11.68,
+            "pivotCount": 3,
+            "highPivotCount": 3,
+            "lowPivotCount": 0,
+            "role": "RESISTANCE_ORIGIN",
+            "interactions": 6,
+            "rejections": 2,
+            "timeframes": [
+              "1d",
+              "1w",
+              "1M"
+            ],
+            "lastTouchAt": 1755820800000,
+            "ageDays": 436,
+            "zonePct": 0.55
+          },
+          {
+            "price": 4949,
+            "strength": 10.98,
+            "pivotCount": 3,
+            "highPivotCount": 3,
+            "lowPivotCount": 0,
+            "role": "RESISTANCE_ORIGIN",
+            "interactions": 3,
+            "rejections": 2,
+            "timeframes": [
+              "1d",
+              "1w",
+              "1M"
+            ],
+            "lastTouchAt": 1755993600000,
+            "ageDays": 434,
+            "zonePct": 0.55
+          },
+          {
+            "price": 175.82,
+            "strength": 8.15,
+            "pivotCount": 3,
+            "highPivotCount": 1,
+            "lowPivotCount": 2,
+            "role": "SUPPORT_ORIGIN",
+            "interactions": 37,
+            "rejections": 16,
+            "timeframes": [
+              "1d",
+              "1w"
+            ],
+            "lastTouchAt": 1589155200000,
+            "ageDays": 2365,
+            "zonePct": 0.4
+          },
+          {
+            "price": 227.02,
+            "strength": 6.65,
+            "pivotCount": 2,
+            "highPivotCount": 2,
+            "lowPivotCount": 0,
+            "role": "RESISTANCE_ORIGIN",
+            "interactions": 29,
+            "rejections": 12,
+            "timeframes": [
+              "1d",
+              "1w"
+            ],
+            "lastTouchAt": 1593993600000,
+            "ageDays": 2309,
+            "zonePct": 0.4
+          }
+        ],
+        "source": "Binance.US spot OHLCV"
+      }
+    }
+  }
 }
