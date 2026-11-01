@@ -5,7 +5,7 @@ import { spawn } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 
 /*
- * NOVARA SMART MONEY AI V2.18.2 SCENARIO-CONFLICT-HISTORICAL-SOFT-GATES
+ * NOVARA SMART MONEY AI V2.18.4 BASELINE-PRESERVED-REPORT-STATE-FIXES
  * READ-ONLY | NO ORDERS | NO AUTO-COPY | PAPER OUTCOME TRACKING
  * BTC direction is inferred from weighted multi-timeframe structure, momentum, EMA alignment and candle behavior; neutral BTC does not automatically suppress every qualified setup
  *
@@ -19,7 +19,7 @@ import { fileURLToPath } from 'node:url';
  * All eligible liquid perp markets are considered; the worker does not depend on wallet lists.
  */
 
-const VERSION = 'NOVARA-SMART-MONEY-AI-V2.18.3-ANTI-FLIP-REACHABLE-TP-CONFLICT-GUARD';
+const VERSION = 'NOVARA-SMART-MONEY-AI-V2.18.4-BASELINE-PRESERVED-REPORT-STATE-FIXES';
 const CLEAN_START_ID = 'NOVARA-V2.14.0-ENTRY-SIDE-BTC-GATE-REPAIR-COHORT-2026-10-30'; // Preserve existing paper cohort; no destructive reset on upgrade.
 const PAPER_MARGIN_USD = Math.max(10, Number(process.env.NOVARA_PAPER_MARGIN_USD || 1000));
 const PAPER_MAX_HOLD_HOURS = Math.max(6, Math.min(72, Number(process.env.NOVARA_PAPER_MAX_HOLD_HOURS || 24)));
@@ -708,8 +708,7 @@ function buildRisk(candidate) {
   // Allow genuine 1H structure to define a wider stop, but never accept an
   // unbounded stop; require a valid R:R after choosing the level combination.
   const maxRisk = entry * 0.05;
-  // A mathematically attractive R:R is not enough if the structural target is implausibly far away.
-  // Bound the target to a volatility-scaled 1H travel envelope (hard cap 7%); do not stretch TP just to pass R:R.
+  // Reachability guard: never stretch a structural TP merely to manufacture an attractive R:R.
   const maxTargetDistance = Math.min(entry * 0.07, Math.max(entry * 0.015, atr1h * 8));
   const fallbackSupport = n(candidate.support) > 0 ? [{ price: n(candidate.support), touches: n(candidate.supportTouches), source: candidate.supportSource || 'selected-1h-level' }] : [];
   const fallbackResistance = n(candidate.resistance) > 0 ? [{ price: n(candidate.resistance), touches: n(candidate.resistanceTouches), source: candidate.resistanceSource || 'selected-1h-level' }] : [];
@@ -783,22 +782,17 @@ function oppositeSide(side) { return side === 'LONG' ? 'SHORT' : side === 'SHORT
 function shouldReverseSignal(s) { return REVERSE_SWEEP_ONLY && s?.pattern === 'SWEEP_RECLAIM'; }
 function signalKey(s) { return `${s.coin}|${s.side}|${s.pattern}`; }
 function isCooldown(state, s) {
-  // One active thesis per market: never open a second signal (same or opposite side)
-  // while a paper trade for that coin is still unresolved. This prevents flip-flop alerts.
+  // One active paper thesis per market. Prevent same-coin duplicate and opposite-side flip alerts.
   const active = (state.paperTrades || []).find(t => t.coin === s.coin && t.status === 'OPEN');
   if (active) return true;
-
   const history = (state.paperTrades || []).filter(t => t.coin === s.coin && ['TP','SL','AMBIGUOUS'].includes(t.status))
     .sort((a,b) => n(b.closedAt)-n(a.closedAt));
   const latest = history[0];
   if (latest) {
     const age = now() - n(latest.closedAt);
-    // A stop-out needs a longer reset before the opposite thesis can be issued.
     const lockMs = latest.status === 'SL' ? 90*60_000 : latest.status === 'TP' ? 45*60_000 : 60*60_000;
     if (age >= 0 && age < lockMs) return true;
   }
-
-  // Cross-pattern and per-pattern cooldowns remain as a second layer.
   const globalKey = `${s.coin}|${s.side}|GLOBAL`;
   const globalLast = n(state.alertHistory[globalKey]);
   if (globalLast > 0 && now() - globalLast < 30 * 60_000) return true;
@@ -1076,13 +1070,14 @@ async function updatePaperTrades(state, contexts) {
       if (result) { exitMark = mark; hitAt = now(); exitDetection = 'mark_price_snapshot'; }
     }
     if (candleSet.ok) trade.lastCheckedAt = now();
-    if (!result && now() - n(trade.openedAt) >= PAPER_MAX_HOLD_MS) {
-      // 1H/15m setup thesis has expired without touching either planned level.
-      // Record as ambiguous/expired, never as a fabricated TP or SL.
+    const tradeMaxHoldHours = Math.max(6, Math.min(72, n(trade.maxHoldHours, PAPER_MAX_HOLD_HOURS)));
+    if (!result && now() - n(trade.openedAt) >= tradeMaxHoldHours * 3600_000) {
+      // Expired thesis: neither planned level was confirmed. Reference mark is informational only.
       result = 'AMBIGUOUS';
       exitMark = mark;
       hitAt = now();
-      exitDetection = `time_expiry_${PAPER_MAX_HOLD_HOURS}h_no_level_hit`;
+      exitDetection = `time_expiry_${tradeMaxHoldHours}h_no_level_hit`;
+      trade.maxHoldHours = tradeMaxHoldHours;
     }
     if (!result) continue;
 
@@ -1124,20 +1119,33 @@ function formatOutcome(trade) {
   const notional = margin * lev;
   const grossPnl = notional * (movePct / 100);
   const estimatedCostsUsd = notional * (n(trade.estimatedRoundTripCostPct, PAPER_ROUND_TRIP_COST_PCT) / 100);
-  // Net simulated P&L deducts the same round-trip fee/slippage assumption used in R statistics.
-  // Conservative isolated-margin display: never claim loss beyond the simulated margin.
   const pnl = Math.max(-margin, grossPnl - estimatedCostsUsd);
   const pnlPct = margin > 0 ? pnl / margin * 100 : 0;
   const finalEquity = Math.max(0, margin + pnl);
   const durationMin = Math.max(0, Math.round((n(trade.closedAt) - n(trade.openedAt)) / 60_000));
   const duration = durationMin >= 60 ? `${Math.floor(durationMin / 60)}H ${durationMin % 60}M` : `${durationMin}M`;
   const outcomeR = ambiguous ? 'UNDETERMINED' : `${trade.pnlR >= 0 ? '+' : ''}${n(trade.pnlR).toFixed(2)}R`;
-  const header = ambiguous ? '⚠️ OUTCOME UNCERTAIN' : isTp
-    ? (long ? '🏁 LONG TAKE PROFIT HIT' : '🏁 SHORT TAKE PROFIT HIT')
-    : (long ? '🛑 LONG STOP LOSS HIT' : '🛑 SHORT STOP LOSS HIT');
-  const pnlLine = ambiguous ? 'P&L: UNDETERMINED' : `${pnl >= 0 ? '🟢' : '🔴'} <b>${pnl >= 0 ? '+' : '−'}$${Math.abs(pnl).toFixed(2)}</b>  (${pnlPct >= 0 ? '+' : ''}${pnlPct.toFixed(2)}% on margin)`;
-  const exitLabel = isTp ? 'TP reference' : isSl ? 'SL reference' : 'Exit/reference';
-  const accent = isTp ? '🟢 PROFIT CARD' : isSl ? '🔴 LOSS CARD' : '🟠 REVIEW CARD';
+  const expiry = String(trade.exitDetection || '').startsWith('time_expiry_');
+  const bothSameMinute = String(trade.exitDetection || '').includes('same_1m_candle_both_levels');
+  const header = ambiguous
+    ? (expiry ? '⌛ PAPER THESIS EXPIRED — NO TP/SL HIT' : '⚠️ PAPER REVIEW — OUTCOME UNRESOLVED')
+    : isTp
+      ? (long ? '🏁 LONG TAKE PROFIT HIT' : '🏁 SHORT TAKE PROFIT HIT')
+      : (long ? '🛑 LONG STOP LOSS HIT' : '🛑 SHORT STOP LOSS HIT');
+  const pnlLine = ambiguous ? 'P&L: NOT BOOKED — no confirmed TP/SL exit' : `${pnl >= 0 ? '🟢' : '🔴'} <b>${pnl >= 0 ? '+' : '−'}$${Math.abs(pnl).toFixed(2)}</b>  (${pnlPct >= 0 ? '+' : ''}${pnlPct.toFixed(2)}% on margin)`;
+  const exitLabel = isTp ? 'Detected TP level (simulated close)' : isSl ? 'Detected SL level (simulated close)' : 'Last observed mark (NOT an exit)';
+  const accent = isTp ? '🟢 PAPER PROFIT REVIEW' : isSl ? '🔴 PAPER LOSS REVIEW' : '🟠 PAPER EXPIRY REVIEW';
+  const strategy = String(trade.strategyVersion || 'LEGACY/UNKNOWN');
+  const strategyShort = strategy.replace(/^NOVARA-SMART-MONEY-AI-/, '');
+  const currentVersion = VERSION.replace(/^NOVARA-SMART-MONEY-AI-/, '');
+  const tradeExpiryHours = Math.max(6, Math.min(72, n(trade.maxHoldHours, Number(String(trade.exitDetection || '').match(/time_expiry_(\d+)h/)?.[1]) || PAPER_MAX_HOLD_HOURS)));
+  const reason = expiry
+    ? `The paper tracking window (${tradeExpiryHours}h configured) elapsed without a confirmed TP or SL touch. The mark below is only the last available reference; it is not an executed exit and is not counted as a win or loss.`
+    : bothSameMinute
+      ? 'Both planned levels were inside the same 1-minute candle. OHLC data cannot establish which was first; the paper accounting applied its conservative stop-first rule.'
+      : ambiguous
+        ? `No confirmed TP/SL exit was recorded (detection: ${trade.exitDetection || 'not available'}). The reference mark is informational only.`
+        : 'The planned TP or SL level was detected in market data; this is a simulated result, not a real fill.';
   return `${accent}  |  <b>NOVARA AI</b>
 ━━━━━━━━━━━━━━━━━━
 ${header}
@@ -1149,22 +1157,23 @@ ${header}
 • Position notional: <b>$${notional.toLocaleString('en-US', { maximumFractionDigits: 2 })}</b>
 
 📍 Entry: <code>${fmtPrice(entry)}</code>
-🎯 Take Profit: <code>${fmtPrice(trade.tp)}</code>
-🛑 Stop Loss: <code>${fmtPrice(trade.sl)}</code>
+🎯 Planned Take Profit: <code>${fmtPrice(trade.tp)}</code>
+🛑 Planned Stop Loss: <code>${fmtPrice(trade.sl)}</code>
 🏁 ${exitLabel}: <code>${fmtPrice(targetExit)}</code>
-📉 Price move (direction-adjusted): <b>${movePct >= 0 ? '+' : ''}${movePct.toFixed(2)}%</b>
+📉 Direction-adjusted move to reference: <b>${movePct >= 0 ? '+' : ''}${movePct.toFixed(2)}%</b>
 
-💰 <b>SIMULATED NET P&L</b>
+💰 <b>SIMULATED RESULT</b>
 ${pnlLine}
-🧾 Assumed round-trip costs: <b>$${estimatedCostsUsd.toFixed(2)}</b> (${n(trade.estimatedRoundTripCostPct, PAPER_ROUND_TRIP_COST_PCT).toFixed(3)}% of notional)
-💼 Margin after trade: <b>$${ambiguous ? '—' : finalEquity.toFixed(2)}</b>
-📊 Result in R: <b>${outcomeR}</b>
-⏱ Duration: <b>${duration}</b>
+${ambiguous ? '' : `🧾 Estimated round-trip costs: <b>$${estimatedCostsUsd.toFixed(2)}</b> (${n(trade.estimatedRoundTripCostPct, PAPER_ROUND_TRIP_COST_PCT).toFixed(3)}% of notional)\n💼 Simulated margin after trade: <b>$${finalEquity.toFixed(2)}</b>\n`}📊 Result in R: <b>${outcomeR}</b>
+⏱ Tracking duration (signal → review): <b>${duration}</b>
 🧩 Setup: ${escapeHtml(String(trade.pattern || '').replaceAll('_', ' '))}
-🧠 Strategy: ${escapeHtml(String(trade.strategyVersion || 'LEGACY/UNKNOWN'))}
+🧠 Original signal strategy: <b>${escapeHtml(strategyShort)}</b>
+🛠 Current engine: <b>${escapeHtml(currentVersion)}</b>
 
-<b>HYPERLIQUID MARKET DATA • PAPER TRADING</b>
-No real order was placed. P&L/R includes configurable estimated round-trip fees and slippage, but excludes funding and liquidation modeling; leverage can cause liquidation before a stop is reached. ${ambiguous ? 'Both levels may have been touched in the same candle; no win/loss is assigned.' : ''}`;
+📝 <b>What this means:</b> ${escapeHtml(reason)}
+
+<b>HYPERLIQUID MARKET DATA • PAPER TRACKING ONLY</b>
+No real order was placed. Fees/slippage are estimates; funding and liquidation are not modeled. This review describes the stored paper signal lifecycle, not a fresh signal.`;
 }
 
 function report24h(state, audience) {
@@ -1515,13 +1524,15 @@ async function main() {
   state.version = VERSION;
   console.log(`\n${VERSION} — START`);
   console.log(`Mode: READ-ONLY / NO ORDERS / NO AUTO-COPY / PAPER TRACKING`);
-  console.log(`[STRATEGY][PATTERNS] SWEEP_RECLAIM=STANDARD DIRECTION | BREAKOUT_RETEST=ATR-ADAPTIVE CONFIRMED RETEST | TREND_PULLBACK=EMA20 REACTION-CONFIRMED | BTC NEXT-MOVE SCENARIO ENGINE=4H-CONFLICT-AWARE+ALT-CONFLICT-QUALITY-GATE | ONE-ACTIVE-THESIS-PER-COIN | ATR-BOUNDED-TP`);
-  console.log(`[SIGNAL][ANTI-FLIP] one active thesis per coin; after SL lockout=90m; after TP=45m; after ambiguous=60m; paper thesis expiry=${PAPER_MAX_HOLD_HOURS}h; one selected signal per coin per cycle`);
-  console.log(`[RISK][TP-REACHABILITY] max target distance=min(7%, max(1.5%, 8x 1H ATR)); targets >3% require >=3 touches; no TP stretching to manufacture R:R`);
+  console.log(`[STRATEGY][PATTERNS] SWEEP_RECLAIM=STANDARD DIRECTION | BREAKOUT_RETEST=ATR-ADAPTIVE CONFIRMED RETEST | TREND_PULLBACK=EMA20 REACTION-CONFIRMED | BTC NEXT-MOVE SCENARIO ENGINE=4H-CONFLICT-AWARE+ALT-CONFLICT-QUALITY-GATE | BTC+ETH 15m+1h HISTORICAL LEVEL MEMORY=SOFT-GATE | ANTI-FLIP | ATR-BOUNDED-TP`);
+  console.log(`[SIGNAL][ANTI-FLIP] one active paper thesis per coin; post-SL lockout=90m; post-TP=45m; post-expiry=60m; thesis expiry=${PAPER_MAX_HOLD_HOURS}h`);
+  console.log(`[RISK][TP-REACHABILITY] max target=min(7%, max(1.5%, 8x 1H ATR)); targets >3% require >=3 historical touches`);
   console.log(`[PAPER][COST MODEL] roundTrip=${PAPER_ROUND_TRIP_COST_PCT.toFixed(3)}% (fees ${PAPER_FEE_BPS_PER_SIDE}bps/side; slippage ${PAPER_SLIPPAGE_BPS_PER_SIDE}bps/side); funding excluded`);
   console.log(`[CLEAN-START] Evaluation cohort begins ${new Date(n(state.cleanStartAt, started)).toISOString()} (UTC); existing cohort retained; new trades are tagged ${VERSION}.`);
   console.log(`Time: ${new Date().toISOString()}`);
-  console.log(`Strategy: standard-direction SWEEP_RECLAIM; ATR-adaptive confirmed BREAKOUT_RETEST; EMA20 reaction-confirmed TREND_PULLBACK; pattern-specific trigger gates; 1H multi-touch support/resistance independently sets fresh SL/TP; TP is capped by an ATR-scaled reachable 1H travel envelope (max 7%; targets beyond 3% require >=3 touches); one unresolved thesis per coin; minimum net R:R after estimated fees/slippage 1:1.5; estimated paper round-trip cost=${PAPER_ROUND_TRIP_COST_PCT.toFixed(3)}% (fee ${PAPER_FEE_BPS_PER_SIDE} bps/side + slippage ${PAPER_SLIPPAGE_BPS_PER_SIDE} bps/side); PAPER TRACKING only | Signal threshold: ${MIN_SCORE}/10 | min R:R: 1:${MIN_RR.toFixed(2)} | BTC adaptive regime: weighted 4H/1H/15m/5m structure+momentum+EMA+rejection evidence; hard directional gate only above confidence threshold; weak BTC bias is a soft filter | BTC/ETH timeframe-matched 15m (${HISTORICAL_15M_LOOKBACK_DAYS}d) + 1h (${HISTORICAL_1H_LOOKBACK_DAYS}d) pivot/reaction memory; same-timeframe completed-close false-breakout handling | structure-first SL/TP | 24h volume floor: NONE | market cap: NONE (all active listed perps)`);
+  console.log(`[VERSION][REPORTING] new paper signals are tagged ${VERSION}; legacy reviews retain and identify their original strategy version.`);
+  console.log(`[VERSION][REPORTING] new signals tagged ${VERSION}; legacy paper trades retain their original strategyVersion and are labelled as such in review cards.`);
+  console.log(`Strategy: standard-direction SWEEP_RECLAIM; ATR-adaptive confirmed BREAKOUT_RETEST; EMA20 reaction-confirmed TREND_PULLBACK; pattern-specific trigger gates; 1H multi-touch support/resistance independently sets fresh SL/TP; LONG stop below support and target before resistance; SHORT stop above resistance and target before support; minimum net R:R after estimated fees/slippage 1:1.5; estimated paper round-trip cost=${PAPER_ROUND_TRIP_COST_PCT.toFixed(3)}% (fee ${PAPER_FEE_BPS_PER_SIDE} bps/side + slippage ${PAPER_SLIPPAGE_BPS_PER_SIDE} bps/side); PAPER TRACKING only | Signal threshold: ${MIN_SCORE}/10 | min R:R: 1:${MIN_RR.toFixed(2)} | BTC adaptive regime: weighted 4H/1H/15m/5m structure+momentum+EMA+rejection evidence; hard directional gate only above confidence threshold; weak BTC bias is a soft filter | BTC/ETH timeframe-matched 15m (${HISTORICAL_15M_LOOKBACK_DAYS}d) + 1h (${HISTORICAL_1H_LOOKBACK_DAYS}d) pivot/reaction memory; same-timeframe completed-close false-breakout handling | structure-first SL/TP | 24h volume floor: NONE | market cap: NONE (all active listed perps)`);
   console.log(`[API][POLICY] requestGap=${SCAN_GAP_MS}ms retries429=${MAX_429_RETRIES} backoff=${RATE_LIMIT_BASE_MS}-${RATE_LIMIT_MAX_MS}ms globalCooldown=yes (shared across concurrent calls)`);
   console.log(`[TELEGRAM][CONFIG] token=${TOKEN ? 'configured' : 'MISSING'} vipChat=${VIP_CHAT ? 'configured' : (LEGACY_CHAT ? 'legacy-fallback' : 'MISSING')} freeChat=${FREE_CHAT ? 'configured' : 'MISSING'} legacyChat=${LEGACY_CHAT ? 'configured' : 'MISSING'}`);
   if (!TOKEN || (!VIP_CHAT && !LEGACY_CHAT && !FREE_CHAT)) {
@@ -1769,26 +1780,25 @@ async function main() {
           }
           continue;
         }
-        // When the BTC scenario explicitly says 4H conflicts with a lower-timeframe reclaim,
-        // require the alt itself to provide independent confirmation. BTC's weak/neutral label
-        // must not disguise a split regime, and one isolated flow reading is not enough.
+        // When the V2.18.2 scenario engine explicitly marks a 4H-vs-lower-TF
+        // countertrend reaction as WAIT, require independent alt confirmation.
         const btcScenarioConflict = Boolean(s.btcRegime?.nextMove?.higherTimeframeConflict) &&
           /COUNTERTREND\s*[—-]\s*WAIT/.test(String(s.btcRegime?.nextMove?.state || ''));
         if (btcScenarioConflict) {
-          const flowAligned = s.side === 'LONG'
+          const scenarioFlowAligned = s.side === 'LONG'
             ? (n(s.flowDelta) >= 0.12 || n(s.imbalance) >= 0.12)
             : (n(s.flowDelta) <= -0.12 || n(s.imbalance) <= -0.12);
-          const independentEvidence = [s.trend === s.side, flowAligned, n(s.volRatio) >= 0.90].filter(Boolean).length;
+          const independentEvidence = [s.trend === s.side, scenarioFlowAligned, n(s.volRatio) >= 0.90].filter(Boolean).length;
           if (n(s.score) < 6.90 || independentEvidence < 2) {
-            const reason = `BTC 4H countertrend WAIT: require score >= 6.90 and 2/3 independent alt confirmations (1H trend, directional flow/book, volume); score=${n(s.score).toFixed(2)}, confirmations=${independentEvidence}/3, trend=${s.trend}, flowAligned=${flowAligned}, volume=${n(s.volRatio).toFixed(2)}x`;
+            const reason = `BTC 4H countertrend WAIT: require score >= 6.90 and 2/3 independent alt confirmations (1H trend, directional flow/book, volume); score=${n(s.score).toFixed(2)}, confirmations=${independentEvidence}/3`;
             console.log(`[FILTER][BTC-SCENARIO-CONFLICT] ${s.coin} ${s.side} rejected: ${reason}`);
             noteReject('regime', s, reason);
             continue;
           }
           console.log(`[FILTER][BTC-SCENARIO-CONFLICT][PASS] ${s.coin} ${s.side}: score=${n(s.score).toFixed(2)} independent confirmations=${independentEvidence}/3`);
         }
-        // If BTC 1H and 15m are aligned against the proposed alt direction, demand stronger
-        // participation; a high trade-delta snapshot alone cannot overrule a two-timeframe conflict.
+        // If BTC 1H and 15m both oppose an alt setup, one flow snapshot cannot
+        // overrule the conflict: require trend, volume, trade delta, OI and score.
         const btc1h = s.btcRegime?.timeframes?.['1H'];
         const btc15 = s.btcRegime?.timeframes?.['15m'];
         const btcLowerTfOpposes = btc1h?.status === 'OK' && btc15?.status === 'OK' &&
@@ -1797,7 +1807,7 @@ async function main() {
           const strongAltConfirmation = s.trend === s.side && n(s.volRatio) >= 1.15 &&
             (s.side === 'LONG' ? n(s.flowDelta) >= 0.15 : n(s.flowDelta) <= -0.15) && n(s.oiChange) >= 0.15;
           if (!strongAltConfirmation || n(s.score) < 7.10) {
-            const reason = `BTC 1H+15m oppose ${s.side}; require aligned asset trend, volume >=1.15x, directional trade delta, OI >=+0.15%, score >=7.10 (trend=${s.trend}, volume=${n(s.volRatio).toFixed(2)}x, delta=${n(s.flowDelta).toFixed(2)}, OI=${n(s.oiChange).toFixed(2)}%, score=${n(s.score).toFixed(2)})`;
+            const reason = `BTC 1H+15m oppose ${s.side}; require aligned asset trend, volume >=1.15x, directional trade delta, OI >=+0.15%, score >=7.10`;
             console.log(`[FILTER][BTC-LOWER-TF-CONFLICT] ${s.coin} ${s.side} rejected: ${reason}`);
             noteReject('regime', s, reason);
             continue;
@@ -1855,11 +1865,11 @@ async function main() {
   for (const sample of rejectionSamples) console.log(`[DIAGNOSTICS][SAMPLE] ${sample}`);
   candidates.sort((a, b) => b.score - a.score);
   const chosen = [];
-  const seenMarket = new Set();
+  const seenMarketSide = new Set();
   for (const c of candidates) {
-    const k = c.coin;
-    if (seenMarket.has(k)) continue;
-    seenMarket.add(k);
+    const k = `${c.coin}|${c.side}`;
+    if (seenMarketSide.has(k)) continue;
+    seenMarketSide.add(k);
     chosen.push(c);
     if (chosen.length >= MAX_SIGNALS_PER_CYCLE) break;
   }
@@ -1895,7 +1905,7 @@ async function main() {
       state.alertHistory[signalKey(s)] = now();
       state.alertHistory[`${s.coin}|${s.side}|GLOBAL`] = now();
       const audience = deliveredNames.includes('VIP') && deliveredNames.includes('FREE') ? 'BOTH' : deliveredNames[0];
-      state.paperTrades.push({ strategyVersion: VERSION, id: `${s.coin}|${s.side}|${s.pattern}|${now()}`, coin: s.coin, side: s.side, pattern: s.pattern, score: Number(s.score.toFixed(2)), audience, outcomeDelivered: [], entry: s.risk.entry, sl: s.risk.sl, tp: s.risk.tp, rr: s.risk.rr, netRR: s.risk.netRR, riskPct: s.risk.riskPct, estimatedRoundTripCostPct: PAPER_ROUND_TRIP_COST_PCT, suggestedLeverage: s.leverageInfo?.leverage ?? null, btcRegime: s.btcRegime?.label || 'NEUTRAL', btcScenario: s.btcRegime?.nextMove ? { ...s.btcRegime.nextMove } : null, btcHistoricalContext: s.historicalContext ? { btc:s.historicalContext.btc, eth:s.historicalContext.eth, reasons:s.historicalContext.reasons } : null, rsi15: s.rsi15, fibConfluence: Boolean(s.fibConfluence), openedAt: now(), lastCheckedAt: now(), status: 'OPEN', pnlR: null, reasons: s.reasons });
+      state.paperTrades.push({ strategyVersion: VERSION, id: `${s.coin}|${s.side}|${s.pattern}|${now()}`, coin: s.coin, side: s.side, pattern: s.pattern, score: Number(s.score.toFixed(2)), audience, outcomeDelivered: [], entry: s.risk.entry, sl: s.risk.sl, tp: s.risk.tp, rr: s.risk.rr, netRR: s.risk.netRR, riskPct: s.risk.riskPct, estimatedRoundTripCostPct: PAPER_ROUND_TRIP_COST_PCT, suggestedLeverage: s.leverageInfo?.leverage ?? null, btcRegime: s.btcRegime?.label || 'NEUTRAL', btcScenario: s.btcRegime?.nextMove ? { ...s.btcRegime.nextMove } : null, btcHistoricalContext: s.historicalContext ? { btc:s.historicalContext.btc, eth:s.historicalContext.eth, reasons:s.historicalContext.reasons } : null, rsi15: s.rsi15, fibConfluence: Boolean(s.fibConfluence), maxHoldHours: PAPER_MAX_HOLD_HOURS, openedAt: now(), lastCheckedAt: now(), status: 'OPEN', pnlR: null, reasons: s.reasons });
     } else {
       sendErrors++;
       console.warn(`[DELIVERY][FAIL] ${s.coin} ${s.side}: no destination confirmed delivery`);
