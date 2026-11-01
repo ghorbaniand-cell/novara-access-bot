@@ -5,7 +5,7 @@ import { spawn } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 
 /*
- * NOVARA SMART MONEY AI V2.18.0 BTC-ETH-HISTORICAL-REACTION-MEMORY
+ * NOVARA SMART MONEY AI V2.18.1 BTC-ETH-TIMEFRAME-ALIGNED-MEMORY
  * READ-ONLY | NO ORDERS | NO AUTO-COPY | PAPER OUTCOME TRACKING
  * BTC direction is inferred from weighted multi-timeframe structure, momentum, EMA alignment and candle behavior; neutral BTC does not automatically suppress every qualified setup
  *
@@ -19,7 +19,7 @@ import { fileURLToPath } from 'node:url';
  * All eligible liquid perp markets are considered; the worker does not depend on wallet lists.
  */
 
-const VERSION = 'NOVARA-SMART-MONEY-AI-V2.18.0-BTC-ETH-HISTORICAL-REACTION-MEMORY';
+const VERSION = 'NOVARA-SMART-MONEY-AI-V2.18.1-BTC-ETH-TIMEFRAME-ALIGNED-MEMORY';
 const CLEAN_START_ID = 'NOVARA-V2.14.0-ENTRY-SIDE-BTC-GATE-REPAIR-COHORT-2026-10-30'; // Preserve existing paper cohort; no destructive reset on upgrade.
 const PAPER_MARGIN_USD = Math.max(10, Number(process.env.NOVARA_PAPER_MARGIN_USD || 1000));
 // Transparent conservative paper estimate only; configure to match your fee tier. Round-trip cost includes entry+exit fee and slippage assumptions.
@@ -30,7 +30,9 @@ const REVERSE_SWEEP_ONLY = false; // V2.15 restores standard liquidity-sweep dir
 const API = (process.env.HYPERLIQUID_API_URL || 'https://api.hyperliquid.xyz/info').trim();
 const HISTORICAL_KLINES_API = (process.env.NOVARA_HISTORICAL_KLINES_API || 'https://api.binance.us/api/v3/klines').trim();
 const HISTORICAL_LEVEL_REFRESH_MS = Math.max(6, Number(process.env.NOVARA_HISTORICAL_LEVEL_REFRESH_HOURS || 24)) * 3600_000;
-const HISTORICAL_LEVEL_START = Date.UTC(2017, 0, 1); // fetch from earliest supported public exchange history
+// Historical levels are deliberately built on the same execution horizons: 15m entry timing and 1h structure.
+const HISTORICAL_15M_LOOKBACK_DAYS = Math.max(60, Math.min(730, Number(process.env.NOVARA_HISTORICAL_15M_LOOKBACK_DAYS || 365)));
+const HISTORICAL_1H_LOOKBACK_DAYS = Math.max(365, Math.min(2555, Number(process.env.NOVARA_HISTORICAL_1H_LOOKBACK_DAYS || 1825))); 
 const TOKEN = process.env.TELEGRAM_TOKEN || process.env.TELEGRAM_BOT_TOKEN || '';
 const LEGACY_CHAT = process.env.TELEGRAM_CHAT_ID || '';
 const FREE_CHAT = process.env.NOVARA_FREE_CHAT_ID || process.env.FREE_CHAT_ID || '';
@@ -269,11 +271,13 @@ function trendBias(candles) {
  * Only completed candles are retained. Levels are pivot clusters weighted by
  * timeframe, independent retests, rejection closes and recency (not round-number guesses).
  */
-async function fetchHistoricalKlines(symbol, interval) {
+async function fetchHistoricalKlines(symbol, interval, lookbackDays) {
   const rows = new Map();
-  let startTime = HISTORICAL_LEVEL_START;
-  const intervalMs = interval === '1d' ? 86400_000 : interval === '1w' ? 7*86400_000 : 30*86400_000;
-  for (let page = 0; page < 8; page++) {
+  const intervalMs = interval === '15m' ? 15*60_000 : 60*60_000;
+  const startFloor = now() - lookbackDays * 86400_000;
+  let startTime = startFloor;
+  const maxPages = Math.ceil((lookbackDays * 86400_000) / (intervalMs * 1000)) + 2;
+  for (let page = 0; page < maxPages; page++) {
     const url = new URL(HISTORICAL_KLINES_API);
     url.searchParams.set('symbol', symbol);
     url.searchParams.set('interval', interval);
@@ -291,12 +295,12 @@ async function fetchHistoricalKlines(symbol, interval) {
     if (!batch.length) break;
     for (const k of batch) {
       const c = { t:n(k[0]), o:n(k[1]), h:n(k[2]), l:n(k[3]), c:n(k[4]), v:n(k[5]), T:n(k[6]) };
-      if (c.t && c.c > 0 && c.T < now()) rows.set(c.t, c);
+      if (c.t >= startFloor && c.c > 0 && c.T < now()) rows.set(c.t, c);
     }
     const lastOpen = n(batch.at(-1)?.[0]);
     if (batch.length < 1000 || !lastOpen || lastOpen <= startTime) break;
     startTime = lastOpen + intervalMs;
-    await sleep(120);
+    await sleep(180);
   }
   return [...rows.values()].sort((a,b)=>a.t-b.t);
 }
@@ -309,149 +313,148 @@ function historicalPivotPoints(candlesIn, left, right, weight, timeframe) {
   }
   return out;
 }
-function buildHistoricalLevelMap(seriesByTf) {
-  const pivotsAll=[];
-  for(const [tf, spec] of Object.entries(seriesByTf)) pivotsAll.push(...historicalPivotPoints(spec.rows,spec.left,spec.right,spec.weight,tf));
-  pivotsAll.sort((a,b)=>a.price-b.price);
+function buildHistoricalLevelMap(rows, timeframe) {
+  const is15m = timeframe === '15m';
+  const spec = is15m
+    ? { left:4, right:4, tolerance:0.18, zonePct:0.10, recencyDays:45, minPivots:2 }
+    : { left:3, right:3, tolerance:0.32, zonePct:0.18, recencyDays:365, minPivots:2 };
+  const points=historicalPivotPoints(rows,spec.left,spec.right,is15m?1:1.6,timeframe).sort((a,b)=>a.price-b.price);
   const clusters=[];
-  for(const point of pivotsAll){
-    let best=null, bestPct=Infinity;
+  for(const point of points){
+    let best=null,bestPct=Infinity;
     for(const cluster of clusters){
       const d=Math.abs(point.price-cluster.center)/cluster.center*100;
-      const tolerance=cluster.timeframes.has('1M')||point.timeframe==='1M'?1.15:cluster.timeframes.has('1w')||point.timeframe==='1w'?0.90:0.65;
-      if(d<=tolerance && d<bestPct){best=cluster;bestPct=d;}
+      if(d<=spec.tolerance && d<bestPct){best=cluster;bestPct=d;}
     }
-    if(!best){best={points:[],center:point.price,timeframes:new Set()};clusters.push(best);}
-    best.points.push(point); best.timeframes.add(point.timeframe);
-    best.center=median(best.points.map(x=>x.price));
+    if(!best){best={points:[],center:point.price};clusters.push(best);}
+    best.points.push(point); best.center=median(best.points.map(x=>x.price));
   }
-  const allRows=Object.entries(seriesByTf);
-  const built=clusters.map(cl=>{
-    const center=cl.center, zonePct=cl.timeframes.has('1M')?0.55:cl.timeframes.has('1w')?0.40:0.28;
-    let interactions=0,rejections=0,lastTouch=0;
-    for(const [tf,spec] of allRows){
-      const rows=spec.rows; let lastAccepted=-Infinity;
-      for(let i=0;i<rows.length;i++){
-        const c=rows[i], overlaps=c.l<=center*(1+zonePct/100)&&c.h>=center*(1-zonePct/100);
-        if(!overlaps || c.t-lastAccepted < (tf==='1d'?3:tf==='1w'?2:1)*({ '1d':86400_000,'1w':7*86400_000,'1M':30*86400_000 }[tf])) continue;
-        interactions++; lastAccepted=c.t; lastTouch=Math.max(lastTouch,c.t);
-        const upper=(c.h-Math.max(c.o,c.c))/Math.max(1e-12,c.h-c.l);
-        const lower=(Math.min(c.o,c.c)-c.l)/Math.max(1e-12,c.h-c.l);
-        if((c.h>=center*(1-zonePct/100)&&c.c<center&&upper>=0.32)||(c.l<=center*(1+zonePct/100)&&c.c>center&&lower>=0.32)) rejections++;
-      }
+  const barMs=is15m?15*60_000:60*60_000;
+  return clusters.map(cl=>{
+    const center=cl.center; let interactions=0,rejections=0,lastTouch=0,lastAccepted=-Infinity;
+    for(const c of rows){
+      const overlaps=c.l<=center*(1+spec.zonePct/100)&&c.h>=center*(1-spec.zonePct/100);
+      if(!overlaps || c.t-lastAccepted<barMs*3) continue;
+      interactions++; lastAccepted=c.t; lastTouch=Math.max(lastTouch,c.t);
+      const upper=(c.h-Math.max(c.o,c.c))/Math.max(1e-12,c.h-c.l);
+      const lower=(Math.min(c.o,c.c)-c.l)/Math.max(1e-12,c.h-c.l);
+      if((c.h>=center*(1-spec.zonePct/100)&&c.c<center&&upper>=0.32)||(c.l<=center*(1+spec.zonePct/100)&&c.c>center&&lower>=0.32)) rejections++;
     }
     const highPivotCount=cl.points.filter(x=>x.kind==='HIGH').length;
     const lowPivotCount=cl.points.filter(x=>x.kind==='LOW').length;
-    const tfWeight=cl.points.reduce((sum,x)=>sum+x.weight,0);
-    const distinctTf=cl.timeframes.size;
-    const ageDays=lastTouch?Math.max(0,(now()-lastTouch)/86400_000):5000;
-    const recency=Math.exp(-ageDays/1800);
-    const score=(cl.points.length*1.1)+(interactions*0.30)+(rejections*0.65)+(distinctTf*2.2)+tfWeight*0.25;
+    const ageDays=lastTouch?Math.max(0,(now()-lastTouch)/86400_000):spec.recencyDays*10;
+    const recency=Math.exp(-ageDays/spec.recencyDays);
+    const score=cl.points.length*1.2+interactions*0.35+rejections*0.75;
     const strength=clamp(score*recency,0,100);
-    return {price:Number(center.toPrecision(10)),strength:Number(strength.toFixed(2)),pivotCount:cl.points.length,highPivotCount,lowPivotCount,role:highPivotCount>lowPivotCount?'RESISTANCE_ORIGIN':lowPivotCount>highPivotCount?'SUPPORT_ORIGIN':'MIXED',interactions,rejections,timeframes:[...cl.timeframes],lastTouchAt:lastTouch,ageDays:Math.round(ageDays),zonePct};
-  }).filter(x=>x.pivotCount>=2 || (x.timeframes.includes('1w')&&x.interactions>=3))
-    .sort((a,b)=>b.strength-a.strength).slice(0,80);
-  return built;
+    return {price:Number(center.toPrecision(10)),strength:Number(strength.toFixed(2)),pivotCount:cl.points.length,highPivotCount,lowPivotCount,role:highPivotCount>lowPivotCount?'RESISTANCE_ORIGIN':lowPivotCount>highPivotCount?'SUPPORT_ORIGIN':'MIXED',interactions,rejections,timeframe,lastTouchAt:lastTouch,ageDays:Math.round(ageDays),zonePct:spec.zonePct};
+  }).filter(x=>x.pivotCount>=spec.minPivots || x.interactions>=3)
+    .sort((a,b)=>b.strength-a.strength).slice(0,100);
 }
 async function refreshBtcEthHistoricalMemory(state) {
   const cached=state.btcEthHistoricalMemory;
-  if(cached?.refreshedAt && now()-cached.refreshedAt<HISTORICAL_LEVEL_REFRESH_MS && cached.assets?.BTC?.levels?.length && cached.assets?.ETH?.levels?.length){
-    console.log(`[HISTORY][LEVEL-MEMORY] cache hit age=${((now()-cached.refreshedAt)/3600000).toFixed(1)}h BTC=${cached.assets.BTC.levels.length} ETH=${cached.assets.ETH.levels.length}`);
+  const cacheCompatible=cached?.schema===2 && cached?.assets?.BTC?.timeframes?.['15m']?.levels?.length && cached?.assets?.BTC?.timeframes?.['1h']?.levels?.length && cached?.assets?.ETH?.timeframes?.['15m']?.levels?.length && cached?.assets?.ETH?.timeframes?.['1h']?.levels?.length;
+  if(cacheCompatible && cached.refreshedAt && now()-cached.refreshedAt<HISTORICAL_LEVEL_REFRESH_MS){
+    console.log(`[HISTORY][LEVEL-MEMORY] cache hit age=${((now()-cached.refreshedAt)/3600000).toFixed(1)}h BTC15m=${cached.assets.BTC.timeframes['15m'].levels.length} BTC1h=${cached.assets.BTC.timeframes['1h'].levels.length} ETH15m=${cached.assets.ETH.timeframes['15m'].levels.length} ETH1h=${cached.assets.ETH.timeframes['1h'].levels.length}`);
     return cached;
   }
   const assets={};
   for(const [coin,symbols] of [['BTC',['BTCUSD','BTCUSDT']],['ETH',['ETHUSD','ETHUSDT']]]){
     try{
-      let symbol=null, daily=[], weekly=[], monthly=[]; let lastError=null;
+      let symbol=null, series=null, lastError=null;
       for(const candidateSymbol of symbols){
         try{
-          const result=await Promise.all([fetchHistoricalKlines(candidateSymbol,'1d'),fetchHistoricalKlines(candidateSymbol,'1w'),fetchHistoricalKlines(candidateSymbol,'1M')]);
-          if(result[0].length>=500 && result[1].length>=80){symbol=candidateSymbol;[daily,weekly,monthly]=result;break;}
-          lastError=new Error(`${candidateSymbol} insufficient history daily=${result[0].length} weekly=${result[1].length}`);
+          const [m15,h1]=await Promise.all([
+            fetchHistoricalKlines(candidateSymbol,'15m',HISTORICAL_15M_LOOKBACK_DAYS),
+            fetchHistoricalKlines(candidateSymbol,'1h',HISTORICAL_1H_LOOKBACK_DAYS),
+          ]);
+          if(m15.length>=3000 && h1.length>=5000){symbol=candidateSymbol;series={'15m':m15,'1h':h1};break;}
+          lastError=new Error(`${candidateSymbol} insufficient aligned history 15m=${m15.length} 1h=${h1.length}`);
         }catch(error){lastError=error;}
       }
       if(!symbol) throw lastError || new Error('no supported USD/USDT symbol');
-      if(daily.length<500 || weekly.length<80) throw new Error(`insufficient history daily=${daily.length} weekly=${weekly.length}`);
-      const levels=buildHistoricalLevelMap({
-        '1d':{rows:daily,left:3,right:3,weight:1},
-        '1w':{rows:weekly,left:2,right:2,weight:2.5},
-        '1M':{rows:monthly,left:1,right:1,weight:4},
-      });
-      assets[coin]={symbol,dailyBars:daily.length,weeklyBars:weekly.length,monthlyBars:monthly.length,latestDailyClose:daily.at(-1).c,latestWeeklyClose:weekly.at(-1).c,levels,source:'Binance.US spot OHLCV'};
-      console.log(`[HISTORY][LEVEL-MEMORY][${coin}] daily=${daily.length} weekly=${weekly.length} monthly=${monthly.length} levels=${levels.length} strongest=${levels.slice(0,5).map(x=>`${fmtPrice(x.price)}(${x.strength.toFixed(1)},${x.interactions}x)`).join(',')}`);
+      const timeframes={};
+      for(const tf of ['15m','1h']){
+        const rows=series[tf], levels=buildHistoricalLevelMap(rows,tf);
+        timeframes[tf]={bars:rows.length,firstAt:rows[0]?.t||0,lastAt:rows.at(-1)?.t||0,latestClose:rows.at(-1)?.c||0,recentCandles:rows.slice(-3),levels};
+        console.log(`[HISTORY][LEVEL-MEMORY][${coin}][${tf}] bars=${rows.length} levels=${levels.length} strongest=${levels.slice(0,5).map(x=>`${fmtPrice(x.price)}(${x.strength.toFixed(1)},${x.interactions}x)`).join(',')}`);
+      }
+      assets[coin]={symbol,timeframes,source:'Binance.US spot OHLCV'};
     }catch(e){
-      console.warn(`[HISTORY][LEVEL-MEMORY][${coin}][WARN] ${e?.message||e}; keeping prior cache if available`);
-      if(cached?.assets?.[coin]) assets[coin]=cached.assets[coin];
+      console.warn(`[HISTORY][LEVEL-MEMORY][${coin}][WARN] ${e?.message||e}; keeping prior compatible cache if available`);
+      if(cacheCompatible && cached?.assets?.[coin]) assets[coin]=cached.assets[coin];
     }
   }
-  if(!assets.BTC?.levels?.length || !assets.ETH?.levels?.length){
-    if(cached?.assets?.BTC?.levels?.length && cached?.assets?.ETH?.levels?.length) return cached;
-    console.warn('[HISTORY][LEVEL-MEMORY][DEGRADED] Historical levels unavailable; this cycle will use the existing multi-timeframe BTC engine without inventing historical levels.');
-    return {schema:1,source:'unavailable',refreshedAt:0,assets:{}};
+  if(!assets.BTC?.timeframes?.['15m']?.levels?.length || !assets.BTC?.timeframes?.['1h']?.levels?.length || !assets.ETH?.timeframes?.['15m']?.levels?.length || !assets.ETH?.timeframes?.['1h']?.levels?.length){
+    if(cacheCompatible) return cached;
+    console.warn('[HISTORY][LEVEL-MEMORY][DEGRADED] Timeframe-aligned BTC/ETH history unavailable; historical level gate disabled this cycle (no daily/monthly fallback).');
+    return {schema:2,source:'unavailable',refreshedAt:0,assets:{}};
   }
-  const memory={schema:1,source:'Binance.US spot OHLCV',refreshedAt:now(),assets};
+  const memory={schema:2,source:'Binance.US spot OHLCV',refreshedAt:now(),assets};
   state.btcEthHistoricalMemory=memory;
   return memory;
 }
-function historicalReactionContext(memoryAsset, currentPrice, shortTermRows=[]) {
-  if(!memoryAsset?.levels?.length || !(currentPrice>0)) return {available:false,state:'UNAVAILABLE'};
+function historicalReactionContext(memoryAsset, currentPrice, timeframe) {
+  if(!memoryAsset?.levels?.length || !(currentPrice>0)) return {available:false,timeframe,state:'UNAVAILABLE'};
   const levels=memoryAsset.levels;
   const below=levels.filter(x=>x.price<currentPrice).sort((a,b)=>b.price-a.price);
   const above=levels.filter(x=>x.price>currentPrice).sort((a,b)=>a.price-b.price);
   const support=below[0]||null, resistance=above[0]||null;
   const distance=(x)=>x?Math.abs(currentPrice-x.price)/currentPrice*100:Infinity;
-  const last=shortTermRows.at(-1), prev=shortTermRows.at(-2);
-  const upper=last?((last.h-Math.max(last.o,last.c))/Math.max(1e-12,last.h-last.l)):0;
-  const lower=last?((Math.min(last.o,last.c)-last.l)/Math.max(1e-12,last.h-last.l)):0;
-  const dailyClose=n(memoryAsset.latestDailyClose),weeklyClose=n(memoryAsset.latestWeeklyClose);
-  // A false wick does not flip the level: require a completed daily close AND
-  // a completed 4H BTC / 1H ETH close outside the zone. Weekly close is logged
-  // as additional context, not required to wait a full week for confirmation.
-  const confirmedAbove=(x)=>dailyClose>x.price*(1+x.zonePct/100)&&Boolean(last&&last.c>x.price*(1+x.zonePct/100));
-  const confirmedBelow=(x)=>dailyClose<x.price*(1-x.zonePct/100)&&Boolean(last&&last.c<x.price*(1-x.zonePct/100));
-  // Role reversal requires the original pivot character plus completed daily and 4H/1H closes.
-  const resistanceBreak=Boolean(support&&support.highPivotCount>support.lowPivotCount&&confirmedAbove(support));
-  const supportBreak=Boolean(resistance&&resistance.lowPivotCount>resistance.highPivotCount&&confirmedBelow(resistance));
-  const supportRoleValid=Boolean(support&&(support.lowPivotCount>=support.highPivotCount||resistanceBreak));
-  const resistanceRoleValid=Boolean(resistance&&(resistance.highPivotCount>=resistance.lowPivotCount||supportBreak));
-  const nearSupport=Boolean(supportRoleValid&&distance(support)<=Math.max(0.65,support.zonePct*1.8));
-  const nearResistance=Boolean(resistanceRoleValid&&distance(resistance)<=Math.max(0.65,resistance.zonePct*1.8));
-  const resistanceReject=Boolean(nearResistance&&last&&last.h>=resistance.price*(1-resistance.zonePct/100)&&last.c<resistance.price&&upper>=0.34);
-  const supportBounce=Boolean(nearSupport&&last&&last.l<=support.price*(1+support.zonePct/100)&&last.c>support.price&&lower>=0.34);
-  let state='BETWEEN_LEVELS', bias='NEUTRAL', reason='No high-confluence historical level is close enough for a directional reaction call.';
-  if(resistanceBreak){state='RESISTANCE_BROKEN_AND_HOLDING';bias='LONG';reason='Completed daily and 4H/1H closes confirmed above former resistance; treat it as support on retest.';}
-  else if(supportBreak){state='SUPPORT_BROKEN_AND_HOLDING_BELOW';bias='SHORT';reason='Completed daily and 4H/1H closes confirmed below former support; treat it as resistance on retest.';}
-  else if(resistanceReject){state='HISTORICAL_RESISTANCE_REJECTION';bias='SHORT';reason='A completed candle wicked into the multi-year resistance zone and closed back below it.';}
-  else if(supportBounce){state='HISTORICAL_SUPPORT_RECLAIM';bias='LONG';reason='A completed candle swept the multi-year support zone and closed back above it.';}
-  else if(nearResistance){state='NEAR_HISTORICAL_RESISTANCE_WAIT';reason='Price is below a high-confluence historical resistance; wait for confirmed rejection or completed daily and 4H/1H close above.';}
-  else if(nearSupport){state='NEAR_HISTORICAL_SUPPORT_WAIT';reason='Price is above a high-confluence historical support; wait for confirmed bounce or completed daily and 4H/1H close below.';}
-  return {available:true,state,bias,reason,support:support?{price:support.price,strength:support.strength,touches:support.interactions,distancePct:Number(distance(support).toFixed(3))}:null,resistance:resistance?{price:resistance.price,strength:resistance.strength,touches:resistance.interactions,distancePct:Number(distance(resistance).toFixed(3))}:null,nearSupport:Boolean(nearSupport),nearResistance:Boolean(nearResistance),supportBounce,resistanceReject,supportBreak,resistanceBreak,dailyClose,weeklyClose};
+  const zone=(x)=>x?x.zonePct:0.1;
+  const nearSupport=Boolean(support&&distance(support)<=Math.max(timeframe==='15m'?0.22:0.45,zone(support)*1.8));
+  const nearResistance=Boolean(resistance&&distance(resistance)<=Math.max(timeframe==='15m'?0.22:0.45,zone(resistance)*1.8));
+  let state='BETWEEN_LEVELS',bias='NEUTRAL',reason='No timeframe-matched historical level is close enough.';
+  const upperOrigin=(x)=>x&&x.highPivotCount>x.lowPivotCount;
+  const lowerOrigin=(x)=>x&&x.lowPivotCount>x.highPivotCount;
+  // Only completed candles from the same timeframe are used. Two closes outside
+  // the level zone are required for role reversal; one wick alone is never a breakout.
+  const rows=memoryAsset.recentCandles||[];
+  const last=rows.at(-1),prev=rows.at(-2);
+  const twoAbove=Boolean(support&&last&&prev&&last.c>support.price*(1+zone(support)/100)&&prev.c>support.price*(1+zone(support)/100));
+  const twoBelow=Boolean(resistance&&last&&prev&&last.c<resistance.price*(1-zone(resistance)/100)&&prev.c<resistance.price*(1-zone(resistance)/100));
+  const resistanceBreak=Boolean(support&&upperOrigin(support)&&twoAbove);
+  const supportBreak=Boolean(resistance&&lowerOrigin(resistance)&&twoBelow);
+  const resistanceReject=Boolean(nearResistance&&last&&last.h>=resistance.price*(1-zone(resistance)/100)&&last.c<resistance.price&&((last.h-Math.max(last.o,last.c))/Math.max(1e-12,last.h-last.l))>=0.34);
+  const supportBounce=Boolean(nearSupport&&last&&last.l<=support.price*(1+zone(support)/100)&&last.c>support.price&&((Math.min(last.o,last.c)-last.l)/Math.max(1e-12,last.h-last.l))>=0.34);
+  if(resistanceBreak){state='RESISTANCE_BROKEN_AND_HOLDING';bias='LONG';reason=`Two completed ${timeframe} closes confirmed above former resistance; wait for retest.`;}
+  else if(supportBreak){state='SUPPORT_BROKEN_AND_HOLDING_BELOW';bias='SHORT';reason=`Two completed ${timeframe} closes confirmed below former support; wait for retest.`;}
+  else if(resistanceReject){state='HISTORICAL_RESISTANCE_REJECTION';bias='SHORT';reason=`Completed ${timeframe} candle rejected a repeated historical resistance.`;}
+  else if(supportBounce){state='HISTORICAL_SUPPORT_RECLAIM';bias='LONG';reason=`Completed ${timeframe} candle swept and reclaimed a repeated historical support.`;}
+  else if(nearResistance){state='NEAR_HISTORICAL_RESISTANCE_WAIT';reason=`Price is near ${timeframe} historical resistance; wait for rejection or two closes above.`;}
+  else if(nearSupport){state='NEAR_HISTORICAL_SUPPORT_WAIT';reason=`Price is near ${timeframe} historical support; wait for bounce or two closes below.`;}
+  return {available:true,timeframe,state,bias,reason,support:support?{price:support.price,strength:support.strength,touches:support.interactions,distancePct:Number(distance(support).toFixed(3))}:null,resistance:resistance?{price:resistance.price,strength:resistance.strength,touches:resistance.interactions,distancePct:Number(distance(resistance).toFixed(3))}:null,nearSupport,nearResistance,supportBounce,resistanceReject,supportBreak,resistanceBreak};
 }
 function historicalBtcEthAdjustment(candidate, btcCtx, ethCtx) {
   let adjustment=0; const reasons=[]; const blocked=[];
   const apply=(name,ctx,weight)=>{
     if(!ctx?.available)return;
+    const suffix=`${name} ${ctx.timeframe}`;
     if(ctx.state==='HISTORICAL_RESISTANCE_REJECTION'){
-      if(candidate.side==='SHORT'){adjustment+=0.55*weight;reasons.push(`${name} multi-year resistance rejection supports SHORT`);}
-      else {adjustment-=0.70*weight;reasons.push(`${name} multi-year resistance rejection conflicts with LONG`);if(weight===1)blocked.push(`${name} resistance rejection blocks LONG`);}
+      if(candidate.side==='SHORT'){adjustment+=0.42*weight;reasons.push(`${suffix} historical resistance rejection supports SHORT`);}
+      else {adjustment-=0.48*weight;reasons.push(`${suffix} resistance rejection conflicts with LONG`);if(ctx.timeframe==='1h')blocked.push(`${suffix} resistance rejection blocks LONG`);}
     } else if(ctx.state==='HISTORICAL_SUPPORT_RECLAIM'){
-      if(candidate.side==='LONG'){adjustment+=0.55*weight;reasons.push(`${name} multi-year support reclaim supports LONG`);}
-      else {adjustment-=0.70*weight;reasons.push(`${name} multi-year support reclaim conflicts with SHORT`);if(weight===1)blocked.push(`${name} support reclaim blocks SHORT`);}
+      if(candidate.side==='LONG'){adjustment+=0.42*weight;reasons.push(`${suffix} historical support reclaim supports LONG`);}
+      else {adjustment-=0.48*weight;reasons.push(`${suffix} support reclaim conflicts with SHORT`);if(ctx.timeframe==='1h')blocked.push(`${suffix} support reclaim blocks SHORT`);}
     } else if(ctx.state==='RESISTANCE_BROKEN_AND_HOLDING'){
-      if(candidate.side==='LONG'){adjustment+=0.35*weight;reasons.push(`${name} former resistance confirmed as support`);}
-      else {adjustment-=0.45*weight;reasons.push(`${name} former resistance held as support`);if(weight===1)blocked.push(`${name} confirmed role-reversal support blocks SHORT`);}
+      if(candidate.side==='LONG'){adjustment+=0.28*weight;reasons.push(`${suffix} former resistance confirmed as support`);}
+      else {adjustment-=0.34*weight;if(ctx.timeframe==='1h')blocked.push(`${suffix} role-reversal support blocks SHORT`);}
     } else if(ctx.state==='SUPPORT_BROKEN_AND_HOLDING_BELOW'){
-      if(candidate.side==='SHORT'){adjustment+=0.35*weight;reasons.push(`${name} former support confirmed as resistance`);}
-      else {adjustment-=0.45*weight;reasons.push(`${name} former support held as resistance`);if(weight===1)blocked.push(`${name} confirmed role-reversal resistance blocks LONG`);}
+      if(candidate.side==='SHORT'){adjustment+=0.28*weight;reasons.push(`${suffix} former support confirmed as resistance`);}
+      else {adjustment-=0.34*weight;if(ctx.timeframe==='1h')blocked.push(`${suffix} role-reversal resistance blocks LONG`);}
     } else if(ctx.state==='NEAR_HISTORICAL_RESISTANCE_WAIT'){
-      adjustment-= (candidate.side==='LONG'?0.30:0.10)*weight; reasons.push(`${name} near historical resistance; wait for rejection or confirmed daily+4H/1H breakout`);
-      if(weight===1) blocked.push(`${name} resistance test unresolved; wait for candle close`);
+      adjustment-=(candidate.side==='LONG'?0.22:0.05)*weight; reasons.push(`${suffix} resistance nearby; wait for same-timeframe close`);
+      if(ctx.timeframe==='1h')blocked.push(`${suffix} resistance test unresolved; wait for 1h candle confirmation`);
     } else if(ctx.state==='NEAR_HISTORICAL_SUPPORT_WAIT'){
-      adjustment-= (candidate.side==='SHORT'?0.30:0.10)*weight; reasons.push(`${name} near historical support; wait for bounce or confirmed daily+4H/1H breakdown`);
-      if(weight===1) blocked.push(`${name} support test unresolved; wait for candle close`);
+      adjustment-=(candidate.side==='SHORT'?0.22:0.05)*weight; reasons.push(`${suffix} support nearby; wait for same-timeframe close`);
+      if(ctx.timeframe==='1h')blocked.push(`${suffix} support test unresolved; wait for 1h candle confirmation`);
     }
   };
-  apply('BTC',btcCtx,1); apply('ETH',ethCtx,0.45);
+  // 1h is the structural context; 15m is the entry/reaction timing layer.
+  for(const tf of ['1h','15m']){
+    const weight=tf==='1h'?1:0.65;
+    apply('BTC',btcCtx?.[tf],weight);
+    apply('ETH',ethCtx?.[tf],weight*0.45);
+  }
   return {adjustment:clamp(adjustment,-1.1,0.8),reasons,blocked,btc:btcCtx,eth:ethCtx};
 }
 
@@ -869,7 +872,7 @@ function formatSignal(s, risk) {
   };
   const modeLabel = 'ADAPTIVE BTC REGIME + HISTORICAL LEVEL MEMORY';
   const hist = btc.historicalMemory || {};
-  const histLine = (name, x) => `${name}: ${x?.state || 'UNAVAILABLE'} | S ${fmtPrice(x?.support?.price)} (${x?.support?.distancePct ?? '—'}% away; ${x?.support?.touches || 0} reactions; strength ${x?.support?.strength ?? '—'}) | R ${fmtPrice(x?.resistance?.price)} (${x?.resistance?.distancePct ?? '—'}% away; ${x?.resistance?.touches || 0} reactions; strength ${x?.resistance?.strength ?? '—'})`;
+  const histLine = (name, x) => ['15m','1h'].map(tf => { const c=x?.[tf]; return `${name} ${tf}: ${c?.state || 'UNAVAILABLE'} | S ${fmtPrice(c?.support?.price)} (${c?.support?.distancePct ?? '—'}%; ${c?.support?.touches || 0} touches) | R ${fmtPrice(c?.resistance?.price)} (${c?.resistance?.distancePct ?? '—'}%; ${c?.resistance?.touches || 0} touches)`; }).join('\n');
   return `${emoji} <b>NOVARA SMART MONEY AI — NEXT-MOVE SCENARIO ENGINE</b>\n🧭 BTC regime: adaptive multi-timeframe structure + momentum + EMA + rejection analysis\n📐 BTC direction: ${btc.label || 'NEUTRAL'} | regime confidence: ${n(btc.confidence)}% | score: ${n(btc.directionScore).toFixed(3)}
 🔮 Next-move scenario: ${escapeHtml(btc.nextMove?.state || 'UNAVAILABLE')}
 🧭 Scenario evidence: LONG ${n(btc.nextMove?.longScore)}/100 | SHORT ${n(btc.nextMove?.shortScore)}/100 (heuristic, NOT win probability)
@@ -1462,11 +1465,11 @@ async function main() {
   state.version = VERSION;
   console.log(`\n${VERSION} — START`);
   console.log(`Mode: READ-ONLY / NO ORDERS / NO AUTO-COPY / PAPER TRACKING`);
-  console.log(`[STRATEGY][PATTERNS] SWEEP_RECLAIM=STANDARD DIRECTION | BREAKOUT_RETEST=ATR-ADAPTIVE CONFIRMED RETEST | TREND_PULLBACK=EMA20 REACTION-CONFIRMED | BTC NEXT-MOVE SCENARIO ENGINE=ON | BTC+ETH MULTI-YEAR LEVEL MEMORY=ON`);
+  console.log(`[STRATEGY][PATTERNS] SWEEP_RECLAIM=STANDARD DIRECTION | BREAKOUT_RETEST=ATR-ADAPTIVE CONFIRMED RETEST | TREND_PULLBACK=EMA20 REACTION-CONFIRMED | BTC NEXT-MOVE SCENARIO ENGINE=ON | BTC+ETH 15m+1h HISTORICAL LEVEL MEMORY=ON`);
   console.log(`[PAPER][COST MODEL] roundTrip=${PAPER_ROUND_TRIP_COST_PCT.toFixed(3)}% (fees ${PAPER_FEE_BPS_PER_SIDE}bps/side; slippage ${PAPER_SLIPPAGE_BPS_PER_SIDE}bps/side); funding excluded`);
   console.log(`[CLEAN-START] Evaluation cohort begins ${new Date(n(state.cleanStartAt, started)).toISOString()} (UTC); existing cohort retained; new trades are tagged ${VERSION}.`);
   console.log(`Time: ${new Date().toISOString()}`);
-  console.log(`Strategy: standard-direction SWEEP_RECLAIM; ATR-adaptive confirmed BREAKOUT_RETEST; EMA20 reaction-confirmed TREND_PULLBACK; pattern-specific trigger gates; 1H multi-touch support/resistance independently sets fresh SL/TP; LONG stop below support and target before resistance; SHORT stop above resistance and target before support; minimum net R:R after estimated fees/slippage 1:1.5; estimated paper round-trip cost=${PAPER_ROUND_TRIP_COST_PCT.toFixed(3)}% (fee ${PAPER_FEE_BPS_PER_SIDE} bps/side + slippage ${PAPER_SLIPPAGE_BPS_PER_SIDE} bps/side); PAPER TRACKING only | Signal threshold: ${MIN_SCORE}/10 | min R:R: 1:${MIN_RR.toFixed(2)} | BTC adaptive regime: weighted 4H/1H/15m/5m structure+momentum+EMA+rejection evidence; hard directional gate only above confidence threshold; weak BTC bias is a soft filter | BTC/ETH multi-year daily+weekly+monthly pivot/reaction memory; completed-close false-breakout handling | structure-first SL/TP | 24h volume floor: NONE | market cap: NONE (all active listed perps)`);
+  console.log(`Strategy: standard-direction SWEEP_RECLAIM; ATR-adaptive confirmed BREAKOUT_RETEST; EMA20 reaction-confirmed TREND_PULLBACK; pattern-specific trigger gates; 1H multi-touch support/resistance independently sets fresh SL/TP; LONG stop below support and target before resistance; SHORT stop above resistance and target before support; minimum net R:R after estimated fees/slippage 1:1.5; estimated paper round-trip cost=${PAPER_ROUND_TRIP_COST_PCT.toFixed(3)}% (fee ${PAPER_FEE_BPS_PER_SIDE} bps/side + slippage ${PAPER_SLIPPAGE_BPS_PER_SIDE} bps/side); PAPER TRACKING only | Signal threshold: ${MIN_SCORE}/10 | min R:R: 1:${MIN_RR.toFixed(2)} | BTC adaptive regime: weighted 4H/1H/15m/5m structure+momentum+EMA+rejection evidence; hard directional gate only above confidence threshold; weak BTC bias is a soft filter | BTC/ETH timeframe-matched 15m (120d) + 1h (5y) pivot/reaction memory; same-timeframe completed-close false-breakout handling | structure-first SL/TP | 24h volume floor: NONE | market cap: NONE (all active listed perps)`);
   console.log(`[API][POLICY] requestGap=${SCAN_GAP_MS}ms retries429=${MAX_429_RETRIES} backoff=${RATE_LIMIT_BASE_MS}-${RATE_LIMIT_MAX_MS}ms globalCooldown=yes (shared across concurrent calls)`);
   console.log(`[TELEGRAM][CONFIG] token=${TOKEN ? 'configured' : 'MISSING'} vipChat=${VIP_CHAT ? 'configured' : (LEGACY_CHAT ? 'legacy-fallback' : 'MISSING')} freeChat=${FREE_CHAT ? 'configured' : 'MISSING'} legacyChat=${LEGACY_CHAT ? 'configured' : 'MISSING'}`);
   if (!TOKEN || (!VIP_CHAT && !LEGACY_CHAT && !FREE_CHAT)) {
@@ -1480,12 +1483,21 @@ async function main() {
   const historicalMemory = await refreshBtcEthHistoricalMemory(state);
   const btcRefPrice = n(contexts.BTC?.markPx);
   const ethRefPrice = n(contexts.ETH?.markPx);
+  const makeAssetReaction = (coin, price) => {
+    const assetMemory=historicalMemory.assets?.[coin]?.timeframes || {};
+    const result={};
+    for(const tf of ['15m','1h']){
+      const frame=assetMemory[tf];
+      result[tf]=historicalReactionContext(frame || null,price,tf);
+    }
+    return result;
+  };
   btcRegime.historicalMemory = {
-    BTC: historicalReactionContext(historicalMemory.assets.BTC, btcRefPrice, [btcRegime.timeframes?.['4H']?.previousCandle, btcRegime.timeframes?.['4H']?.lastCandle].filter(Boolean)),
-    ETH: historicalReactionContext(historicalMemory.assets.ETH, ethRefPrice, [btcRegime.timeframes?.['1H']?.previousCandle, btcRegime.timeframes?.['1H']?.lastCandle].filter(Boolean)),
+    BTC: makeAssetReaction('BTC',btcRefPrice),
+    ETH: makeAssetReaction('ETH',ethRefPrice),
     source: historicalMemory.source, refreshedAt: historicalMemory.refreshedAt,
   };
-  console.log(`[HISTORY][REACTION] BTC=${btcRegime.historicalMemory.BTC.state} bias=${btcRegime.historicalMemory.BTC.bias} support=${fmtPrice(btcRegime.historicalMemory.BTC.support?.price)} resistance=${fmtPrice(btcRegime.historicalMemory.BTC.resistance?.price)} | ETH=${btcRegime.historicalMemory.ETH.state} bias=${btcRegime.historicalMemory.ETH.bias} support=${fmtPrice(btcRegime.historicalMemory.ETH.support?.price)} resistance=${fmtPrice(btcRegime.historicalMemory.ETH.resistance?.price)}`);
+  console.log(`[HISTORY][REACTION] BTC 15m=${btcRegime.historicalMemory.BTC['15m'].state} / 1h=${btcRegime.historicalMemory.BTC['1h'].state} | ETH 15m=${btcRegime.historicalMemory.ETH['15m'].state} / 1h=${btcRegime.historicalMemory.ETH['1h'].state}`);
   if (!n(state.lastDailyReportAt)) state.lastDailyReportAt = now(); // first report is sent after one full 24-hour observation window
   const closed = await updatePaperTrades(state, contexts);
   for (const t of closed) {
@@ -1569,7 +1581,7 @@ async function main() {
         }
         const historicalGate = s.historicalContext?.blocked || [];
         if (historicalGate.length) {
-          const reason = `historical BTC/ETH level context: ${historicalGate.join('; ')}; wait for completed-candle rejection/reclaim or confirmed daily plus 4H/1H breakout/breakdown`;
+          const reason = `historical BTC/ETH level context: ${historicalGate.join('; ')}; wait for completed-candle rejection/reclaim or confirmed completed 15m/1h breakout/breakdown`;
           console.log(`[FILTER][HISTORICAL-LEVEL] ${s.coin} ${s.side} ${s.pattern} rejected: ${reason}`);
           noteReject('regime', s, reason);
           continue;
