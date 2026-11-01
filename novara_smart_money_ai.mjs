@@ -5,7 +5,7 @@ import { spawn } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 
 /*
- * NOVARA SMART MONEY AI V2.18.1 BTC-ETH-TIMEFRAME-ALIGNED-MEMORY
+ * NOVARA SMART MONEY AI V2.18.2 SCENARIO-CONFLICT-HISTORICAL-SOFT-GATES
  * READ-ONLY | NO ORDERS | NO AUTO-COPY | PAPER OUTCOME TRACKING
  * BTC direction is inferred from weighted multi-timeframe structure, momentum, EMA alignment and candle behavior; neutral BTC does not automatically suppress every qualified setup
  *
@@ -19,7 +19,7 @@ import { fileURLToPath } from 'node:url';
  * All eligible liquid perp markets are considered; the worker does not depend on wallet lists.
  */
 
-const VERSION = 'NOVARA-SMART-MONEY-AI-V2.18.1-BTC-ETH-TIMEFRAME-ALIGNED-MEMORY';
+const VERSION = 'NOVARA-SMART-MONEY-AI-V2.18.2-SCENARIO-CONFLICT-HISTORICAL-SOFT-GATES';
 const CLEAN_START_ID = 'NOVARA-V2.14.0-ENTRY-SIDE-BTC-GATE-REPAIR-COHORT-2026-10-30'; // Preserve existing paper cohort; no destructive reset on upgrade.
 const PAPER_MARGIN_USD = Math.max(10, Number(process.env.NOVARA_PAPER_MARGIN_USD || 1000));
 // Transparent conservative paper estimate only; configure to match your fee tier. Round-trip cost includes entry+exit fee and slippage assumptions.
@@ -425,31 +425,44 @@ function historicalReactionContext(memoryAsset, currentPrice, timeframe) {
   return {available:true,timeframe,state,bias,reason,support:support?{price:support.price,strength:support.strength,touches:support.interactions,distancePct:Number(distance(support).toFixed(3))}:null,resistance:resistance?{price:resistance.price,strength:resistance.strength,touches:resistance.interactions,distancePct:Number(distance(resistance).toFixed(3))}:null,nearSupport,nearResistance,supportBounce,resistanceReject,supportBreak,resistanceBreak};
 }
 function historicalBtcEthAdjustment(candidate, btcCtx, ethCtx) {
+  // Historical BTC/ETH levels are contextual evidence, not a market-wide on/off switch.
+  // Only the dedicated BTC confirmed-breakdown rule below may hard-block a side.
   let adjustment=0; const reasons=[]; const blocked=[];
   const apply=(name,ctx,weight)=>{
     if(!ctx?.available)return;
     const suffix=`${name} ${ctx.timeframe}`;
+    const touches=Math.max(0,n(ctx.support?.touches),n(ctx.resistance?.touches));
+    const strongReaction=touches>=5;
     if(ctx.state==='HISTORICAL_RESISTANCE_REJECTION'){
-      if(candidate.side==='SHORT'){adjustment+=0.42*weight;reasons.push(`${suffix} historical resistance rejection supports SHORT`);}
-      else {adjustment-=0.48*weight;reasons.push(`${suffix} resistance rejection conflicts with LONG`);if(ctx.timeframe==='1h')blocked.push(`${suffix} resistance rejection blocks LONG`);}
+      if(candidate.side==='SHORT'){adjustment+=0.38*weight;reasons.push(`${suffix} historical resistance rejection supports SHORT`);}
+      else {adjustment-=0.38*weight;reasons.push(`${suffix} resistance rejection is opposing evidence for LONG`);}
     } else if(ctx.state==='HISTORICAL_SUPPORT_RECLAIM'){
-      if(candidate.side==='LONG'){adjustment+=0.42*weight;reasons.push(`${suffix} historical support reclaim supports LONG`);}
-      else {adjustment-=0.48*weight;reasons.push(`${suffix} support reclaim conflicts with SHORT`);if(ctx.timeframe==='1h')blocked.push(`${suffix} support reclaim blocks SHORT`);}
+      if(candidate.side==='LONG'){adjustment+=0.38*weight;reasons.push(`${suffix} historical support reclaim supports LONG`);}
+      else {adjustment-=0.38*weight;reasons.push(`${suffix} support reclaim is opposing evidence for SHORT`);}
     } else if(ctx.state==='RESISTANCE_BROKEN_AND_HOLDING'){
-      if(candidate.side==='LONG'){adjustment+=0.28*weight;reasons.push(`${suffix} former resistance confirmed as support`);}
-      else {adjustment-=0.34*weight;if(ctx.timeframe==='1h')blocked.push(`${suffix} role-reversal support blocks SHORT`);}
+      if(candidate.side==='LONG'){adjustment+=0.24*weight;reasons.push(`${suffix} former resistance is holding as support`);}
+      else {adjustment-=0.30*weight;reasons.push(`${suffix} role-reversal support is opposing evidence for SHORT`);}
     } else if(ctx.state==='SUPPORT_BROKEN_AND_HOLDING_BELOW'){
-      if(candidate.side==='SHORT'){adjustment+=0.28*weight;reasons.push(`${suffix} former support confirmed as resistance`);}
-      else {adjustment-=0.34*weight;if(ctx.timeframe==='1h')blocked.push(`${suffix} role-reversal resistance blocks LONG`);}
+      if(candidate.side==='SHORT'){adjustment+=0.24*weight;reasons.push(`${suffix} former support is holding as resistance`);}
+      else {adjustment-=0.30*weight;reasons.push(`${suffix} role-reversal resistance is opposing evidence for LONG`);}
     } else if(ctx.state==='NEAR_HISTORICAL_RESISTANCE_WAIT'){
-      adjustment-=(candidate.side==='LONG'?0.22:0.05)*weight; reasons.push(`${suffix} resistance nearby; wait for same-timeframe close`);
-      if(ctx.timeframe==='1h')blocked.push(`${suffix} resistance test unresolved; wait for 1h candle confirmation`);
+      const penalty=candidate.side==='LONG'?0.20:0.04;
+      adjustment-=penalty*weight; reasons.push(`${suffix} unresolved resistance: reduce LONG conviction; await same-timeframe confirmation`);
     } else if(ctx.state==='NEAR_HISTORICAL_SUPPORT_WAIT'){
-      adjustment-=(candidate.side==='SHORT'?0.22:0.05)*weight; reasons.push(`${suffix} support nearby; wait for same-timeframe close`);
-      if(ctx.timeframe==='1h')blocked.push(`${suffix} support test unresolved; wait for 1h candle confirmation`);
+      const penalty=candidate.side==='SHORT'?0.20:0.04;
+      adjustment-=penalty*weight; reasons.push(`${suffix} unresolved support: reduce SHORT conviction; await same-timeframe confirmation`);
+    }
+    // Strong 1h role reversal remains a substantial penalty, but not a blind veto.
+    // The candidate's own structure, trigger, flow, spread and net-RR gates decide next.
+    if(ctx.timeframe==='1h' && strongReaction && (
+      (candidate.side==='LONG' && ctx.state==='SUPPORT_BROKEN_AND_HOLDING_BELOW') ||
+      (candidate.side==='SHORT' && ctx.state==='RESISTANCE_BROKEN_AND_HOLDING')
+    )) {
+      adjustment-=0.18*weight;
+      reasons.push(`${suffix} strong role-reversal context: additional caution, not an automatic block`);
     }
   };
-  // 1h is the structural context; 15m is the entry/reaction timing layer.
+  // 1h provides structure; 15m provides timing. ETH remains secondary to BTC.
   for(const tf of ['1h','15m']){
     const weight=tf==='1h'?1:0.65;
     apply('BTC',btcCtx?.[tf],weight);
@@ -1192,13 +1205,18 @@ ${details.length ? details.join('\n') : 'No tracked signals were opened in this 
 }
 
 function dailySummary(state) {
-  const all = state.paperTrades.filter(t => t.strategyVersion === VERSION && (t.status === 'TP' || t.status === 'SL'));
+  const cohort = state.paperTrades.filter(t => t.strategyVersion === VERSION);
+  const all = cohort.filter(t => t.status === 'TP' || t.status === 'SL');
   const tp = all.filter(t => t.status === 'TP').length;
   const sl = all.filter(t => t.status === 'SL').length;
   const closed = tp + sl;
   const r = all.reduce((sum, t) => sum + n(t.pnlR), 0);
   const avgR = closed ? r / closed : 0;
-  return { closed, tp, sl, winRate: closed ? tp / closed * 100 : 0, realizedR: r, avgR, open: state.paperTrades.filter(t => t.strategyVersion === VERSION && t.status === 'OPEN').length };
+  const allClosed = state.paperTrades.filter(t => t.status === 'TP' || t.status === 'SL').length;
+  const allOpen = state.paperTrades.filter(t => t.status === 'OPEN').length;
+  return { closed, tp, sl, winRate: closed ? tp / closed * 100 : 0, realizedR: r, avgR,
+    open: cohort.filter(t => t.status === 'OPEN').length, allOpen, allClosed,
+    retainedOtherVersion: state.paperTrades.filter(t => t.strategyVersion !== VERSION).length };
 }
 
 async function getMarketSnapshot() {
@@ -1321,49 +1339,55 @@ function buildBtcNextMoveScenario(timeframes, structure) {
   const st = tf => structure?.[tf] || {};
   const e4 = ev('4H'), e1 = ev('1H'), e15 = ev('15m'), e5 = ev('5m');
   const s1 = st('1H'), s15 = st('15m'), s4 = st('4H');
-  const score = (side) => {
+  // Evidence weights deliberately privilege 1H/15m, but retain a meaningful 4H veto
+  // against calling a short-term bounce a confirmed higher-timeframe continuation.
+  const score = side => {
     const sign = side === 'LONG' ? 1 : -1;
     let v = 0;
-    for (const [e,w] of [[e4,18],[e1,30],[e15,30],[e5,8]]) {
+    for (const [e,w] of [[e4,24],[e1,34],[e15,28],[e5,4]]) {
       if (e.available) v += clamp(n(e.score) * sign / 3.5, -1, 1) * w;
     }
     if (side === 'LONG') {
-      if (s1.reclaim) v += 12; if (s15.reclaim) v += 12;
-      if (s1.resistanceBreak) v += 10; if (s15.resistanceBreak) v += 8;
-      if (s4.breakdown) v -= 25;
-      if (s1.breakdown) v -= 18; if (s15.breakdown) v -= 15;
+      if (s1.reclaim) v += 10; if (s15.reclaim) v += 10;
+      if (s1.resistanceBreak) v += 9; if (s15.resistanceBreak) v += 6;
+      if (s4.breakdown) v -= 24;
+      if (s1.breakdown) v -= 18; if (s15.breakdown) v -= 14;
     } else {
-      if (s4.breakdown) v += 22;
-      if (s1.breakdown) v += 16; if (s15.breakdown) v += 14;
-      if (s1.reclaim) v -= 18; if (s15.reclaim) v -= 15;
-      if (s1.resistanceBreak) v -= 12; if (s15.resistanceBreak) v -= 10;
+      if (s4.breakdown) v += 24;
+      if (s1.breakdown) v += 18; if (s15.breakdown) v += 14;
+      if (s1.reclaim) v -= 16; if (s15.reclaim) v -= 13;
+      if (s1.resistanceBreak) v -= 10; if (s15.resistanceBreak) v -= 8;
     }
-    return clamp(Math.round(50 + v / 1.15), 0, 100);
+    return clamp(Math.round(50 + v / 1.12), 0, 100);
   };
-  const longScore = score('LONG'), shortScore = score('SHORT');
-  const top = longScore >= shortScore ? 'LONG' : 'SHORT';
-  const topScore = Math.max(longScore, shortScore);
-  const lowerAligned = e1.available && e15.available && e1.trend === top && e15.trend === top;
-  const confirmedBreak = top === 'LONG'
-    ? Boolean(s1.resistanceBreak || (s1.reclaim && s15.reclaim))
-    : Boolean(s4.breakdown || (s1.breakdown && s15.breakdown));
-  const opposingReclaim = top === 'SHORT' && (s1.reclaim || s15.reclaim) || top === 'LONG' && (s1.breakdown || s15.breakdown);
-  let state = 'RANGE / WAIT';
-  let direction = 'NEUTRAL';
-  let reason = 'No sufficiently aligned 1H/15m scenario; wait for a completed-candle confirmation.';
-  if (opposingReclaim) {
-    state = top === 'SHORT' ? 'BEARISH EXHAUSTION / BULLISH RECLAIM WATCH' : 'BULLISH EXHAUSTION / BEARISH BREAKDOWN WATCH';
-    reason = 'A recent structural reclaim/breakdown conflicts with the leading directional score; avoid chasing the prior trend.';
-  } else if (topScore >= 64 && lowerAligned && confirmedBreak) {
-    direction = top;
-    state = top === 'LONG' ? 'UPSIDE CONTINUATION / RECLAIM CONFIRMED' : 'DOWNSIDE CONTINUATION / BREAKDOWN CONFIRMED';
-    reason = `1H and 15m evidence align with a completed-candle structural ${top === 'LONG' ? 'reclaim/break' : 'breakdown'}; 5m only refines timing.`;
-  } else if (topScore >= 58 && lowerAligned) {
-    direction = top;
-    state = top === 'LONG' ? 'UPSIDE SETUP DEVELOPING — WAIT FOR BREAK' : 'DOWNSIDE SETUP DEVELOPING — WAIT FOR BREAK';
-    reason = '1H and 15m lean together, but structural trigger is not yet confirmed.';
+  const longScore=score('LONG'), shortScore=score('SHORT');
+  const top=longScore>=shortScore?'LONG':'SHORT';
+  const topScore=Math.max(longScore,shortScore);
+  const lowerAligned=Boolean(e1.available&&e15.available&&e1.trend===top&&e15.trend===top);
+  const fourHourAgainst=Boolean(e4.available && ((top==='LONG' && n(e4.score)<=-1.25) || (top==='SHORT' && n(e4.score)>=1.25)));
+  const fourHourStructureAgainst=Boolean(top==='LONG'?s4.breakdown:(s4.reclaim||s4.resistanceBreak));
+  const confirmedBreak=top==='LONG'
+    ? Boolean(s1.resistanceBreak || (s1.reclaim&&s15.reclaim))
+    : Boolean(s4.breakdown || (s1.breakdown&&s15.breakdown));
+  const opposingReclaim=(top==='SHORT'&&(s1.reclaim||s15.reclaim))||(top==='LONG'&&(s1.breakdown||s15.breakdown));
+  let state='RANGE / WAIT',direction='NEUTRAL',actionable=false;
+  let reason='No sufficiently aligned 1H/15m scenario; wait for a completed-candle confirmation.';
+  if(opposingReclaim){
+    state=top==='SHORT'?'BEARISH EXHAUSTION / BULLISH RECLAIM WATCH':'BULLISH EXHAUSTION / BEARISH BREAKDOWN WATCH';
+    reason='A completed structural reclaim/breakdown conflicts with the leading score; the prior trend may be exhausting.';
+  } else if(topScore>=68 && lowerAligned && confirmedBreak && !fourHourAgainst && !fourHourStructureAgainst){
+    direction=top; actionable=true;
+    state=top==='LONG'?'UPSIDE CONTINUATION / RECLAIM CONFIRMED':'DOWNSIDE CONTINUATION / BREAKDOWN CONFIRMED';
+    reason=`1H and 15m evidence plus completed structural trigger align; 4H does not materially oppose. 5m is timing only.`;
+  } else if(topScore>=58 && lowerAligned){
+    state=fourHourAgainst||fourHourStructureAgainst
+      ? `${top==='LONG'?'BULLISH':'BEARISH'} LOWER-TF RECLAIM / 4H COUNTERTREND — WAIT`
+      : `${top==='LONG'?'UPSIDE':'DOWNSIDE'} SETUP DEVELOPING — WAIT FOR TRIGGER`;
+    reason=fourHourAgainst||fourHourStructureAgainst
+      ? `1H/15m lean ${top}, but 4H structure/evidence opposes it; treat as a countertrend reaction, not confirmed continuation. Do not globally veto independent altcoin setups.`
+      : '1H and 15m lean together, but the completed structural trigger is not confirmed.';
   }
-  return { state, direction, longScore, shortScore, leadingScore: topScore, lowerTimeframesAligned: lowerAligned, structuralTriggerConfirmed: confirmedBreak, reason, scoreType: 'HEURISTIC_EVIDENCE_SCORE_NOT_STATISTICAL_PROBABILITY', evaluatedAt: now() };
+  return {state,direction,longScore,shortScore,leadingScore:topScore,lowerTimeframesAligned:lowerAligned,structuralTriggerConfirmed:confirmedBreak,actionable,higherTimeframeConflict:fourHourAgainst||fourHourStructureAgainst,reason,scoreType:'HEURISTIC_EVIDENCE_SCORE_NOT_STATISTICAL_PROBABILITY',evaluatedAt:now()};
 }
 
 async function refreshBtcDirection(fallbackRegime) {
@@ -1399,7 +1423,7 @@ async function refreshBtcDirection(fallbackRegime) {
   };
   out.nextMove = buildBtcNextMoveScenario(timeframes, structure);
   out.refreshedAt = now();
-  console.log(`[BTC][NEXT-MOVE] state=${out.nextMove.state} direction=${out.nextMove.direction} longScore=${out.nextMove.longScore} shortScore=${out.nextMove.shortScore} aligned=${out.nextMove.lowerTimeframesAligned} trigger=${out.nextMove.structuralTriggerConfirmed} | ${out.nextMove.reason}`);
+  console.log(`[BTC][NEXT-MOVE] state=${out.nextMove.state} direction=${out.nextMove.direction} longScore=${out.nextMove.longScore} shortScore=${out.nextMove.shortScore} aligned=${out.nextMove.lowerTimeframesAligned} trigger=${out.nextMove.structuralTriggerConfirmed} actionable=${out.nextMove.actionable} 4HConflict=${out.nextMove.higherTimeframeConflict} | ${out.nextMove.reason}`);
   console.log(`[BTC][STRUCTURE] breakdown=${out.structure.breakdown} confirmedBy=${out.structure.confirmedBy.join('+') || 'none'} reclaimed=${out.structure.reclaimed} 4H-low=${fmtPrice(s4h?.swingLow)} 1H-low=${fmtPrice(s1h?.swingLow)}`);
   console.log(`[BTC][ADAPTIVE-REGIME] direction=${out.trend} confidence=${out.confidence}% score=${out.directionScore.toFixed(3)} source=${out.directionSource}`);
   console.log(`[BTC][SUMMARY] ${['4H','1H','15m','5m'].map(tf => { const r=timeframes[tf], ev=r?.evidence; return `${tf}=${ev?.available ? (ev.label || 'NEUTRAL') : 'UNAVAILABLE'}(${ev?.score?.toFixed?.(2) ?? 'NA'})`; }).join(' | ')}`);
@@ -1465,11 +1489,11 @@ async function main() {
   state.version = VERSION;
   console.log(`\n${VERSION} — START`);
   console.log(`Mode: READ-ONLY / NO ORDERS / NO AUTO-COPY / PAPER TRACKING`);
-  console.log(`[STRATEGY][PATTERNS] SWEEP_RECLAIM=STANDARD DIRECTION | BREAKOUT_RETEST=ATR-ADAPTIVE CONFIRMED RETEST | TREND_PULLBACK=EMA20 REACTION-CONFIRMED | BTC NEXT-MOVE SCENARIO ENGINE=ON | BTC+ETH 15m+1h HISTORICAL LEVEL MEMORY=ON`);
+  console.log(`[STRATEGY][PATTERNS] SWEEP_RECLAIM=STANDARD DIRECTION | BREAKOUT_RETEST=ATR-ADAPTIVE CONFIRMED RETEST | TREND_PULLBACK=EMA20 REACTION-CONFIRMED | BTC NEXT-MOVE SCENARIO ENGINE=4H-CONFLICT-AWARE | BTC+ETH 15m+1h HISTORICAL LEVEL MEMORY=SOFT-GATE`);
   console.log(`[PAPER][COST MODEL] roundTrip=${PAPER_ROUND_TRIP_COST_PCT.toFixed(3)}% (fees ${PAPER_FEE_BPS_PER_SIDE}bps/side; slippage ${PAPER_SLIPPAGE_BPS_PER_SIDE}bps/side); funding excluded`);
   console.log(`[CLEAN-START] Evaluation cohort begins ${new Date(n(state.cleanStartAt, started)).toISOString()} (UTC); existing cohort retained; new trades are tagged ${VERSION}.`);
   console.log(`Time: ${new Date().toISOString()}`);
-  console.log(`Strategy: standard-direction SWEEP_RECLAIM; ATR-adaptive confirmed BREAKOUT_RETEST; EMA20 reaction-confirmed TREND_PULLBACK; pattern-specific trigger gates; 1H multi-touch support/resistance independently sets fresh SL/TP; LONG stop below support and target before resistance; SHORT stop above resistance and target before support; minimum net R:R after estimated fees/slippage 1:1.5; estimated paper round-trip cost=${PAPER_ROUND_TRIP_COST_PCT.toFixed(3)}% (fee ${PAPER_FEE_BPS_PER_SIDE} bps/side + slippage ${PAPER_SLIPPAGE_BPS_PER_SIDE} bps/side); PAPER TRACKING only | Signal threshold: ${MIN_SCORE}/10 | min R:R: 1:${MIN_RR.toFixed(2)} | BTC adaptive regime: weighted 4H/1H/15m/5m structure+momentum+EMA+rejection evidence; hard directional gate only above confidence threshold; weak BTC bias is a soft filter | BTC/ETH timeframe-matched 15m (120d) + 1h (5y) pivot/reaction memory; same-timeframe completed-close false-breakout handling | structure-first SL/TP | 24h volume floor: NONE | market cap: NONE (all active listed perps)`);
+  console.log(`Strategy: standard-direction SWEEP_RECLAIM; ATR-adaptive confirmed BREAKOUT_RETEST; EMA20 reaction-confirmed TREND_PULLBACK; pattern-specific trigger gates; 1H multi-touch support/resistance independently sets fresh SL/TP; LONG stop below support and target before resistance; SHORT stop above resistance and target before support; minimum net R:R after estimated fees/slippage 1:1.5; estimated paper round-trip cost=${PAPER_ROUND_TRIP_COST_PCT.toFixed(3)}% (fee ${PAPER_FEE_BPS_PER_SIDE} bps/side + slippage ${PAPER_SLIPPAGE_BPS_PER_SIDE} bps/side); PAPER TRACKING only | Signal threshold: ${MIN_SCORE}/10 | min R:R: 1:${MIN_RR.toFixed(2)} | BTC adaptive regime: weighted 4H/1H/15m/5m structure+momentum+EMA+rejection evidence; hard directional gate only above confidence threshold; weak BTC bias is a soft filter | BTC/ETH timeframe-matched 15m (${HISTORICAL_15M_LOOKBACK_DAYS}d) + 1h (${HISTORICAL_1H_LOOKBACK_DAYS}d) pivot/reaction memory; same-timeframe completed-close false-breakout handling | structure-first SL/TP | 24h volume floor: NONE | market cap: NONE (all active listed perps)`);
   console.log(`[API][POLICY] requestGap=${SCAN_GAP_MS}ms retries429=${MAX_429_RETRIES} backoff=${RATE_LIMIT_BASE_MS}-${RATE_LIMIT_MAX_MS}ms globalCooldown=yes (shared across concurrent calls)`);
   console.log(`[TELEGRAM][CONFIG] token=${TOKEN ? 'configured' : 'MISSING'} vipChat=${VIP_CHAT ? 'configured' : (LEGACY_CHAT ? 'legacy-fallback' : 'MISSING')} freeChat=${FREE_CHAT ? 'configured' : 'MISSING'} legacyChat=${LEGACY_CHAT ? 'configured' : 'MISSING'}`);
   if (!TOKEN || (!VIP_CHAT && !LEGACY_CHAT && !FREE_CHAT)) {
@@ -1558,13 +1582,13 @@ async function main() {
         const nextMove = s.btcRegime?.nextMove || {};
         // Do not fight a confirmed BTC next-leg scenario merely because a coin's
         // local pattern fired. Developing scenarios apply a stricter score floor.
-        if (nextMove.direction && s.side !== nextMove.direction && nextMove.leadingScore >= 64 && nextMove.lowerTimeframesAligned && nextMove.structuralTriggerConfirmed) {
+        if (nextMove.actionable && nextMove.direction && s.side !== nextMove.direction && nextMove.leadingScore >= 68 && nextMove.lowerTimeframesAligned && nextMove.structuralTriggerConfirmed) {
           const reason = `BTC next-move scenario ${nextMove.state} leads ${nextMove.direction} (evidence ${nextMove.leadingScore}/100); opposing ${s.side} blocked`;
           console.log(`[FILTER][BTC-NEXT-MOVE] ${s.coin} ${s.side} rejected: ${reason}`);
           noteReject('regime', s, reason);
           continue;
         }
-        if (nextMove.direction && s.side !== nextMove.direction && nextMove.leadingScore >= 58 && nextMove.lowerTimeframesAligned) {
+        if (nextMove.actionable && nextMove.direction && s.side !== nextMove.direction && nextMove.leadingScore >= 58 && nextMove.lowerTimeframesAligned) {
           const required = Math.max(7.2, MIN_SCORE + 1.0);
           if (s.score < required || !flowAligned || !assetTrendAligned) {
             const reason = `BTC scenario developing toward ${nextMove.direction} (${nextMove.leadingScore}/100); countertrend requires score>=${required.toFixed(2)} plus aligned asset trend and flow/book`;
@@ -1824,7 +1848,7 @@ async function main() {
   state.lastCycle = { at: state.lastRunAt, rejectionCounts: rejects, eligible: eligible.length, totalEligible: snapshot.totalEligible, checked, failed, rawCandidates: candidates.length, signalsSelected: chosen.length, sentSignals, sendErrors, openPaperTrades: state.paperTrades.filter(t => t.status === 'OPEN').length };
 
   const stats = dailySummary(state);
-  console.log(`[CYCLE] markets=${eligible.length}/${snapshot.totalEligible} checked=${checked} dataErrors=${failed} candidates=${candidates.length} selected=${chosen.length} sent=${sentSignals} deliveryErrors=${sendErrors} paperOpen=${stats.open} paperClosed=${stats.closed} paperWinRate=${stats.winRate.toFixed(1)}% paperNetR=${stats.realizedR.toFixed(2)} v2Rejects=${JSON.stringify(rejects)} runtime=${((now() - started) / 1000).toFixed(1)}s`);
+  console.log(`[CYCLE] markets=${eligible.length}/${snapshot.totalEligible} checked=${checked} dataErrors=${failed} candidates=${candidates.length} selected=${chosen.length} sent=${sentSignals} deliveryErrors=${sendErrors} paperCohortOpen=${stats.open} paperCohortClosed=${stats.closed} paperCohortWinRate=${stats.winRate.toFixed(1)}% paperCohortNetR=${stats.realizedR.toFixed(2)} paperAllOpen=${stats.allOpen} paperAllClosed=${stats.allClosed} retainedOtherVersion=${stats.retainedOtherVersion} v2Rejects=${JSON.stringify(rejects)} runtime=${((now() - started) / 1000).toFixed(1)}s`);
 
   // No WATCHING/status spam. Send separate audience-specific reports so VIP signal details never leak to FREE.
   if (!state.pendingDailyReports && now() - n(state.lastDailyReportAt) >= 24 * 3600_000) {
