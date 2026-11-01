@@ -1,0 +1,41 @@
+NOVARA V2.18.3 — AUDIT / CHANGE NOTES
+Version: NOVARA-SMART-MONEY-AI-V2.18.3-ANTI-FLIP-REACHABLE-TP-CONFLICT-GUARD
+Base: V2.18.2 source retrieved from the user's Library.
+
+1) SAME-COIN DUPLICATE / DIRECTION FLIP PROTECTION
+- Only one signal per coin is selected in a scan cycle, even if LONG and SHORT pattern candidates both exist.
+- A coin with any OPEN paper thesis cannot emit another signal, whether same-side or opposite-side.
+- After a closed SL, opposite/same-side re-entry is locked for 90 minutes.
+- After TP: 45-minute reset. After AMBIGUOUS/expiry: 60-minute reset.
+- Existing 30-minute cross-pattern and 90-minute same-pattern cooldowns remain as additional protection.
+- This directly addresses the PONS LONG then SHORT sequence: the second direction is blocked while the first thesis is open and for 90 minutes after its stop-out.
+
+2) TP REACHABILITY — NO MORE REWARD DISTANCE JUST TO PASS R:R
+- Structural TP candidates must be within min(7% of entry, max(1.5% of entry, 8 x 1H ATR)).
+- Targets more than 3% from entry require at least 3 touches on the 1H level; closer targets still require at least 2 touches.
+- TP remains placed before the structural zone using the existing buffer.
+- The engine does not pull a target closer artificially or extend it to manufacture a high R:R. If no reachable structural target meets the minimum net R:R, the candidate is rejected.
+- The PONS LONG example had a 16.48% target and a 1H resistance with only 2 touches; this is outside the new TP envelope and cannot pass as-is.
+
+3) BTC SPLIT-REGIME / ALTCOIN INDEPENDENT CONFIRMATION
+- When the BTC scenario explicitly reports a 4H countertrend WAIT state, an altcoin must score at least 6.90 and show at least 2 of: aligned 1H asset trend, directional trade-flow/order-book confirmation, volume >=0.90x.
+- When BTC 1H and 15m both oppose the candidate, the alt requires aligned asset trend, volume >=1.15x, directional trade delta, OI change >=+0.15%, and score >=7.10.
+- This addresses the two PONS examples: the LONG had neutral asset trend and 0.76x volume; the SHORT had BTC 1H/15m opposing, 1.11x volume, negative OI change, and score 6.84. Both fail the new independent-confirmation requirements.
+- These are conservative heuristic guards, not calibrated probabilities.
+
+4) PAPER TRADE TIME EXPIRY
+- Default maximum paper thesis duration is 24 hours (configurable 6–72h).
+- If neither level is touched by expiry, the trade is closed as AMBIGUOUS with no fabricated TP/SL or R result.
+- This prevents old unresolved paper trades from locking a coin indefinitely.
+
+5) VALIDATION
+- `node --check novara_smart_money_ai.mjs`: PASS.
+- Synthetic unit test: PONS-like 16.48% TP rejected by reachability cap: PASS.
+- Synthetic unit test: active LONG blocks opposite SHORT on same coin: PASS.
+- Synthetic unit test: recent SL enforces 90-minute reset: PASS.
+- Synthetic unit test: expired lockout releases: PASS.
+- Live API / GitHub Actions end-to-end test: NOT RUN.
+- Historical replay / out-of-sample profitability test: NOT RUN.
+
+IMPORTANT STATE REQUIREMENT
+The state file `production/state/novara_smart_money_state.json` must be restored before each GitHub Actions run and persisted after each run. Without state persistence, cross-run duplicate and anti-flip protections cannot be guaranteed. This package changes only the worker; the workflow was not changed because its current contents were not available for audit.

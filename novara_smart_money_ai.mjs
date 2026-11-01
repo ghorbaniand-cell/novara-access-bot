@@ -19,9 +19,11 @@ import { fileURLToPath } from 'node:url';
  * All eligible liquid perp markets are considered; the worker does not depend on wallet lists.
  */
 
-const VERSION = 'NOVARA-SMART-MONEY-AI-V2.18.2-SCENARIO-CONFLICT-HISTORICAL-SOFT-GATES';
+const VERSION = 'NOVARA-SMART-MONEY-AI-V2.18.3-ANTI-FLIP-REACHABLE-TP-CONFLICT-GUARD';
 const CLEAN_START_ID = 'NOVARA-V2.14.0-ENTRY-SIDE-BTC-GATE-REPAIR-COHORT-2026-10-30'; // Preserve existing paper cohort; no destructive reset on upgrade.
 const PAPER_MARGIN_USD = Math.max(10, Number(process.env.NOVARA_PAPER_MARGIN_USD || 1000));
+const PAPER_MAX_HOLD_HOURS = Math.max(6, Math.min(72, Number(process.env.NOVARA_PAPER_MAX_HOLD_HOURS || 24)));
+const PAPER_MAX_HOLD_MS = PAPER_MAX_HOLD_HOURS * 3600_000;
 // Transparent conservative paper estimate only; configure to match your fee tier. Round-trip cost includes entry+exit fee and slippage assumptions.
 const PAPER_FEE_BPS_PER_SIDE = Math.max(0, Number(process.env.NOVARA_PAPER_FEE_BPS_PER_SIDE || 5));
 const PAPER_SLIPPAGE_BPS_PER_SIDE = Math.max(0, Number(process.env.NOVARA_PAPER_SLIPPAGE_BPS_PER_SIDE || 3));
@@ -706,6 +708,9 @@ function buildRisk(candidate) {
   // Allow genuine 1H structure to define a wider stop, but never accept an
   // unbounded stop; require a valid R:R after choosing the level combination.
   const maxRisk = entry * 0.05;
+  // A mathematically attractive R:R is not enough if the structural target is implausibly far away.
+  // Bound the target to a volatility-scaled 1H travel envelope (hard cap 7%); do not stretch TP just to pass R:R.
+  const maxTargetDistance = Math.min(entry * 0.07, Math.max(entry * 0.015, atr1h * 8));
   const fallbackSupport = n(candidate.support) > 0 ? [{ price: n(candidate.support), touches: n(candidate.supportTouches), source: candidate.supportSource || 'selected-1h-level' }] : [];
   const fallbackResistance = n(candidate.resistance) > 0 ? [{ price: n(candidate.resistance), touches: n(candidate.resistanceTouches), source: candidate.resistanceSource || 'selected-1h-level' }] : [];
   const supports = (Array.isArray(candidate.supportLevels) && candidate.supportLevels.length ? candidate.supportLevels : fallbackSupport)
@@ -722,12 +727,12 @@ function buildRisk(candidate) {
   const targetResistances = (Array.isArray(candidate.resistanceLevels) && candidate.resistanceLevels.length ? candidate.resistanceLevels : fallbackResistance)
     .filter(x => n(x.price) > entry && n(x.touches, 2) >= 2)
     .map(x => ({ ...x, price: n(x.price), tp: n(x.price) - buffer }))
-    .filter(x => x.tp > entry)
+    .filter(x => x.tp > entry && x.tp - entry <= maxTargetDistance && (x.tp - entry <= entry * 0.03 || n(x.touches) >= 3))
     .sort((a,b) => a.price-b.price);
   const targetSupports = (Array.isArray(candidate.supportLevels) && candidate.supportLevels.length ? candidate.supportLevels : fallbackSupport)
     .filter(x => n(x.price) > 0 && n(x.price) < entry && n(x.touches, 2) >= 2)
     .map(x => ({ ...x, price: n(x.price), tp: n(x.price) + buffer }))
-    .filter(x => x.tp < entry)
+    .filter(x => x.tp < entry && entry - x.tp <= maxTargetDistance && (entry - x.tp <= entry * 0.03 || n(x.touches) >= 3))
     .sort((a,b) => b.price-a.price);
 
   if (candidate.side === 'LONG') {
@@ -750,7 +755,7 @@ function buildRisk(candidate) {
     const sup=supports[0], nearestTarget=targetResistances[0];
     const riskDist=entry-sup.stop, targetDist=nearestTarget ? nearestTarget.tp-entry : 0;
     return { entry, sl: sup.stop, tp: nearestTarget?.tp || 0, riskPct: riskDist/entry*100, rewardPct: Math.max(0,targetDist)/entry*100,
-      rr: riskDist>0 ? targetDist/riskDist : 0, valid: false, reason: 'no overhead repeated-touch 1H resistance provides the required R:R before the resistance zone' };
+      rr: riskDist>0 ? targetDist/riskDist : 0, valid: false, reason: 'no reachable overhead repeated-touch 1H resistance within the ATR-based TP envelope provides the required R:R' };
   }
 
   if (!resistances.length) {
@@ -772,15 +777,28 @@ function buildRisk(candidate) {
   const res=resistances[0], nearestTarget=targetSupports[0];
   const riskDist=res.stop-entry, targetDist=nearestTarget ? entry-nearestTarget.tp : 0;
   return { entry, sl: res.stop, tp: nearestTarget?.tp || 0, riskPct: riskDist/entry*100, rewardPct: Math.max(0,targetDist)/entry*100,
-    rr: riskDist>0 ? targetDist/riskDist : 0, valid: false, reason: 'no downside repeated-touch 1H support provides the required R:R before the support zone' };
+    rr: riskDist>0 ? targetDist/riskDist : 0, valid: false, reason: 'no reachable downside repeated-touch 1H support within the ATR-based TP envelope provides the required R:R' };
 }
 function oppositeSide(side) { return side === 'LONG' ? 'SHORT' : side === 'SHORT' ? 'LONG' : side; }
 function shouldReverseSignal(s) { return REVERSE_SWEEP_ONLY && s?.pattern === 'SWEEP_RECLAIM'; }
 function signalKey(s) { return `${s.coin}|${s.side}|${s.pattern}`; }
 function isCooldown(state, s) {
-  // A short cross-pattern cooldown prevents repeat alerts for the same coin/side
-  // when two pattern families trigger in adjacent runs. The longer per-pattern
-  // cooldown remains in place; opposite directions remain independent.
+  // One active thesis per market: never open a second signal (same or opposite side)
+  // while a paper trade for that coin is still unresolved. This prevents flip-flop alerts.
+  const active = (state.paperTrades || []).find(t => t.coin === s.coin && t.status === 'OPEN');
+  if (active) return true;
+
+  const history = (state.paperTrades || []).filter(t => t.coin === s.coin && ['TP','SL','AMBIGUOUS'].includes(t.status))
+    .sort((a,b) => n(b.closedAt)-n(a.closedAt));
+  const latest = history[0];
+  if (latest) {
+    const age = now() - n(latest.closedAt);
+    // A stop-out needs a longer reset before the opposite thesis can be issued.
+    const lockMs = latest.status === 'SL' ? 90*60_000 : latest.status === 'TP' ? 45*60_000 : 60*60_000;
+    if (age >= 0 && age < lockMs) return true;
+  }
+
+  // Cross-pattern and per-pattern cooldowns remain as a second layer.
   const globalKey = `${s.coin}|${s.side}|GLOBAL`;
   const globalLast = n(state.alertHistory[globalKey]);
   if (globalLast > 0 && now() - globalLast < 30 * 60_000) return true;
@@ -1058,6 +1076,14 @@ async function updatePaperTrades(state, contexts) {
       if (result) { exitMark = mark; hitAt = now(); exitDetection = 'mark_price_snapshot'; }
     }
     if (candleSet.ok) trade.lastCheckedAt = now();
+    if (!result && now() - n(trade.openedAt) >= PAPER_MAX_HOLD_MS) {
+      // 1H/15m setup thesis has expired without touching either planned level.
+      // Record as ambiguous/expired, never as a fabricated TP or SL.
+      result = 'AMBIGUOUS';
+      exitMark = mark;
+      hitAt = now();
+      exitDetection = `time_expiry_${PAPER_MAX_HOLD_HOURS}h_no_level_hit`;
+    }
     if (!result) continue;
 
     trade.status = result;
@@ -1489,11 +1515,13 @@ async function main() {
   state.version = VERSION;
   console.log(`\n${VERSION} — START`);
   console.log(`Mode: READ-ONLY / NO ORDERS / NO AUTO-COPY / PAPER TRACKING`);
-  console.log(`[STRATEGY][PATTERNS] SWEEP_RECLAIM=STANDARD DIRECTION | BREAKOUT_RETEST=ATR-ADAPTIVE CONFIRMED RETEST | TREND_PULLBACK=EMA20 REACTION-CONFIRMED | BTC NEXT-MOVE SCENARIO ENGINE=4H-CONFLICT-AWARE | BTC+ETH 15m+1h HISTORICAL LEVEL MEMORY=SOFT-GATE`);
+  console.log(`[STRATEGY][PATTERNS] SWEEP_RECLAIM=STANDARD DIRECTION | BREAKOUT_RETEST=ATR-ADAPTIVE CONFIRMED RETEST | TREND_PULLBACK=EMA20 REACTION-CONFIRMED | BTC NEXT-MOVE SCENARIO ENGINE=4H-CONFLICT-AWARE+ALT-CONFLICT-QUALITY-GATE | ONE-ACTIVE-THESIS-PER-COIN | ATR-BOUNDED-TP`);
+  console.log(`[SIGNAL][ANTI-FLIP] one active thesis per coin; after SL lockout=90m; after TP=45m; after ambiguous=60m; paper thesis expiry=${PAPER_MAX_HOLD_HOURS}h; one selected signal per coin per cycle`);
+  console.log(`[RISK][TP-REACHABILITY] max target distance=min(7%, max(1.5%, 8x 1H ATR)); targets >3% require >=3 touches; no TP stretching to manufacture R:R`);
   console.log(`[PAPER][COST MODEL] roundTrip=${PAPER_ROUND_TRIP_COST_PCT.toFixed(3)}% (fees ${PAPER_FEE_BPS_PER_SIDE}bps/side; slippage ${PAPER_SLIPPAGE_BPS_PER_SIDE}bps/side); funding excluded`);
   console.log(`[CLEAN-START] Evaluation cohort begins ${new Date(n(state.cleanStartAt, started)).toISOString()} (UTC); existing cohort retained; new trades are tagged ${VERSION}.`);
   console.log(`Time: ${new Date().toISOString()}`);
-  console.log(`Strategy: standard-direction SWEEP_RECLAIM; ATR-adaptive confirmed BREAKOUT_RETEST; EMA20 reaction-confirmed TREND_PULLBACK; pattern-specific trigger gates; 1H multi-touch support/resistance independently sets fresh SL/TP; LONG stop below support and target before resistance; SHORT stop above resistance and target before support; minimum net R:R after estimated fees/slippage 1:1.5; estimated paper round-trip cost=${PAPER_ROUND_TRIP_COST_PCT.toFixed(3)}% (fee ${PAPER_FEE_BPS_PER_SIDE} bps/side + slippage ${PAPER_SLIPPAGE_BPS_PER_SIDE} bps/side); PAPER TRACKING only | Signal threshold: ${MIN_SCORE}/10 | min R:R: 1:${MIN_RR.toFixed(2)} | BTC adaptive regime: weighted 4H/1H/15m/5m structure+momentum+EMA+rejection evidence; hard directional gate only above confidence threshold; weak BTC bias is a soft filter | BTC/ETH timeframe-matched 15m (${HISTORICAL_15M_LOOKBACK_DAYS}d) + 1h (${HISTORICAL_1H_LOOKBACK_DAYS}d) pivot/reaction memory; same-timeframe completed-close false-breakout handling | structure-first SL/TP | 24h volume floor: NONE | market cap: NONE (all active listed perps)`);
+  console.log(`Strategy: standard-direction SWEEP_RECLAIM; ATR-adaptive confirmed BREAKOUT_RETEST; EMA20 reaction-confirmed TREND_PULLBACK; pattern-specific trigger gates; 1H multi-touch support/resistance independently sets fresh SL/TP; TP is capped by an ATR-scaled reachable 1H travel envelope (max 7%; targets beyond 3% require >=3 touches); one unresolved thesis per coin; minimum net R:R after estimated fees/slippage 1:1.5; estimated paper round-trip cost=${PAPER_ROUND_TRIP_COST_PCT.toFixed(3)}% (fee ${PAPER_FEE_BPS_PER_SIDE} bps/side + slippage ${PAPER_SLIPPAGE_BPS_PER_SIDE} bps/side); PAPER TRACKING only | Signal threshold: ${MIN_SCORE}/10 | min R:R: 1:${MIN_RR.toFixed(2)} | BTC adaptive regime: weighted 4H/1H/15m/5m structure+momentum+EMA+rejection evidence; hard directional gate only above confidence threshold; weak BTC bias is a soft filter | BTC/ETH timeframe-matched 15m (${HISTORICAL_15M_LOOKBACK_DAYS}d) + 1h (${HISTORICAL_1H_LOOKBACK_DAYS}d) pivot/reaction memory; same-timeframe completed-close false-breakout handling | structure-first SL/TP | 24h volume floor: NONE | market cap: NONE (all active listed perps)`);
   console.log(`[API][POLICY] requestGap=${SCAN_GAP_MS}ms retries429=${MAX_429_RETRIES} backoff=${RATE_LIMIT_BASE_MS}-${RATE_LIMIT_MAX_MS}ms globalCooldown=yes (shared across concurrent calls)`);
   console.log(`[TELEGRAM][CONFIG] token=${TOKEN ? 'configured' : 'MISSING'} vipChat=${VIP_CHAT ? 'configured' : (LEGACY_CHAT ? 'legacy-fallback' : 'MISSING')} freeChat=${FREE_CHAT ? 'configured' : 'MISSING'} legacyChat=${LEGACY_CHAT ? 'configured' : 'MISSING'}`);
   if (!TOKEN || (!VIP_CHAT && !LEGACY_CHAT && !FREE_CHAT)) {
@@ -1741,6 +1769,40 @@ async function main() {
           }
           continue;
         }
+        // When the BTC scenario explicitly says 4H conflicts with a lower-timeframe reclaim,
+        // require the alt itself to provide independent confirmation. BTC's weak/neutral label
+        // must not disguise a split regime, and one isolated flow reading is not enough.
+        const btcScenarioConflict = Boolean(s.btcRegime?.nextMove?.higherTimeframeConflict) &&
+          /COUNTERTREND\s*[—-]\s*WAIT/.test(String(s.btcRegime?.nextMove?.state || ''));
+        if (btcScenarioConflict) {
+          const flowAligned = s.side === 'LONG'
+            ? (n(s.flowDelta) >= 0.12 || n(s.imbalance) >= 0.12)
+            : (n(s.flowDelta) <= -0.12 || n(s.imbalance) <= -0.12);
+          const independentEvidence = [s.trend === s.side, flowAligned, n(s.volRatio) >= 0.90].filter(Boolean).length;
+          if (n(s.score) < 6.90 || independentEvidence < 2) {
+            const reason = `BTC 4H countertrend WAIT: require score >= 6.90 and 2/3 independent alt confirmations (1H trend, directional flow/book, volume); score=${n(s.score).toFixed(2)}, confirmations=${independentEvidence}/3, trend=${s.trend}, flowAligned=${flowAligned}, volume=${n(s.volRatio).toFixed(2)}x`;
+            console.log(`[FILTER][BTC-SCENARIO-CONFLICT] ${s.coin} ${s.side} rejected: ${reason}`);
+            noteReject('regime', s, reason);
+            continue;
+          }
+          console.log(`[FILTER][BTC-SCENARIO-CONFLICT][PASS] ${s.coin} ${s.side}: score=${n(s.score).toFixed(2)} independent confirmations=${independentEvidence}/3`);
+        }
+        // If BTC 1H and 15m are aligned against the proposed alt direction, demand stronger
+        // participation; a high trade-delta snapshot alone cannot overrule a two-timeframe conflict.
+        const btc1h = s.btcRegime?.timeframes?.['1H'];
+        const btc15 = s.btcRegime?.timeframes?.['15m'];
+        const btcLowerTfOpposes = btc1h?.status === 'OK' && btc15?.status === 'OK' &&
+          btc1h.trend === oppositeSide(s.side) && btc15.trend === oppositeSide(s.side);
+        if (btcLowerTfOpposes) {
+          const strongAltConfirmation = s.trend === s.side && n(s.volRatio) >= 1.15 &&
+            (s.side === 'LONG' ? n(s.flowDelta) >= 0.15 : n(s.flowDelta) <= -0.15) && n(s.oiChange) >= 0.15;
+          if (!strongAltConfirmation || n(s.score) < 7.10) {
+            const reason = `BTC 1H+15m oppose ${s.side}; require aligned asset trend, volume >=1.15x, directional trade delta, OI >=+0.15%, score >=7.10 (trend=${s.trend}, volume=${n(s.volRatio).toFixed(2)}x, delta=${n(s.flowDelta).toFixed(2)}, OI=${n(s.oiChange).toFixed(2)}%, score=${n(s.score).toFixed(2)})`;
+            console.log(`[FILTER][BTC-LOWER-TF-CONFLICT] ${s.coin} ${s.side} rejected: ${reason}`);
+            noteReject('regime', s, reason);
+            continue;
+          }
+        }
         if (btcImpulseOpposes(s)) {
           const evidence = countertrendEvidence(s);
           const minScore = BTC_COUNTERTREND_MIN_SCORE;
@@ -1793,11 +1855,11 @@ async function main() {
   for (const sample of rejectionSamples) console.log(`[DIAGNOSTICS][SAMPLE] ${sample}`);
   candidates.sort((a, b) => b.score - a.score);
   const chosen = [];
-  const seenMarketSide = new Set();
+  const seenMarket = new Set();
   for (const c of candidates) {
-    const k = `${c.coin}|${c.side}`;
-    if (seenMarketSide.has(k)) continue;
-    seenMarketSide.add(k);
+    const k = c.coin;
+    if (seenMarket.has(k)) continue;
+    seenMarket.add(k);
     chosen.push(c);
     if (chosen.length >= MAX_SIGNALS_PER_CYCLE) break;
   }
