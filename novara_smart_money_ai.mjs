@@ -19,7 +19,10 @@ import { fileURLToPath } from 'node:url';
  * All eligible liquid perp markets are considered; the worker does not depend on wallet lists.
  */
 
-const VERSION = 'NOVARA-SMART-MONEY-AI-V2.19.0-GLOBAL-HISTORICAL-REACTION-MEMORY';
+const VERSION = 'NOVARA-SMART-MONEY-AI-V2.20.0-PROBABILISTIC-NEXT-MOVE-ENGINE';
+const PREDICTIVE_MIN_CONVICTION = Math.max(55, Math.min(85, Number(process.env.NOVARA_PREDICTIVE_MIN_CONVICTION || 61)));
+const PREDICTIVE_MIN_EDGE_GAP = Math.max(5, Math.min(35, Number(process.env.NOVARA_PREDICTIVE_MIN_EDGE_GAP || 12)));
+const PREDICTIVE_HORIZON_MINUTES = [15, 60];
 const CLEAN_START_ID = 'NOVARA-V2.14.0-ENTRY-SIDE-BTC-GATE-REPAIR-COHORT-2026-10-30'; // Preserve existing paper cohort; no destructive reset on upgrade.
 const PAPER_MARGIN_USD = Math.max(10, Number(process.env.NOVARA_PAPER_MARGIN_USD || 1000));
 const PAPER_MAX_HOLD_HOURS = Math.max(6, Math.min(72, Number(process.env.NOVARA_PAPER_MAX_HOLD_HOURS || 24)));
@@ -735,6 +738,66 @@ function tradeDelta(trades) {
   return { buy, sell, delta: total ? (buy - sell) / total : 0, total };
 }
 
+function pctChange(a, b) { return a > 0 && b > 0 ? (b / a - 1) * 100 : 0; }
+function emaSpread(values, fast = 8, slow = 21) {
+  const a = ema(values, fast), b = ema(values, slow);
+  return a > 0 ? (a / b - 1) * 100 : 0;
+}
+// A transparent, bounded directional model. Its output is conviction, NOT a
+// statistically calibrated probability of winning. Calibration is deliberately
+// deferred until sufficient timestamped out-of-sample outcomes exist.
+function predictNextMove({ c15, c1h, mid, flow, imbalance, oiChange, fundingPct, vwap15 }) {
+  const closes15 = c15.map(x => x.c), closes1h = c1h.map(x => x.c);
+  const last15 = c15.at(-1), last1h = c1h.at(-1);
+  const r15 = pctChange(closes15.at(-2), closes15.at(-1));
+  const r30 = pctChange(closes15.at(-3), closes15.at(-1));
+  const r60 = pctChange(closes15.at(-5), closes15.at(-1));
+  const r120 = pctChange(closes15.at(-9), closes15.at(-1));
+  const r1h = pctChange(closes1h.at(-2), closes1h.at(-1));
+  const r4h = pctChange(closes1h.at(-5), closes1h.at(-1));
+  const accel = r30 - 2 * r15;
+  const fastTrend = emaSpread(closes15.slice(-48), 8, 21);
+  const slowTrend = emaSpread(closes1h.slice(-48), 8, 21);
+  const vwapGap = mid > 0 && vwap15 > 0 ? (mid / vwap15 - 1) * 100 : 0;
+  const candleBody = last15 && last15.h > last15.l ? (last15.c - last15.o) / (last15.h - last15.l) : 0;
+  const range = last15 && last15.c > 0 ? (last15.h - last15.l) / last15.c * 100 : 0;
+  // Normalize inputs to prevent one volatile instrument dominating the model.
+  const z = (x, scale) => clamp(x / scale, -1, 1);
+  const components = {
+    momentum15: z(r15, 0.45) * 0.08,
+    momentum30: z(r30, 0.75) * 0.13,
+    momentum60: z(r60, 1.15) * 0.13,
+    momentum120: z(r120, 1.8) * 0.08,
+    momentum1h: z(r1h, 0.9) * 0.10,
+    momentum4h: z(r4h, 1.8) * 0.08,
+    acceleration: z(accel, 0.45) * 0.09,
+    trend15: z(fastTrend, 0.55) * 0.08,
+    trend1h: z(slowTrend, 1.0) * 0.08,
+    tradeFlow: z(n(flow?.delta), 0.35) * 0.07,
+    orderBook: z(imbalance, 0.35) * 0.04,
+    openInterest: z(n(oiChange), 1.2) * Math.sign(r30 || r15 || 1) * 0.025,
+    vwap: z(vwapGap, 0.8) * 0.025,
+    candlePressure: z(candleBody, 1) * 0.025,
+    fundingCrowding: (fundingPct > 0.08 ? -0.015 : fundingPct < -0.08 ? 0.015 : 0),
+  };
+  let raw = Object.values(components).reduce((a,b)=>a+b,0);
+  // High-range candles with weak follow-through reduce confidence (whipsaw risk).
+  const whipsawPenalty = range > 1.8 && Math.abs(r15) < range * 0.12 ? 0.035 : 0;
+  raw = clamp(raw * (1 - whipsawPenalty), -0.35, 0.35);
+  const longConviction = Math.round(50 + raw * 140);
+  const shortConviction = 100 - longConviction;
+  const direction = longConviction >= shortConviction ? 'LONG' : 'SHORT';
+  const conviction = Math.max(longConviction, shortConviction);
+  const edgeGap = Math.abs(longConviction - shortConviction);
+  return {
+    direction, conviction, longConviction, shortConviction, edgeGap,
+    horizonMinutes: PREDICTIVE_HORIZON_MINUTES,
+    expectedBias: direction === 'LONG' ? 'positive' : 'negative',
+    components, diagnostics: { r15, r30, r60, r120, r1h, r4h, acceleration: accel, fastTrend, slowTrend, vwapGap, candleBody, range, whipsawPenalty },
+    label: 'directional conviction; not calibrated win probability',
+  };
+}
+
 function detectPatterns({ coin, c15, c1h, ctx, prevCtx, mid, spread, imbalance, flow, btcRegime }) {
   const last = c15.at(-1), prev = c15.at(-2);
   if (!last || !prev || c15.length < 35 || c1h.length < 30) return [];
@@ -1135,14 +1198,12 @@ function formatSignal(s, risk) {
     const move = Number.isFinite(Number(r.change24hPct)) ? ` | 24h ${Number(r.change24hPct).toFixed(2)}%` : '';
     return `${tf}: ${ev.label || 'NEUTRAL'} (evidence ${n(ev.score).toFixed(2)}, EMA ${ev.emaAligned || 'MIXED'}${move})`;
   };
-  const modeLabel = 'ADAPTIVE BTC REGIME + HISTORICAL LEVEL MEMORY';
-  const hist = btc.historicalMemory || {};
-  const histLine = (name, x) => ['15m','1h'].map(tf => { const c=x?.[tf]; return `${name} ${tf}: ${c?.state || 'UNAVAILABLE'} | S ${fmtPrice(c?.support?.price)} (${c?.support?.distancePct ?? '—'}%; ${c?.support?.touches || 0} touches) | R ${fmtPrice(c?.resistance?.price)} (${c?.resistance?.distancePct ?? '—'}%; ${c?.resistance?.touches || 0} touches)`; }).join('\n');
+  const modeLabel = 'ADAPTIVE BTC REGIME + PROBABILISTIC NEXT-MOVE MODEL';
   return `${emoji} <b>NOVARA SMART MONEY AI — NEXT-MOVE SCENARIO ENGINE</b>\n🧭 BTC regime: adaptive multi-timeframe structure + momentum + EMA + rejection analysis\n📐 BTC direction: ${btc.label || 'NEUTRAL'} | regime confidence: ${n(btc.confidence)}% | score: ${n(btc.directionScore).toFixed(3)}
 🔮 Next-move scenario: ${escapeHtml(btc.nextMove?.state || 'UNAVAILABLE')}
 🧭 Scenario evidence: LONG ${n(btc.nextMove?.longScore)}/100 | SHORT ${n(btc.nextMove?.shortScore)}/100 (heuristic, NOT win probability)
 🧠 Scenario note: ${escapeHtml(btc.nextMove?.reason || 'Unavailable')}
-🧱 BTC support breakdown: ${btc.structure?.breakdown ? `CONFIRMED (${(btc.structure.confirmedBy || []).join('+')}) — LONG blocked` : 'not confirmed'}\n🧠 <b>HISTORICAL BTC/ETH LEVEL MEMORY</b>\n${escapeHtml(histLine('BTC',hist.BTC))}\n${escapeHtml(histLine('ETH',hist.ETH))}\n━━━━━━━━━━━━━━━━━━\n<b>${s.side} ${escapeHtml(s.coin)} PERP</b>\n🧭 Setup: ${escapeHtml(s.pattern.replaceAll('_', ' '))}\n📍 Entry (reference): <code>${fmtPrice(risk.entry)}</code>\n🛑 Stop Loss: <code>${fmtPrice(risk.sl)}</code> (${pct(risk.riskPct)})\n🎯 Take Profit: <code>${fmtPrice(risk.tp)}</code> (${pct(risk.rewardPct)})\n⚖️ Planned R:R: 1:${risk.rr.toFixed(2)} gross | 1:${n(risk.netRR, risk.rr).toFixed(2)} net\n⚡ Suggested Leverage: ${lev.leverage}x${lev.cappedBelowRequestedRange ? ` (exchange max: ${Math.floor(lev.exchangeMax)}x)` : ''}\n🧠 Setup score: ${s.score.toFixed(2)}/10 (not a win-probability estimate)\n📊 Asset 1H trend: ${s.trend}\n₿ <b>BTC MARKET CHECK</b>\n${tfLine('4H', '4H')}\n${tfLine('1H', '1H')}\n${tfLine('15m', '15m')}\n📉 Alt 15m RSI: ${n(s.rsi15, 50).toFixed(1)} | Fib: ${s.fibConfluence ? 'YES' : 'NO'} | Volume: ${s.volRatio.toFixed(2)}x\n🌊 Trade delta: ${(s.flowDelta * 100).toFixed(1)}% | Book imbalance: ${(s.imbalance * 100).toFixed(1)}%\n📈 OI change: ${s.oiChange >= 0 ? '+' : ''}${s.oiChange.toFixed(2)}% | Funding: ${s.fundingPct.toFixed(4)}%\n🧱 1H Structure: Support ${fmtPrice(s.support)} (${s.supportTouches || 0} touches) | Resistance ${fmtPrice(s.resistance)} (${s.resistanceTouches || 0} touches)\n🧩 Evidence:\n${reasons}\n\n🧪 Mode: ${modeLabel}. Paper tracking only — no real orders.`;
+🧱 BTC support breakdown: ${btc.structure?.breakdown ? `CONFIRMED (${(btc.structure.confirmedBy || []).join('+')}) — LONG blocked` : 'not confirmed'}\n🧠 Historical reaction-memory gates: DISABLED (V2.20)\n━━━━━━━━━━━━━━━━━━\n<b>${s.side} ${escapeHtml(s.coin)} PERP</b>\n🧭 Setup: ${escapeHtml(s.pattern.replaceAll('_', ' '))}\n📍 Entry (reference): <code>${fmtPrice(risk.entry)}</code>\n🛑 Stop Loss: <code>${fmtPrice(risk.sl)}</code> (${pct(risk.riskPct)})\n🎯 Take Profit: <code>${fmtPrice(risk.tp)}</code> (${pct(risk.rewardPct)})\n⚖️ Planned R:R: 1:${risk.rr.toFixed(2)} gross | 1:${n(risk.netRR, risk.rr).toFixed(2)} net\n⚡ Suggested Leverage: ${lev.leverage}x${lev.cappedBelowRequestedRange ? ` (exchange max: ${Math.floor(lev.exchangeMax)}x)` : ''}\n🧠 Setup score: ${s.score.toFixed(2)}/10 (not a win-probability estimate)\n🔮 Next-move model: ${s.predictive?.direction || 'NA'} | conviction ${n(s.predictive?.conviction)}% | horizons 15m/60m (NOT calibrated win probability)\n📊 Asset 1H trend: ${s.trend}\n₿ <b>BTC MARKET CHECK</b>\n${tfLine('4H', '4H')}\n${tfLine('1H', '1H')}\n${tfLine('15m', '15m')}\n📉 Alt 15m RSI: ${n(s.rsi15, 50).toFixed(1)} | Fib: ${s.fibConfluence ? 'YES' : 'NO'} | Volume: ${s.volRatio.toFixed(2)}x\n🌊 Trade delta: ${(s.flowDelta * 100).toFixed(1)}% | Book imbalance: ${(s.imbalance * 100).toFixed(1)}%\n📈 OI change: ${s.oiChange >= 0 ? '+' : ''}${s.oiChange.toFixed(2)}% | Funding: ${s.fundingPct.toFixed(4)}%\n🧱 1H Structure: Support ${fmtPrice(s.support)} (${s.supportTouches || 0} touches) | Resistance ${fmtPrice(s.resistance)} (${s.resistanceTouches || 0} touches)\n🧩 Evidence:\n${reasons}\n\n🧪 Mode: ${modeLabel}. Paper tracking only — no real orders.`;
 }
 
 let telegramNextAt = 0;
@@ -1729,8 +1790,11 @@ async function analyzeAsset(asset, previous, btcRegime) {
   const spread = spreadPct(book, asset.markPx);
   const imbalance = bookImbalance(book);
   const flow = tradeDelta(trades);
-  return detectPatterns({ coin: asset.coin, c15, c1h, ctx: asset, prevCtx: previous, mid: asset.markPx, spread, imbalance, flow, btcRegime })
-    .map(candidate => ({...candidate,currentCandles15m:c15.slice(-4),currentCandles1h:c1h.slice(-4)}));
+  const patterns = detectPatterns({ coin: asset.coin, c15, c1h, ctx: asset, prevCtx: previous, mid: asset.markPx, spread, imbalance, flow, btcRegime });
+  return patterns.map(candidate => {
+    const prediction = predictNextMove({ c15, c1h, mid: asset.markPx, flow, imbalance, oiChange: candidate.oiChange, fundingPct: candidate.fundingPct, vwap15: candidate.vwap });
+    return {...candidate, predictive: prediction, currentCandles15m:c15.slice(-4),currentCandles1h:c1h.slice(-4)};
+  });
 }
 
 async function main() {
@@ -1765,7 +1829,7 @@ async function main() {
   state.version = VERSION;
   console.log(`\n${VERSION} — START`);
   console.log(`Mode: READ-ONLY / NO ORDERS / NO AUTO-COPY / PAPER TRACKING`);
-  console.log(`[STRATEGY][PATTERNS] SWEEP_RECLAIM=STANDARD DIRECTION | BREAKOUT_RETEST=ATR-ADAPTIVE CONFIRMED RETEST | TREND_PULLBACK=EMA20 REACTION-CONFIRMED | BTC NEXT-MOVE SCENARIO ENGINE=4H-CONFLICT-AWARE+ALT-CONFLICT-QUALITY-GATE | BTC+ETH LEGACY MEMORY + ALL-PERP 15m/1h GLOBAL REACTION MEMORY | ANTI-FLIP | ATR-BOUNDED-TP`);
+  console.log(`[STRATEGY][PATTERNS] SWEEP_RECLAIM=STANDARD DIRECTION | BREAKOUT_RETEST=ATR-ADAPTIVE CONFIRMED RETEST | TREND_PULLBACK=EMA20 REACTION-CONFIRMED | BTC NEXT-MOVE SCENARIO ENGINE=4H-CONFLICT-AWARE+ALT-CONFLICT-QUALITY-GATE | PROBABILISTIC NEXT-MOVE MODEL=15m/60m | ANTI-FLIP | ATR-BOUNDED-TP`);
   console.log(`[SIGNAL][ANTI-FLIP] one active paper thesis per coin; post-SL lockout=90m; post-TP=45m; post-expiry=60m; thesis expiry=${PAPER_MAX_HOLD_HOURS}h`);
   console.log(`[RISK][TP-REACHABILITY] max target=min(7%, max(1.5%, 8x 1H ATR)); targets >3% require >=3 historical touches`);
   console.log(`[PAPER][COST MODEL] roundTrip=${PAPER_ROUND_TRIP_COST_PCT.toFixed(3)}% (fees ${PAPER_FEE_BPS_PER_SIDE}bps/side; slippage ${PAPER_SLIPPAGE_BPS_PER_SIDE}bps/side); funding excluded`);
@@ -1773,7 +1837,7 @@ async function main() {
   console.log(`Time: ${new Date().toISOString()}`);
   console.log(`[VERSION][REPORTING] new paper signals are tagged ${VERSION}; legacy reviews retain and identify their original strategy version.`);
   console.log(`[VERSION][REPORTING] new signals tagged ${VERSION}; legacy paper trades retain their original strategyVersion and are labelled as such in review cards.`);
-  console.log(`Strategy: standard-direction SWEEP_RECLAIM; ATR-adaptive confirmed BREAKOUT_RETEST; EMA20 reaction-confirmed TREND_PULLBACK; pattern-specific trigger gates; 1H multi-touch support/resistance independently sets fresh SL/TP; LONG stop below support and target before resistance; SHORT stop above resistance and target before support; minimum net R:R after estimated fees/slippage 1:1.5; estimated paper round-trip cost=${PAPER_ROUND_TRIP_COST_PCT.toFixed(3)}% (fee ${PAPER_FEE_BPS_PER_SIDE} bps/side + slippage ${PAPER_SLIPPAGE_BPS_PER_SIDE} bps/side); PAPER TRACKING only | Signal threshold: ${MIN_SCORE}/10 | min R:R: 1:${MIN_RR.toFixed(2)} | BTC adaptive regime: weighted 4H/1H/15m/5m structure+momentum+EMA+rejection evidence; hard directional gate only above confidence threshold; weak BTC bias is a soft filter | BTC/ETH legacy memory + all-perp Hyperliquid 15m (${GLOBAL_HIST_15M_DAYS}d) / 1h (${GLOBAL_HIST_1H_DAYS}d) pivot/reaction memory; staged universe backfill; role reversal after two completed closes | structure-first SL/TP | 24h volume floor: NONE | market cap: NONE (all active listed perps)`);
+  console.log(`Strategy: standard-direction SWEEP_RECLAIM; ATR-adaptive confirmed BREAKOUT_RETEST; EMA20 reaction-confirmed TREND_PULLBACK; pattern-specific trigger gates; 1H multi-touch support/resistance independently sets fresh SL/TP; LONG stop below support and target before resistance; SHORT stop above resistance and target before support; minimum net R:R after estimated fees/slippage 1:1.5; estimated paper round-trip cost=${PAPER_ROUND_TRIP_COST_PCT.toFixed(3)}% (fee ${PAPER_FEE_BPS_PER_SIDE} bps/side + slippage ${PAPER_SLIPPAGE_BPS_PER_SIDE} bps/side); PAPER TRACKING only | Signal threshold: ${MIN_SCORE}/10 | min R:R: 1:${MIN_RR.toFixed(2)} | BTC adaptive regime: weighted 4H/1H/15m/5m structure+momentum+EMA+rejection evidence; hard directional gate only above confidence threshold; weak BTC bias is a soft filter | probabilistic next-move layer (15m/60m momentum, acceleration, trend, trade flow, book imbalance, OI/funding); legacy/global historical reaction-memory scans and gates disabled | structure-first SL/TP | 24h volume floor: NONE | market cap: NONE (all active listed perps)`);
   console.log(`[API][POLICY] requestGap=${SCAN_GAP_MS}ms retries429=${MAX_429_RETRIES} backoff=${RATE_LIMIT_BASE_MS}-${RATE_LIMIT_MAX_MS}ms globalCooldown=yes (shared across concurrent calls)`);
   console.log(`[TELEGRAM][CONFIG] token=${TOKEN ? 'configured' : 'MISSING'} vipChat=${VIP_CHAT ? 'configured' : (LEGACY_CHAT ? 'legacy-fallback' : 'MISSING')} freeChat=${FREE_CHAT ? 'configured' : 'MISSING'} legacyChat=${LEGACY_CHAT ? 'configured' : 'MISSING'}`);
   if (!TOKEN || (!VIP_CHAT && !LEGACY_CHAT && !FREE_CHAT)) {
@@ -1784,25 +1848,9 @@ async function main() {
   const contexts = snapshot.ctxByCoin;
   const eligible = snapshot.assets;
   let btcRegime = await refreshBtcDirection({});
-  const historicalMemory = await refreshBtcEthHistoricalMemory(state);
-  const globalHistoricalMemory = await refreshGlobalReactionMemory(state, eligible);
-  const btcRefPrice = n(contexts.BTC?.markPx);
-  const ethRefPrice = n(contexts.ETH?.markPx);
-  const makeAssetReaction = (coin, price) => {
-    const assetMemory=historicalMemory.assets?.[coin]?.timeframes || {};
-    const result={};
-    for(const tf of ['15m','1h']){
-      const frame=assetMemory[tf];
-      result[tf]=historicalReactionContext(frame || null,price,tf);
-    }
-    return result;
-  };
-  btcRegime.historicalMemory = {
-    BTC: makeAssetReaction('BTC',btcRefPrice),
-    ETH: makeAssetReaction('ETH',ethRefPrice),
-    source: historicalMemory.source, refreshedAt: historicalMemory.refreshedAt,
-  };
-  console.log(`[HISTORY][REACTION] BTC 15m=${btcRegime.historicalMemory.BTC['15m'].state} / 1h=${btcRegime.historicalMemory.BTC['1h'].state} | ETH 15m=${btcRegime.historicalMemory.ETH['15m'].state} / 1h=${btcRegime.historicalMemory.ETH['1h'].state}`);
+  // V2.20 disables legacy/global historical reaction-memory scans and gates.
+  btcRegime.historicalMemory = null;
+  console.log('[PREDICTIVE][MODE] multi-horizon momentum + acceleration + trend + trade-flow + order-book + OI/funding; historical reaction-memory gates DISABLED');
   if (!n(state.lastDailyReportAt)) state.lastDailyReportAt = now(); // first report is sent after one full 24-hour observation window
   const closed = await updatePaperTrades(state, contexts);
   for (const t of closed) {
@@ -1840,29 +1888,25 @@ async function main() {
           const patternSide = candidate.side;
           candidate.btcRegime = liveBtc;
           const sideAdjustment = finalSideEvidenceAdjustment(candidate, patternSide);
-          const assetHist=globalHistoricalMemory.assets?.[candidate.coin]?.timeframes || {};
-          const global15=globalReactionContext(assetHist['15m'],candidate.entry,'15m',candidate.currentCandles15m);
-          const global1h=globalReactionContext(assetHist['1h'],candidate.entry,'1h',candidate.currentCandles1h);
-          const globalEvidence=applyGlobalReactionEvidence(candidate,global15,global1h);
-          candidate.globalHistoricalContext={m15:global15,h1:global1h,...globalEvidence};
-          const historical = historicalBtcEthAdjustment(candidate, liveBtc.historicalMemory?.BTC, liveBtc.historicalMemory?.ETH);
-          candidate.historicalContext = historical;
-          candidate.score = clamp(candidate.score + sideAdjustment + historical.adjustment + globalEvidence.adjustment, 0, 9.5);
-          if (historical.reasons.length) candidate.reasons.push(...historical.reasons);
-          if (globalEvidence.reasons.length) candidate.reasons.push(...globalEvidence.reasons);
+          candidate.score = clamp(candidate.score + sideAdjustment, 0, 9.5);
+          const pred = candidate.predictive || {};
+          candidate.reasons.push(`Predictive model ${pred.direction || 'NA'} conviction=${n(pred.conviction)}% (15m/60m horizons; not a win probability)`);
           const trendRelation = candidate.trend === patternSide ? 'aligned' : 'countertrend';
           candidate.reasons = [`${candidate.pattern === 'SWEEP_RECLAIM' ? 'STANDARD-DIRECTION SWEEP' : 'NORMAL-DIRECTION SETUP'}: side=${patternSide}; asset 1H trend=${candidate.trend} (${trendRelation}) is context; BTC adaptive regime ${liveBtc.label || 'NEUTRAL'} (${n(liveBtc.confidence)}% confidence); regime gate is applied before selection; fresh SL/TP recalculated from 1H structure`, `Same-side evidence adjustment ${sideAdjustment >= 0 ? '+' : ''}${sideAdjustment.toFixed(2)} (flow/order-book/RSI/VWAP)`, ...candidate.reasons];
           console.log(`[DIRECTION][PATTERN-SIDE] ${candidate.coin} ${candidate.pattern}: side=${patternSide}; 1H=${candidate.trend}; BTC=${liveBtc.trend}; evidenceAdjustment=${sideAdjustment.toFixed(2)}; score=${candidate.score.toFixed(2)}; entry=${fmtPrice(candidate.entry)} support=${fmtPrice(candidate.support)} resistance=${fmtPrice(candidate.resistance)}`);
         }
       }
       for (const s of found) {
-        const coinMemory=globalHistoricalMemory.assets?.[s.coin]?.timeframes || {};
-        const coinMemoryReady=Boolean(coinMemory['15m']?.levels?.length && coinMemory['1h']?.levels?.length);
-        if(!coinMemoryReady){
-          const reason=`global historical reaction memory for ${s.coin} is not ready yet; no signal is permitted before both 15m and 1h history are built`;
-          console.log(`[FILTER][GLOBAL-HISTORY][NOT-READY] ${s.coin} ${s.side} rejected: ${reason}`);
-          noteReject('regime',s,reason); continue;
+        // Predictive gate: only consider a setup when the independent next-move
+        // model points the same way and the long/short conviction gap is material.
+        const prediction = s.predictive || {};
+        if (prediction.direction !== s.side || n(prediction.conviction) < PREDICTIVE_MIN_CONVICTION || n(prediction.edgeGap) < PREDICTIVE_MIN_EDGE_GAP) {
+          const reason = `next-move model=${prediction.direction || 'NA'} conviction=${n(prediction.conviction)}% edgeGap=${n(prediction.edgeGap)}; requires same-side conviction >=${PREDICTIVE_MIN_CONVICTION}% and edge gap >=${PREDICTIVE_MIN_EDGE_GAP}`;
+          console.log(`[FILTER][PREDICTIVE-EDGE] ${s.coin} ${s.side} rejected: ${reason}`);
+          noteReject('regime', s, reason);
+          continue;
         }
+        console.log(`[PREDICTIVE][PASS] ${s.coin} ${s.side}: conviction=${prediction.conviction}% edgeGap=${prediction.edgeGap} horizon=15/60m`);
         // Confidence-aware BTC gate: weak BTC bias is context, not an automatic veto.
         // A hard opposing-direction block applies only when weighted BTC confidence is material.
         const rawBtcDirection = ['LONG', 'SHORT'].includes(s.btcRegime?.trend) ? s.btcRegime.trend : null;
@@ -1894,18 +1938,6 @@ async function main() {
         if (s.side === 'LONG' && btcBreakdown) {
           const reason = `confirmed BTC support breakdown (${(s.btcRegime.structure.confirmedBy || []).join('+')}); LONG entries blocked until BTC structure is reclaimed`;
           console.log(`[FILTER][BTC-SUPPORT-BREAKDOWN] ${s.coin} LONG ${s.pattern} rejected: ${reason}`);
-          noteReject('regime', s, reason);
-          continue;
-        }
-        if (s.globalHistoricalContext?.blocked) {
-          const reason=`global ${s.globalHistoricalContext.m15?.timeframe||'15m'}/${s.globalHistoricalContext.h1?.timeframe||'1h'} historical reaction memory conflicts with ${s.side}; avoid trading directly into a stronger opposing reaction zone`;
-          console.log(`[FILTER][GLOBAL-HISTORY] ${s.coin} ${s.side} rejected: ${reason}`);
-          noteReject('regime',s,reason); continue;
-        }
-        const historicalGate = s.historicalContext?.blocked || [];
-        if (historicalGate.length) {
-          const reason = `historical BTC/ETH level context: ${historicalGate.join('; ')}; wait for completed-candle rejection/reclaim or confirmed completed 15m/1h breakout/breakdown`;
-          console.log(`[FILTER][HISTORICAL-LEVEL] ${s.coin} ${s.side} ${s.pattern} rejected: ${reason}`);
           noteReject('regime', s, reason);
           continue;
         }
@@ -2165,7 +2197,7 @@ async function main() {
       state.alertHistory[signalKey(s)] = now();
       state.alertHistory[`${s.coin}|${s.side}|GLOBAL`] = now();
       const audience = deliveredNames.includes('VIP') && deliveredNames.includes('FREE') ? 'BOTH' : deliveredNames[0];
-      state.paperTrades.push({ strategyVersion: VERSION, id: `${s.coin}|${s.side}|${s.pattern}|${now()}`, coin: s.coin, side: s.side, pattern: s.pattern, score: Number(s.score.toFixed(2)), audience, outcomeDelivered: [], entry: s.risk.entry, sl: s.risk.sl, tp: s.risk.tp, rr: s.risk.rr, netRR: s.risk.netRR, riskPct: s.risk.riskPct, estimatedRoundTripCostPct: PAPER_ROUND_TRIP_COST_PCT, suggestedLeverage: s.leverageInfo?.leverage ?? null, btcRegime: s.btcRegime?.label || 'NEUTRAL', btcScenario: s.btcRegime?.nextMove ? { ...s.btcRegime.nextMove } : null, btcHistoricalContext: s.historicalContext ? { btc:s.historicalContext.btc, eth:s.historicalContext.eth, reasons:s.historicalContext.reasons } : null, globalHistoricalContext: s.globalHistoricalContext ? {m15:s.globalHistoricalContext.m15,h1:s.globalHistoricalContext.h1,reasons:s.globalHistoricalContext.reasons} : null, rsi15: s.rsi15, fibConfluence: Boolean(s.fibConfluence), maxHoldHours: PAPER_MAX_HOLD_HOURS, openedAt: now(), lastCheckedAt: now(), status: 'OPEN', pnlR: null, reasons: s.reasons });
+      state.paperTrades.push({ strategyVersion: VERSION, id: `${s.coin}|${s.side}|${s.pattern}|${now()}`, coin: s.coin, side: s.side, pattern: s.pattern, score: Number(s.score.toFixed(2)), predictive: s.predictive || null, audience, outcomeDelivered: [], entry: s.risk.entry, sl: s.risk.sl, tp: s.risk.tp, rr: s.risk.rr, netRR: s.risk.netRR, riskPct: s.risk.riskPct, estimatedRoundTripCostPct: PAPER_ROUND_TRIP_COST_PCT, suggestedLeverage: s.leverageInfo?.leverage ?? null, btcRegime: s.btcRegime?.label || 'NEUTRAL', btcScenario: s.btcRegime?.nextMove ? { ...s.btcRegime.nextMove } : null, btcHistoricalContext: s.historicalContext ? { btc:s.historicalContext.btc, eth:s.historicalContext.eth, reasons:s.historicalContext.reasons } : null, globalHistoricalContext: s.globalHistoricalContext ? {m15:s.globalHistoricalContext.m15,h1:s.globalHistoricalContext.h1,reasons:s.globalHistoricalContext.reasons} : null, rsi15: s.rsi15, fibConfluence: Boolean(s.fibConfluence), maxHoldHours: PAPER_MAX_HOLD_HOURS, openedAt: now(), lastCheckedAt: now(), status: 'OPEN', pnlR: null, reasons: s.reasons });
     } else {
       sendErrors++;
       console.warn(`[DELIVERY][FAIL] ${s.coin} ${s.side}: no destination confirmed delivery`);
