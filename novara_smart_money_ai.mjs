@@ -5,7 +5,7 @@ import { spawn } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 
 /*
- * NOVARA SMART MONEY AI V2.18.4 BASELINE-PRESERVED-REPORT-STATE-FIXES
+ * NOVARA SMART MONEY AI V2.21.0 FORECAST-LEDGER-EDGE-RESEARCH
  * READ-ONLY | NO ORDERS | NO AUTO-COPY | PAPER OUTCOME TRACKING
  * BTC direction is inferred from weighted multi-timeframe structure, momentum, EMA alignment and candle behavior; neutral BTC does not automatically suppress every qualified setup
  *
@@ -19,9 +19,14 @@ import { fileURLToPath } from 'node:url';
  * All eligible liquid perp markets are considered; the worker does not depend on wallet lists.
  */
 
-const VERSION = 'NOVARA-SMART-MONEY-AI-V2.20.0-PROBABILISTIC-NEXT-MOVE-ENGINE';
-const PREDICTIVE_MIN_CONVICTION = Math.max(55, Math.min(85, Number(process.env.NOVARA_PREDICTIVE_MIN_CONVICTION || 61)));
+const VERSION = 'NOVARA-SMART-MONEY-AI-V2.21.0-FORECAST-LEDGER-EDGE-RESEARCH';
+// These are directional-strength gates, never probabilities or win-rate estimates.
+const PREDICTIVE_MIN_STRENGTH = Math.max(55, Math.min(85, Number(process.env.NOVARA_PREDICTIVE_MIN_STRENGTH || 61)));
 const PREDICTIVE_MIN_EDGE_GAP = Math.max(5, Math.min(35, Number(process.env.NOVARA_PREDICTIVE_MIN_EDGE_GAP || 12)));
+const FORECAST_HORIZONS_MIN = [15, 60];
+const FORECAST_DEADBAND_PCT = Math.max(0.05, Number(process.env.NOVARA_FORECAST_DEADBAND_PCT || 0.10));
+const FORECAST_MAX_RECORDS = 30000;
+const FORECAST_SAMPLE_INTERVAL_MS = 15 * 60_000;
 const PREDICTIVE_HORIZON_MINUTES = [15, 60];
 const CLEAN_START_ID = 'NOVARA-V2.14.0-ENTRY-SIDE-BTC-GATE-REPAIR-COHORT-2026-10-30'; // Preserve existing paper cohort; no destructive reset on upgrade.
 const PAPER_MARGIN_USD = Math.max(10, Number(process.env.NOVARA_PAPER_MARGIN_USD || 1000));
@@ -743,9 +748,8 @@ function emaSpread(values, fast = 8, slow = 21) {
   const a = ema(values, fast), b = ema(values, slow);
   return a > 0 ? (a / b - 1) * 100 : 0;
 }
-// A transparent, bounded directional model. Its output is conviction, NOT a
-// statistically calibrated probability of winning. Calibration is deliberately
-// deferred until sufficient timestamped out-of-sample outcomes exist.
+// Transparent bounded directional score. It is NOT a probability. Forecast
+// quality is measured later against timestamped forward marks in the ledger.
 function predictNextMove({ c15, c1h, mid, flow, imbalance, oiChange, fundingPct, vwap15 }) {
   const closes15 = c15.map(x => x.c), closes1h = c1h.map(x => x.c);
   const last15 = c15.at(-1), last1h = c1h.at(-1);
@@ -784,17 +788,15 @@ function predictNextMove({ c15, c1h, mid, flow, imbalance, oiChange, fundingPct,
   // High-range candles with weak follow-through reduce confidence (whipsaw risk).
   const whipsawPenalty = range > 1.8 && Math.abs(r15) < range * 0.12 ? 0.035 : 0;
   raw = clamp(raw * (1 - whipsawPenalty), -0.35, 0.35);
-  const longConviction = Math.round(50 + raw * 140);
-  const shortConviction = 100 - longConviction;
-  const direction = longConviction >= shortConviction ? 'LONG' : 'SHORT';
-  const conviction = Math.max(longConviction, shortConviction);
-  const edgeGap = Math.abs(longConviction - shortConviction);
+  const direction = Math.abs(raw) < 0.035 ? 'NEUTRAL' : raw > 0 ? 'LONG' : 'SHORT';
+  const strengthIndex = Math.round(50 + (Math.abs(raw) / 0.35) * 35);
+  const edgeGapIndex = Math.round((Math.abs(raw) / 0.35) * 98);
   return {
-    direction, conviction, longConviction, shortConviction, edgeGap,
-    horizonMinutes: PREDICTIVE_HORIZON_MINUTES,
+    direction, strengthIndex: clamp(strengthIndex, 50, 85), edgeGapIndex, rawScore: Number(raw.toFixed(5)),
+    horizonMinutes: FORECAST_HORIZONS_MIN,
     expectedBias: direction === 'LONG' ? 'positive' : 'negative',
     components, diagnostics: { r15, r30, r60, r120, r1h, r4h, acceleration: accel, fastTrend, slowTrend, vwapGap, candleBody, range, whipsawPenalty },
-    label: 'directional conviction; not calibrated win probability',
+    label: 'directional strength index; NOT probability and NOT calibrated',
   };
 }
 
@@ -1198,12 +1200,12 @@ function formatSignal(s, risk) {
     const move = Number.isFinite(Number(r.change24hPct)) ? ` | 24h ${Number(r.change24hPct).toFixed(2)}%` : '';
     return `${tf}: ${ev.label || 'NEUTRAL'} (evidence ${n(ev.score).toFixed(2)}, EMA ${ev.emaAligned || 'MIXED'}${move})`;
   };
-  const modeLabel = 'ADAPTIVE BTC REGIME + PROBABILISTIC NEXT-MOVE MODEL';
+  const modeLabel = 'ADAPTIVE BTC REGIME + DIRECTIONAL FORECAST RESEARCH MODEL';
   return `${emoji} <b>NOVARA SMART MONEY AI — NEXT-MOVE SCENARIO ENGINE</b>\n🧭 BTC regime: adaptive multi-timeframe structure + momentum + EMA + rejection analysis\n📐 BTC direction: ${btc.label || 'NEUTRAL'} | regime confidence: ${n(btc.confidence)}% | score: ${n(btc.directionScore).toFixed(3)}
 🔮 Next-move scenario: ${escapeHtml(btc.nextMove?.state || 'UNAVAILABLE')}
 🧭 Scenario evidence: LONG ${n(btc.nextMove?.longScore)}/100 | SHORT ${n(btc.nextMove?.shortScore)}/100 (heuristic, NOT win probability)
 🧠 Scenario note: ${escapeHtml(btc.nextMove?.reason || 'Unavailable')}
-🧱 BTC support breakdown: ${btc.structure?.breakdown ? `CONFIRMED (${(btc.structure.confirmedBy || []).join('+')}) — LONG blocked` : 'not confirmed'}\n🧠 Historical reaction-memory gates: DISABLED (V2.20)\n━━━━━━━━━━━━━━━━━━\n<b>${s.side} ${escapeHtml(s.coin)} PERP</b>\n🧭 Setup: ${escapeHtml(s.pattern.replaceAll('_', ' '))}\n📍 Entry (reference): <code>${fmtPrice(risk.entry)}</code>\n🛑 Stop Loss: <code>${fmtPrice(risk.sl)}</code> (${pct(risk.riskPct)})\n🎯 Take Profit: <code>${fmtPrice(risk.tp)}</code> (${pct(risk.rewardPct)})\n⚖️ Planned R:R: 1:${risk.rr.toFixed(2)} gross | 1:${n(risk.netRR, risk.rr).toFixed(2)} net\n⚡ Suggested Leverage: ${lev.leverage}x${lev.cappedBelowRequestedRange ? ` (exchange max: ${Math.floor(lev.exchangeMax)}x)` : ''}\n🧠 Setup score: ${s.score.toFixed(2)}/10 (not a win-probability estimate)\n🔮 Next-move model: ${s.predictive?.direction || 'NA'} | conviction ${n(s.predictive?.conviction)}% | horizons 15m/60m (NOT calibrated win probability)\n📊 Asset 1H trend: ${s.trend}\n₿ <b>BTC MARKET CHECK</b>\n${tfLine('4H', '4H')}\n${tfLine('1H', '1H')}\n${tfLine('15m', '15m')}\n📉 Alt 15m RSI: ${n(s.rsi15, 50).toFixed(1)} | Fib: ${s.fibConfluence ? 'YES' : 'NO'} | Volume: ${s.volRatio.toFixed(2)}x\n🌊 Trade delta: ${(s.flowDelta * 100).toFixed(1)}% | Book imbalance: ${(s.imbalance * 100).toFixed(1)}%\n📈 OI change: ${s.oiChange >= 0 ? '+' : ''}${s.oiChange.toFixed(2)}% | Funding: ${s.fundingPct.toFixed(4)}%\n🧱 1H Structure: Support ${fmtPrice(s.support)} (${s.supportTouches || 0} touches) | Resistance ${fmtPrice(s.resistance)} (${s.resistanceTouches || 0} touches)\n🧩 Evidence:\n${reasons}\n\n🧪 Mode: ${modeLabel}. Paper tracking only — no real orders.`;
+🧱 BTC support breakdown: ${btc.structure?.breakdown ? `CONFIRMED (${(btc.structure.confirmedBy || []).join('+')}) — LONG blocked` : 'not confirmed'}\n🧠 Historical reaction-memory gates: DISABLED (V2.21)\n━━━━━━━━━━━━━━━━━━\n<b>${s.side} ${escapeHtml(s.coin)} PERP</b>\n🧭 Setup: ${escapeHtml(s.pattern.replaceAll('_', ' '))}\n📍 Entry (reference): <code>${fmtPrice(risk.entry)}</code>\n🛑 Stop Loss: <code>${fmtPrice(risk.sl)}</code> (${pct(risk.riskPct)})\n🎯 Take Profit: <code>${fmtPrice(risk.tp)}</code> (${pct(risk.rewardPct)})\n⚖️ Planned R:R: 1:${risk.rr.toFixed(2)} gross | 1:${n(risk.netRR, risk.rr).toFixed(2)} net\n⚡ Suggested Leverage: ${lev.leverage}x${lev.cappedBelowRequestedRange ? ` (exchange max: ${Math.floor(lev.exchangeMax)}x)` : ''}\n🧠 Setup score: ${s.score.toFixed(2)}/10 (not a win-probability estimate)\n🔮 Next-move model: ${s.predictive?.direction || 'NA'} | directional strength ${n(s.predictive?.strengthIndex)}/85 | horizons 15m/60m (NOT probability)\n📊 Asset 1H trend: ${s.trend}\n₿ <b>BTC MARKET CHECK</b>\n${tfLine('4H', '4H')}\n${tfLine('1H', '1H')}\n${tfLine('15m', '15m')}\n📉 Alt 15m RSI: ${n(s.rsi15, 50).toFixed(1)} | Fib: ${s.fibConfluence ? 'YES' : 'NO'} | Volume: ${s.volRatio.toFixed(2)}x\n🌊 Trade delta: ${(s.flowDelta * 100).toFixed(1)}% | Book imbalance: ${(s.imbalance * 100).toFixed(1)}%\n📈 OI change: ${s.oiChange >= 0 ? '+' : ''}${s.oiChange.toFixed(2)}% | Funding: ${s.fundingPct.toFixed(4)}%\n🧱 1H Structure: Support ${fmtPrice(s.support)} (${s.supportTouches || 0} touches) | Resistance ${fmtPrice(s.resistance)} (${s.resistanceTouches || 0} touches)\n🧩 Evidence:\n${reasons}\n\n🧪 Mode: ${modeLabel}. Paper tracking only — no real orders.`;
 }
 
 let telegramNextAt = 0;
@@ -1791,10 +1793,58 @@ async function analyzeAsset(asset, previous, btcRegime) {
   const imbalance = bookImbalance(book);
   const flow = tradeDelta(trades);
   const patterns = detectPatterns({ coin: asset.coin, c15, c1h, ctx: asset, prevCtx: previous, mid: asset.markPx, spread, imbalance, flow, btcRegime });
-  return patterns.map(candidate => {
-    const prediction = predictNextMove({ c15, c1h, mid: asset.markPx, flow, imbalance, oiChange: candidate.oiChange, fundingPct: candidate.fundingPct, vwap15: candidate.vwap });
-    return {...candidate, predictive: prediction, currentCandles15m:c15.slice(-4),currentCandles1h:c1h.slice(-4)};
-  });
+  const prediction = predictNextMove({ c15, c1h, mid: asset.markPx, flow, imbalance, oiChange: previous?.openInterest > 0 ? (asset.openInterest / previous.openInterest - 1) * 100 : 0, fundingPct: asset.funding * 100, vwap15: vwap(c15) });
+  const found = patterns.map(candidate => ({...candidate, predictive: prediction, currentCandles15m:c15.slice(-4),currentCandles1h:c1h.slice(-4)}));
+  found.forecast = { coin: asset.coin, at: now(), markPx: asset.markPx, direction: prediction.direction, rawScore: prediction.rawScore, strengthIndex: prediction.strengthIndex, components: prediction.components, evaluations: {} };
+  return found;
+}
+
+function updateForecastLedger(state, contexts) {
+  state.predictiveForecasts ||= [];
+  const t = now();
+  let evaluated15 = 0, evaluated60 = 0;
+  for (const f of state.predictiveForecasts) {
+    if (!f || !f.coin || !(f.markPx > 0)) continue;
+    const current = n(contexts[f.coin]?.markPx);
+    if (!(current > 0)) continue;
+    f.evaluations ||= {};
+    for (const horizon of FORECAST_HORIZONS_MIN) {
+      const key = String(horizon);
+      if (f.evaluations[key] || t - n(f.at) < horizon * 60_000) continue;
+      const returnPct = (current / f.markPx - 1) * 100;
+      const observed = Math.abs(returnPct) <= FORECAST_DEADBAND_PCT ? 'FLAT' : returnPct > 0 ? 'LONG' : 'SHORT';
+      f.evaluations[key] = {
+        observedAt: t, elapsedMinutes: Number(((t - f.at) / 60_000).toFixed(1)),
+        futureMark: current, returnPct: Number(returnPct.toFixed(5)), observed,
+        classHit: (f.direction === 'NEUTRAL' ? observed === 'FLAT' : observed === f.direction),
+        directionalHit: (f.direction === 'NEUTRAL' || observed === 'FLAT') ? null : observed === f.direction,
+        deadbandPct: FORECAST_DEADBAND_PCT,
+      };
+      if (horizon === 15) evaluated15++; else evaluated60++;
+    }
+  }
+  // Keep a bounded rolling sample; evaluated records older than 30 days are not needed.
+  state.predictiveForecasts = state.predictiveForecasts.filter(f => t - n(f.at) <= 30 * 86400_000).slice(-FORECAST_MAX_RECORDS);
+  const summary = {};
+  for (const horizon of FORECAST_HORIZONS_MIN) {
+    const rows = state.predictiveForecasts.map(f => f.evaluations?.[String(horizon)]).filter(Boolean);
+    const directional = rows.filter(x => x.directionalHit !== null && x.directionalHit !== undefined);
+    const hits = directional.filter(x => x.directionalHit).length;
+    const classHits = rows.filter(x => x.classHit).length;
+    summary[horizon] = {
+      resolved: rows.length, directional: directional.length,
+      classAccuracy: rows.length ? Number((classHits / rows.length * 100).toFixed(1)) : null,
+      accuracy: directional.length ? Number((hits / directional.length * 100).toFixed(1)) : null,
+      flatPct: rows.length ? Number(((rows.length - directional.length) / rows.length * 100).toFixed(1)) : null,
+      meanAbsMovePct: rows.length ? Number((rows.reduce((a,x)=>a+Math.abs(x.returnPct),0)/rows.length).toFixed(4)) : null,
+    };
+  }
+  console.log(`[FORECAST][LEDGER] pending=${state.predictiveForecasts.filter(f=>!FORECAST_HORIZONS_MIN.every(h=>f.evaluations?.[String(h)])).length} evaluatedNow15m=${evaluated15} evaluatedNow60m=${evaluated60} deadband=±${FORECAST_DEADBAND_PCT.toFixed(2)}%`);
+  for (const h of FORECAST_HORIZONS_MIN) {
+    const x = summary[h];
+    console.log(`[FORECAST][SCORECARD] horizon=${h}m resolved=${x.resolved} directional=${x.directional} 3classAccuracy=${x.classAccuracy === null ? 'NA' : `${x.classAccuracy}%`} directionalAccuracy=${x.accuracy === null ? 'NA' : `${x.accuracy}%`} flat=${x.flatPct === null ? 'NA' : `${x.flatPct}%`} meanAbsMove=${x.meanAbsMovePct === null ? 'NA' : `${x.meanAbsMovePct}%`} | descriptive only; not trade win rate`);
+  }
+  return summary;
 }
 
 async function main() {
@@ -1837,7 +1887,7 @@ async function main() {
   console.log(`Time: ${new Date().toISOString()}`);
   console.log(`[VERSION][REPORTING] new paper signals are tagged ${VERSION}; legacy reviews retain and identify their original strategy version.`);
   console.log(`[VERSION][REPORTING] new signals tagged ${VERSION}; legacy paper trades retain their original strategyVersion and are labelled as such in review cards.`);
-  console.log(`Strategy: standard-direction SWEEP_RECLAIM; ATR-adaptive confirmed BREAKOUT_RETEST; EMA20 reaction-confirmed TREND_PULLBACK; pattern-specific trigger gates; 1H multi-touch support/resistance independently sets fresh SL/TP; LONG stop below support and target before resistance; SHORT stop above resistance and target before support; minimum net R:R after estimated fees/slippage 1:1.5; estimated paper round-trip cost=${PAPER_ROUND_TRIP_COST_PCT.toFixed(3)}% (fee ${PAPER_FEE_BPS_PER_SIDE} bps/side + slippage ${PAPER_SLIPPAGE_BPS_PER_SIDE} bps/side); PAPER TRACKING only | Signal threshold: ${MIN_SCORE}/10 | min R:R: 1:${MIN_RR.toFixed(2)} | BTC adaptive regime: weighted 4H/1H/15m/5m structure+momentum+EMA+rejection evidence; hard directional gate only above confidence threshold; weak BTC bias is a soft filter | probabilistic next-move layer (15m/60m momentum, acceleration, trend, trade flow, book imbalance, OI/funding); legacy/global historical reaction-memory scans and gates disabled | structure-first SL/TP | 24h volume floor: NONE | market cap: NONE (all active listed perps)`);
+  console.log(`Strategy: standard-direction SWEEP_RECLAIM; ATR-adaptive confirmed BREAKOUT_RETEST; EMA20 reaction-confirmed TREND_PULLBACK; pattern-specific trigger gates; 1H multi-touch support/resistance independently sets fresh SL/TP; LONG stop below support and target before resistance; SHORT stop above resistance and target before support; minimum net R:R after estimated fees/slippage 1:1.5; estimated paper round-trip cost=${PAPER_ROUND_TRIP_COST_PCT.toFixed(3)}% (fee ${PAPER_FEE_BPS_PER_SIDE} bps/side + slippage ${PAPER_SLIPPAGE_BPS_PER_SIDE} bps/side); PAPER TRACKING only | Signal threshold: ${MIN_SCORE}/10 | min R:R: 1:${MIN_RR.toFixed(2)} | BTC adaptive regime: weighted 4H/1H/15m/5m structure+momentum+EMA+rejection evidence; hard directional gate only above confidence threshold; weak BTC bias is a soft filter | directional next-move score (15m/60m momentum, acceleration, trend, trade flow, book imbalance, OI/funding); no probability claim; all-market forecast ledger; legacy/global historical reaction-memory scans and gates disabled | structure-first SL/TP | 24h volume floor: NONE | market cap: NONE (all active listed perps)`);
   console.log(`[API][POLICY] requestGap=${SCAN_GAP_MS}ms retries429=${MAX_429_RETRIES} backoff=${RATE_LIMIT_BASE_MS}-${RATE_LIMIT_MAX_MS}ms globalCooldown=yes (shared across concurrent calls)`);
   console.log(`[TELEGRAM][CONFIG] token=${TOKEN ? 'configured' : 'MISSING'} vipChat=${VIP_CHAT ? 'configured' : (LEGACY_CHAT ? 'legacy-fallback' : 'MISSING')} freeChat=${FREE_CHAT ? 'configured' : 'MISSING'} legacyChat=${LEGACY_CHAT ? 'configured' : 'MISSING'}`);
   if (!TOKEN || (!VIP_CHAT && !LEGACY_CHAT && !FREE_CHAT)) {
@@ -1847,10 +1897,11 @@ async function main() {
   const snapshot = await getMarketSnapshot();
   const contexts = snapshot.ctxByCoin;
   const eligible = snapshot.assets;
+  updateForecastLedger(state, contexts);
   let btcRegime = await refreshBtcDirection({});
   // V2.20 disables legacy/global historical reaction-memory scans and gates.
   btcRegime.historicalMemory = null;
-  console.log('[PREDICTIVE][MODE] multi-horizon momentum + acceleration + trend + trade-flow + order-book + OI/funding; historical reaction-memory gates DISABLED');
+  console.log('[PREDICTIVE][MODE] multi-horizon directional score + timestamped 15m/60m forecast ledger; no calibrated probability claim; historical reaction-memory gates DISABLED');
   if (!n(state.lastDailyReportAt)) state.lastDailyReportAt = now(); // first report is sent after one full 24-hour observation window
   const closed = await updatePaperTrades(state, contexts);
   for (const t of closed) {
@@ -1876,6 +1927,14 @@ async function main() {
     try {
       const found = await analyzeAsset(asset, state.previousMarketContext[asset.coin], btcRegime);
       checked++;
+      if (found.forecast) {
+        state.lastForecastAtByCoin ||= {};
+        const lastForecastAt = n(state.lastForecastAtByCoin[asset.coin]);
+        if (now() - lastForecastAt >= FORECAST_SAMPLE_INTERVAL_MS) {
+          state.predictiveForecasts.push(found.forecast);
+          state.lastForecastAtByCoin[asset.coin] = found.forecast.at;
+        }
+      }
       if (found.stale) rejects.stale++;
       if (found.length) {
         // Use one coherent BTC regime snapshot for the entire cycle so candidates
@@ -1890,7 +1949,7 @@ async function main() {
           const sideAdjustment = finalSideEvidenceAdjustment(candidate, patternSide);
           candidate.score = clamp(candidate.score + sideAdjustment, 0, 9.5);
           const pred = candidate.predictive || {};
-          candidate.reasons.push(`Predictive model ${pred.direction || 'NA'} conviction=${n(pred.conviction)}% (15m/60m horizons; not a win probability)`);
+          candidate.reasons.push(`Predictive model ${pred.direction || 'NA'} strengthIndex=${n(pred.strengthIndex)}/85 (not a probability)`);
           const trendRelation = candidate.trend === patternSide ? 'aligned' : 'countertrend';
           candidate.reasons = [`${candidate.pattern === 'SWEEP_RECLAIM' ? 'STANDARD-DIRECTION SWEEP' : 'NORMAL-DIRECTION SETUP'}: side=${patternSide}; asset 1H trend=${candidate.trend} (${trendRelation}) is context; BTC adaptive regime ${liveBtc.label || 'NEUTRAL'} (${n(liveBtc.confidence)}% confidence); regime gate is applied before selection; fresh SL/TP recalculated from 1H structure`, `Same-side evidence adjustment ${sideAdjustment >= 0 ? '+' : ''}${sideAdjustment.toFixed(2)} (flow/order-book/RSI/VWAP)`, ...candidate.reasons];
           console.log(`[DIRECTION][PATTERN-SIDE] ${candidate.coin} ${candidate.pattern}: side=${patternSide}; 1H=${candidate.trend}; BTC=${liveBtc.trend}; evidenceAdjustment=${sideAdjustment.toFixed(2)}; score=${candidate.score.toFixed(2)}; entry=${fmtPrice(candidate.entry)} support=${fmtPrice(candidate.support)} resistance=${fmtPrice(candidate.resistance)}`);
@@ -1898,15 +1957,15 @@ async function main() {
       }
       for (const s of found) {
         // Predictive gate: only consider a setup when the independent next-move
-        // model points the same way and the long/short conviction gap is material.
+        // model points the same way and its directional-strength index clears the gate.
         const prediction = s.predictive || {};
-        if (prediction.direction !== s.side || n(prediction.conviction) < PREDICTIVE_MIN_CONVICTION || n(prediction.edgeGap) < PREDICTIVE_MIN_EDGE_GAP) {
-          const reason = `next-move model=${prediction.direction || 'NA'} conviction=${n(prediction.conviction)}% edgeGap=${n(prediction.edgeGap)}; requires same-side conviction >=${PREDICTIVE_MIN_CONVICTION}% and edge gap >=${PREDICTIVE_MIN_EDGE_GAP}`;
+        if (prediction.direction !== s.side || n(prediction.strengthIndex) < PREDICTIVE_MIN_STRENGTH || n(prediction.edgeGapIndex) < PREDICTIVE_MIN_EDGE_GAP) {
+          const reason = `next-move model=${prediction.direction || 'NA'} strengthIndex=${n(prediction.strengthIndex)}/85 edgeGapIndex=${n(prediction.edgeGapIndex)}; requires same-side strength >=${PREDICTIVE_MIN_STRENGTH}/85 and edge gap >=${PREDICTIVE_MIN_EDGE_GAP}`;
           console.log(`[FILTER][PREDICTIVE-EDGE] ${s.coin} ${s.side} rejected: ${reason}`);
           noteReject('regime', s, reason);
           continue;
         }
-        console.log(`[PREDICTIVE][PASS] ${s.coin} ${s.side}: conviction=${prediction.conviction}% edgeGap=${prediction.edgeGap} horizon=15/60m`);
+        console.log(`[PREDICTIVE][PASS] ${s.coin} ${s.side}: strengthIndex=${prediction.strengthIndex}/85 edgeGapIndex=${prediction.edgeGapIndex} horizon=15/60m`);
         // Confidence-aware BTC gate: weak BTC bias is context, not an automatic veto.
         // A hard opposing-direction block applies only when weighted BTC confidence is material.
         const rawBtcDirection = ['LONG', 'SHORT'].includes(s.btcRegime?.trend) ? s.btcRegime.trend : null;
@@ -2208,6 +2267,7 @@ async function main() {
   const nextCtx = {};
   for (const a of eligible) nextCtx[a.coin] = { markPx: a.markPx, openInterest: a.openInterest, funding: a.funding, at: now() };
   state.previousMarketContext = nextCtx;
+  state.predictiveForecasts = (state.predictiveForecasts || []).slice(-FORECAST_MAX_RECORDS);
   state.lastRunAt = now();
   state.lastCycle = { at: state.lastRunAt, rejectionCounts: rejects, eligible: eligible.length, totalEligible: snapshot.totalEligible, checked, failed, rawCandidates: candidates.length, signalsSelected: chosen.length, sentSignals, sendErrors, openPaperTrades: state.paperTrades.filter(t => t.status === 'OPEN').length };
 
