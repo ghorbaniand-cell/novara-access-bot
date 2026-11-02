@@ -5,7 +5,7 @@ import { spawn } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 
 /*
- * NOVARA SMART MONEY AI V2.21.0 FORECAST-LEDGER-EDGE-RESEARCH
+ * NOVARA SMART MONEY AI V2.21.1 FORECAST-INTEGRITY-REPAIR
  * READ-ONLY | NO ORDERS | NO AUTO-COPY | PAPER OUTCOME TRACKING
  * BTC direction is inferred from weighted multi-timeframe structure, momentum, EMA alignment and candle behavior; neutral BTC does not automatically suppress every qualified setup
  *
@@ -19,7 +19,7 @@ import { fileURLToPath } from 'node:url';
  * All eligible liquid perp markets are considered; the worker does not depend on wallet lists.
  */
 
-const VERSION = 'NOVARA-SMART-MONEY-AI-V2.21.0-FORECAST-LEDGER-EDGE-RESEARCH';
+const VERSION = 'NOVARA-SMART-MONEY-AI-V2.21.1-FORECAST-INTEGRITY-REPAIR';
 // These are directional-strength gates, never probabilities or win-rate estimates.
 const PREDICTIVE_MIN_STRENGTH = Math.max(55, Math.min(85, Number(process.env.NOVARA_PREDICTIVE_MIN_STRENGTH || 61)));
 const PREDICTIVE_MIN_EDGE_GAP = Math.max(5, Math.min(35, Number(process.env.NOVARA_PREDICTIVE_MIN_EDGE_GAP || 12)));
@@ -27,6 +27,8 @@ const FORECAST_HORIZONS_MIN = [15, 60];
 const FORECAST_DEADBAND_PCT = Math.max(0.05, Number(process.env.NOVARA_FORECAST_DEADBAND_PCT || 0.10));
 const FORECAST_MAX_RECORDS = 30000;
 const FORECAST_SAMPLE_INTERVAL_MS = 15 * 60_000;
+const FORECAST_METHOD = 'WINDOWED_V1';
+const FORECAST_MAX_LATE_MIN = { 15: Math.max(5, Math.min(12, Number(process.env.NOVARA_FORECAST_MAX_LATE_15M || 7))), 60: Math.max(8, Math.min(20, Number(process.env.NOVARA_FORECAST_MAX_LATE_60M || 12))) };
 const PREDICTIVE_HORIZON_MINUTES = [15, 60];
 const CLEAN_START_ID = 'NOVARA-V2.14.0-ENTRY-SIDE-BTC-GATE-REPAIR-COHORT-2026-10-30'; // Preserve existing paper cohort; no destructive reset on upgrade.
 const PAPER_MARGIN_USD = Math.max(10, Number(process.env.NOVARA_PAPER_MARGIN_USD || 1000));
@@ -1559,6 +1561,7 @@ function dailySummary(state) {
 
 async function getMarketSnapshot() {
   const result = await request({ type: 'metaAndAssetCtxs' }, 'metaAndAssetCtxs');
+  const observedAt = now(); // Timestamp the reference marks were actually fetched, not the end of the multi-minute scan.
   const meta = result?.[0];
   const contexts = result?.[1];
   if (!meta?.universe || !Array.isArray(contexts)) throw new Error('Hyperliquid metaAndAssetCtxs returned an unexpected schema');
@@ -1575,7 +1578,7 @@ async function getMarketSnapshot() {
     assets.push(ctx);
   }
   assets.sort((a, b) => b.dayVolume - a.dayVolume);
-  return { ctxByCoin, assets, totalEligible: assets.length };
+  return { ctxByCoin, assets, totalEligible: assets.length, observedAt };
 }
 async function candles(coin, interval, hours) {
   const endTime = now();
@@ -1768,7 +1771,7 @@ async function refreshBtcDirection(fallbackRegime) {
   return out;
 }
 
-async function analyzeAsset(asset, previous, btcRegime) {
+async function analyzeAsset(asset, previous, btcRegime, snapshotAt = now()) {
   const [c15, c1h] = await Promise.all([
     candles(asset.coin, '15m', 30),
     candles(asset.coin, '1h', 90),
@@ -1795,55 +1798,126 @@ async function analyzeAsset(asset, previous, btcRegime) {
   const patterns = detectPatterns({ coin: asset.coin, c15, c1h, ctx: asset, prevCtx: previous, mid: asset.markPx, spread, imbalance, flow, btcRegime });
   const prediction = predictNextMove({ c15, c1h, mid: asset.markPx, flow, imbalance, oiChange: previous?.openInterest > 0 ? (asset.openInterest / previous.openInterest - 1) * 100 : 0, fundingPct: asset.funding * 100, vwap15: vwap(c15) });
   const found = patterns.map(candidate => ({...candidate, predictive: prediction, currentCandles15m:c15.slice(-4),currentCandles1h:c1h.slice(-4)}));
-  found.forecast = { coin: asset.coin, at: now(), markPx: asset.markPx, direction: prediction.direction, rawScore: prediction.rawScore, strengthIndex: prediction.strengthIndex, components: prediction.components, evaluations: {} };
+  found.forecast = { coin: asset.coin, at: snapshotAt, markPx: asset.markPx, direction: prediction.direction, rawScore: prediction.rawScore, strengthIndex: prediction.strengthIndex, components: prediction.components, btcRegime: { direction: btcRegime?.trend || 'NEUTRAL', confidence: n(btcRegime?.confidence) }, forecastMethod: FORECAST_METHOD, path: [{ at: snapshotAt, markPx: asset.markPx }], evaluations: {} };
   return found;
 }
 
-function updateForecastLedger(state, contexts) {
+function updateForecastLedger(state, contexts, observedAt = now()) {
   state.predictiveForecasts ||= [];
-  const t = now();
-  let evaluated15 = 0, evaluated60 = 0;
+  const t = n(observedAt, now());
+  let evaluated15 = 0, evaluated60 = 0, expired15 = 0, expired60 = 0, legacyExcluded = 0;
+
+  // V2.21.0 labels were resolved at any time after the target horizon. Preserve
+  // them for audit, but never mix them into the corrected, windowed scorecards.
   for (const f of state.predictiveForecasts) {
-    if (!f || !f.coin || !(f.markPx > 0)) continue;
-    const current = n(contexts[f.coin]?.markPx);
-    if (!(current > 0)) continue;
+    if (!f || !f.coin || !(n(f.markPx) > 0)) continue;
     f.evaluations ||= {};
+    if (f.forecastMethod !== FORECAST_METHOD) {
+      f.forecastMethod = 'LEGACY_UNVERIFIED';
+      for (const horizon of FORECAST_HORIZONS_MIN) {
+        const key = String(horizon);
+        if (!f.evaluations[key]) f.evaluations[key] = { status: 'LEGACY_UNVERIFIED', quality: 'EXCLUDED_LEGACY' };
+      }
+      delete f.path;
+      legacyExcluded++;
+      continue;
+    }
+
+    const current = n(contexts[f.coin]?.markPx);
+    if (current > 0 && t >= n(f.at)) {
+      f.path ||= [{ at: n(f.at), markPx: n(f.markPx) }];
+      const last = f.path.at(-1);
+      if (!last || t > n(last.at)) f.path.push({ at: t, markPx: current });
+      // 60m window plus bounded tolerance needs at most ~16 five-minute samples.
+      f.path = f.path.slice(-20);
+    }
+
     for (const horizon of FORECAST_HORIZONS_MIN) {
       const key = String(horizon);
-      if (f.evaluations[key] || t - n(f.at) < horizon * 60_000) continue;
-      const returnPct = (current / f.markPx - 1) * 100;
-      const observed = Math.abs(returnPct) <= FORECAST_DEADBAND_PCT ? 'FLAT' : returnPct > 0 ? 'LONG' : 'SHORT';
-      f.evaluations[key] = {
-        observedAt: t, elapsedMinutes: Number(((t - f.at) / 60_000).toFixed(1)),
-        futureMark: current, returnPct: Number(returnPct.toFixed(5)), observed,
-        classHit: (f.direction === 'NEUTRAL' ? observed === 'FLAT' : observed === f.direction),
-        directionalHit: (f.direction === 'NEUTRAL' || observed === 'FLAT') ? null : observed === f.direction,
-        deadbandPct: FORECAST_DEADBAND_PCT,
-      };
-      if (horizon === 15) evaluated15++; else evaluated60++;
+      if (f.evaluations[key]) continue;
+      const targetAt = n(f.at) + horizon * 60_000;
+      const deadlineAt = targetAt + FORECAST_MAX_LATE_MIN[horizon] * 60_000;
+      const path = Array.isArray(f.path) ? f.path : [];
+      // Use the first captured mark at/after the target, never a much later mark.
+      const targetPoint = path.find(point => n(point.at) >= targetAt && n(point.at) <= deadlineAt && n(point.markPx) > 0);
+      if (targetPoint) {
+        const returnPct = (n(targetPoint.markPx) / n(f.markPx) - 1) * 100;
+        const observed = Math.abs(returnPct) <= FORECAST_DEADBAND_PCT ? 'FLAT' : returnPct > 0 ? 'LONG' : 'SHORT';
+        const pathToTarget = path.filter(point => n(point.at) >= n(f.at) && n(point.at) <= n(targetPoint.at) && n(point.markPx) > 0);
+        const signedReturns = pathToTarget.map(point => ((n(point.markPx) / n(f.markPx) - 1) * 100) * (f.direction === 'SHORT' ? -1 : 1));
+        const mfe = f.direction === 'NEUTRAL' || !signedReturns.length ? null : Math.max(0, ...signedReturns);
+        const mae = f.direction === 'NEUTRAL' || !signedReturns.length ? null : Math.max(0, ...signedReturns.map(x => -x));
+        const elapsedMinutes = (n(targetPoint.at) - n(f.at)) / 60_000;
+        f.evaluations[key] = {
+          status: 'RESOLVED', quality: 'IN_WINDOW', method: FORECAST_METHOD,
+          observedAt: n(targetPoint.at), elapsedMinutes: Number(elapsedMinutes.toFixed(2)),
+          latenessMinutes: Number((elapsedMinutes - horizon).toFixed(2)),
+          futureMark: n(targetPoint.markPx), returnPct: Number(returnPct.toFixed(5)), observed,
+          classHit: (f.direction === 'NEUTRAL' ? observed === 'FLAT' : observed === f.direction),
+          directionalHit: (f.direction === 'NEUTRAL' || observed === 'FLAT') ? null : observed === f.direction,
+          sampledMfePct: mfe === null ? null : Number(mfe.toFixed(5)),
+          sampledMaePct: mae === null ? null : Number(mae.toFixed(5)),
+          deadbandPct: FORECAST_DEADBAND_PCT,
+        };
+        if (horizon === 15) evaluated15++; else evaluated60++;
+      } else if (t > deadlineAt) {
+        f.evaluations[key] = { status: 'EXPIRED', quality: 'OUT_OF_WINDOW', expiredAt: t, targetAt, deadlineAt, maxLatenessMinutes: FORECAST_MAX_LATE_MIN[horizon] };
+        if (horizon === 15) expired15++; else expired60++;
+      }
     }
+    if (FORECAST_HORIZONS_MIN.every(h => f.evaluations[String(h)])) delete f.path;
   }
-  // Keep a bounded rolling sample; evaluated records older than 30 days are not needed.
+
+  // Keep a bounded rolling sample; retain legacy outcomes for audit, but exclude them from metrics.
   state.predictiveForecasts = state.predictiveForecasts.filter(f => t - n(f.at) <= 30 * 86400_000).slice(-FORECAST_MAX_RECORDS);
-  const summary = {};
-  for (const horizon of FORECAST_HORIZONS_MIN) {
-    const rows = state.predictiveForecasts.map(f => f.evaluations?.[String(horizon)]).filter(Boolean);
-    const directional = rows.filter(x => x.directionalHit !== null && x.directionalHit !== undefined);
-    const hits = directional.filter(x => x.directionalHit).length;
-    const classHits = rows.filter(x => x.classHit).length;
-    summary[horizon] = {
+  const validRows = horizon => state.predictiveForecasts
+    .filter(f => f.forecastMethod === FORECAST_METHOD)
+    .map(f => ({ forecast: f, outcome: f.evaluations?.[String(horizon)] }))
+    .filter(row => row.outcome?.quality === 'IN_WINDOW' && row.outcome?.status === 'RESOLVED');
+  const statsFor = rows => {
+    const outcomes = rows.map(row => row.outcome);
+    const directional = rows.filter(row => row.forecast.direction !== 'NEUTRAL' && row.outcome.observed !== 'FLAT');
+    const hits = directional.filter(row => row.outcome.directionalHit).length;
+    const classHits = outcomes.filter(x => x.classHit).length;
+    const values = key => outcomes.map(x => x[key]).filter(x => Number.isFinite(x));
+    const avg = arr => arr.length ? Number((arr.reduce((a,b)=>a+b,0)/arr.length).toFixed(4)) : null;
+    return {
       resolved: rows.length, directional: directional.length,
       classAccuracy: rows.length ? Number((classHits / rows.length * 100).toFixed(1)) : null,
       accuracy: directional.length ? Number((hits / directional.length * 100).toFixed(1)) : null,
-      flatPct: rows.length ? Number(((rows.length - directional.length) / rows.length * 100).toFixed(1)) : null,
-      meanAbsMovePct: rows.length ? Number((rows.reduce((a,x)=>a+Math.abs(x.returnPct),0)/rows.length).toFixed(4)) : null,
+      flatPct: rows.length ? Number((outcomes.filter(x=>x.observed==='FLAT').length / rows.length * 100).toFixed(1)) : null,
+      meanAbsMovePct: avg(values('returnPct').map(Math.abs)),
+      meanMfePct: avg(values('sampledMfePct')), meanMaePct: avg(values('sampledMaePct')),
+      meanElapsedMinutes: avg(values('elapsedMinutes')),
+      maxLatenessMinutes: FORECAST_MAX_LATE_MIN,
     };
+  };
+  const summary = {};
+  for (const horizon of FORECAST_HORIZONS_MIN) {
+    const rows = validRows(horizon);
+    const x = statsFor(rows);
+    const expired = state.predictiveForecasts.filter(f => f.forecastMethod === FORECAST_METHOD && f.evaluations?.[String(horizon)]?.status === 'EXPIRED').length;
+    summary[horizon] = { ...x, expired };
+    console.log(`[FORECAST][SCORECARD] horizon=${horizon}m resolved=${x.resolved} expired=${expired} directional=${x.directional} 3classAccuracy=${x.classAccuracy === null ? 'NA' : `${x.classAccuracy}%`} directionalAccuracy=${x.accuracy === null ? 'NA' : `${x.accuracy}%`} flat=${x.flatPct === null ? 'NA' : `${x.flatPct}%`} meanAbsMove=${x.meanAbsMovePct === null ? 'NA' : `${x.meanAbsMovePct}%`} sampledMFE=${x.meanMfePct === null ? 'NA' : `${x.meanMfePct}%`} sampledMAE=${x.meanMaePct === null ? 'NA' : `${x.meanMaePct}%`} meanElapsed=${x.meanElapsedMinutes === null ? 'NA' : `${x.meanElapsedMinutes}m`} maxLate=${FORECAST_MAX_LATE_MIN[horizon]}m | windowed descriptive accuracy; not trade win rate`);
+
+    for (const [dimension, keyOf] of [
+      ['predictedSide', row => row.forecast.direction || 'NA'],
+      ['btcRegime', row => row.forecast.btcRegime?.direction || 'UNKNOWN'],
+    ]) {
+      const groups = new Map();
+      for (const row of rows) {
+        const key = keyOf(row);
+        if (!groups.has(key)) groups.set(key, []);
+        groups.get(key).push(row);
+      }
+      for (const [group, groupRows] of groups) {
+        const g = statsFor(groupRows);
+        console.log(`[FORECAST][BREAKDOWN] horizon=${horizon}m dimension=${dimension} group=${group} n=${g.resolved} 3class=${g.classAccuracy ?? 'NA'}% directional=${g.accuracy ?? 'NA'}% directionalN=${g.directional}`);
+      }
+    }
   }
-  console.log(`[FORECAST][LEDGER] pending=${state.predictiveForecasts.filter(f=>!FORECAST_HORIZONS_MIN.every(h=>f.evaluations?.[String(h)])).length} evaluatedNow15m=${evaluated15} evaluatedNow60m=${evaluated60} deadband=±${FORECAST_DEADBAND_PCT.toFixed(2)}%`);
-  for (const h of FORECAST_HORIZONS_MIN) {
-    const x = summary[h];
-    console.log(`[FORECAST][SCORECARD] horizon=${h}m resolved=${x.resolved} directional=${x.directional} 3classAccuracy=${x.classAccuracy === null ? 'NA' : `${x.classAccuracy}%`} directionalAccuracy=${x.accuracy === null ? 'NA' : `${x.accuracy}%`} flat=${x.flatPct === null ? 'NA' : `${x.flatPct}%`} meanAbsMove=${x.meanAbsMovePct === null ? 'NA' : `${x.meanAbsMovePct}%`} | descriptive only; not trade win rate`);
-  }
+  const pending = state.predictiveForecasts.filter(f => f.forecastMethod === FORECAST_METHOD && FORECAST_HORIZONS_MIN.some(h => !f.evaluations?.[String(h)] && !['EXPIRED','LEGACY_UNVERIFIED'].includes(f.evaluations?.[String(h)]?.status))).length;
+  console.log(`[FORECAST][LEDGER] method=${FORECAST_METHOD} pending=${pending} evaluatedNow15m=${evaluated15} evaluatedNow60m=${evaluated60} expiredNow15m=${expired15} expiredNow60m=${expired60} legacyExcluded=${legacyExcluded} window15m=15-${15+FORECAST_MAX_LATE_MIN[15]}m window60m=60-${60+FORECAST_MAX_LATE_MIN[60]}m deadband=±${FORECAST_DEADBAND_PCT.toFixed(2)}%`);
   return summary;
 }
 
@@ -1897,11 +1971,11 @@ async function main() {
   const snapshot = await getMarketSnapshot();
   const contexts = snapshot.ctxByCoin;
   const eligible = snapshot.assets;
-  updateForecastLedger(state, contexts);
+  updateForecastLedger(state, contexts, snapshot.observedAt);
   let btcRegime = await refreshBtcDirection({});
   // V2.20 disables legacy/global historical reaction-memory scans and gates.
   btcRegime.historicalMemory = null;
-  console.log('[PREDICTIVE][MODE] multi-horizon directional score + timestamped 15m/60m forecast ledger; no calibrated probability claim; historical reaction-memory gates DISABLED');
+  console.log('[PREDICTIVE][MODE] multi-horizon directional score + window-validated 15m/60m forecast ledger; no calibrated probability claim; historical reaction-memory gates DISABLED');
   if (!n(state.lastDailyReportAt)) state.lastDailyReportAt = now(); // first report is sent after one full 24-hour observation window
   const closed = await updatePaperTrades(state, contexts);
   for (const t of closed) {
@@ -1925,7 +1999,7 @@ async function main() {
   const noteReject = (kind, s, reason) => { rejects[kind]++; if (rejectionSamples.length < 18) rejectionSamples.push(`${s.coin} ${s.side} ${s.pattern}: ${reason}`); };
   for (const asset of eligible) {
     try {
-      const found = await analyzeAsset(asset, state.previousMarketContext[asset.coin], btcRegime);
+      const found = await analyzeAsset(asset, state.previousMarketContext[asset.coin], btcRegime, snapshot.observedAt);
       checked++;
       if (found.forecast) {
         state.lastForecastAtByCoin ||= {};
