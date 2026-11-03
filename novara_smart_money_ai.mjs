@@ -5,11 +5,11 @@ import { spawn } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 
 /*
- * NOVARA SMART MONEY AI V2.19.0 FULL-REVERSE-FIXED-1.5-0.5
+ * NOVARA SMART MONEY AI V2.20.0 ORIGINAL-DIRECTION-FIXED-TP1P5-SL0P5
  * READ-ONLY | NO ORDERS | NO AUTO-COPY | PAPER OUTCOME TRACKING
  * BTC direction is inferred from weighted multi-timeframe structure, momentum, EMA alignment and candle behavior; neutral BTC does not automatically suppress every qualified setup
  *
- * FULL REVERSE MODE: every qualified LONG is published/tracked as SHORT and vice versa; fixed TP=1.50%, SL=0.50%.\n * Combines three entry families:
+ * Combines three entry families:
  *  1) Liquidity sweep + reclaim (standard directional interpretation)
  *  2) Breakout + successful retest (normal direction)
  *  3) Trend pullback + continuation (normal direction)
@@ -19,7 +19,7 @@ import { fileURLToPath } from 'node:url';
  * All eligible liquid perp markets are considered; the worker does not depend on wallet lists.
  */
 
-const VERSION = 'NOVARA-SMART-MONEY-AI-V2.19.0-FULL-REVERSE-FIXED-1P5-0P5';
+const VERSION = 'NOVARA-SMART-MONEY-AI-V2.20.0-ORIGINAL-DIRECTION-FIXED-TP1P5-SL0P5';
 const CLEAN_START_ID = 'NOVARA-V2.14.0-ENTRY-SIDE-BTC-GATE-REPAIR-COHORT-2026-10-30'; // Preserve existing paper cohort; no destructive reset on upgrade.
 const PAPER_MARGIN_USD = Math.max(10, Number(process.env.NOVARA_PAPER_MARGIN_USD || 1000));
 const PAPER_MAX_HOLD_HOURS = Math.max(6, Math.min(72, Number(process.env.NOVARA_PAPER_MAX_HOLD_HOURS || 24)));
@@ -692,23 +692,29 @@ function detectPatterns({ coin, c15, c1h, ctx, prevCtx, mid, spread, imbalance, 
   return results;
 }
 
-function buildFixedReverseRisk(candidate) {
+function buildFixedRisk(candidate) {
   const entry = n(candidate.entry);
   if (!(entry > 0) || !['LONG', 'SHORT'].includes(candidate.side)) {
-    return { entry, sl: 0, tp: 0, riskPct: 0, rewardPct: 0, rr: 0, netRR: 0, valid: false, reason: 'invalid entry/side for fixed reverse risk' };
+    return { entry, sl: 0, tp: 0, riskPct: 0, rewardPct: 0, rr: 0, netRR: 0, valid: false, reason: 'invalid entry/side for fixed-percentage risk' };
   }
+
+  // Fixed paper levels for every pattern: 0.50% stop and 1.50% target.
+  // Preserve the detected direction; LONG remains LONG and SHORT remains SHORT.
   const riskPct = 0.5;
   const rewardPct = 1.5;
-  const long = candidate.side === 'LONG';
-  const sl = entry * (long ? 1 - riskPct / 100 : 1 + riskPct / 100);
-  const tp = entry * (long ? 1 + rewardPct / 100 : 1 - rewardPct / 100);
+  const isLong = candidate.side === 'LONG';
+  const sl = entry * (isLong ? 1 - riskPct / 100 : 1 + riskPct / 100);
+  const tp = entry * (isLong ? 1 + rewardPct / 100 : 1 - rewardPct / 100);
   const rr = rewardPct / riskPct;
   const estimatedCostR = PAPER_ROUND_TRIP_COST_PCT / riskPct;
   const netRR = Math.max(0, rr - estimatedCostR);
+
   return {
     entry, sl, tp, riskPct, rewardPct, rr, estimatedCostR, netRR,
     valid: sl > 0 && tp > 0 && netRR >= MIN_RR,
-    reason: netRR < MIN_RR ? `fixed reverse net R:R 1:${netRR.toFixed(2)} below minimum 1:${MIN_RR.toFixed(2)}` : null,
+    reason: netRR < MIN_RR
+      ? `fixed-level net R:R 1:${netRR.toFixed(2)} below minimum 1:${MIN_RR.toFixed(2)}`
+      : null,
     fixedPercentRisk: true
   };
 }
@@ -1845,14 +1851,8 @@ async function main() {
           }
           console.log(`[FILTER][BTC-COUNTERTREND][PASS] ${s.coin} ${s.side}: BTC ${s.btcRegime.label} ${n(s.btcRegime.change24hPct).toFixed(2)}%/24h; score=${s.score.toFixed(2)} evidence=${evidence.count} [${evidence.passed.join(',')}]`);
         }
-        // Reverse every qualified setup only after its original pattern, location,
-        // BTC and quality checks have passed. The emitted/paper-tracked side is the opposite.
-        const detectedSide = s.side;
-        s.side = oppositeSide(detectedSide);
-        s.detectedSide = detectedSide;
-        s.reasons = [...(s.reasons || []), `REVERSE MODE: detected ${detectedSide}; published ${s.side}`];
         if (isCooldown(state, s)) { noteReject('cooldown', s, '30-minute cross-pattern / 90-minute per-pattern cooldown'); continue; }
-        const risk = buildFixedReverseRisk(s);
+        const risk = buildFixedRisk(s);
         if (risk.valid) {
           const estimatedCostR = PAPER_ROUND_TRIP_COST_PCT / Math.max(0.01, n(risk.riskPct));
           risk.estimatedCostR = estimatedCostR;
@@ -1870,13 +1870,13 @@ async function main() {
           }
           continue;
         }
-        // Use the exact structural anchors selected by buildRisk() in the alert and paper record.
+        // Keep detected support/resistance context for diagnostics; fixed SL/TP are recorded in the alert and paper trade.
         if (risk.selectedSupport > 0) { s.support = risk.selectedSupport; s.supportTouches = risk.supportTouches || s.supportTouches; }
         if (risk.selectedResistance > 0) { s.resistance = risk.selectedResistance; s.resistanceTouches = risk.resistanceTouches || s.resistanceTouches; }
         // Avoid chasing a move that has already travelled too far from its 15m mean.
         const distanceToVwap = Math.abs((s.entry - s.vwap) / s.entry) * 100;
         if (distanceToVwap > Math.max(2.2, s.atr / s.entry * 100 * 2.8)) { noteReject('vwap', s, `distance ${distanceToVwap.toFixed(2)}%`); continue; }
-        // Direction has already been resolved per pattern; risk levels are independently structure-validated.
+        // Original pattern direction is preserved; fixed 0.50% SL / 1.50% TP are applied to every accepted setup.
         s.risk = risk;
         s.leverageInfo = suggestLeverage(s);
         candidates.push(s); rejects.accepted++;
