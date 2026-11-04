@@ -38,10 +38,14 @@ jobs:
           FREE_CHAT_ID: ${{ vars.FREE_CHAT_ID }}
           TELEGRAM_CHAT_ID: ${{ vars.TELEGRAM_CHAT_ID }}
           NOVARA_SMART_REQUEST_GAP_MS: '300'
-          NOVARA_PREDICTIVE_MIN_CONVICTION: '61'
+          NOVARA_PREDICTIVE_MIN_STRENGTH: '61'
+          NOVARA_FORECAST_DEADBAND_PCT: '0.10'
+          NOVARA_FORECAST_MAX_LATE_15M: '7'
+          NOVARA_FORECAST_MAX_LATE_60M: '12'
           NOVARA_PREDICTIVE_MIN_EDGE_GAP: '12'
           NOVARA_SMART_MIN_SCORE: '6.0'
           NOVARA_SMART_MIN_RR: '1.5'
+          NOVARA_REVERSE_BREAKOUT_ONLY: 'true'
           NOVARA_PAPER_MAX_HOLD_HOURS: '24'
         shell: bash
         run: |
@@ -50,7 +54,7 @@ jobs:
           node --version
           node novara_smart_money_ai.mjs
 
-      - name: Persist paper outcomes and predictive metadata
+      - name: Persist paper outcomes and window-validated forecast ledger
         if: always()
         shell: bash
         run: |
@@ -61,7 +65,7 @@ jobs:
             git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
             git add -f "$STATE"
             if ! git diff --cached --quiet; then
-              git commit -m "Persist NOVARA paper outcomes and predictive metadata [skip ci]"
+              git commit -m "Persist NOVARA paper outcomes and forecast research ledger [skip ci]"
               git push
             else
               echo "No state changes to persist."
