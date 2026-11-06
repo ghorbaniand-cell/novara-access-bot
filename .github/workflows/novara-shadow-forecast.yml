@@ -48,6 +48,8 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: novara-shadow-forecast-${{ github.run_id }}
-          path: production/shadow/scorecard.json
+          path: |
+            production/shadow/scorecard.json
+            production/shadow/novara_shadow_state.json
           retention-days: 90
           if-no-files-found: error
