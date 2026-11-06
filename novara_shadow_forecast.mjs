@@ -1,7 +1,7 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 
-// NOVARA SHADOW FORECAST — isolated research runner.
+// NOVARA SHADOW FORECAST V1.1 — isolated research runner.
 // READ-ONLY: no orders, no Telegram, no signal routing, never opens or edits the production state.
 const API = (process.env.HYPERLIQUID_API_URL || 'https://api.hyperliquid.xyz/info').trim();
 const OUT_DIR = process.env.NOVARA_SHADOW_DIR || 'production/shadow';
@@ -11,7 +11,8 @@ const REQUEST_GAP_MS = Math.max(200, Number(process.env.NOVARA_SHADOW_REQUEST_GA
 const TIMEOUT_MS = Math.max(3000, Number(process.env.NOVARA_SHADOW_TIMEOUT_MS || 12000));
 const MAX_RETRIES = Math.max(0, Math.min(4, Number(process.env.NOVARA_SHADOW_RETRIES || 3)));
 const DEAD_BAND_PCT = Math.max(0.03, Number(process.env.NOVARA_SHADOW_DEADBAND_PCT || 0.10));
-const MAX_LATE_MIN = { 15: 7, 60: 12 };
+const EXPERIMENT_VERSION = 'NOVARA_SHADOW_FORECAST_V1.1';
+const MAX_OUTCOME_AGE_HOURS = 48;
 const MAX_AGE_MIN = Math.max(10, Number(process.env.NOVARA_SHADOW_MAX_FEATURE_AGE_MIN || 45));
 const WORKERS = Math.max(1, Math.min(8, Number(process.env.NOVARA_SHADOW_WORKERS || 4)));
 const MAX_MARKETS = Math.max(0, Number(process.env.NOVARA_SHADOW_MAX_MARKETS || 0)); // 0 = all active perps
@@ -167,41 +168,81 @@ async function pool(items, worker) {
   });
   await Promise.all(runners); return out;
 }
-function evaluate(state, mids, observedAt) {
-  let resolved = 0, expired = 0;
-  for (const f of state.forecasts) {
-    const h = f.horizonMinutes; if (f.outcome || f.expired) continue;
-    const target = f.forecastAt + h * 60_000, deadline = target + MAX_LATE_MIN[h] * 60_000;
-    if (observedAt < target) continue;
-    if (observedAt > deadline) { f.expired = { at: observedAt, reason: 'outside_evaluation_window' }; expired++; continue; }
-    const px = num(mids[f.coin]); if (!(px > 0) || !(f.referencePrice > 0)) continue;
-    const ret = (px / f.referencePrice - 1) * 100;
-    const observed = Math.abs(ret) <= DEAD_BAND_PCT ? 'FLAT' : ret > 0 ? 'LONG' : 'SHORT';
-    const directionalHit = f.modelDirection !== 'NEUTRAL' && observed !== 'FLAT' && f.modelDirection === observed;
-    const baselineHit = f.baselineDirection !== 'NEUTRAL' && observed !== 'FLAT' && f.baselineDirection === observed;
-    f.outcome = { observedAt, observedPrice: px, returnPct: Number(ret.toFixed(6)), observed, directionalHit, baselineHit,
-      modelClassHit: f.modelDirection === observed, baselineClassHit: f.baselineDirection === observed, elapsedMinutes: Number(((observedAt - f.forecastAt) / 60000).toFixed(2)) };
-    resolved++;
+function parseCompleted1m(raw, observedAt) {
+  return (Array.isArray(raw) ? raw : [])
+    .map(c => ({ t: num(c.t), T: num(c.T), c: num(c.c) }))
+    .filter(c => c.t > 0 && c.c > 0 && c.T > 0 && c.T <= observedAt)
+    .sort((a, b) => a.t - b.t);
+}
+async function evaluateHistorical(state, observedAt) {
+  const due = state.forecasts.filter(f => f.experimentVersion === EXPERIMENT_VERSION && !f.outcome && !f.expired && observedAt >= f.forecastAt + f.horizonMinutes * 60_000);
+  const byCoin = new Map();
+  for (const f of due) {
+    if (!byCoin.has(f.coin)) byCoin.set(f.coin, []);
+    byCoin.get(f.coin).push(f);
   }
-  return { resolved, expired };
+  let resolved = 0, expired = 0, historyErrors = 0;
+  const jobs = [...byCoin.entries()].map(([coin, forecasts]) => ({ coin, forecasts }));
+  const histories = await pool(jobs, async ({ coin, forecasts }) => {
+    const earliestTarget = Math.min(...forecasts.map(f => f.forecastAt + f.horizonMinutes * 60_000));
+    const raw = await info({ type: 'candleSnapshot', req: { coin, interval: '1m', startTime: earliestTarget - 120_000, endTime: observedAt } }, `${coin} 1m outcome candles`);
+    return { coin, candles: parseCompleted1m(raw, observedAt) };
+  });
+  const historyByCoin = new Map();
+  for (const item of histories) {
+    if (item.error) { historyErrors++; continue; }
+    historyByCoin.set(item.coin, item.candles);
+  }
+  for (const f of due) {
+    const candles = historyByCoin.get(f.coin);
+    if (!candles) continue; // retry on the next cycle; do not turn an API error into a failed forecast.
+    const target = f.forecastAt + f.horizonMinutes * 60_000;
+    // Use the completed 1m candle containing the target timestamp. Its close is
+    // observed no more than ~60 seconds after the target and is reproducible later.
+    const candle = candles.find(c => c.t <= target && c.T >= target) || candles.find(c => c.t >= target && c.t < target + 60_000);
+    if (candle) {
+      const ret = (candle.c / f.referencePrice - 1) * 100;
+      const observed = Math.abs(ret) <= DEAD_BAND_PCT ? 'FLAT' : ret > 0 ? 'LONG' : 'SHORT';
+      const directionalHit = f.modelDirection !== 'NEUTRAL' && observed !== 'FLAT' && f.modelDirection === observed;
+      const baselineHit = f.baselineDirection !== 'NEUTRAL' && observed !== 'FLAT' && f.baselineDirection === observed;
+      f.outcome = { observedAt, outcomePriceAt: candle.T, observedPrice: candle.c, returnPct: Number(ret.toFixed(6)), observed, directionalHit, baselineHit,
+        modelClassHit: f.modelDirection === observed, baselineClassHit: f.baselineDirection === observed,
+        elapsedMinutes: Number(((candle.T - f.forecastAt) / 60000).toFixed(2)), evaluationLagSeconds: Math.max(0, Math.round((candle.T - target) / 1000)), outcomeSource: 'hyperliquid_completed_1m_candle_close' };
+      resolved++;
+    } else if (observedAt - target > MAX_OUTCOME_AGE_HOURS * 3_600_000) {
+      f.expired = { at: observedAt, reason: 'historical_1m_candle_unavailable_after_48h' };
+      expired++;
+    }
+  }
+  return { resolved, expired, historyCoinsRequested: jobs.length, historyErrors };
 }
 function metrics(state, h) {
-  const rows = state.forecasts.filter(f => f.horizonMinutes === h && f.outcome && !f.expired);
+  const rows = state.forecasts.filter(f => f.experimentVersion === EXPERIMENT_VERSION && f.horizonMinutes === h && f.outcome && !f.expired);
   const directional = rows.filter(f => f.modelDirection !== 'NEUTRAL' && f.outcome.observed !== 'FLAT');
   const baseDirectional = rows.filter(f => f.baselineDirection !== 'NEUTRAL' && f.outcome.observed !== 'FLAT');
-  const hit = xs => xs.length ? Number((xs.filter(f => f.outcome.directionalHit ?? f.outcome.baselineHit).length / xs.length * 100).toFixed(2)) : null;
+  const paired = rows.filter(f => f.modelDirection !== 'NEUTRAL' && f.baselineDirection !== 'NEUTRAL' && f.outcome.observed !== 'FLAT');
   const modelHits = directional.filter(f => f.outcome.directionalHit).length;
   const baselineHits = baseDirectional.filter(f => f.outcome.baselineHit).length;
+  const pairedModelHits = paired.filter(f => f.outcome.directionalHit).length;
+  const pairedBaselineHits = paired.filter(f => f.outcome.baselineHit).length;
   const classAcc = key => rows.length ? Number((rows.filter(f => f.outcome[key]).length / rows.length * 100).toFixed(2)) : null;
   const observedCounts = { LONG: 0, SHORT: 0, FLAT: 0 };
   for (const f of rows) observedCounts[f.outcome.observed]++;
-  const alwaysLong = rows.length ? Number((rows.filter(f => f.outcome.observed === 'LONG').length / rows.length * 100).toFixed(2)) : null;
+  const alwaysLong = rows.length ? Number((observedCounts.LONG / rows.length * 100).toFixed(2)) : null;
+  const alwaysShort = rows.length ? Number((observedCounts.SHORT / rows.length * 100).toFixed(2)) : null;
+  const directionalObservedN = observedCounts.LONG + observedCounts.SHORT;
   return { n: rows.length, directionalN: directional.length, directionalAccuracyPct: directional.length ? Number((modelHits / directional.length * 100).toFixed(2)) : null,
     baselineDirectionalN: baseDirectional.length, baselineDirectionalAccuracyPct: baseDirectional.length ? Number((baselineHits / baseDirectional.length * 100).toFixed(2)) : null,
+    pairedDirectionalN: paired.length,
+    pairedModelDirectionalAccuracyPct: paired.length ? Number((pairedModelHits / paired.length * 100).toFixed(2)) : null,
+    pairedBaselineDirectionalAccuracyPct: paired.length ? Number((pairedBaselineHits / paired.length * 100).toFixed(2)) : null,
+    pairedModelMinusBaselinePctPoints: paired.length ? Number(((pairedModelHits - pairedBaselineHits) / paired.length * 100).toFixed(2)) : null,
+    alwaysLongDirectionalAccuracyPct: directionalObservedN ? Number((observedCounts.LONG / directionalObservedN * 100).toFixed(2)) : null,
+    alwaysShortDirectionalAccuracyPct: directionalObservedN ? Number((observedCounts.SHORT / directionalObservedN * 100).toFixed(2)) : null,
     modelThreeClassAccuracyPct: classAcc('modelClassHit'), baselineThreeClassAccuracyPct: classAcc('baselineClassHit'),
-    alwaysLongThreeClassAccuracyPct: alwaysLong, observedCounts,
+    alwaysLongThreeClassAccuracyPct: alwaysLong, alwaysShortThreeClassAccuracyPct: alwaysShort, observedCounts,
     modelNeutralPct: rows.length ? Number((rows.filter(f => f.modelDirection === 'NEUTRAL').length / rows.length * 100).toFixed(2)) : null,
-    expired: state.forecasts.filter(f => f.horizonMinutes === h && f.expired).length };
+    expired: state.forecasts.filter(f => f.experimentVersion === EXPERIMENT_VERSION && f.horizonMinutes === h && f.expired).length };
 }
 async function main() {
   const started = now();
@@ -209,6 +250,8 @@ async function main() {
   const metaCtx = await info({ type: 'metaAndAssetCtxs' }, 'metaAndAssetCtxs');
   const meta = metaCtx?.[0], contexts = metaCtx?.[1];
   if (!Array.isArray(meta?.universe) || !Array.isArray(contexts)) throw new Error('Unexpected metaAndAssetCtxs schema');
+  const evaluationStartedAt = now();
+  const evalResult = await evaluateHistorical(state, evaluationStartedAt);
   let assets = meta.universe.map((u, i) => ({ coin: String(u.name || ''), mark: num(contexts[i]?.markPx || contexts[i]?.midPx), dayVolume: num(contexts[i]?.dayNtlVlm), fundingPct: num(contexts[i]?.funding) * 100, oi: num(contexts[i]?.openInterest), delisted: Boolean(u.isDelisted) }))
     .filter(x => x.coin && x.mark > 0 && !x.delisted).sort((a, b) => b.dayVolume - a.dayVolume);
   const universeCount = assets.length;
@@ -217,12 +260,11 @@ async function main() {
   const featureRows = await pool(assets, fetchAssetFeatures);
   const mids = await info({ type: 'allMids' }, 'allMids');
   const observedAt = now();
-  const evalResult = evaluate(state, mids || {}, observedAt);
   state.lastMarketContext ||= {};
   const previous = state.lastMarketContext;
   let created15 = 0, created60 = 0, skipped = 0, failed = 0, stale = 0;
   const addForecast = (row, asset, mark, horizon, direction, baseline, prediction) => {
-    state.forecasts.push({ id: `${row.coin}|${horizon}|${observedAt}`, coin: row.coin, horizonMinutes: horizon, forecastAt: observedAt, referencePrice: mark,
+    state.forecasts.push({ id: `${row.coin}|${horizon}|${observedAt}`, experimentVersion: EXPERIMENT_VERSION, coin: row.coin, horizonMinutes: horizon, forecastAt: observedAt, referencePrice: mark,
       priceSource: 'allMids_after_feature_collection', featureFetchedAt: row.fetchedAt, featureAgeMs: observedAt - row.fetchedAt,
       lastCompleted15mCloseAt: row.last15CloseAt, lastCompleted1hCloseAt: row.last1hCloseAt,
       orderBookAvailable: row.bookAvailable, orderBookSnapshotImbalance: row.imbalance, recentTrades: row.flow,
@@ -263,10 +305,10 @@ async function main() {
   const m15 = metrics(state, 15), m60 = metrics(state, 60);
   state.lastRunAt = observedAt;
   await saveState(state);
-  await fs.writeFile(path.join(OUT_DIR, 'scorecard.json'), JSON.stringify({ at: observedAt, universeCount, scanned: assets.length, featureSuccess: featureRows.filter(x => !x.error && !x.skipped).length, failed, skipped, stale, created15, created60, evaluated: evalResult, horizons: { 15: m15, 60: m60 } }, null, 2) + '\n');
-  console.log(`[SHADOW][CYCLE] featureOK=${featureRows.filter(x => !x.error && !x.skipped).length}/${assets.length} failed=${failed} skipped=${skipped} stale=${stale} new15m=${created15} new60m=${created60} evaluated=${evalResult.resolved} expired=${evalResult.expired} runtime=${((now() - started) / 1000).toFixed(1)}s`);
+  await fs.writeFile(path.join(OUT_DIR, 'scorecard.json'), JSON.stringify({ version: EXPERIMENT_VERSION, at: observedAt, universeCount, scanned: assets.length, featureSuccess: featureRows.filter(x => !x.error && !x.skipped).length, failed, skipped, stale, created15, created60, evaluated: evalResult, horizons: { 15: m15, 60: m60 } }, null, 2) + '\n');
+  console.log(`[SHADOW][CYCLE] featureOK=${featureRows.filter(x => !x.error && !x.skipped).length}/${assets.length} failed=${failed} skipped=${skipped} stale=${stale} new15m=${created15} new60m=${created60} evaluated=${evalResult.resolved} expired=${evalResult.expired} historyCoins=${evalResult.historyCoinsRequested} historyErrors=${evalResult.historyErrors} runtime=${((now() - started) / 1000).toFixed(1)}s`);
   console.log(`[SHADOW][SCORECARD] 15m ${JSON.stringify(m15)}`);
   console.log(`[SHADOW][SCORECARD] 60m ${JSON.stringify(m60)}`);
-  console.log(`[SHADOW][SAFETY] noOrders=true noTelegram=true productionStateTouched=false deadband=±${DEAD_BAND_PCT}% featureAgeMax=${MAX_AGE_MIN}m`);
+  console.log(`[SHADOW][SAFETY] noOrders=true noTelegram=true productionStateTouched=false outcomeSource=completed_1m_candle historicalEvaluation=true deadband=±${DEAD_BAND_PCT}% featureAgeMax=${MAX_AGE_MIN}m`);
 }
 main().catch(e => { console.error(`[SHADOW][FATAL] ${e?.stack || e}`); process.exitCode = 1; });
