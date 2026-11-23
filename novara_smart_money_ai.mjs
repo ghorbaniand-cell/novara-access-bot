@@ -3,9 +3,10 @@ import path from 'node:path';
 import os from 'node:os';
 import { spawn } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
+import { detectParallelChannel } from './novara_channel_engine.mjs';
 
 /*
- * NOVARA SMART MONEY AI V3.0.0 RISK-ENGINE-REBUILD
+ * NOVARA SMART MONEY AI V3.1.0 DYNAMIC-PARALLEL-CHANNELS
  * READ-ONLY | NO ORDERS | NO AUTO-COPY | PAPER OUTCOME TRACKING
  * BTC direction is inferred from weighted multi-timeframe structure, momentum, EMA alignment and candle behavior; neutral BTC does not automatically suppress every qualified setup
  *
@@ -19,7 +20,7 @@ import { fileURLToPath } from 'node:url';
  * All eligible liquid perp markets are considered; the worker does not depend on wallet lists.
  */
 
-const VERSION = 'NOVARA-SMART-MONEY-AI-V3.0.0-RISK-ENGINE-REBUILD';
+const VERSION = 'NOVARA-SMART-MONEY-AI-V3.1.0-DYNAMIC-PARALLEL-CHANNELS';
 // These are directional-strength gates, never probabilities or win-rate estimates.
 const PREDICTIVE_MIN_STRENGTH = Math.max(55, Math.min(85, Number(process.env.NOVARA_PREDICTIVE_MIN_STRENGTH || 61)));
 const PREDICTIVE_MIN_EDGE_GAP = Math.max(5, Math.min(35, Number(process.env.NOVARA_PREDICTIVE_MIN_EDGE_GAP || 12)));
@@ -985,6 +986,39 @@ function detectPatterns({ coin, c15, c1h, ctx, prevCtx, mid, spread, imbalance, 
     results.push({ coin, side, pattern: 'TREND_PULLBACK', pullbackMean: ema20_15, pullbackReactionConfirmed: true, rawSupport, rawResistance, minLevelGap, score: clamp(score, 0, 9.5), reasons, entry: mid, atr: atr15, atr1h, support, resistance, supportSource, resistanceSource, supportTouches: selectedSupport?.touches || 0, resistanceTouches: selectedResistance?.touches || 0, supportLevels: supportCandidates.map(x => ({ price: x.price, touches: x.touches, source: x.source })), resistanceLevels: resistanceCandidates.map(x => ({ price: x.price, touches: x.touches, source: x.source })), trend, btcRegime: btcRegime || { label: 'NEUTRAL', change24hPct: 0 }, rsi15, fibConfluence: fib.confluence, volRatio, oiChange, fundingPct, flowDelta: flow.delta, imbalance, vwap: vwap15, spreadPct: spread, atrPct, dayVolume: n(ctx?.dayVolume), maxLeverage: n(ctx?.maxLeverage) });
   }
 
+  // V3.1: dynamic parallel-channel structure on confirmed 1H pivots; trigger on the last completed 15m candle.
+  const channelResult = detectParallelChannel({ c1h, c15, atr1h, atr15, mid, volRatio, flowDelta: n(flow?.delta), imbalance });
+  if (channelResult?.signal) {
+    const ch = channelResult.channel, sig = channelResult.signal, side = sig.side;
+    let score = 5.25;
+    const reasons = [`${sig.setup.replaceAll('_',' ')}: ${sig.confirmation}`, `1H ${ch.type.toLowerCase()} parallel channel; rails ${fmtPrice(ch.lower)}–${fmtPrice(ch.upper)}; touches L${ch.lowerTouches}/U${ch.upperTouches}; fit R² ${ch.r2.toFixed(2)}`];
+    if (sig.flowAligned) { score += 0.65; reasons.push('directional order-flow/book confirms channel trigger'); }
+    if (sig.volOk) { score += 0.40; reasons.push('15m relative volume confirms channel trigger'); }
+    if (side === trend) { score += 0.35; reasons.push('1H trend aligns with channel signal'); }
+    score = addContext(side, score, reasons);
+    const channelSupport = { price: ch.lower, touches: ch.lowerTouches, source: '1h-parallel-channel-lower-rail' };
+    const channelResistance = { price: ch.upper, touches: ch.upperTouches, source: '1h-parallel-channel-upper-rail' };
+    const supports = [...supportCandidates.map(x=>({price:x.price,touches:x.touches,source:x.source})), channelSupport];
+    const resistances = [...resistanceCandidates.map(x=>({price:x.price,touches:x.touches,source:x.source})), channelResistance];
+    if (sig.setup === 'CHANNEL_BREAKOUT') {
+      supports.push({price:ch.upper,touches:ch.upperTouches,source:'1h-channel-breakout-retest-rail'});
+      resistances.push({price:ch.upper+ch.width,touches:ch.upperTouches,source:'1h-channel-measured-move-target'});
+    }
+    if (sig.setup === 'CHANNEL_BREAKDOWN') {
+      resistances.push({price:ch.lower,touches:ch.lowerTouches,source:'1h-channel-breakdown-retest-rail'});
+      supports.push({price:Math.max(mid*.5,ch.lower-ch.width),touches:ch.lowerTouches,source:'1h-channel-measured-move-target'});
+    }
+    results.push({ coin, side, pattern: sig.setup, channel: ch, channelConfirmation: sig.confirmation, channelTriggerLevel: sig.triggerLevel,
+      channelSupport: ch.lower, channelResistance: ch.upper, rawSupport, rawResistance, minLevelGap,
+      score: clamp(score,0,9.5), reasons, entry: mid, atr: atr15, atr1h,
+      support: selectedSupport?.price || ch.lower, resistance: selectedResistance?.price || ch.upper,
+      supportSource: selectedSupport?.source || channelSupport.source, resistanceSource: selectedResistance?.source || channelResistance.source,
+      supportTouches: selectedSupport?.touches || ch.lowerTouches, resistanceTouches: selectedResistance?.touches || ch.upperTouches,
+      supportLevels: supports, resistanceLevels: resistances, trend, btcRegime: btcRegime || {label:'NEUTRAL',change24hPct:0},
+      rsi15, fibConfluence:fib.confluence, volRatio, oiChange, fundingPct, flowDelta:n(flow?.delta), imbalance, vwap:vwap15, spreadPct:spread, atrPct,
+      dayVolume:n(ctx?.dayVolume), maxLeverage:n(ctx?.maxLeverage), channelTriggerConfirmed:true });
+  }
+
   // V2.8.6: attach location/rejection diagnostics. A directional pattern alone
   // is not enough: entries must occur near the relevant 1H boundary and show
   // a completed 15m rejection/reclaim, rather than chasing the middle of a range.
@@ -1000,6 +1034,12 @@ function detectPatterns({ coin, c15, c1h, ctx, prevCtx, mid, spread, imbalance, 
     candidate.entryReactionConfirmed = candidate.side === 'SHORT'
       ? (level > 0 && last.c < level && last.c < last.o && upperWick >= Math.max(atr15 * 0.10, mid * 0.0005))
       : (level > 0 && last.c > level && last.c > last.o && lowerWick >= Math.max(atr15 * 0.10, mid * 0.0005));
+    if (candidate.channelTriggerConfirmed) {
+      candidate.entryLevel = candidate.channelTriggerLevel;
+      candidate.entryLevelDistancePct = Math.abs(mid-candidate.channelTriggerLevel)/mid*100;
+      candidate.entryProximityMaxPct = Math.max(0.35, atrPct*0.85);
+      candidate.entryReactionConfirmed = true;
+    }
   }
   return results;
 }
@@ -1213,7 +1253,7 @@ function formatSignal(s, risk) {
 🔮 Next-move scenario: ${escapeHtml(btc.nextMove?.state || 'UNAVAILABLE')}
 🧭 Scenario evidence: LONG ${n(btc.nextMove?.longScore)}/100 | SHORT ${n(btc.nextMove?.shortScore)}/100 (heuristic, NOT win probability)
 🧠 Scenario note: ${escapeHtml(btc.nextMove?.reason || 'Unavailable')}
-🧱 BTC support breakdown: ${btc.structure?.breakdown ? `CONFIRMED (${(btc.structure.confirmedBy || []).join('+')}) — LONG blocked` : 'not confirmed'}\n🧠 Historical reaction-memory gates: DISABLED (V3)\n━━━━━━━━━━━━━━━━━━\n<b>${s.side} ${escapeHtml(s.coin)} PERP</b>\n🧭 Setup: ${escapeHtml(s.pattern.replaceAll('_', ' '))}\n📍 Entry (reference): <code>${fmtPrice(risk.entry)}</code>\n🛑 Stop Loss: <code>${fmtPrice(risk.sl)}</code> (${pct(risk.riskPct)})\n🎯 Take Profit: <code>${fmtPrice(risk.tp)}</code> (${pct(risk.rewardPct)})\n⚖️ Planned R:R: 1:${risk.rr.toFixed(2)} gross | 1:${n(risk.netRR, risk.rr).toFixed(2)} net\n⚡ Leverage reference: ${lev.leverage}x${lev.cappedByExchange ? ` (exchange max: ${Math.floor(lev.exchangeMax)}x)` : ''}
+🧱 BTC support breakdown: ${btc.structure?.breakdown ? `CONFIRMED (${(btc.structure.confirmedBy || []).join('+')}) — LONG blocked` : 'not confirmed'}\n🧠 Historical reaction-memory gates: DISABLED (V3)\n━━━━━━━━━━━━━━━━━━\n<b>${s.side} ${escapeHtml(s.coin)} PERP</b>\n🧭 Setup: ${escapeHtml(s.pattern.replaceAll('_', ' '))}\n${s.channel ? `📐 1H Channel: ${s.channel.type} | lower ${fmtPrice(s.channel.lower)} | upper ${fmtPrice(s.channel.upper)} | touches L${s.channel.lowerTouches}/U${s.channel.upperTouches}\n🧪 Trigger: ${escapeHtml(s.channelConfirmation || '')}\n` : ''}📍 Entry (reference): <code>${fmtPrice(risk.entry)}</code>\n🛑 Stop Loss: <code>${fmtPrice(risk.sl)}</code> (${pct(risk.riskPct)})\n🎯 Take Profit: <code>${fmtPrice(risk.tp)}</code> (${pct(risk.rewardPct)})\n⚖️ Planned R:R: 1:${risk.rr.toFixed(2)} gross | 1:${n(risk.netRR, risk.rr).toFixed(2)} net\n⚡ Leverage reference: ${lev.leverage}x${lev.cappedByExchange ? ` (exchange max: ${Math.floor(lev.exchangeMax)}x)` : ''}
 📐 Paper size model: ${sizing ? `$${sizing.notionalUsd.toFixed(2)} notional / $${sizing.marginUsd.toFixed(2)} margin; stop-risk ≈ $${sizing.estimatedStopLossUsd.toFixed(2)} of $${sizing.equityUsd.toFixed(2)} equity (${sizing.riskPerTradePct.toFixed(2)}% budget)` : 'not available'}\n🧠 Setup score: ${s.score.toFixed(2)}/10 (not a win-probability estimate)\n🔮 Next-move model: ${s.predictive?.direction || 'NA'} | directional strength ${n(s.predictive?.strengthIndex)}/85 | horizons 15m/60m (NOT probability)\n📊 Asset 1H trend: ${s.trend}\n₿ <b>BTC MARKET CHECK</b>\n${tfLine('4H', '4H')}\n${tfLine('1H', '1H')}\n${tfLine('15m', '15m')}\n📉 Alt 15m RSI: ${n(s.rsi15, 50).toFixed(1)} | Fib: ${s.fibConfluence ? 'YES' : 'NO'} | Volume: ${s.volRatio.toFixed(2)}x\n🌊 Trade delta: ${(s.flowDelta * 100).toFixed(1)}% | Book imbalance: ${(s.imbalance * 100).toFixed(1)}%\n📈 OI change: ${s.oiChange >= 0 ? '+' : ''}${s.oiChange.toFixed(2)}% | Funding: ${s.fundingPct.toFixed(4)}%\n🧱 1H Structure: Support ${fmtPrice(s.support)} (${s.supportTouches || 0} touches) | Resistance ${fmtPrice(s.resistance)} (${s.resistanceTouches || 0} touches)\n🧩 Evidence:\n${reasons}\n\n🧪 Mode: ${modeLabel}. Paper tracking only — no real orders.`;
 }
 
@@ -1317,6 +1357,23 @@ async function sendOutcomePhoto(chatId, trade) {
     if (!response.ok || !data.ok) throw new Error(`Telegram sendPhoto ${response.status}: ${raw.slice(0,180)}`);
     return { sent:true, type:'photo' };
   } finally { try { await fs.unlink(temp); } catch {} }
+}
+
+async function sendChannelChartPhoto(chatId, signal) {
+  if (!TOKEN || !chatId || !signal?.channel || !Array.isArray(signal.currentCandles15m)) return {sent:false,reason:'channel_chart_data_unavailable'};
+  const temp=path.join(os.tmpdir(),`novara-channel-${process.pid}-${now()}.png`);
+  const script=path.join(path.dirname(fileURLToPath(import.meta.url)),'novara_channel_chart.py');
+  const payload={coin:signal.coin,side:signal.side,setup:signal.pattern,channel:signal.channel,candles:signal.currentCandles15m,confirmation:signal.channelConfirmation};
+  const run=()=>new Promise((resolve,reject)=>{const child=spawn(process.env.PYTHON||'python3',[script,temp],{stdio:['pipe','ignore','pipe']});let err='';child.stderr.on('data',d=>err+=d.toString());child.on('error',reject);child.on('close',code=>code===0?resolve():reject(new Error(`channel chart renderer exited ${code}: ${err.slice(-300)}`)));child.stdin.end(JSON.stringify(payload));});
+  try {
+    await run(); const bytes=await fs.readFile(temp); const form=new FormData();
+    form.append('chat_id',chatId); form.append('caption',`📐 NOVARA ${signal.coin} ${signal.side} — ${signal.channel.type} parallel channel | ${signal.pattern.replaceAll('_',' ')}\nPaper research signal; no real order was placed.`);
+    form.append('photo',new Blob([bytes],{type:'image/png'}),'novara-channel.png');
+    const wait=Math.max(0,telegramNextAt-now()); if(wait) await sleep(wait); telegramNextAt=now()+TELEGRAM_GAP_MS;
+    const response=await fetch(`https://api.telegram.org/bot${TOKEN}/sendPhoto`,{method:'POST',body:form}); const raw=await response.text(); let data={}; try{data=JSON.parse(raw)}catch{}
+    if(!response.ok||!data.ok) throw new Error(`Telegram sendPhoto ${response.status}: ${raw.slice(0,160)}`);
+    return {sent:true,type:'channel_chart'};
+  } finally { try{await fs.unlink(temp)}catch{} }
 }
 
 function reportAudiences() {
@@ -1826,7 +1883,7 @@ async function analyzeAsset(asset, previous, btcRegime, snapshotAt = now()) {
   const flow = tradeDelta(trades);
   const patterns = detectPatterns({ coin: asset.coin, c15, c1h, ctx: asset, prevCtx: previous, mid: asset.markPx, spread, imbalance, flow, btcRegime });
   const prediction = predictNextMove({ c15, c1h, mid: asset.markPx, flow, imbalance, oiChange: previous?.openInterest > 0 ? (asset.openInterest / previous.openInterest - 1) * 100 : 0, fundingPct: asset.funding * 100, vwap15: vwap(c15) });
-  const found = patterns.map(candidate => ({...candidate, predictive: prediction, currentCandles15m:c15.slice(-4),currentCandles1h:c1h.slice(-4)}));
+  const found = patterns.map(candidate => ({...candidate, predictive: prediction, currentCandles15m:c15.slice(-48),currentCandles1h:c1h.slice(-4)}));
   found.forecast = { coin: asset.coin, at: snapshotAt, markPx: asset.markPx, direction: prediction.direction, rawScore: prediction.rawScore, strengthIndex: prediction.strengthIndex, components: prediction.components, btcRegime: { direction: btcRegime?.trend || 'NEUTRAL', confidence: n(btcRegime?.confidence) }, forecastMethod: FORECAST_METHOD, path: [{ at: snapshotAt, markPx: asset.markPx }], evaluations: {} };
   return found;
 }
@@ -2165,7 +2222,12 @@ async function main() {
         // markets, but capped so a distant breakout is never treated as a retest.
         const maxEntryLevelDistancePct = Math.min(0.90, Math.max(0.35, atr1hPct * 0.90));
         let entryLevel = 0, levelDistancePct = Infinity, locationPass = false, locationReason = '';
-        if (s.pattern === 'SWEEP_RECLAIM') {
+        if (s.channelTriggerConfirmed) {
+          entryLevel = n(s.channelTriggerLevel);
+          levelDistancePct = entryLevel > 0 ? Math.abs(s.entry-entryLevel)/s.entry*100 : Infinity;
+          locationPass = entryLevel > 0 && s.entryReactionConfirmed === true && levelDistancePct <= Math.max(maxEntryLevelDistancePct, n(s.atr)/s.entry*100*1.25);
+          locationReason = `confirmed 15m parallel-channel trigger at ${fmtPrice(entryLevel)}; distance=${Number.isFinite(levelDistancePct)?levelDistancePct.toFixed(2)+'%':'NA'}`;
+        } else if (s.pattern === 'SWEEP_RECLAIM') {
           entryLevel = n(s.failureLevel);
           levelDistancePct = entryLevel > 0 ? Math.abs(s.entry - entryLevel) / s.entry * 100 : Infinity;
           // Entry must remain near the reclaimed/rejected swing in the same direction as the pattern.
@@ -2350,12 +2412,13 @@ async function main() {
       try {
         const result = await sendTelegram(vip.id, message);
         destinations.push({ name: 'VIP', ...(vip.viaLegacy ? { route: 'TELEGRAM_CHAT_ID fallback' } : {}), ...result });
+        if (s.channel) { try { destinations.push({name:'VIP_CHART',...(await sendChannelChartPhoto(vip.id,s))}); } catch(e) { console.warn(`[CHANNEL][CHART][WARN] ${s.coin}: ${e.message}`); } }
       } catch (e) { destinations.push({ name: 'VIP', sent: false, reason: e.message }); }
     } else destinations.push({ name: 'VIP', sent: false, reason: 'vip_chat_not_configured_and_no_legacy_fallback' });
     if (s === publicPick) {
       const pub = configuredAudience('FREE');
       if (pub) {
-        try { destinations.push({ name: 'FREE', ...(await sendTelegram(pub.id, message)) }); }
+        try { destinations.push({ name: 'FREE', ...(await sendTelegram(pub.id, message)) }); if (s.channel) { try { destinations.push({name:'FREE_CHART',...(await sendChannelChartPhoto(pub.id,s))}); } catch(e) { console.warn(`[CHANNEL][CHART][WARN] ${s.coin}: ${e.message}`); } } }
         catch (e) { destinations.push({ name: 'FREE', sent: false, reason: e.message }); }
       } else destinations.push({ name: 'FREE', sent: false, reason: 'free_chat_not_configured' });
     }
