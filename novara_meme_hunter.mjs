@@ -1,7 +1,7 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 
-const VERSION = 'NOVARA-MEME-HUNTER-V1.0.1-SOLANA-TON-DATA-FIX';
+const VERSION = 'NOVARA-MEME-HUNTER-V1.0.2-TRADE-HOLDER-DIAGNOSTICS';
 const ROOT = path.dirname(new URL(import.meta.url).pathname);
 const STATE_FILE = path.join(ROOT, process.env.NOVARA_STATE_FILE || 'data/meme_hunter_state.json');
 const n = (v, d=0) => Number.isFinite(Number(v)) ? Number(v) : d;
@@ -91,26 +91,45 @@ async function enrichDex(token){
     const isBase=String(p.baseToken?.address||'').toLowerCase()===String(token.tokenAddress||'').toLowerCase();
     const target=isBase?p.baseToken:p.quoteToken;
     return {...token,name:target?.name||token.name,symbol:target?.symbol||token.symbol,isBaseToken:isBase,priceUsd:n(p.priceUsd,token.priceUsd),liquidityUsd:n(p.liquidity?.usd,token.liquidityUsd),fdv:n(p.fdv,token.fdv),marketCap:n(p.marketCap,token.marketCap),volume24h:n(p.volume?.h24,token.volume24h),txns24h:p.txns?.h24||token.txns24h||{},priceChange:p.priceChange||{},pairCreatedAt:p.pairCreatedAt||token.poolCreatedAt,poolAddress:p.pairAddress||token.poolAddress,pairAddress:p.pairAddress||token.poolAddress,dexId:p.dexId||'',url:p.url||token.url};
-  } catch { return token; }
+  } catch(e) { return {...token,pairLookup:'DEXSCREENER_LOOKUP_ERROR',pairLookupError:e.message}; }
 }
 
 // Stage 2 — infer early buyer activity from recent indexed pool trades.
-// This is an evidence sample, not a complete wallet PnL/history database.
+// Trade direction is resolved from the token's actual from/to addresses when available.
+function tradeIsBuyForToken(t, token) {
+  const target=String(token.tokenAddress||'').toLowerCase();
+  const from=String(t.from_token_address||'').toLowerCase();
+  const to=String(t.to_token_address||'').toLowerCase();
+  if(target && from && to){
+    if(to===target && from!==target) return true;
+    if(from===target && to!==target) return false;
+  }
+  // Fallback for older/partial indexed records where token addresses are omitted.
+  return (String(t.kind||'').toLowerCase()==='buy') === (token.isBaseToken!==false);
+}
 async function smartMoney(token){
-  const result={trades:[],uniqueBuyers:0,uniqueSellers:0,buyUsd:0,sellUsd:0,earlyWallets:[],coordinationRisk:false,coverage:'UNAVAILABLE'};
-  if(!token.poolAddress) return result;
+  const result={trades:[],tradesFetched:0,recentTradeCount:0,walletAttributedTrades:0,latestTradeAt:null,uniqueBuyers:0,uniqueSellers:0,buyUsd:0,sellUsd:0,earlyWallets:[],coordinationRisk:false,coverage:'UNAVAILABLE'};
+  if(!token.poolAddress){result.coverage='NO_POOL';return result;}
   try {
     const j=await request(`https://api.geckoterminal.com/api/v2/networks/${token.chain}/pools/${encodeURIComponent(token.poolAddress)}/trades?page=1`,{headers:{accept:'application/json;version=20230302'}});
     const trades=(j.data||[]).map(x=>x.attributes||{});
     const cutoff=Date.now()-15*60_000;
-    const recent=trades.filter(t=>n(t.block_timestamp?Date.parse(t.block_timestamp):t.timestamp)>cutoff);
-    const isBuy=t=>((String(t.kind||'').toLowerCase()==='buy') === (token.isBaseToken!==false));
-    const buys=recent.filter(isBuy);
-    const sells=recent.filter(t=>!isBuy(t));
+    const stamped=trades.map(t=>({...t,_ts:Date.parse(t.block_timestamp||t.timestamp||'')}));
+    const recent=stamped.filter(t=>Number.isFinite(t._ts)&&t._ts>cutoff);
+    const buys=recent.filter(t=>tradeIsBuyForToken(t,token));
+    const sells=recent.filter(t=>!tradeIsBuyForToken(t,token));
     const wallet=t=>t.tx_from_address||t.tx_from||t.from_address||t.trader_address||t.maker||'';
     const buyerSet=new Set(buys.map(wallet).filter(Boolean)), sellerSet=new Set(sells.map(wallet).filter(Boolean));
-    result={trades:recent,uniqueBuyers:buyerSet.size,uniqueSellers:sellerSet.size,buyUsd:buys.reduce((a,t)=>a+n(t.volume_in_usd),0),sellUsd:sells.reduce((a,t)=>a+n(t.volume_in_usd),0),earlyWallets:[...buyerSet].slice(0,8),coordinationRisk:detectCoordination(buys,wallet),coverage:'SAMPLED_15M_TRADES'};
-  } catch(e){ result.error=e.message; }
+    const walletTrades=recent.filter(t=>Boolean(wallet(t)));
+    result={
+      trades:recent,tradesFetched:trades.length,recentTradeCount:recent.length,walletAttributedTrades:walletTrades.length,
+      latestTradeAt:stamped.reduce((m,t)=>Number.isFinite(t._ts)?Math.max(m,t._ts):m,0)||null,
+      uniqueBuyers:buyerSet.size,uniqueSellers:sellerSet.size,
+      buyUsd:buys.reduce((a,t)=>a+n(t.volume_in_usd),0),sellUsd:sells.reduce((a,t)=>a+n(t.volume_in_usd),0),
+      earlyWallets:[...buyerSet].slice(0,8),coordinationRisk:detectCoordination(buys,wallet),
+      coverage:trades.length===0?'NO_INDEXED_TRADES':recent.length===0?'NO_TRADES_LAST_15M':walletTrades.length===0?'NO_WALLET_ATTRIBUTION':'SAMPLED_15M_TRADES'
+    };
+  } catch(e){ result.error=e.message;result.coverage='API_ERROR'; }
   return result;
 }
 function detectCoordination(buys,walletFn){
@@ -134,24 +153,37 @@ async function solanaSafety(token){
   const rpcErrors=checks.filter(x=>x.status==='rejected').map(x=>x.reason?.message||String(x.reason));
   if(info?.value?.data?.[0]){
     const b=Buffer.from(info.value.data[0],'base64');
-    if(b.length>=82){
-      const mintOpt=b.readUInt32LE(0), freezeOpt=b.readUInt32LE(46);
-      s.mintAuthority=mintOpt===0?'REVOKED':'ACTIVE'; s.freezeAuthority=freezeOpt===0?'REVOKED':'ACTIVE';
-    }
+    if(b.length>=82){const mintOpt=b.readUInt32LE(0),freezeOpt=b.readUInt32LE(46);s.mintAuthority=mintOpt===0?'REVOKED':'ACTIVE';s.freezeAuthority=freezeOpt===0?'REVOKED':'ACTIVE';}
   }
   try {
     const total=BigInt(supply?.value?.amount||'0');
     const accounts=largest?.value||[];
-    if(total>0n&&accounts.length){const sum=accounts.slice(0,10).reduce((a,x)=>a+BigInt(x.amount||'0'),0n);s.top10HolderPct=Number(sum*1000000n/total)/10000;s.holderCoverage='RPC_TOP10_ACCOUNTS';}
-  } catch(e){rpcErrors.push(`holder calculation: ${e.message}`);}
-  if(rpcErrors.length){s.rpcErrors=rpcErrors;s.riskFlags.push(`برخی درخواست‌های RPC ناموفق بود (${rpcErrors.length}/3)`);}
+    if(total>0n&&accounts.length){
+      // getTokenLargestAccounts returns token accounts, not beneficial owners.
+      // Resolve the SPL token-account owner at byte offset 32 and aggregate balances by owner.
+      const details=await rpc('getMultipleAccounts',[accounts.map(x=>x.address),{encoding:'base64'}]);
+      const ownerBalances=new Map();
+      for(let i=0;i<accounts.length;i++){
+        const raw=details?.value?.[i]?.data?.[0];
+        let ownerKey=`account:${accounts[i].address}`;
+        if(raw){const bytes=Buffer.from(raw,'base64');if(bytes.length>=64)ownerKey=bytes.subarray(32,64).toString('hex');}
+        ownerBalances.set(ownerKey,(ownerBalances.get(ownerKey)||0n)+BigInt(accounts[i].amount||'0'));
+      }
+      const topOwners=[...ownerBalances.values()].sort((a,b)=>a>b?-1:a<b?1:0).slice(0,10);
+      const sum=topOwners.reduce((a,v)=>a+v,0n);
+      s.top10HolderPct=Number(sum*1000000n/total)/10000;
+      s.holderCoverage='RPC_TOP10_OWNER_ESTIMATE';
+      s.riskFlags.push('تمرکز هولدر برآوردی از ۲۰ حساب توکنی بزرگ و تجمیع مالک آن‌هاست؛ کیف‌پول استخر/LP ممکن است همچنان در محاسبه باشد');
+    }
+  } catch(e){rpcErrors.push(`owner aggregation: ${e.message}`);}
+  if(rpcErrors.length){s.rpcErrors=rpcErrors;s.riskFlags.push(`برخی درخواست‌های RPC ناموفق بود (${rpcErrors.length})`);}
   if(s.mintAuthority==='ACTIVE') s.riskFlags.push('اختیار ضرب توکن هنوز فعال است');
   if(s.freezeAuthority==='ACTIVE') s.riskFlags.push('اختیار فریز هنوز فعال است');
-  if(s.top10HolderPct!=null&&s.top10HolderPct>CFG.maxTop10Pct) s.riskFlags.push(`تمرکز ۱۰ هولدر اول ${s.top10HolderPct.toFixed(1)}٪ است`);
+  if(s.top10HolderPct!=null&&s.top10HolderPct>CFG.maxTop10Pct) s.riskFlags.push(`تمرکز ۱۰ مالک برآوردی ${s.top10HolderPct.toFixed(1)}٪ است`);
   // Optional Jupiter quote-only sellability probe. It does not sign or send a transaction.
   if(CFG.jupiterApiKey){
     try{
-      const amount=1000000; // one-million base units; quote is a route probe, not a standard-size slippage guarantee.
+      const amount=1000000;
       const q=await request(`https://api.jup.ag/swap/v1/quote?inputMint=${encodeURIComponent(token.tokenAddress)}&outputMint=So11111111111111111111111111111111111111112&amount=${amount}&slippageBps=300`,{headers:{'x-api-key':CFG.jupiterApiKey}});
       s.sellability=q.outAmount?'ROUTE_QUOTE_AVAILABLE':'NO_ROUTE'; s.sellQuoteImpactPct=n(q.priceImpactPct)*100;
     } catch(e){s.sellability='QUOTE_FAILED';s.sellQuoteError=e.message;}
@@ -162,12 +194,20 @@ async function tonSafety(token){
   const s={mintAuthority:'NOT_APPLICABLE',freezeAuthority:'NOT_APPLICABLE',top10HolderPct:null,holderCoverage:'UNAVAILABLE',sellability:'NOT_SIMULATED',riskFlags:[]};
   if(!CFG.tonApiKey){s.riskFlags.push('برای بررسی هولدرهای TON کلید TONAPI_KEY تنظیم نشده');return s;}
   try{
-    const j=await request(`https://tonapi.io/v2/jettons/${encodeURIComponent(token.tokenAddress)}/holders?limit=10`,{headers:{Authorization:`Bearer ${CFG.tonApiKey}`}});
-    const holders=j.addresses||j.holders||[]; const total=n(j.total_supply||j.totalSupply);
-    if(total>0&&holders.length){const sum=holders.reduce((a,h)=>a+n(h.balance),0);s.top10HolderPct=pct(sum,total);s.holderCoverage='TONAPI_TOP10';}
-  }catch(e){s.error=e.message;s.riskFlags.push('دریافت اطلاعات هولدرهای TON ناموفق بود');}
-  // STON.fi documents a swap-simulation endpoint, but the required pool/router-specific request body
-  // is not safely inferable from generic market data; do not fabricate a simulation request.
+    // TonAPI holders response exposes `total` as holder count, NOT token supply.
+    // Fetch jetton metadata separately to obtain raw total_supply.
+    const [holders,info]=await Promise.all([
+      request(`https://tonapi.io/v2/jettons/${encodeURIComponent(token.tokenAddress)}/holders?limit=10&sort_by=balance`,{headers:{Authorization:`Bearer ${CFG.tonApiKey}`}}),
+      request(`https://tonapi.io/v2/jettons/${encodeURIComponent(token.tokenAddress)}`,{headers:{Authorization:`Bearer ${CFG.tonApiKey}`}})
+    ]);
+    const addresses=holders.addresses||[]; const totalSupply=BigInt(info.total_supply||'0');
+    if(totalSupply>0n&&addresses.length){
+      const sum=addresses.reduce((a,h)=>a+BigInt(h.balance||'0'),0n);
+      s.top10HolderPct=Number(sum*1000000n/totalSupply)/10000;
+      s.holderCoverage='TONAPI_TOP10_HOLDERS';
+      s.holderCount=holders.total??null;
+    } else s.riskFlags.push('TonAPI پاسخ داد اما total_supply یا فهرست هولدرها برای محاسبه کافی نبود');
+  }catch(e){s.error=e.message;s.riskFlags.push(`دریافت اطلاعات هولدرهای TON ناموفق بود: ${e.message}`);}
   s.riskFlags.push('امکان فروش با شبیه‌سازی واقعی در این نسخه برای TON تأیید نشده');
   return s;
 }
@@ -186,20 +226,20 @@ function rank(token,sm,safety,mom,age){
   let discovery=0,smart=0,safe=0,flow=0,market=0; const reasons=[],risks=[...(safety.riskFlags||[])];
   if(age!=null&&age<=24) discovery+=10; else if(age!=null&&age<=CFG.maxAgeHours) discovery+=7;
   if(token.source?.includes('new_pools')) discovery+=5;
-  if(sm.coverage!=='UNAVAILABLE'){
+  if(sm.coverage==='SAMPLED_15M_TRADES'){
     smart+=Math.min(12,sm.uniqueBuyers*1.5);
     if(sm.uniqueBuyers>sm.uniqueSellers) smart+=5;
     if(sm.buyUsd>sm.sellUsd) smart+=4;
     if(sm.uniqueBuyers>=CFG.minUniqueBuyers) reasons.push(`${sm.uniqueBuyers} خریدار متمایز در نمونه ۱۵ دقیقه‌ای`);
     if(sm.coordinationRisk){smart-=6;risks.push('الگوی خرید تکراری/هماهنگ مشکوک؛ نیازمند بررسی');}
-  } else risks.push('تاریخچه معاملات/کیف‌پول‌ها در دسترس نبود');
+  } else risks.push(sm.coverage==='NO_TRADES_LAST_15M'?'در نمونه دریافتی معامله‌ای در ۱۵ دقیقه اخیر وجود نداشت':sm.coverage==='NO_INDEXED_TRADES'?'GeckoTerminal برای این استخر معامله‌ای برنگرداند':sm.coverage==='NO_WALLET_ATTRIBUTION'?'معاملات اخیر دریافت شد اما آدرس کیف‌پول معامله‌گران موجود نبود':sm.coverage==='API_ERROR'?`خطای دریافت معاملات: ${sm.error||'نامشخص'}`:'تاریخچه معاملات/کیف‌پول‌ها در دسترس نبود');
   if(safety.mintAuthority==='REVOKED') safe+=7; else if(safety.mintAuthority==='ACTIVE') safe-=10;
   if(safety.freezeAuthority==='REVOKED') safe+=7; else if(safety.freezeAuthority==='ACTIVE') safe-=10;
   if(safety.top10HolderPct!=null){safe+=Math.max(0,12-(safety.top10HolderPct/100*12)); if(safety.top10HolderPct<=CFG.maxTop10Pct) reasons.push(`سهم ۱۰ هولدر اول ${safety.top10HolderPct.toFixed(1)}٪`);}
   else risks.push('تمرکز هولدرها تأیید نشده');
   if(safety.sellability==='ROUTE_QUOTE_AVAILABLE') safe+=8; else if(safety.sellability==='NO_ROUTE'||safety.sellability==='QUOTE_FAILED') safe-=12; else risks.push('فروش‌پذیری با مسیر واقعی تأیید نشده');
   if(token.liquidityUsd>=CFG.minLiquidity) safe+=7; else risks.push(`نقدینگی کمتر از حداقل ${usd(CFG.minLiquidity)}`);
-  if(sm.coverage!=='UNAVAILABLE'){
+  if(sm.coverage==='SAMPLED_15M_TRADES'){
     if(mom.buyers15m>=CFG.minUniqueBuyers) flow+=8;
     if(mom.netFlow15m>0) flow+=7;
     if(mom.buyerSellerRatio!=null&&mom.buyerSellerRatio>=0.60) flow+=5;
@@ -208,10 +248,12 @@ function rank(token,sm,safety,mom,age){
   if(token.volume24h>=10000) market+=5; if(n(token.txns24h?.buys)>n(token.txns24h?.sells)) market+=4;
   if(token.liquidityUsd>=CFG.minLiquidity) market+=3;
   const raw=discovery+smart+safe+flow+market; const score=Math.max(0,Math.min(100,Math.round(raw)));
-  const hardFail=!token.poolAddress || token.pairLookup==='NO_DEXSCREENER_PAIR' || token.liquidityUsd<CFG.minLiquidity || (safety.mintAuthority==='ACTIVE'&&safety.freezeAuthority==='ACTIVE') || safety.sellability==='NO_ROUTE';
-  const enoughEvidence=sm.coverage!=='UNAVAILABLE' && safety.top10HolderPct!=null && safety.mintAuthority!=='UNKNOWN' && safety.freezeAuthority!=='UNKNOWN';
+  const hardFail=!token.poolAddress || token.liquidityUsd<CFG.minLiquidity || (safety.mintAuthority==='ACTIVE'&&safety.freezeAuthority==='ACTIVE') || safety.sellability==='NO_ROUTE';
+  const enoughEvidence=sm.coverage==='SAMPLED_15M_TRADES' && safety.top10HolderPct!=null && safety.mintAuthority!=='UNKNOWN' && safety.freezeAuthority!=='UNKNOWN';
   const qualified=!hardFail&&enoughEvidence&&score>=CFG.minScore&&sm.uniqueBuyers>=CFG.minUniqueBuyers&&sm.buyUsd>=CFG.minBuyVolume15m&&mom.buys24h>=CFG.minBuys24h&&sm.buyUsd>sm.sellUsd;
-  if(!token.poolAddress || token.pairLookup==='NO_DEXSCREENER_PAIR') risks.push('برای این توکن استخر معاملاتی قابل تأیید پیدا نشد');
+  if(!token.poolAddress) risks.push('برای این توکن استخر معاملاتی قابل تأیید پیدا نشد');
+  if(token.pairLookup==='NO_DEXSCREENER_PAIR') risks.push('DexScreener برای این آدرس جفت پیدا نکرد؛ داده استخر از GeckoTerminal حفظ شده است');
+  if(token.pairLookup==='DEXSCREENER_LOOKUP_ERROR') risks.push(`استعلام DexScreener ناموفق بود: ${token.pairLookupError||'نامشخص'}`);
   if(token.liquidityUsd>=CFG.minLiquidity) reasons.push(`نقدینگی استخر ${usd(token.liquidityUsd)}`);
   if(sm.buyUsd>sm.sellUsd) reasons.push(`خالص جریان خرید ۱۵ دقیقه‌ای ${usd(sm.buyUsd-sm.sellUsd)}`);
   if(!enoughEvidence) risks.push('داده‌های ایمنی کافی برای تأیید نهایی موجود نیست');
@@ -239,13 +281,13 @@ async function main(){
   // Alternate chains so a busy Solana feed cannot starve TON discovery.
   const buckets={solana:[],ton:[]}; for(const t of tokens){(buckets[t.chain]||buckets.solana).push(t);}
   const work=[]; while(work.length<CFG.scanLimit&&(buckets.solana.length||buckets.ton.length)){for(const c of ['solana','ton']) if(buckets[c].length&&work.length<CFG.scanLimit) work.push(buckets[c].shift());}
-  let checked=0,qualified=0,alerts=0,candidateErrors=0,noPool=0;
+  let checked=0,qualified=0,alerts=0,candidateErrors=0,noPool=0,dexPairMissing=0,tradeApiErrors=0,noRecentTrades=0;
   for(const raw of work){
     const key=`${raw.chain}:${raw.tokenAddress}`; const previous=state.tokens[key]||{};
     try{
-      const t=await enrichDex(raw); if(!t.poolAddress || t.pairLookup==='NO_DEXSCREENER_PAIR') noPool++; const age=ageHours(t.pairCreatedAt||t.poolCreatedAt);
+      const t=await enrichDex(raw); if(!t.poolAddress) noPool++; if(t.pairLookup==='NO_DEXSCREENER_PAIR') dexPairMissing++; const age=ageHours(t.pairCreatedAt||t.poolCreatedAt);
       if(age!=null&&age>CFG.maxAgeHours) continue;
-      const sm=await smartMoney(t);
+      const sm=await smartMoney(t); if(sm.coverage==='API_ERROR') tradeApiErrors++; if(sm.coverage==='NO_TRADES_LAST_15M'||sm.coverage==='NO_INDEXED_TRADES') noRecentTrades++;
       const safety=t.chain==='solana'?await solanaSafety(t):await tonSafety(t);
       const mom=momentum(t,sm,previous); const rankResult=rank(t,sm,safety,mom,age); checked++;
       const record={firstSeen:previous.firstSeen||Date.now(),lastSeen:Date.now(),name:t.name,symbol:t.symbol,priceUsd:t.priceUsd,liquidityUsd:t.liquidityUsd,score:rankResult.score,qualified:rankResult.qualified,chain:t.chain,tokenAddress:t.tokenAddress,poolAddress:t.poolAddress,source:t.source,top10HolderPct:safety.top10HolderPct};
@@ -255,18 +297,20 @@ async function main(){
         let sent=false; for(const chat of [CFG.vipChat,CFG.freeChat].filter(Boolean)){try{sent=await sendTelegram(msg,chat)||sent;}catch(e){console.error(`Telegram: ${e.message}`);}}
         if(sent){alerts++;state.tokens[key].lastAlertAt=Date.now();state.stats.alerts++;}
       }}
-      console.log(`${t.chain} ${t.symbol} score=${rankResult.score} qualified=${rankResult.qualified} buyers15m=${sm.uniqueBuyers} liquidity=${n(t.liquidityUsd)} top10=${safety.top10HolderPct}`);
+      console.log(`${t.chain} ${t.symbol} score=${rankResult.score} qualified=${rankResult.qualified} tradesFetched=${sm.tradesFetched} trades15m=${sm.recentTradeCount} walletTrades15m=${sm.walletAttributedTrades} buyers15m=${sm.uniqueBuyers} buyUsd15m=${sm.buyUsd.toFixed(2)} liquidity=${n(t.liquidityUsd)} top10=${safety.top10HolderPct} holderCoverage=${safety.holderCoverage} pairLookup=${t.pairLookup||'NOT_RUN'}${sm.error?` tradeError=${sm.error}`:''}`);
     }catch(e){candidateErrors++;console.error(`Candidate ${key}: ${e.message}`);}
     await sleep(250);
   }
   state.lastRun=new Date().toISOString(); await saveState(state);
-  console.log(`${VERSION} END | checked=${checked} qualified=${qualified} alerts=${alerts} noPool=${noPool} candidateErrors=${candidateErrors} feedErrors=${errors.length} elapsed=${Math.round((Date.now()-started)/1000)}s`);
+  console.log(`${VERSION} END | checked=${checked} qualified=${qualified} alerts=${alerts} noPool=${noPool} dexPairMissing=${dexPairMissing} tradeApiErrors=${tradeApiErrors} noRecentTrades=${noRecentTrades} candidateErrors=${candidateErrors} feedErrors=${errors.length} elapsed=${Math.round((Date.now()-started)/1000)}s`);
   for(const e of errors) console.log(`FEED_WARNING ${e}`);
 }
 if (process.env.HUNTER_SELF_TEST === '1') {
   const assert = (await import('node:assert/strict')).default;
   assert.equal(detectCoordination([{tx_from:'a'},{tx_from:'a'},{tx_from:'a'},{tx_from:'b'},{tx_from:'b'},{tx_from:'b'}],t=>t.tx_from), true);
   assert.equal(detectCoordination([{tx_from:'a'},{tx_from:'b'}],t=>t.tx_from), false);
+  assert.equal(tradeIsBuyForToken({from_token_address:'SOL',to_token_address:'TOKEN',kind:'buy'},{tokenAddress:'TOKEN',isBaseToken:false}),true);
+  assert.equal(tradeIsBuyForToken({from_token_address:'TOKEN',to_token_address:'SOL',kind:'sell'},{tokenAddress:'TOKEN',isBaseToken:false}),false);
   const scored=rank({chain:'solana',poolAddress:'test-pool',liquidityUsd:10000,volume24h:20000,txns24h:{buys:20,sells:5}}, {coverage:'SAMPLED_15M_TRADES',uniqueBuyers:8,uniqueSellers:2,buyUsd:5000,sellUsd:1000,coordinationRisk:false}, {mintAuthority:'REVOKED',freezeAuthority:'REVOKED',top10HolderPct:20,sellability:'ROUTE_QUOTE_AVAILABLE',riskFlags:[]}, {buyers15m:8,netFlow15m:4000,buyerSellerRatio:0.8,liquidityDeltaPct:5,buys24h:20,sells24h:5}, 2);
   assert.equal(scored.qualified, true);
   console.log('SELF_TEST_OK');
