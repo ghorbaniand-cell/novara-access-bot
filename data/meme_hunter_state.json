@@ -1209,7 +1209,7 @@
     },
     "ton:EQB3D9wOGUCVQnC2T1_6mbmxO5zFa-YW9KSFmRmKcWXZYXIC": {
       "firstSeen": 1795731406614,
-      "lastSeen": 1795731406614,
+      "lastSeen": 1795731924334,
       "name": "Tethe USD",
       "symbol": "Tether USDT",
       "priceUsd": 0.998,
@@ -1239,12 +1239,12 @@
     },
     "ton:EQDo3y_m9K-_k8AUDN-etLzF1el40WveQJdf8AG8xhwbgAy6": {
       "firstSeen": 1795731431390,
-      "lastSeen": 1795731431390,
+      "lastSeen": 1795731937389,
       "name": "ROBOT TOKEN",
       "symbol": "ROB",
-      "priceUsd": 1.208e-9,
-      "liquidityUsd": 0.96,
-      "score": 37,
+      "priceUsd": 3.356e-9,
+      "liquidityUsd": 1.7,
+      "score": 48,
       "qualified": false,
       "chain": "ton",
       "tokenAddress": "EQDo3y_m9K-_k8AUDN-etLzF1el40WveQJdf8AG8xhwbgAy6",
@@ -1269,7 +1269,7 @@
     },
     "ton:EQDcMHRhfmn9UV-aD1RH4uvBeneEnF1QpPfdxWVDrfRcjVul": {
       "firstSeen": 1795731456485,
-      "lastSeen": 1795731456485,
+      "lastSeen": 1795731950383,
       "name": "Fat Jason gta6",
       "symbol": "FATJASON",
       "priceUsd": 1.002e-7,
@@ -1296,11 +1296,90 @@
       "poolAddress": "CKkUkFb2c9wpAphnBmDo3LgQ3xp9f8UV6QmAqeMvKXJR",
       "source": "GeckoTerminal new_pools",
       "top10HolderPct": 94.9739
+    },
+    "solana:D8V4y6drZkEp37rLtjbeuBRysq3g2bsRiJPA8VBUpump": {
+      "firstSeen": 1795731869647,
+      "lastSeen": 1795731869647,
+      "name": "makemerich",
+      "symbol": "mmrich",
+      "priceUsd": 4.161e-7,
+      "liquidityUsd": 895.8555,
+      "score": 63,
+      "qualified": false,
+      "chain": "solana",
+      "tokenAddress": "D8V4y6drZkEp37rLtjbeuBRysq3g2bsRiJPA8VBUpump",
+      "poolAddress": "AnsCHWkprZ5pSMkSLt1GcASdMXfdHNa5R1hKoX6CztdM",
+      "source": "GeckoTerminal new_pools",
+      "top10HolderPct": 100
+    },
+    "ton:EQDlogIMj1kpV1bGkC6x50nCILtbckqM9hAEnj7V1bj0MGt4": {
+      "firstSeen": 1795731875504,
+      "lastSeen": 1795731875504,
+      "name": "Tethe USD",
+      "symbol": "Tether USDT",
+      "priceUsd": 1.00072,
+      "liquidityUsd": 22.07,
+      "score": 28,
+      "qualified": false,
+      "chain": "ton",
+      "tokenAddress": "EQDlogIMj1kpV1bGkC6x50nCILtbckqM9hAEnj7V1bj0MGt4",
+      "poolAddress": "EQDryF9_cOI08OjeprkTOYmnm7LvFIdV2dLmLt3ta-xNdwFY",
+      "source": "GeckoTerminal new_pools",
+      "top10HolderPct": 100
+    },
+    "solana:HdhMCFdekTFtrDtfG4pRUdbHheU2z1e25uUfm6npump": {
+      "firstSeen": 1795731881947,
+      "lastSeen": 1795731881947,
+      "name": "Agent User Interaction Protocol",
+      "symbol": "AGUI",
+      "priceUsd": 0.000002039,
+      "liquidityUsd": 1973.2492,
+      "score": 69,
+      "qualified": false,
+      "chain": "solana",
+      "tokenAddress": "HdhMCFdekTFtrDtfG4pRUdbHheU2z1e25uUfm6npump",
+      "poolAddress": "ysfXNdzLuZtqKjwqa4Ri32XfJgLtk74Ci75hwyMZycX",
+      "source": "GeckoTerminal new_pools",
+      "top10HolderPct": 100
+    },
+    "solana:8n7mSQ8KUqP17AQii1bmWR1wdRhtKe5fDW7yiuLqpump": {
+      "firstSeen": 1795731931264,
+      "lastSeen": 1795731931264,
+      "name": "coin",
+      "symbol": "COIN",
+      "priceUsd": 0.00001403,
+      "liquidityUsd": 5520.1657,
+      "score": 74,
+      "qualified": false,
+      "chain": "solana",
+      "tokenAddress": "8n7mSQ8KUqP17AQii1bmWR1wdRhtKe5fDW7yiuLqpump",
+      "poolAddress": "BR4qstXqbR316eJqJ9gCwpc6zKnRjqhJBr7ggPj3Rqni",
+      "source": "GeckoTerminal new_pools",
+      "top10HolderPct": 53.4553
+    },
+    "solana:Hy61oCi7BwS1AyitGtmXZYHhcRFVjSu1ygSzuXCypump": {
+      "firstSeen": 1795731944739,
+      "lastSeen": 1795731944739,
+      "name": "Drink Watta",
+      "symbol": "DWTA",
+      "priceUsd": 3.025e-9,
+      "liquidityUsd": 2372.2881,
+      "score": 58,
+      "qualified": false,
+      "chain": "solana",
+      "tokenAddress": "Hy61oCi7BwS1AyitGtmXZYHhcRFVjSu1ygSzuXCypump",
+      "poolAddress": "5w3jrQLyzxbbphBUshEeqHHpiUugHTNjECqXh7EzUqVn",
+      "source": "GeckoTerminal new_pools",
+      "top10HolderPct": 100
     }
   },
   "stats": {
-    "runs": 15,
+    "runs": 16,
     "alerts": 0
   },
-  "lastRun": "2026-11-26T22:18:01.554Z"
+  "lastRun": "2026-11-26T22:25:50.633Z",
+  "telegram": {
+    "lastTestAt": 1795731855526,
+    "lastError": "HTTP 400 Telegram API: Bad Request: chat not found"
+  }
 }
