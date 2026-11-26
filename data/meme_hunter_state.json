@@ -744,11 +744,11 @@
     },
     "ton:EQBH1rcJcIzTl9iyM8jjbqPIF1gyjB73ydGQ3Ib9VQQAe0no": {
       "firstSeen": 1795727814189,
-      "lastSeen": 1795729815307,
+      "lastSeen": 1795730110656,
       "name": "Unknown Tokene0no",
       "symbol": "UKWNe0no",
       "priceUsd": 0.0000126449087188151,
-      "liquidityUsd": 1283.0096,
+      "liquidityUsd": 1289.5477,
       "score": 15,
       "qualified": false,
       "chain": "ton",
@@ -849,7 +849,7 @@
     },
     "ton:EQDrEOSwriBurHS0AB-nsNPM8mJ0TjmqTL1tLX3PdKiL6GuP": {
       "firstSeen": 1795728000145,
-      "lastSeen": 1795729766249,
+      "lastSeen": 1795730061642,
       "name": "GRAMMY",
       "symbol": "GRAMMY",
       "priceUsd": 9.763e-9,
@@ -1071,11 +1071,86 @@
       "poolAddress": "GAtgpUJKSQPNa4hiCBBjGKs4eNuBrWCKMTfEi8uVZ4PN",
       "source": "GeckoTerminal new_pools",
       "top10HolderPct": 92.6741
+    },
+    "solana:CtjqGP6uX5Y6vUUwHeu2FVJf3qWC9nahyjh8zHzCpump": {
+      "firstSeen": 1795730036201,
+      "lastSeen": 1795730036201,
+      "name": "The Last Thanksgiving",
+      "symbol": "thankful",
+      "priceUsd": 0.000002339165607330052,
+      "liquidityUsd": 2038.3323,
+      "score": 65,
+      "qualified": false,
+      "chain": "solana",
+      "tokenAddress": "CtjqGP6uX5Y6vUUwHeu2FVJf3qWC9nahyjh8zHzCpump",
+      "poolAddress": "DiTgp9dihVueDV3DHebfgouaK88EEJrb4CQZFtuwZPnh",
+      "source": "GeckoTerminal new_pools",
+      "top10HolderPct": 100
+    },
+    "ton:EQBIlEWCAsP4Wy6olh8RxF-Asrqv8U4R3HHdwogMyGp3Qxzw": {
+      "firstSeen": 1795730042409,
+      "lastSeen": 1795730042409,
+      "name": "Rik",
+      "symbol": "RIK",
+      "priceUsd": 0.0001394,
+      "liquidityUsd": 2.54,
+      "score": 28,
+      "qualified": false,
+      "chain": "ton",
+      "tokenAddress": "EQBIlEWCAsP4Wy6olh8RxF-Asrqv8U4R3HHdwogMyGp3Qxzw",
+      "poolAddress": "EQAF3F08vgTxgmD1t3BGe2vubjwV0x-JwshYl7kJ2ZjfSCCn",
+      "source": "GeckoTerminal new_pools",
+      "top10HolderPct": 100
+    },
+    "solana:5FRMpWDicn77cvk2J9h7Ac8axL5aGvB9qdb66Ksepump": {
+      "firstSeen": 1795730048785,
+      "lastSeen": 1795730048785,
+      "name": "genny???",
+      "symbol": "FAMILY",
+      "priceUsd": 0.000002004,
+      "liquidityUsd": 1588.8869,
+      "score": 31,
+      "qualified": false,
+      "chain": "solana",
+      "tokenAddress": "5FRMpWDicn77cvk2J9h7Ac8axL5aGvB9qdb66Ksepump",
+      "poolAddress": "DyZmWcTTkuQfqJPr8sRkmvj37RggfCm4FBmzjfRdifFE",
+      "source": "GeckoTerminal new_pools",
+      "top10HolderPct": 100
+    },
+    "solana:7bt7d3XhRGeZ6SXfdFvgfuAnmzAbQrrovR335PkLrdML": {
+      "firstSeen": 1795730055452,
+      "lastSeen": 1795730055452,
+      "name": "WOKEFLIX",
+      "symbol": "WOKEFLIX",
+      "priceUsd": 0.000002083,
+      "liquidityUsd": 1895.2993,
+      "score": 65,
+      "qualified": false,
+      "chain": "solana",
+      "tokenAddress": "7bt7d3XhRGeZ6SXfdFvgfuAnmzAbQrrovR335PkLrdML",
+      "poolAddress": "FXZbJ9rfecsxU6JjQ45aPGY6W51oaGxR3sNCNSJGWbwj",
+      "source": "GeckoTerminal new_pools",
+      "top10HolderPct": 100
+    },
+    "solana:Ex3Uv1hoYSWuGiQkqNyTKFvVEYCt52j7TqZ4qYwopump": {
+      "firstSeen": 1795730104299,
+      "lastSeen": 1795730104299,
+      "name": "genny???",
+      "symbol": "FAMILY",
+      "priceUsd": 0.000002004,
+      "liquidityUsd": 1588.8869,
+      "score": 42,
+      "qualified": false,
+      "chain": "solana",
+      "tokenAddress": "Ex3Uv1hoYSWuGiQkqNyTKFvVEYCt52j7TqZ4qYwopump",
+      "poolAddress": "4UAG3TxJstUpSzXQdFonXHjQd6qEnwzYKZJCinVdEMj8",
+      "source": "GeckoTerminal new_pools",
+      "top10HolderPct": 100
     }
   },
   "stats": {
-    "runs": 12,
+    "runs": 13,
     "alerts": 0
   },
-  "lastRun": "2026-11-26T21:50:28.656Z"
+  "lastRun": "2026-11-26T21:55:10.906Z"
 }
