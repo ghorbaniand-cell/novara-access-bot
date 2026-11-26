@@ -744,11 +744,11 @@
     },
     "ton:EQBH1rcJcIzTl9iyM8jjbqPIF1gyjB73ydGQ3Ib9VQQAe0no": {
       "firstSeen": 1795727814189,
-      "lastSeen": 1795728254749,
+      "lastSeen": 1795729412909,
       "name": "Unknown Tokene0no",
       "symbol": "UKWNe0no",
       "priceUsd": 0.0000126449087188151,
-      "liquidityUsd": 1271.4549,
+      "liquidityUsd": 1283.1362,
       "score": 15,
       "qualified": false,
       "chain": "ton",
@@ -774,7 +774,7 @@
     },
     "ton:EQCD_NgsY11DMDqW1xW0X4D7oK8hGmO3ZKeBfKHj79VExizw": {
       "firstSeen": 1795727839236,
-      "lastSeen": 1795728267761,
+      "lastSeen": 1795729461909,
       "name": "duk",
       "symbol": "duk",
       "priceUsd": 3.298e-8,
@@ -849,12 +849,12 @@
     },
     "ton:EQDrEOSwriBurHS0AB-nsNPM8mJ0TjmqTL1tLX3PdKiL6GuP": {
       "firstSeen": 1795728000145,
-      "lastSeen": 1795728205731,
+      "lastSeen": 1795729399835,
       "name": "GRAMMY",
       "symbol": "GRAMMY",
       "priceUsd": 9.763e-9,
       "liquidityUsd": 1.93,
-      "score": 42,
+      "score": 19,
       "qualified": false,
       "chain": "ton",
       "tokenAddress": "EQDrEOSwriBurHS0AB-nsNPM8mJ0TjmqTL1tLX3PdKiL6GuP",
@@ -951,11 +951,71 @@
       "poolAddress": "EQBKFQHhMj5HB8WvHybHXF2WxERxQMA5jJQUCPqzNe8e",
       "source": "GeckoTerminal new_pools",
       "top10HolderPct": 90.0012
+    },
+    "solana:3gCvY2AsEmXCzPQgCK6zBnH2CVFcCzG98erLfwQBe3gW": {
+      "firstSeen": 1795729386906,
+      "lastSeen": 1795729386906,
+      "name": "Jobcat",
+      "symbol": "JOBCAT",
+      "priceUsd": 0.0000033693959176474544,
+      "liquidityUsd": 3394.0863,
+      "score": 54,
+      "qualified": false,
+      "chain": "solana",
+      "tokenAddress": "3gCvY2AsEmXCzPQgCK6zBnH2CVFcCzG98erLfwQBe3gW",
+      "poolAddress": "2hzuLz2U96bTfF81YF3XYtCSwcJ6xd8D4Eh5ZjmJ6Rgd",
+      "source": "GeckoTerminal new_pools",
+      "top10HolderPct": 100
+    },
+    "solana:EfLzmVgEDyjyhApCQu9dS984JP5iCeKNrJ24HTYfRKLS": {
+      "firstSeen": 1795729393483,
+      "lastSeen": 1795729393483,
+      "name": "Veto Corleone",
+      "symbol": "Corleone",
+      "priceUsd": 0.00005344,
+      "liquidityUsd": 1984.86,
+      "score": 74,
+      "qualified": false,
+      "chain": "solana",
+      "tokenAddress": "EfLzmVgEDyjyhApCQu9dS984JP5iCeKNrJ24HTYfRKLS",
+      "poolAddress": "AgHiXU1XQgp1qJitzzPKdQPPg7a1KQKSqu6s114tWy5P",
+      "source": "GeckoTerminal new_pools",
+      "top10HolderPct": 98.6125
+    },
+    "solana:BWqpRTtmPLJzqp753Nj5Lu3s5KUFKFKmgurMd8Vhpump": {
+      "firstSeen": 1795729406493,
+      "lastSeen": 1795729406493,
+      "name": "PigeonWifChain",
+      "symbol": "PWC",
+      "priceUsd": 0.000002037,
+      "liquidityUsd": 1603.6189,
+      "score": 59,
+      "qualified": false,
+      "chain": "solana",
+      "tokenAddress": "BWqpRTtmPLJzqp753Nj5Lu3s5KUFKFKmgurMd8Vhpump",
+      "poolAddress": "DPXpXJcVCsW2ZMLRW856b8VAdhqEyVjxFSuWAy5UFVEJ",
+      "source": "GeckoTerminal new_pools",
+      "top10HolderPct": 100
+    },
+    "solana:DsEHHC94TNyWRGVdj8S26UQL7CVBQpEWj9L6YaGvpump": {
+      "firstSeen": 1795729455868,
+      "lastSeen": 1795729455868,
+      "name": "ULTRAPAID",
+      "symbol": "ULTRA",
+      "priceUsd": 9.481e-8,
+      "liquidityUsd": 1698.02679101196,
+      "score": 58,
+      "qualified": false,
+      "chain": "solana",
+      "tokenAddress": "DsEHHC94TNyWRGVdj8S26UQL7CVBQpEWj9L6YaGvpump",
+      "poolAddress": "2hpZLYGz3kav1T2rNsu69qdXNN9A99f1uSNPfiWVrvfS",
+      "source": "GeckoTerminal new_pools",
+      "top10HolderPct": 100
     }
   },
   "stats": {
-    "runs": 10,
+    "runs": 11,
     "alerts": 0
   },
-  "lastRun": "2026-11-26T21:24:28.010Z"
+  "lastRun": "2026-11-26T21:44:22.159Z"
 }
