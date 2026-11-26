@@ -1209,12 +1209,12 @@
     },
     "ton:EQB3D9wOGUCVQnC2T1_6mbmxO5zFa-YW9KSFmRmKcWXZYXIC": {
       "firstSeen": 1795731406614,
-      "lastSeen": 1795731924334,
+      "lastSeen": 1795732231729,
       "name": "Tethe USD",
       "symbol": "Tether USDT",
       "priceUsd": 0.998,
       "liquidityUsd": 22.01,
-      "score": 28,
+      "score": 15,
       "qualified": false,
       "chain": "ton",
       "tokenAddress": "EQB3D9wOGUCVQnC2T1_6mbmxO5zFa-YW9KSFmRmKcWXZYXIC",
@@ -1239,12 +1239,12 @@
     },
     "ton:EQDo3y_m9K-_k8AUDN-etLzF1el40WveQJdf8AG8xhwbgAy6": {
       "firstSeen": 1795731431390,
-      "lastSeen": 1795731937389,
+      "lastSeen": 1795732280775,
       "name": "ROBOT TOKEN",
       "symbol": "ROB",
       "priceUsd": 3.356e-9,
       "liquidityUsd": 1.7,
-      "score": 48,
+      "score": 43,
       "qualified": false,
       "chain": "ton",
       "tokenAddress": "EQDo3y_m9K-_k8AUDN-etLzF1el40WveQJdf8AG8xhwbgAy6",
@@ -1314,7 +1314,7 @@
     },
     "ton:EQDlogIMj1kpV1bGkC6x50nCILtbckqM9hAEnj7V1bj0MGt4": {
       "firstSeen": 1795731875504,
-      "lastSeen": 1795731875504,
+      "lastSeen": 1795732218714,
       "name": "Tethe USD",
       "symbol": "Tether USDT",
       "priceUsd": 1.00072,
@@ -1371,15 +1371,78 @@
       "poolAddress": "5w3jrQLyzxbbphBUshEeqHHpiUugHTNjECqXh7EzUqVn",
       "source": "GeckoTerminal new_pools",
       "top10HolderPct": 100
+    },
+    "ton:EQB2LnNNGJzgsVek-S84ob2dOrdLTuqtpi7REdIi80VbZTKs": {
+      "firstSeen": 1795732206000,
+      "lastSeen": 1795732206000,
+      "name": "Tethel USD",
+      "symbol": "USDT-GARN",
+      "priceUsd": 0.9993,
+      "liquidityUsd": 22.04,
+      "score": 28,
+      "qualified": false,
+      "chain": "ton",
+      "tokenAddress": "EQB2LnNNGJzgsVek-S84ob2dOrdLTuqtpi7REdIi80VbZTKs",
+      "poolAddress": "EQC9Wu4fUCMSoxVU4xkWRWExpVedE40AwysdbG3_iz1bxLU8",
+      "source": "GeckoTerminal new_pools",
+      "top10HolderPct": 100
+    },
+    "solana:9EqqqMP54LFQW6ZfFvXVRXnacG1BXegKUJM6gpBipump": {
+      "firstSeen": 1795732212393,
+      "lastSeen": 1795732212393,
+      "name": "Make Ass Great Again",
+      "symbol": "MAGA",
+      "priceUsd": 0.00004426,
+      "liquidityUsd": 4082.52,
+      "score": 40,
+      "qualified": false,
+      "chain": "solana",
+      "tokenAddress": "9EqqqMP54LFQW6ZfFvXVRXnacG1BXegKUJM6gpBipump",
+      "poolAddress": "3jUy54dg5oucjNDpS8RtXAVxNyr4zLjM9RmE6J6K1MU2",
+      "source": "GeckoTerminal new_pools",
+      "top10HolderPct": 69.1785
+    },
+    "solana:9GePZSavuteYxVPV12rJnVmRRRSeuGHhynBw4XLnpump": {
+      "firstSeen": 1795732225431,
+      "lastSeen": 1795732225431,
+      "name": "dogwifhat",
+      "symbol": "WIF",
+      "priceUsd": 0.000002267,
+      "liquidityUsd": 1200.7022,
+      "score": 68,
+      "qualified": false,
+      "chain": "solana",
+      "tokenAddress": "9GePZSavuteYxVPV12rJnVmRRRSeuGHhynBw4XLnpump",
+      "poolAddress": "3r1c6icA7fWJ8SvMx8EBycssqmjYKpEULRjoGd9f3ckz",
+      "source": "GeckoTerminal new_pools",
+      "top10HolderPct": 100
+    },
+    "solana:FdSWKp3ussCMx8NH18kEw3WfbfNLFnKo5wF5SbZZpump": {
+      "firstSeen": 1795732274391,
+      "lastSeen": 1795732274391,
+      "name": "TRUMP DOGI ",
+      "symbol": "TRUMP ",
+      "priceUsd": 3.316e-7,
+      "liquidityUsd": 1430.4394,
+      "score": 57,
+      "qualified": false,
+      "chain": "solana",
+      "tokenAddress": "FdSWKp3ussCMx8NH18kEw3WfbfNLFnKo5wF5SbZZpump",
+      "poolAddress": "27moDFtT2cMczTLrnv1AbqDmfHRNCPY2Jr7Wmbp5RfbM",
+      "source": "GeckoTerminal new_pools",
+      "top10HolderPct": 100
     }
   },
   "stats": {
-    "runs": 16,
+    "runs": 17,
     "alerts": 0
   },
-  "lastRun": "2026-11-26T22:25:50.633Z",
+  "lastRun": "2026-11-26T22:31:21.025Z",
   "telegram": {
-    "lastTestAt": 1795731855526,
-    "lastError": "HTTP 400 Telegram API: Bad Request: chat not found"
+    "verifiedAt": 1795732192336,
+    "target": "-1005614977570",
+    "botId": "9168929206",
+    "botUsername": "NovaraSignalsHQ_bot",
+    "lastError": null
   }
 }
