@@ -1,7 +1,7 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 
-const VERSION = 'NOVARA-MEME-HUNTER-V1.0.2-TRADE-HOLDER-DIAGNOSTICS';
+const VERSION = 'NOVARA-MEME-HUNTER-V1.0.3-TRADE-ERROR-RATE-LIMIT-FIX';
 const ROOT = path.dirname(new URL(import.meta.url).pathname);
 const STATE_FILE = path.join(ROOT, process.env.NOVARA_STATE_FILE || 'data/meme_hunter_state.json');
 const n = (v, d=0) => Number.isFinite(Number(v)) ? Number(v) : d;
@@ -26,6 +26,10 @@ const CFG = {
   jupiterApiKey: process.env.JUPITER_API_KEY || '',
 };
 const sleep = ms => new Promise(r => setTimeout(r, ms));
+// GeckoTerminal's public API is rate-limited. Pace every request across discovery and trade sampling.
+let lastGeckoRequestAt = 0;
+const GECKO_MIN_INTERVAL_MS = Math.max(6000, num('HUNTER_GECKO_MIN_INTERVAL_MS', 6500));
+const GECKO_MAX_429_RETRIES = 2;
 const pct = (a,b) => b > 0 ? a/b*100 : null;
 const short = s => !s ? '—' : String(s).length > 13 ? `${String(s).slice(0,6)}…${String(s).slice(-5)}` : String(s);
 const usd = v => v == null || !Number.isFinite(Number(v)) ? 'نامشخص' : `$${Number(v).toLocaleString('en-US',{maximumFractionDigits:0})}`;
@@ -33,12 +37,28 @@ const fmtPct = v => v == null ? 'نامشخص' : `${Number(v).toFixed(1)}%`;
 const ageHours = ts => ts ? Math.max(0,(Date.now()-ts)/3600000) : null;
 
 async function request(url, opts={}, timeout=12000) {
-  const controller = new AbortController(); const timer=setTimeout(()=>controller.abort(),timeout);
-  try {
-    const res=await fetch(url,{...opts,signal:controller.signal,headers:{'accept':'application/json','user-agent':'NOVARA-Meme-Hunter/1.0',...(opts.headers||{})}});
-    if(!res.ok) throw new Error(`HTTP ${res.status} ${url}`);
-    return await res.json();
-  } finally { clearTimeout(timer); }
+  const isGecko = String(url).includes('api.geckoterminal.com');
+  for (let attempt=0; ; attempt++) {
+    if (isGecko) {
+      const wait = GECKO_MIN_INTERVAL_MS - (Date.now() - lastGeckoRequestAt);
+      if (wait > 0) await sleep(wait);
+      lastGeckoRequestAt = Date.now();
+    }
+    const controller = new AbortController(); const timer=setTimeout(()=>controller.abort(),timeout);
+    let res;
+    try {
+      res=await fetch(url,{...opts,signal:controller.signal,headers:{'accept':'application/json','user-agent':'NOVARA-Meme-Hunter/1.0',...(opts.headers||{})}});
+      if (res.ok) return await res.json();
+      if (isGecko && res.status===429 && attempt<GECKO_MAX_429_RETRIES) {
+        const retryAfter=Number(res.headers.get('retry-after'));
+        const delay=Number.isFinite(retryAfter)&&retryAfter>0 ? Math.min(60000,retryAfter*1000) : 12000*(attempt+1);
+        console.warn(`[GECKO_RATE_LIMIT] HTTP 429; retry ${attempt+1}/${GECKO_MAX_429_RETRIES} after ${delay}ms`);
+        await sleep(delay);
+        continue;
+      }
+      throw new Error(`HTTP ${res.status} ${url}`);
+    } finally { clearTimeout(timer); }
+  }
 }
 async function rpc(method, params) {
   const j=await request(CFG.solanaRpc,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({jsonrpc:'2.0',id:1,method,params})});
@@ -90,7 +110,7 @@ async function enrichDex(token){
     const p=pairs[0]; if(!p) return {...token,pairLookup:'NO_DEXSCREENER_PAIR'};
     const isBase=String(p.baseToken?.address||'').toLowerCase()===String(token.tokenAddress||'').toLowerCase();
     const target=isBase?p.baseToken:p.quoteToken;
-    return {...token,name:target?.name||token.name,symbol:target?.symbol||token.symbol,isBaseToken:isBase,priceUsd:n(p.priceUsd,token.priceUsd),liquidityUsd:n(p.liquidity?.usd,token.liquidityUsd),fdv:n(p.fdv,token.fdv),marketCap:n(p.marketCap,token.marketCap),volume24h:n(p.volume?.h24,token.volume24h),txns24h:p.txns?.h24||token.txns24h||{},priceChange:p.priceChange||{},pairCreatedAt:p.pairCreatedAt||token.poolCreatedAt,poolAddress:p.pairAddress||token.poolAddress,pairAddress:p.pairAddress||token.poolAddress,dexId:p.dexId||'',url:p.url||token.url};
+    return {...token,name:target?.name||token.name,symbol:target?.symbol||token.symbol,isBaseToken:isBase,priceUsd:n(p.priceUsd,token.priceUsd),liquidityUsd:n(p.liquidity?.usd,token.liquidityUsd),fdv:n(p.fdv,token.fdv),marketCap:n(p.marketCap,token.marketCap),volume24h:n(p.volume?.h24,token.volume24h),txns24h:p.txns?.h24||token.txns24h||{},priceChange:p.priceChange||{},pairCreatedAt:p.pairCreatedAt||token.poolCreatedAt,poolAddress:p.pairAddress||token.poolAddress,pairAddress:p.pairAddress||token.poolAddress,dexId:p.dexId||'',url:p.url||token.url,pairLookup:'FOUND'};
   } catch(e) { return {...token,pairLookup:'DEXSCREENER_LOOKUP_ERROR',pairLookupError:e.message}; }
 }
 
@@ -108,7 +128,7 @@ function tradeIsBuyForToken(t, token) {
   return (String(t.kind||'').toLowerCase()==='buy') === (token.isBaseToken!==false);
 }
 async function smartMoney(token){
-  const result={trades:[],tradesFetched:0,recentTradeCount:0,walletAttributedTrades:0,latestTradeAt:null,uniqueBuyers:0,uniqueSellers:0,buyUsd:0,sellUsd:0,earlyWallets:[],coordinationRisk:false,coverage:'UNAVAILABLE'};
+  let result={trades:[],tradesFetched:0,recentTradeCount:0,walletAttributedTrades:0,latestTradeAt:null,uniqueBuyers:0,uniqueSellers:0,buyUsd:0,sellUsd:0,earlyWallets:[],coordinationRisk:false,coverage:'UNAVAILABLE'};
   if(!token.poolAddress){result.coverage='NO_POOL';return result;}
   try {
     const j=await request(`https://api.geckoterminal.com/api/v2/networks/${token.chain}/pools/${encodeURIComponent(token.poolAddress)}/trades?page=1`,{headers:{accept:'application/json;version=20230302'}});
@@ -311,6 +331,17 @@ if (process.env.HUNTER_SELF_TEST === '1') {
   assert.equal(detectCoordination([{tx_from:'a'},{tx_from:'b'}],t=>t.tx_from), false);
   assert.equal(tradeIsBuyForToken({from_token_address:'SOL',to_token_address:'TOKEN',kind:'buy'},{tokenAddress:'TOKEN',isBaseToken:false}),true);
   assert.equal(tradeIsBuyForToken({from_token_address:'TOKEN',to_token_address:'SOL',kind:'sell'},{tokenAddress:'TOKEN',isBaseToken:false}),false);
+  // Regression test: a successful GeckoTerminal response must populate the mutable result object.
+  const originalFetch=globalThis.fetch;
+  try {
+    globalThis.fetch=async()=>new Response(JSON.stringify({data:[{attributes:{block_timestamp:new Date().toISOString(),from_token_address:'SOL',to_token_address:'TOKEN',tx_from_address:'buyer-1',volume_in_usd:'125',kind:'buy'}}]}),{status:200,headers:{'content-type':'application/json'}});
+    lastGeckoRequestAt=Date.now()-GECKO_MIN_INTERVAL_MS;
+    const sampled=await smartMoney({chain:'solana',poolAddress:'test-pool',tokenAddress:'TOKEN',isBaseToken:false});
+    assert.equal(sampled.coverage,'SAMPLED_15M_TRADES');
+    assert.equal(sampled.tradesFetched,1);
+    assert.equal(sampled.uniqueBuyers,1);
+    assert.equal(sampled.buyUsd,125);
+  } finally { globalThis.fetch=originalFetch; }
   const scored=rank({chain:'solana',poolAddress:'test-pool',liquidityUsd:10000,volume24h:20000,txns24h:{buys:20,sells:5}}, {coverage:'SAMPLED_15M_TRADES',uniqueBuyers:8,uniqueSellers:2,buyUsd:5000,sellUsd:1000,coordinationRisk:false}, {mintAuthority:'REVOKED',freezeAuthority:'REVOKED',top10HolderPct:20,sellability:'ROUTE_QUOTE_AVAILABLE',riskFlags:[]}, {buyers15m:8,netFlow15m:4000,buyerSellerRatio:0.8,liquidityDeltaPct:5,buys24h:20,sells24h:5}, 2);
   assert.equal(scored.qualified, true);
   console.log('SELF_TEST_OK');
