@@ -744,11 +744,11 @@
     },
     "ton:EQBH1rcJcIzTl9iyM8jjbqPIF1gyjB73ydGQ3Ib9VQQAe0no": {
       "firstSeen": 1795727814189,
-      "lastSeen": 1795730110656,
+      "lastSeen": 1795730598909,
       "name": "Unknown Tokene0no",
       "symbol": "UKWNe0no",
       "priceUsd": 0.0000126449087188151,
-      "liquidityUsd": 1289.5477,
+      "liquidityUsd": 1289.2893,
       "score": 15,
       "qualified": false,
       "chain": "ton",
@@ -849,7 +849,7 @@
     },
     "ton:EQDrEOSwriBurHS0AB-nsNPM8mJ0TjmqTL1tLX3PdKiL6GuP": {
       "firstSeen": 1795728000145,
-      "lastSeen": 1795730061642,
+      "lastSeen": 1795730547402,
       "name": "GRAMMY",
       "symbol": "GRAMMY",
       "priceUsd": 9.763e-9,
@@ -1089,7 +1089,7 @@
     },
     "ton:EQBIlEWCAsP4Wy6olh8RxF-Asrqv8U4R3HHdwogMyGp3Qxzw": {
       "firstSeen": 1795730042409,
-      "lastSeen": 1795730042409,
+      "lastSeen": 1795730534427,
       "name": "Rik",
       "symbol": "RIK",
       "priceUsd": 0.0001394,
@@ -1146,11 +1146,56 @@
       "poolAddress": "4UAG3TxJstUpSzXQdFonXHjQd6qEnwzYKZJCinVdEMj8",
       "source": "GeckoTerminal new_pools",
       "top10HolderPct": 100
+    },
+    "solana:HmZwso4ohv252dTdXffmbnnzZ2DroShEgZyvojiLpump": {
+      "firstSeen": 1795730528079,
+      "lastSeen": 1795730528079,
+      "name": "White",
+      "symbol": "White",
+      "priceUsd": 0.000002,
+      "liquidityUsd": 1592.14090118774,
+      "score": 31,
+      "qualified": false,
+      "chain": "solana",
+      "tokenAddress": "HmZwso4ohv252dTdXffmbnnzZ2DroShEgZyvojiLpump",
+      "poolAddress": "Dtv1MKWTNcBUurkFiCVHpRd7QeFWNenRtppAnC11eazy",
+      "source": "GeckoTerminal new_pools",
+      "top10HolderPct": 100
+    },
+    "solana:BYj17yyupSjhWqTsmG5zdTkQ8pyAst86uFowhSB5pump": {
+      "firstSeen": 1795730541330,
+      "lastSeen": 1795730541330,
+      "name": "OTTERPRENEUR",
+      "symbol": "OTTER",
+      "priceUsd": 5.903e-7,
+      "liquidityUsd": 1085.94470346311,
+      "score": 51,
+      "qualified": false,
+      "chain": "solana",
+      "tokenAddress": "BYj17yyupSjhWqTsmG5zdTkQ8pyAst86uFowhSB5pump",
+      "poolAddress": "G9VtzKezzPyRFJLwZrsdQnpThd9ECkLgaZYEsPq5bjU9",
+      "source": "GeckoTerminal new_pools",
+      "top10HolderPct": 100
+    },
+    "solana:BsG1Nd4b9RP5RiXAG4nHv2PLQRXwKCxNi3Baf5pQFnLf": {
+      "firstSeen": 1795730590230,
+      "lastSeen": 1795730590230,
+      "name": "Confidential Inu",
+      "symbol": "cINU",
+      "priceUsd": 0.000003184225790383893,
+      "liquidityUsd": 2534.15164183738,
+      "score": 60,
+      "qualified": false,
+      "chain": "solana",
+      "tokenAddress": "BsG1Nd4b9RP5RiXAG4nHv2PLQRXwKCxNi3Baf5pQFnLf",
+      "poolAddress": "8SPC3KZ8ipu5hbkUUmYW7sBfXwZc4QHLdwBxZhUNL5gu",
+      "source": "GeckoTerminal new_pools",
+      "top10HolderPct": 100
     }
   },
   "stats": {
-    "runs": 13,
+    "runs": 14,
     "alerts": 0
   },
-  "lastRun": "2026-11-26T21:55:10.906Z"
+  "lastRun": "2026-11-26T22:03:19.159Z"
 }
