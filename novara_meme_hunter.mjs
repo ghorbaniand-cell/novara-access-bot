@@ -1,7 +1,7 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 
-const VERSION = 'NOVARA-MEME-HUNTER-V1.0.0-SOLANA-TON';
+const VERSION = 'NOVARA-MEME-HUNTER-V1.0.1-SOLANA-TON-DATA-FIX';
 const ROOT = path.dirname(new URL(import.meta.url).pathname);
 const STATE_FILE = path.join(ROOT, process.env.NOVARA_STATE_FILE || 'data/meme_hunter_state.json');
 const n = (v, d=0) => Number.isFinite(Number(v)) ? Number(v) : d;
@@ -20,7 +20,8 @@ const CFG = {
   telegramToken: process.env.TELEGRAM_TOKEN || process.env.TELEGRAM_BOT_TOKEN || '',
   vipChat: process.env.NOVARA_VIP_CHAT_ID || process.env.VIP_CHAT_ID || '',
   freeChat: process.env.NOVARA_FREE_CHAT_ID || process.env.FREE_CHAT_ID || '',
-  solanaRpc: process.env.SOLANA_RPC_URL || 'https://api.mainnet-beta.solana.com',
+  solanaRpc: (process.env.SOLANA_RPC_URL || '').trim() || 'https://api.mainnet-beta.solana.com',
+  solanaRpcConfigured: Boolean((process.env.SOLANA_RPC_URL || '').trim()),
   tonApiKey: process.env.TONAPI_KEY || '',
   jupiterApiKey: process.env.JUPITER_API_KEY || '',
 };
@@ -54,15 +55,19 @@ async function discover(){
   const out=[]; const errors=[];
   for(const network of ['solana','ton']){
     try {
-      const j=await request(`https://api.geckoterminal.com/api/v2/networks/${network}/new_pools?page=1`,{headers:{accept:'application/json;version=20230302'}});
+      const j=await request(`https://api.geckoterminal.com/api/v2/networks/${network}/new_pools?include=base_token,quote_token&page=1`,{headers:{accept:'application/json;version=20230302'}});
       const included=new Map((j.included||[]).map(x=>[x.id,x.attributes||{}]));
       for(const p of j.data||[]){
         const a=p.attributes||{}, rel=p.relationships||{};
         const baseId=rel.base_token?.data?.id, quoteId=rel.quote_token?.data?.id;
         const base=included.get(baseId)||{}, quote=included.get(quoteId)||{};
-        const tokenAddr=(base.address||base.token_address||'').trim();
+        const quoteLike = new Set(['SOL','WSOL','USDC','USDT','USDE','USD₮','TON','WTON','WETH','ETH','WBTC','BTC']);
+        const baseIsQuote = quoteLike.has(String(base.symbol||'').toUpperCase());
+        const target = baseIsQuote && quote.address ? quote : base;
+        const other = target === base ? quote : base;
+        const tokenAddr=(target.address||target.token_address||'').trim();
         if(!tokenAddr) continue;
-        out.push({chain:network,tokenAddress:tokenAddr,poolAddress:a.address||p.id?.split('_').slice(1).join('_'),name:base.name||'Unknown',symbol:base.symbol||'UNKNOWN',quoteSymbol:quote.symbol||'',poolCreatedAt:a.pool_created_at?Date.parse(a.pool_created_at):null,priceUsd:n(a.base_token_price_usd),liquidityUsd:n(a.reserve_in_usd),fdv:n(a.fdv_usd),marketCap:n(a.market_cap_usd),volume24h:n(a.volume_usd?.h24),txns24h:a.transactions?.h24||{},source:'GeckoTerminal new_pools',url:`https://www.geckoterminal.com/${network}/pools/${a.address||''}`});
+        out.push({chain:network,tokenAddress:tokenAddr,poolAddress:a.address||p.id?.split('_').slice(1).join('_'),name:target.name||'Unknown',symbol:target.symbol||'UNKNOWN',quoteSymbol:other.symbol||'',isBaseToken:target===base,poolCreatedAt:a.pool_created_at?Date.parse(a.pool_created_at):null,priceUsd:n(a.base_token_price_usd),liquidityUsd:n(a.reserve_in_usd),fdv:n(a.fdv_usd),marketCap:n(a.market_cap_usd),volume24h:n(a.volume_usd?.h24),txns24h:a.transactions?.h24||{},source:'GeckoTerminal new_pools',url:`https://www.geckoterminal.com/${network}/pools/${a.address||''}`});
       }
     } catch(e){ errors.push(`${network} discovery: ${e.message}`); }
   }
@@ -81,9 +86,11 @@ async function discover(){
 async function enrichDex(token){
   try {
     const j=await request(`https://api.dexscreener.com/token-pairs/v1/${token.chain}/${encodeURIComponent(token.tokenAddress)}`);
-    const pairs=(Array.isArray(j)?j:[]).sort((a,b)=>n(b.liquidity?.usd)-n(a.liquidity?.usd));
-    const p=pairs[0]; if(!p) return token;
-    return {...token,name:p.baseToken?.name||token.name,symbol:p.baseToken?.symbol||token.symbol,priceUsd:n(p.priceUsd,token.priceUsd),liquidityUsd:n(p.liquidity?.usd,token.liquidityUsd),fdv:n(p.fdv,token.fdv),marketCap:n(p.marketCap,token.marketCap),volume24h:n(p.volume?.h24,token.volume24h),txns24h:p.txns?.h24||token.txns24h||{},priceChange:p.priceChange||{},pairCreatedAt:p.pairCreatedAt||token.poolCreatedAt,pairAddress:p.pairAddress||token.poolAddress,dexId:p.dexId||'',url:p.url||token.url};
+    const pairs=(Array.isArray(j)?j:[]).filter(x=>String(x.chainId||'').toLowerCase()===token.chain).sort((a,b)=>n(b.liquidity?.usd)-n(a.liquidity?.usd));
+    const p=pairs[0]; if(!p) return {...token,pairLookup:'NO_DEXSCREENER_PAIR'};
+    const isBase=String(p.baseToken?.address||'').toLowerCase()===String(token.tokenAddress||'').toLowerCase();
+    const target=isBase?p.baseToken:p.quoteToken;
+    return {...token,name:target?.name||token.name,symbol:target?.symbol||token.symbol,isBaseToken:isBase,priceUsd:n(p.priceUsd,token.priceUsd),liquidityUsd:n(p.liquidity?.usd,token.liquidityUsd),fdv:n(p.fdv,token.fdv),marketCap:n(p.marketCap,token.marketCap),volume24h:n(p.volume?.h24,token.volume24h),txns24h:p.txns?.h24||token.txns24h||{},priceChange:p.priceChange||{},pairCreatedAt:p.pairCreatedAt||token.poolCreatedAt,poolAddress:p.pairAddress||token.poolAddress,pairAddress:p.pairAddress||token.poolAddress,dexId:p.dexId||'',url:p.url||token.url};
   } catch { return token; }
 }
 
@@ -97,9 +104,10 @@ async function smartMoney(token){
     const trades=(j.data||[]).map(x=>x.attributes||{});
     const cutoff=Date.now()-15*60_000;
     const recent=trades.filter(t=>n(t.block_timestamp?Date.parse(t.block_timestamp):t.timestamp)>cutoff);
-    const buys=recent.filter(t=>String(t.kind||'').toLowerCase()==='buy');
-    const sells=recent.filter(t=>String(t.kind||'').toLowerCase()==='sell');
-    const wallet=t=>t.tx_from||t.from_address||t.trader_address||t.maker||'';
+    const isBuy=t=>((String(t.kind||'').toLowerCase()==='buy') === (token.isBaseToken!==false));
+    const buys=recent.filter(isBuy);
+    const sells=recent.filter(t=>!isBuy(t));
+    const wallet=t=>t.tx_from_address||t.tx_from||t.from_address||t.trader_address||t.maker||'';
     const buyerSet=new Set(buys.map(wallet).filter(Boolean)), sellerSet=new Set(sells.map(wallet).filter(Boolean));
     result={trades:recent,uniqueBuyers:buyerSet.size,uniqueSellers:sellerSet.size,buyUsd:buys.reduce((a,t)=>a+n(t.volume_in_usd),0),sellUsd:sells.reduce((a,t)=>a+n(t.volume_in_usd),0),earlyWallets:[...buyerSet].slice(0,8),coordinationRisk:detectCoordination(buys,wallet),coverage:'SAMPLED_15M_TRADES'};
   } catch(e){ result.error=e.message; }
@@ -114,26 +122,32 @@ function detectCoordination(buys,walletFn){
 // Stage 3 — chain-specific safety evidence. Unknown is never silently treated as safe.
 async function solanaSafety(token){
   const s={mintAuthority:'UNKNOWN',freezeAuthority:'UNKNOWN',top10HolderPct:null,holderCoverage:'UNAVAILABLE',sellability:'NOT_SIMULATED',riskFlags:[]};
-  try {
-    const [info,supply,largest]=await Promise.all([
-      rpc('getAccountInfo',[token.tokenAddress,{encoding:'base64'}]),
-      rpc('getTokenSupply',[token.tokenAddress]),
-      rpc('getTokenLargestAccounts',[token.tokenAddress]),
-    ]);
-    if(info?.value?.data?.[0]){
-      const b=Buffer.from(info.value.data[0],'base64');
-      if(b.length>=82){
-        const mintOpt=b.readUInt32LE(0), freezeOpt=b.readUInt32LE(46);
-        s.mintAuthority=mintOpt===0?'REVOKED':'ACTIVE'; s.freezeAuthority=freezeOpt===0?'REVOKED':'ACTIVE';
-      }
+  const checks=await Promise.allSettled([
+    rpc('getAccountInfo',[token.tokenAddress,{encoding:'base64'}]),
+    rpc('getTokenSupply',[token.tokenAddress]),
+    rpc('getTokenLargestAccounts',[token.tokenAddress]),
+  ]);
+  const [infoCheck,supplyCheck,largestCheck]=checks;
+  const info=infoCheck.status==='fulfilled'?infoCheck.value:null;
+  const supply=supplyCheck.status==='fulfilled'?supplyCheck.value:null;
+  const largest=largestCheck.status==='fulfilled'?largestCheck.value:null;
+  const rpcErrors=checks.filter(x=>x.status==='rejected').map(x=>x.reason?.message||String(x.reason));
+  if(info?.value?.data?.[0]){
+    const b=Buffer.from(info.value.data[0],'base64');
+    if(b.length>=82){
+      const mintOpt=b.readUInt32LE(0), freezeOpt=b.readUInt32LE(46);
+      s.mintAuthority=mintOpt===0?'REVOKED':'ACTIVE'; s.freezeAuthority=freezeOpt===0?'REVOKED':'ACTIVE';
     }
+  }
+  try {
     const total=BigInt(supply?.value?.amount||'0');
     const accounts=largest?.value||[];
     if(total>0n&&accounts.length){const sum=accounts.slice(0,10).reduce((a,x)=>a+BigInt(x.amount||'0'),0n);s.top10HolderPct=Number(sum*1000000n/total)/10000;s.holderCoverage='RPC_TOP10_ACCOUNTS';}
-    if(s.mintAuthority==='ACTIVE') s.riskFlags.push('اختیار ضرب توکن هنوز فعال است');
-    if(s.freezeAuthority==='ACTIVE') s.riskFlags.push('اختیار فریز هنوز فعال است');
-    if(s.top10HolderPct!=null&&s.top10HolderPct>CFG.maxTop10Pct) s.riskFlags.push(`تمرکز ۱۰ هولدر اول ${s.top10HolderPct.toFixed(1)}٪ است`);
-  } catch(e){s.error=e.message;s.riskFlags.push('بررسی مستقیم RPC سولانا ناموفق بود');}
+  } catch(e){rpcErrors.push(`holder calculation: ${e.message}`);}
+  if(rpcErrors.length){s.rpcErrors=rpcErrors;s.riskFlags.push(`برخی درخواست‌های RPC ناموفق بود (${rpcErrors.length}/3)`);}
+  if(s.mintAuthority==='ACTIVE') s.riskFlags.push('اختیار ضرب توکن هنوز فعال است');
+  if(s.freezeAuthority==='ACTIVE') s.riskFlags.push('اختیار فریز هنوز فعال است');
+  if(s.top10HolderPct!=null&&s.top10HolderPct>CFG.maxTop10Pct) s.riskFlags.push(`تمرکز ۱۰ هولدر اول ${s.top10HolderPct.toFixed(1)}٪ است`);
   // Optional Jupiter quote-only sellability probe. It does not sign or send a transaction.
   if(CFG.jupiterApiKey){
     try{
@@ -194,9 +208,10 @@ function rank(token,sm,safety,mom,age){
   if(token.volume24h>=10000) market+=5; if(n(token.txns24h?.buys)>n(token.txns24h?.sells)) market+=4;
   if(token.liquidityUsd>=CFG.minLiquidity) market+=3;
   const raw=discovery+smart+safe+flow+market; const score=Math.max(0,Math.min(100,Math.round(raw)));
-  const hardFail=token.liquidityUsd<CFG.minLiquidity || (safety.mintAuthority==='ACTIVE'&&safety.freezeAuthority==='ACTIVE') || safety.sellability==='NO_ROUTE';
+  const hardFail=!token.poolAddress || token.pairLookup==='NO_DEXSCREENER_PAIR' || token.liquidityUsd<CFG.minLiquidity || (safety.mintAuthority==='ACTIVE'&&safety.freezeAuthority==='ACTIVE') || safety.sellability==='NO_ROUTE';
   const enoughEvidence=sm.coverage!=='UNAVAILABLE' && safety.top10HolderPct!=null && safety.mintAuthority!=='UNKNOWN' && safety.freezeAuthority!=='UNKNOWN';
   const qualified=!hardFail&&enoughEvidence&&score>=CFG.minScore&&sm.uniqueBuyers>=CFG.minUniqueBuyers&&sm.buyUsd>=CFG.minBuyVolume15m&&mom.buys24h>=CFG.minBuys24h&&sm.buyUsd>sm.sellUsd;
+  if(!token.poolAddress || token.pairLookup==='NO_DEXSCREENER_PAIR') risks.push('برای این توکن استخر معاملاتی قابل تأیید پیدا نشد');
   if(token.liquidityUsd>=CFG.minLiquidity) reasons.push(`نقدینگی استخر ${usd(token.liquidityUsd)}`);
   if(sm.buyUsd>sm.sellUsd) reasons.push(`خالص جریان خرید ۱۵ دقیقه‌ای ${usd(sm.buyUsd-sm.sellUsd)}`);
   if(!enoughEvidence) risks.push('داده‌های ایمنی کافی برای تأیید نهایی موجود نیست');
@@ -218,16 +233,17 @@ async function sendTelegram(text,chat){
 async function main(){
   const started=Date.now(),state=await loadState(); state.stats.runs++;
   console.log(`${VERSION} START — READ ONLY / NO ORDERS / NO AUTO-BUY`);
-  console.log(`Discovery feeds: GeckoTerminal (Solana + TON), DEX Screener profiles; Solana RPC ${CFG.solanaRpc.includes('api.mainnet-beta')?'public fallback':'custom RPC'}`);
+  console.log(`Discovery feeds: GeckoTerminal (Solana + TON, token relationships included), DEX Screener profiles; Solana RPC ${CFG.solanaRpcConfigured?'custom endpoint':'PUBLIC FALLBACK — SOLANA_RPC_URL secret is empty/unavailable'}`);
+  if(!CFG.solanaRpcConfigured) console.warn('[CONFIG_WARNING] SOLANA_RPC_URL is empty in this job; using rate-limited public Solana RPC. Check GitHub Actions environment secrets.');
   const {tokens,errors}=await discover(); console.log(`Discovered ${tokens.length} unique token candidates`);
   // Alternate chains so a busy Solana feed cannot starve TON discovery.
   const buckets={solana:[],ton:[]}; for(const t of tokens){(buckets[t.chain]||buckets.solana).push(t);}
   const work=[]; while(work.length<CFG.scanLimit&&(buckets.solana.length||buckets.ton.length)){for(const c of ['solana','ton']) if(buckets[c].length&&work.length<CFG.scanLimit) work.push(buckets[c].shift());}
-  let checked=0,qualified=0,alerts=0;
+  let checked=0,qualified=0,alerts=0,candidateErrors=0,noPool=0;
   for(const raw of work){
     const key=`${raw.chain}:${raw.tokenAddress}`; const previous=state.tokens[key]||{};
     try{
-      const t=await enrichDex(raw); const age=ageHours(t.pairCreatedAt||t.poolCreatedAt);
+      const t=await enrichDex(raw); if(!t.poolAddress || t.pairLookup==='NO_DEXSCREENER_PAIR') noPool++; const age=ageHours(t.pairCreatedAt||t.poolCreatedAt);
       if(age!=null&&age>CFG.maxAgeHours) continue;
       const sm=await smartMoney(t);
       const safety=t.chain==='solana'?await solanaSafety(t):await tonSafety(t);
@@ -240,18 +256,18 @@ async function main(){
         if(sent){alerts++;state.tokens[key].lastAlertAt=Date.now();state.stats.alerts++;}
       }}
       console.log(`${t.chain} ${t.symbol} score=${rankResult.score} qualified=${rankResult.qualified} buyers15m=${sm.uniqueBuyers} liquidity=${n(t.liquidityUsd)} top10=${safety.top10HolderPct}`);
-    }catch(e){console.error(`Candidate ${key}: ${e.message}`);}
+    }catch(e){candidateErrors++;console.error(`Candidate ${key}: ${e.message}`);}
     await sleep(250);
   }
   state.lastRun=new Date().toISOString(); await saveState(state);
-  console.log(`${VERSION} END | checked=${checked} qualified=${qualified} alerts=${alerts} errors=${errors.length} elapsed=${Math.round((Date.now()-started)/1000)}s`);
+  console.log(`${VERSION} END | checked=${checked} qualified=${qualified} alerts=${alerts} noPool=${noPool} candidateErrors=${candidateErrors} feedErrors=${errors.length} elapsed=${Math.round((Date.now()-started)/1000)}s`);
   for(const e of errors) console.log(`FEED_WARNING ${e}`);
 }
 if (process.env.HUNTER_SELF_TEST === '1') {
   const assert = (await import('node:assert/strict')).default;
   assert.equal(detectCoordination([{tx_from:'a'},{tx_from:'a'},{tx_from:'a'},{tx_from:'b'},{tx_from:'b'},{tx_from:'b'}],t=>t.tx_from), true);
   assert.equal(detectCoordination([{tx_from:'a'},{tx_from:'b'}],t=>t.tx_from), false);
-  const scored=rank({chain:'solana',liquidityUsd:10000,volume24h:20000,txns24h:{buys:20,sells:5}}, {coverage:'SAMPLED_15M_TRADES',uniqueBuyers:8,uniqueSellers:2,buyUsd:5000,sellUsd:1000,coordinationRisk:false}, {mintAuthority:'REVOKED',freezeAuthority:'REVOKED',top10HolderPct:20,sellability:'ROUTE_QUOTE_AVAILABLE',riskFlags:[]}, {buyers15m:8,netFlow15m:4000,buyerSellerRatio:0.8,liquidityDeltaPct:5,buys24h:20,sells24h:5}, 2);
+  const scored=rank({chain:'solana',poolAddress:'test-pool',liquidityUsd:10000,volume24h:20000,txns24h:{buys:20,sells:5}}, {coverage:'SAMPLED_15M_TRADES',uniqueBuyers:8,uniqueSellers:2,buyUsd:5000,sellUsd:1000,coordinationRisk:false}, {mintAuthority:'REVOKED',freezeAuthority:'REVOKED',top10HolderPct:20,sellability:'ROUTE_QUOTE_AVAILABLE',riskFlags:[]}, {buyers15m:8,netFlow15m:4000,buyerSellerRatio:0.8,liquidityDeltaPct:5,buys24h:20,sells24h:5}, 2);
   assert.equal(scored.qualified, true);
   console.log('SELF_TEST_OK');
 } else { main().catch(e=>{console.error(e.stack||e);process.exitCode=1;}); }
