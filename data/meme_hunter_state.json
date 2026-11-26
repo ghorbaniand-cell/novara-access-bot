@@ -744,11 +744,11 @@
     },
     "ton:EQBH1rcJcIzTl9iyM8jjbqPIF1gyjB73ydGQ3Ib9VQQAe0no": {
       "firstSeen": 1795727814189,
-      "lastSeen": 1795729412909,
+      "lastSeen": 1795729815307,
       "name": "Unknown Tokene0no",
       "symbol": "UKWNe0no",
       "priceUsd": 0.0000126449087188151,
-      "liquidityUsd": 1283.1362,
+      "liquidityUsd": 1283.0096,
       "score": 15,
       "qualified": false,
       "chain": "ton",
@@ -774,7 +774,7 @@
     },
     "ton:EQCD_NgsY11DMDqW1xW0X4D7oK8hGmO3ZKeBfKHj79VExizw": {
       "firstSeen": 1795727839236,
-      "lastSeen": 1795729461909,
+      "lastSeen": 1795729828406,
       "name": "duk",
       "symbol": "duk",
       "priceUsd": 3.298e-8,
@@ -849,7 +849,7 @@
     },
     "ton:EQDrEOSwriBurHS0AB-nsNPM8mJ0TjmqTL1tLX3PdKiL6GuP": {
       "firstSeen": 1795728000145,
-      "lastSeen": 1795729399835,
+      "lastSeen": 1795729766249,
       "name": "GRAMMY",
       "symbol": "GRAMMY",
       "priceUsd": 9.763e-9,
@@ -1011,11 +1011,71 @@
       "poolAddress": "2hpZLYGz3kav1T2rNsu69qdXNN9A99f1uSNPfiWVrvfS",
       "source": "GeckoTerminal new_pools",
       "top10HolderPct": 100
+    },
+    "solana:2BvyDEM1pE4ELUmZMcip6itKmaFR6wezUDSh6f8Cpump": {
+      "firstSeen": 1795729753585,
+      "lastSeen": 1795729753585,
+      "name": "Smart elon",
+      "symbol": "ElonS",
+      "priceUsd": 3.666e-7,
+      "liquidityUsd": 1594.11245254379,
+      "score": 64,
+      "qualified": false,
+      "chain": "solana",
+      "tokenAddress": "2BvyDEM1pE4ELUmZMcip6itKmaFR6wezUDSh6f8Cpump",
+      "poolAddress": "AKu2MWzzREtiEeCLBxeVKPdTsnyhe3j5yPvMWgWevLRq",
+      "source": "GeckoTerminal new_pools",
+      "top10HolderPct": 100
+    },
+    "solana:ENoEZfXNEgBuULsGHsTT8ytPVSdz8EhqRGiugQ6tpump": {
+      "firstSeen": 1795729760084,
+      "lastSeen": 1795729760084,
+      "name": "Retarded Slop Ape Official",
+      "symbol": "RSA",
+      "priceUsd": 0.000003204,
+      "liquidityUsd": 1697.03444930385,
+      "score": 63,
+      "qualified": false,
+      "chain": "solana",
+      "tokenAddress": "ENoEZfXNEgBuULsGHsTT8ytPVSdz8EhqRGiugQ6tpump",
+      "poolAddress": "ACQSDMH5H7uyM3pLtGrSQbr6fqtoBmahT7cmsxmiPYZj",
+      "source": "GeckoTerminal new_pools",
+      "top10HolderPct": 100
+    },
+    "solana:y6ADMuA3Zy7CE81f7jQ3Joke3uMarCca2qK9hdjpump": {
+      "firstSeen": 1795729773005,
+      "lastSeen": 1795729773005,
+      "name": "DOGE PAID",
+      "symbol": "DOGE PAID",
+      "priceUsd": 0.000004437,
+      "liquidityUsd": 1597.74603913485,
+      "score": 63,
+      "qualified": false,
+      "chain": "solana",
+      "tokenAddress": "y6ADMuA3Zy7CE81f7jQ3Joke3uMarCca2qK9hdjpump",
+      "poolAddress": "6nGLPFt5QTGeR4vBDmDj79aKp4cMqnUqmp52ZLwTsmT2",
+      "source": "GeckoTerminal new_pools",
+      "top10HolderPct": 100
+    },
+    "solana:7VzcPuhdhMNzP5Vizwt7jtJnUxSzGJjgBA1hcUbDFbgm": {
+      "firstSeen": 1795729822130,
+      "lastSeen": 1795729822130,
+      "name": "STANKS",
+      "symbol": "STANKS",
+      "priceUsd": 0.00001213,
+      "liquidityUsd": 20617.39,
+      "score": 74,
+      "qualified": false,
+      "chain": "solana",
+      "tokenAddress": "7VzcPuhdhMNzP5Vizwt7jtJnUxSzGJjgBA1hcUbDFbgm",
+      "poolAddress": "GAtgpUJKSQPNa4hiCBBjGKs4eNuBrWCKMTfEi8uVZ4PN",
+      "source": "GeckoTerminal new_pools",
+      "top10HolderPct": 92.6741
     }
   },
   "stats": {
-    "runs": 11,
+    "runs": 12,
     "alerts": 0
   },
-  "lastRun": "2026-11-26T21:44:22.159Z"
+  "lastRun": "2026-11-26T21:50:28.656Z"
 }
