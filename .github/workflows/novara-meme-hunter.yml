@@ -1,75 +1,79 @@
 name: NOVARA Meme Coin Hunter — Solana + TON
 
 on:
-  workflow_dispatch:
-  schedule:
-    - cron: '*/5 * * * *'
+workflow_dispatch:
+schedule:
+- cron: '*/5 * * * *'
 
 permissions:
-  contents: write
+contents: write
 
 concurrency:
-  group: novara-meme-hunter
-  cancel-in-progress: false
+group: novara-meme-hunter
+cancel-in-progress: false
 
 jobs:
-  scan:
-    runs-on: ubuntu-latest
-    environment: production
-    timeout-minutes: 15
-    steps:
-      - name: Checkout repository and persistent hunter state
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
+scan:
+runs-on: ubuntu-latest
+environment: production
+timeout-minutes: 15
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '22'
+steps:
+  - name: Checkout repository and persistent hunter state
+    uses: actions/checkout@v4
+    with:
+      fetch-depth: 0
 
-      - name: Run NOVARA Meme Hunter
-        env:
-          TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
-          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-          NOVARA_VIP_CHAT_ID: ${{ vars.NOVARA_VIP_CHAT_ID }}
-          NOVARA_FREE_CHAT_ID: ${{ vars.NOVARA_FREE_CHAT_ID }}
-          VIP_CHAT_ID: ${{ vars.VIP_CHAT_ID }}
-          FREE_CHAT_ID: ${{ vars.FREE_CHAT_ID }}
-          SOLANA_RPC_URL: ${{ secrets.SOLANA_RPC_URL }}
-          TONAPI_KEY: ${{ secrets.TONAPI_KEY }}
-          JUPITER_API_KEY: ${{ secrets.JUPITER_API_KEY }}
-          HUNTER_SCAN_LIMIT: '8'
-          HUNTER_MAX_AGE_HOURS: '72'
-          HUNTER_MIN_LIQUIDITY_USD: '8000'
-          HUNTER_MIN_BUY_VOLUME_15M_USD: '500'
-          HUNTER_MIN_BUYS_24H: '8'
-          HUNTER_MIN_UNIQUE_BUYERS: '6'
-          HUNTER_MAX_TOP10_HOLDER_PCT: '55'
-          HUNTER_MIN_SCORE: '72'
-          HUNTER_ALERT_COOLDOWN_HOURS: '6'
-        shell: bash
-        run: |
-          set -euo pipefail
-          node --version
-          node novara_meme_hunter.mjs
+  - name: Setup Node.js
+    uses: actions/setup-node@v4
+    with:
+      node-version: '22'
 
-      - name: Persist discovery history and candidate ledger
-        if: always()
-        shell: bash
-        run: |
-          set -euo pipefail
-          STATE='data/meme_hunter_state.json'
-          if [ -f "$STATE" ]; then
-            git config user.name "github-actions[bot]"
-            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-            git add -f "$STATE"
-            if ! git diff --cached --quiet; then
-              git commit -m "Persist NOVARA meme hunter ledger [skip ci]"
-              git push
-            else
-              echo "No hunter state changes to persist."
-            fi
-          else
-            echo "Hunter state not created; nothing to persist."
-          fi
+  - name: Run NOVARA Meme Hunter
+    env:
+      TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
+      NOVARA_CHAT_ID: ${{ vars.NOVARA_CHAT_ID }}
+
+      SOLANA_RPC_URL: ${{ secrets.SOLANA_RPC_URL }}
+      TONAPI_KEY: ${{ secrets.TONAPI_KEY }}
+      JUPITER_API_KEY: ${{ secrets.JUPITER_API_KEY }}
+
+      HUNTER_SCAN_LIMIT: '8'
+      HUNTER_MAX_AGE_HOURS: '72'
+      HUNTER_MIN_LIQUIDITY_USD: '8000'
+      HUNTER_MIN_BUY_VOLUME_15M_USD: '500'
+      HUNTER_MIN_BUYS_24H: '8'
+      HUNTER_MIN_UNIQUE_BUYERS: '6'
+      HUNTER_MAX_TOP10_HOLDER_PCT: '55'
+      HUNTER_MIN_SCORE: '72'
+      HUNTER_ALERT_COOLDOWN_HOURS: '6'
+
+    shell: bash
+    run: |
+      set -euo pipefail
+      node --version
+      node novara_meme_hunter.mjs
+
+  - name: Persist discovery history and candidate ledger
+    if: always()
+    shell: bash
+    run: |
+      set -euo pipefail
+
+      STATE='data/meme_hunter_state.json'
+
+      if [ -f "$STATE" ]; then
+        git config user.name "github-actions[bot]"
+        git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+        git add -f "$STATE"
+
+        if ! git diff --cached --quiet; then
+          git commit -m "Persist NOVARA meme hunter ledger [skip ci]"
+          git push
+        else
+          echo "No hunter state changes to persist."
+        fi
+      else
+        echo "Hunter state not created; nothing to persist."
+      fi
