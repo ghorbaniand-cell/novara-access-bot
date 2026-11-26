@@ -1,7 +1,7 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 
-const VERSION = 'NOVARA-MEME-HUNTER-V1.0.3-TRADE-ERROR-RATE-LIMIT-FIX';
+const VERSION = 'NOVARA-MEME-HUNTER-V1.0.6-SINGLE-PERSONAL-CHANNEL-ALERTS';
 const ROOT = path.dirname(new URL(import.meta.url).pathname);
 const STATE_FILE = path.join(ROOT, process.env.NOVARA_STATE_FILE || 'data/meme_hunter_state.json');
 const n = (v, d=0) => Number.isFinite(Number(v)) ? Number(v) : d;
@@ -17,9 +17,8 @@ const CFG = {
   maxTop10Pct: num('HUNTER_MAX_TOP10_HOLDER_PCT', 55),
   minScore: num('HUNTER_MIN_SCORE', 72),
   alertCooldownHours: num('HUNTER_ALERT_COOLDOWN_HOURS', 6),
-  telegramToken: process.env.TELEGRAM_TOKEN || process.env.TELEGRAM_BOT_TOKEN || '',
-  vipChat: process.env.NOVARA_VIP_CHAT_ID || process.env.VIP_CHAT_ID || '',
-  freeChat: process.env.NOVARA_FREE_CHAT_ID || process.env.FREE_CHAT_ID || '',
+  telegramToken: process.env.TELEGRAM_TOKEN || '',
+  telegramChat: process.env.NOVARA_CHAT_ID || '',
   solanaRpc: (process.env.SOLANA_RPC_URL || '').trim() || 'https://api.mainnet-beta.solana.com',
   solanaRpcConfigured: Boolean((process.env.SOLANA_RPC_URL || '').trim()),
   tonApiKey: process.env.TONAPI_KEY || '',
@@ -56,7 +55,11 @@ async function request(url, opts={}, timeout=12000) {
         await sleep(delay);
         continue;
       }
-      throw new Error(`HTTP ${res.status} ${url}`);
+      let detail='';
+      try { const body=await res.json(); detail=body?.description||body?.error?.message||body?.message||''; } catch {}
+      const isTelegram=String(url).includes('api.telegram.org/bot');
+      const endpoint=isTelegram?'Telegram API':url;
+      throw new Error(`HTTP ${res.status} ${endpoint}${detail?`: ${detail}`:''}`);
     } finally { clearTimeout(timer); }
   }
 }
@@ -268,7 +271,9 @@ function rank(token,sm,safety,mom,age){
   if(token.volume24h>=10000) market+=5; if(n(token.txns24h?.buys)>n(token.txns24h?.sells)) market+=4;
   if(token.liquidityUsd>=CFG.minLiquidity) market+=3;
   const raw=discovery+smart+safe+flow+market; const score=Math.max(0,Math.min(100,Math.round(raw)));
-  const hardFail=!token.poolAddress || token.liquidityUsd<CFG.minLiquidity || (safety.mintAuthority==='ACTIVE'&&safety.freezeAuthority==='ACTIVE') || safety.sellability==='NO_ROUTE';
+  const top10ConcentrationFail=safety.top10HolderPct!=null&&safety.top10HolderPct>CFG.maxTop10Pct;
+  const hardFail=!token.poolAddress || token.liquidityUsd<CFG.minLiquidity || top10ConcentrationFail || (safety.mintAuthority==='ACTIVE'&&safety.freezeAuthority==='ACTIVE') || safety.sellability==='NO_ROUTE';
+  if(top10ConcentrationFail) risks.push(`تمرکز ۱۰ هولدر (${safety.top10HolderPct.toFixed(1)}٪) از سقف مجاز ${CFG.maxTop10Pct.toFixed(1)}٪ بیشتر است؛ نامزد رد شد`);
   const enoughEvidence=sm.coverage==='SAMPLED_15M_TRADES' && safety.top10HolderPct!=null && safety.mintAuthority!=='UNKNOWN' && safety.freezeAuthority!=='UNKNOWN';
   const qualified=!hardFail&&enoughEvidence&&score>=CFG.minScore&&sm.uniqueBuyers>=CFG.minUniqueBuyers&&sm.buyUsd>=CFG.minBuyVolume15m&&mom.buys24h>=CFG.minBuys24h&&sm.buyUsd>sm.sellUsd;
   if(!token.poolAddress) risks.push('برای این توکن استخر معاملاتی قابل تأیید پیدا نشد');
@@ -289,12 +294,14 @@ function esc(v){return String(v??'').replaceAll('&','&amp;').replaceAll('<','&lt
 async function sendTelegram(text,chat){
   if(!CFG.telegramToken||!chat) return false;
   const j=await request(`https://api.telegram.org/bot${CFG.telegramToken}/sendMessage`,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({chat_id:chat,text,parse_mode:'HTML',disable_web_page_preview:true})});
-  if(!j.ok) throw new Error(j.description||'Telegram error'); return true;
+  if(!j.ok) throw new Error(j.description||'Telegram error');
+  return true;
 }
 
 async function main(){
   const started=Date.now(),state=await loadState(); state.stats.runs++;
-  console.log(`${VERSION} START — READ ONLY / NO ORDERS / NO AUTO-BUY`);
+  console.log(`${VERSION} START — READ ONLY / NO ORDERS / NO AUTO-BUY / SINGLE PRIVATE-CHANNEL NOTIFICATIONS`);
+  if (!CFG.telegramToken || !CFG.telegramChat) console.warn('[TELEGRAM_CONFIG_WARNING] Telegram notifications are disabled: configure TELEGRAM_TOKEN secret and NOVARA_CHAT_ID variable in the production environment.');
   console.log(`Discovery feeds: GeckoTerminal (Solana + TON, token relationships included), DEX Screener profiles; Solana RPC ${CFG.solanaRpcConfigured?'custom endpoint':'PUBLIC FALLBACK — SOLANA_RPC_URL secret is empty/unavailable'}`);
   if(!CFG.solanaRpcConfigured) console.warn('[CONFIG_WARNING] SOLANA_RPC_URL is empty in this job; using rate-limited public Solana RPC. Check GitHub Actions environment secrets.');
   const {tokens,errors}=await discover(); console.log(`Discovered ${tokens.length} unique token candidates`);
@@ -314,7 +321,11 @@ async function main(){
       state.tokens[key]={...previous,...record};
       if(rankResult.qualified){qualified++; const lastAlert=n(previous.lastAlertAt); if(Date.now()-lastAlert>CFG.alertCooldownHours*3600000){
         const msg=buildMessage(t,sm,safety,mom,rankResult,age);
-        let sent=false; for(const chat of [CFG.vipChat,CFG.freeChat].filter(Boolean)){try{sent=await sendTelegram(msg,chat)||sent;}catch(e){console.error(`Telegram: ${e.message}`);}}
+        let sent=false;
+        if (CFG.telegramToken && CFG.telegramChat) {
+          try { sent=await sendTelegram(msg,CFG.telegramChat); }
+          catch(e) { console.error(`Telegram notification failed: ${e.message}`); }
+        }
         if(sent){alerts++;state.tokens[key].lastAlertAt=Date.now();state.stats.alerts++;}
       }}
       console.log(`${t.chain} ${t.symbol} score=${rankResult.score} qualified=${rankResult.qualified} tradesFetched=${sm.tradesFetched} trades15m=${sm.recentTradeCount} walletTrades15m=${sm.walletAttributedTrades} buyers15m=${sm.uniqueBuyers} buyUsd15m=${sm.buyUsd.toFixed(2)} liquidity=${n(t.liquidityUsd)} top10=${safety.top10HolderPct} holderCoverage=${safety.holderCoverage} pairLookup=${t.pairLookup||'NOT_RUN'}${sm.error?` tradeError=${sm.error}`:''}`);
@@ -344,5 +355,8 @@ if (process.env.HUNTER_SELF_TEST === '1') {
   } finally { globalThis.fetch=originalFetch; }
   const scored=rank({chain:'solana',poolAddress:'test-pool',liquidityUsd:10000,volume24h:20000,txns24h:{buys:20,sells:5}}, {coverage:'SAMPLED_15M_TRADES',uniqueBuyers:8,uniqueSellers:2,buyUsd:5000,sellUsd:1000,coordinationRisk:false}, {mintAuthority:'REVOKED',freezeAuthority:'REVOKED',top10HolderPct:20,sellability:'ROUTE_QUOTE_AVAILABLE',riskFlags:[]}, {buyers15m:8,netFlow15m:4000,buyerSellerRatio:0.8,liquidityDeltaPct:5,buys24h:20,sells24h:5}, 2);
   assert.equal(scored.qualified, true);
+  const concentrated=rank({chain:'solana',poolAddress:'test-pool',liquidityUsd:10000,volume24h:20000,txns24h:{buys:20,sells:5}}, {coverage:'SAMPLED_15M_TRADES',uniqueBuyers:8,uniqueSellers:2,buyUsd:5000,sellUsd:1000,coordinationRisk:false}, {mintAuthority:'REVOKED',freezeAuthority:'REVOKED',top10HolderPct:95.0896,sellability:'ROUTE_QUOTE_AVAILABLE',riskFlags:[]}, {buyers15m:8,netFlow15m:4000,buyerSellerRatio:0.8,liquidityDeltaPct:5,buys24h:20,sells24h:5}, 2);
+  assert.equal(concentrated.hardFail, true);
+  assert.equal(concentrated.qualified, false);
   console.log('SELF_TEST_OK');
 } else { main().catch(e=>{console.error(e.stack||e);process.exitCode=1;}); }
