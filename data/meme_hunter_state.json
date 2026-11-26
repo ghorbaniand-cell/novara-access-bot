@@ -744,7 +744,7 @@
     },
     "ton:EQBH1rcJcIzTl9iyM8jjbqPIF1gyjB73ydGQ3Ib9VQQAe0no": {
       "firstSeen": 1795727814189,
-      "lastSeen": 1795727814189,
+      "lastSeen": 1795728025045,
       "name": "Unknown Tokene0no",
       "symbol": "UKWNe0no",
       "priceUsd": 0.0000126449087188151,
@@ -774,7 +774,7 @@
     },
     "ton:EQCD_NgsY11DMDqW1xW0X4D7oK8hGmO3ZKeBfKHj79VExizw": {
       "firstSeen": 1795727839236,
-      "lastSeen": 1795727839236,
+      "lastSeen": 1795728038100,
       "name": "duk",
       "symbol": "duk",
       "priceUsd": 3.298e-8,
@@ -816,11 +816,86 @@
       "poolAddress": "EQB2KMaXe1QHzdwCE3Aoa17mSDYU5bLG2n9JVtsv3DE671Gr",
       "source": "GeckoTerminal new_pools",
       "top10HolderPct": 100
+    },
+    "solana:93txULTxNueSZ4Vhp1TJ6DQytW4zNVCT1asvpBavpump": {
+      "firstSeen": 1795727988130,
+      "lastSeen": 1795727988130,
+      "name": "dacity coin",
+      "symbol": "dct",
+      "priceUsd": 1.633e-7,
+      "liquidityUsd": 2115.84117174856,
+      "score": 63,
+      "qualified": false,
+      "chain": "solana",
+      "tokenAddress": "93txULTxNueSZ4Vhp1TJ6DQytW4zNVCT1asvpBavpump",
+      "poolAddress": "E3LgWZTCQGixfhR1TiQsDggPSNqN7hnpKqRJaMR3YyQ7",
+      "source": "GeckoTerminal new_pools",
+      "top10HolderPct": 100
+    },
+    "solana:GiGN5wbrtSAb234dSDpEPWPHWzYH3yew6WRd6NNXWVGE": {
+      "firstSeen": 1795727994067,
+      "lastSeen": 1795727994067,
+      "name": "Fomo Duck",
+      "symbol": "FDUCK",
+      "priceUsd": 0.000002247,
+      "liquidityUsd": 2377.6899,
+      "score": 69,
+      "qualified": false,
+      "chain": "solana",
+      "tokenAddress": "GiGN5wbrtSAb234dSDpEPWPHWzYH3yew6WRd6NNXWVGE",
+      "poolAddress": "9a6HcLhyCjf2HY27oUeq9PqJ2jyoSWf9vCjMjixdSM5y",
+      "source": "GeckoTerminal new_pools",
+      "top10HolderPct": 100
+    },
+    "ton:EQDrEOSwriBurHS0AB-nsNPM8mJ0TjmqTL1tLX3PdKiL6GuP": {
+      "firstSeen": 1795728000145,
+      "lastSeen": 1795728000145,
+      "name": "GRAMMY",
+      "symbol": "GRAMMY",
+      "priceUsd": 9.763e-9,
+      "liquidityUsd": 1.93,
+      "score": 42,
+      "qualified": false,
+      "chain": "ton",
+      "tokenAddress": "EQDrEOSwriBurHS0AB-nsNPM8mJ0TjmqTL1tLX3PdKiL6GuP",
+      "poolAddress": "EQANCILdxvbsG-T-CMN9Bn2CvWQFwfW9k_QAnlm0u664QKE6",
+      "source": "GeckoTerminal new_pools",
+      "top10HolderPct": 100
+    },
+    "solana:EdmoWut9xki1Raxqux5XedeCVfGLF6r7AFyRiucvpump": {
+      "firstSeen": 1795728008981,
+      "lastSeen": 1795728008981,
+      "name": "34percent",
+      "symbol": "34%",
+      "priceUsd": 1.698e-7,
+      "liquidityUsd": 1251.3412,
+      "score": 63,
+      "qualified": false,
+      "chain": "solana",
+      "tokenAddress": "EdmoWut9xki1Raxqux5XedeCVfGLF6r7AFyRiucvpump",
+      "poolAddress": "895ZGsmB6puYDFSBWaZVM3zNQfQqrpFV1RneLXGLn92M",
+      "source": "GeckoTerminal new_pools",
+      "top10HolderPct": 100
+    },
+    "solana:AFBWu4eJyeHSb3wqKxuVRKeZPvVsuSVHLh2AnKd5pump": {
+      "firstSeen": 1795728031688,
+      "lastSeen": 1795728031688,
+      "name": "xmoon",
+      "symbol": "smoon",
+      "priceUsd": 0.000002077,
+      "liquidityUsd": 1683.2357,
+      "score": 71,
+      "qualified": false,
+      "chain": "solana",
+      "tokenAddress": "AFBWu4eJyeHSb3wqKxuVRKeZPvVsuSVHLh2AnKd5pump",
+      "poolAddress": "J3GdngEcTgeNn2LZwqhQNBndCjoZoinHrHTHftzbLucc",
+      "source": "GeckoTerminal new_pools",
+      "top10HolderPct": 100
     }
   },
   "stats": {
-    "runs": 8,
+    "runs": 9,
     "alerts": 0
   },
-  "lastRun": "2026-11-26T21:17:44.469Z"
+  "lastRun": "2026-11-26T21:20:38.349Z"
 }
