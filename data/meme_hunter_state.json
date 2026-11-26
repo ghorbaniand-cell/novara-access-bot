@@ -459,11 +459,11 @@
     },
     "ton:EQDEl0EjqLSbENRp_ruYNjQvIU5LYw4vRLhFW0dQWDmsQbz6": {
       "firstSeen": 1795718193671,
-      "lastSeen": 1795719621789,
+      "lastSeen": 1795720828072,
       "name": "KLP",
       "symbol": "KLP",
       "priceUsd": 0.0004796,
-      "liquidityUsd": 0,
+      "liquidityUsd": 973.95,
       "score": 19,
       "qualified": false,
       "chain": "ton",
@@ -579,18 +579,18 @@
     },
     "ton:EQAmFOwRYLn1cPEWwEzSrQkMlpVK9nnBMNt9-J3OjCDzZoBG": {
       "firstSeen": 1795719578415,
-      "lastSeen": 1795719578415,
+      "lastSeen": 1795720760643,
       "name": "CZloot",
       "symbol": "CZ",
-      "priceUsd": 0.000001114,
-      "liquidityUsd": 832.5558,
-      "score": 56,
+      "priceUsd": 0.000001146,
+      "liquidityUsd": 859.8146,
+      "score": 32,
       "qualified": false,
       "chain": "ton",
       "tokenAddress": "EQAmFOwRYLn1cPEWwEzSrQkMlpVK9nnBMNt9-J3OjCDzZoBG",
       "poolAddress": "EQAmFOwRYLn1cPEWwEzSrQkMlpVK9nnBMNt9-J3OjCDzZoBG",
       "source": "GeckoTerminal new_pools",
-      "top10HolderPct": 1.6745
+      "top10HolderPct": 1.7069
     },
     "solana:HsUvnG94Hpuei4eMwppu6yQr8bVSrM33McCJE9pXpump": {
       "firstSeen": 1795719584738,
@@ -636,11 +636,86 @@
       "poolAddress": "H9eHjwFX6p364sbiZ2bNkxAcBQxmwCfU9NxRxtHWqmRZ",
       "source": "GeckoTerminal new_pools",
       "top10HolderPct": 100
+    },
+    "solana:2sjFeoyYGef9u4gdy3nfbnxwQJXBq8EoW6cDYcA3pump": {
+      "firstSeen": 1795720741321,
+      "lastSeen": 1795720741321,
+      "name": "Coin Market Cat",
+      "symbol": "CAT",
+      "priceUsd": 0.000001646515901309614,
+      "liquidityUsd": 1366.39358084778,
+      "score": 45,
+      "qualified": false,
+      "chain": "solana",
+      "tokenAddress": "2sjFeoyYGef9u4gdy3nfbnxwQJXBq8EoW6cDYcA3pump",
+      "poolAddress": "67yESmCyzx5BBcdk1he22pjYQ2Gp55vgFCsuBxKKB1rt",
+      "source": "GeckoTerminal new_pools",
+      "top10HolderPct": 100
+    },
+    "ton:EQAm7A1ZNsheuQVN4M97k0lPQX2dcwPI5Y8RNPdQccMX5eKR": {
+      "firstSeen": 1795720747649,
+      "lastSeen": 1795720747649,
+      "name": "Margcoin",
+      "symbol": "MARG",
+      "priceUsd": 1.164e-7,
+      "liquidityUsd": 698.7443,
+      "score": 55,
+      "qualified": false,
+      "chain": "ton",
+      "tokenAddress": "EQAm7A1ZNsheuQVN4M97k0lPQX2dcwPI5Y8RNPdQccMX5eKR",
+      "poolAddress": "EQAm7A1ZNsheuQVN4M97k0lPQX2dcwPI5Y8RNPdQccMX5eKR",
+      "source": "GeckoTerminal new_pools",
+      "top10HolderPct": 0.2417
+    },
+    "solana:DbkkNEkJg9yQuq9oMXLaAPKqkDp5H2F5Tkm29NcMpump": {
+      "firstSeen": 1795720756186,
+      "lastSeen": 1795720756186,
+      "name": "whitepill",
+      "symbol": "whitepill",
+      "priceUsd": 0.000002,
+      "liquidityUsd": 4225.28016203392,
+      "score": 58,
+      "qualified": false,
+      "chain": "solana",
+      "tokenAddress": "DbkkNEkJg9yQuq9oMXLaAPKqkDp5H2F5Tkm29NcMpump",
+      "poolAddress": "58B9rcRbfQUpqGFo8QcLpMqnz3PAMXegh9prTgBpfKcT",
+      "source": "GeckoTerminal new_pools",
+      "top10HolderPct": 100
+    },
+    "solana:6RNnx3XfjpBaPmhFcWG22PN8RQKXnyXfGiHbT3q1pump": {
+      "firstSeen": 1795720779431,
+      "lastSeen": 1795720779431,
+      "name": "Mandy",
+      "symbol": "mandy bby",
+      "priceUsd": 0.00000183,
+      "liquidityUsd": 1393.17831547351,
+      "score": 50,
+      "qualified": false,
+      "chain": "solana",
+      "tokenAddress": "6RNnx3XfjpBaPmhFcWG22PN8RQKXnyXfGiHbT3q1pump",
+      "poolAddress": "F1y25DhLyPKZvLLj4651jzaHhMhkpxmSoUkvTjfVrSWq",
+      "source": "GeckoTerminal new_pools",
+      "top10HolderPct": 100
+    },
+    "solana:2yekGTH11Q3xbcbBXrjH5VandHp166rSxvX6cJ2zpump": {
+      "firstSeen": 1795720821826,
+      "lastSeen": 1795720821826,
+      "name": "satoshi nakamoto",
+      "symbol": "satoshi",
+      "priceUsd": 1.861e-7,
+      "liquidityUsd": 236.233765403297,
+      "score": 64,
+      "qualified": false,
+      "chain": "solana",
+      "tokenAddress": "2yekGTH11Q3xbcbBXrjH5VandHp166rSxvX6cJ2zpump",
+      "poolAddress": "AbRneScSriFbAncZSp5FDUDD4LEkoWd55xCsLeNhQvsA",
+      "source": "GeckoTerminal new_pools",
+      "top10HolderPct": 100
     }
   },
   "stats": {
-    "runs": 6,
+    "runs": 7,
     "alerts": 0
   },
-  "lastRun": "2026-11-26T19:00:47.006Z"
+  "lastRun": "2026-11-26T19:20:28.323Z"
 }
