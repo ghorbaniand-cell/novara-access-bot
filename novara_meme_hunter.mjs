@@ -1,10 +1,11 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 
-const VERSION = 'NOVARA-MEME-HUNTER-V1.0.6-SINGLE-PERSONAL-CHANNEL-ALERTS';
+const VERSION = 'NOVARA-MEME-HUNTER-V1.0.7-TELEGRAM-HEALTHCHECK-LIQUIDITY-FALLBACK';
 const ROOT = path.dirname(new URL(import.meta.url).pathname);
 const STATE_FILE = path.join(ROOT, process.env.NOVARA_STATE_FILE || 'data/meme_hunter_state.json');
-const n = (v, d=0) => Number.isFinite(Number(v)) ? Number(v) : d;
+const n = (v, d=0) => v == null || v === '' ? d : (Number.isFinite(Number(v)) ? Number(v) : d);
+const positiveOr = (v, fallback=0) => { const x=Number(v); return Number.isFinite(x)&&x>0 ? x : (Number.isFinite(Number(fallback))&&Number(fallback)>0 ? Number(fallback) : 0); };
 const int = (k,d) => Math.max(1, Math.floor(n(process.env[k],d)));
 const num = (k,d) => Math.max(0,n(process.env[k],d));
 const CFG = {
@@ -68,8 +69,8 @@ async function rpc(method, params) {
   if(j.error) throw new Error(j.error.message||'Solana RPC error'); return j.result;
 }
 async function loadState(){
-  try { const s=JSON.parse(await fs.readFile(STATE_FILE,'utf8')); return {tokens:s.tokens||{},stats:s.stats||{runs:0,alerts:0},lastRun:s.lastRun||null}; }
-  catch { return {tokens:{},stats:{runs:0,alerts:0},lastRun:null}; }
+  try { const s=JSON.parse(await fs.readFile(STATE_FILE,'utf8')); return {tokens:s.tokens||{},stats:{runs:n(s.stats?.runs),alerts:n(s.stats?.alerts)},lastRun:s.lastRun||null,telegram:s.telegram||null}; }
+  catch { return {tokens:{},stats:{runs:0,alerts:0},lastRun:null,telegram:null}; }
 }
 async function saveState(s){ await fs.mkdir(path.dirname(STATE_FILE),{recursive:true}); await fs.writeFile(STATE_FILE,JSON.stringify(s,null,2)+'\n'); }
 
@@ -113,7 +114,7 @@ async function enrichDex(token){
     const p=pairs[0]; if(!p) return {...token,pairLookup:'NO_DEXSCREENER_PAIR'};
     const isBase=String(p.baseToken?.address||'').toLowerCase()===String(token.tokenAddress||'').toLowerCase();
     const target=isBase?p.baseToken:p.quoteToken;
-    return {...token,name:target?.name||token.name,symbol:target?.symbol||token.symbol,isBaseToken:isBase,priceUsd:n(p.priceUsd,token.priceUsd),liquidityUsd:n(p.liquidity?.usd,token.liquidityUsd),fdv:n(p.fdv,token.fdv),marketCap:n(p.marketCap,token.marketCap),volume24h:n(p.volume?.h24,token.volume24h),txns24h:p.txns?.h24||token.txns24h||{},priceChange:p.priceChange||{},pairCreatedAt:p.pairCreatedAt||token.poolCreatedAt,poolAddress:p.pairAddress||token.poolAddress,pairAddress:p.pairAddress||token.poolAddress,dexId:p.dexId||'',url:p.url||token.url,pairLookup:'FOUND'};
+    return {...token,name:target?.name||token.name,symbol:target?.symbol||token.symbol,isBaseToken:isBase,priceUsd:positiveOr(p.priceUsd,token.priceUsd),liquidityUsd:positiveOr(p.liquidity?.usd,token.liquidityUsd),fdv:positiveOr(p.fdv,token.fdv),marketCap:positiveOr(p.marketCap,token.marketCap),volume24h:positiveOr(p.volume?.h24,token.volume24h),txns24h:p.txns?.h24||token.txns24h||{},priceChange:p.priceChange||{},pairCreatedAt:p.pairCreatedAt||token.poolCreatedAt,poolAddress:p.pairAddress||token.poolAddress,pairAddress:p.pairAddress||token.poolAddress,dexId:p.dexId||'',url:p.url||token.url,pairLookup:'FOUND'};
   } catch(e) { return {...token,pairLookup:'DEXSCREENER_LOOKUP_ERROR',pairLookupError:e.message}; }
 }
 
@@ -246,7 +247,7 @@ function momentum(token,sm,previous){
 
 // Stage 5 — explainable scoring; unknown data earns no safety credit.
 function rank(token,sm,safety,mom,age){
-  let discovery=0,smart=0,safe=0,flow=0,market=0; const reasons=[],risks=[...(safety.riskFlags||[])];
+  let discovery=0,smart=0,safe=0,flow=0,market=0; const reasons=[],risks=[...(safety.riskFlags||[])],rejectReasons=[];
   if(age!=null&&age<=24) discovery+=10; else if(age!=null&&age<=CFG.maxAgeHours) discovery+=7;
   if(token.source?.includes('new_pools')) discovery+=5;
   if(sm.coverage==='SAMPLED_15M_TRADES'){
@@ -272,9 +273,23 @@ function rank(token,sm,safety,mom,age){
   if(token.liquidityUsd>=CFG.minLiquidity) market+=3;
   const raw=discovery+smart+safe+flow+market; const score=Math.max(0,Math.min(100,Math.round(raw)));
   const top10ConcentrationFail=safety.top10HolderPct!=null&&safety.top10HolderPct>CFG.maxTop10Pct;
-  const hardFail=!token.poolAddress || token.liquidityUsd<CFG.minLiquidity || top10ConcentrationFail || (safety.mintAuthority==='ACTIVE'&&safety.freezeAuthority==='ACTIVE') || safety.sellability==='NO_ROUTE';
-  if(top10ConcentrationFail) risks.push(`تمرکز ۱۰ هولدر (${safety.top10HolderPct.toFixed(1)}٪) از سقف مجاز ${CFG.maxTop10Pct.toFixed(1)}٪ بیشتر است؛ نامزد رد شد`);
+  const liquidityFail=n(token.liquidityUsd)<CFG.minLiquidity;
+  const authorityFail=safety.mintAuthority==='ACTIVE'&&safety.freezeAuthority==='ACTIVE';
+  const noPoolFail=!token.poolAddress;
+  const noRouteFail=safety.sellability==='NO_ROUTE';
+  const hardFail=noPoolFail || liquidityFail || top10ConcentrationFail || authorityFail || noRouteFail;
+  if(noPoolFail) rejectReasons.push('NO_VERIFIED_POOL');
+  if(liquidityFail) rejectReasons.push(`LOW_LIQUIDITY_${n(token.liquidityUsd).toFixed(2)}_LT_${CFG.minLiquidity}`);
+  if(top10ConcentrationFail) { rejectReasons.push(`TOP10_CONCENTRATION_${safety.top10HolderPct.toFixed(2)}_GT_${CFG.maxTop10Pct}`); risks.push(`تمرکز ۱۰ هولدر (${safety.top10HolderPct.toFixed(1)}٪) از سقف مجاز ${CFG.maxTop10Pct.toFixed(1)}٪ بیشتر است؛ نامزد رد شد`); }
+  if(authorityFail) rejectReasons.push('MINT_AND_FREEZE_AUTHORITIES_ACTIVE');
+  if(noRouteFail) rejectReasons.push('NO_SELL_ROUTE');
   const enoughEvidence=sm.coverage==='SAMPLED_15M_TRADES' && safety.top10HolderPct!=null && safety.mintAuthority!=='UNKNOWN' && safety.freezeAuthority!=='UNKNOWN';
+  if(!enoughEvidence) rejectReasons.push('INSUFFICIENT_SAFETY_OR_TRADE_EVIDENCE');
+  if(score<CFG.minScore) rejectReasons.push(`SCORE_${score}_LT_${CFG.minScore}`);
+  if(sm.uniqueBuyers<CFG.minUniqueBuyers) rejectReasons.push(`BUYERS_${sm.uniqueBuyers}_LT_${CFG.minUniqueBuyers}`);
+  if(sm.buyUsd<CFG.minBuyVolume15m) rejectReasons.push(`BUY_VOLUME_${sm.buyUsd.toFixed(2)}_LT_${CFG.minBuyVolume15m}`);
+  if(mom.buys24h<CFG.minBuys24h) rejectReasons.push(`BUYS_24H_${mom.buys24h}_LT_${CFG.minBuys24h}`);
+  if(!(sm.buyUsd>sm.sellUsd)) rejectReasons.push('NET_BUY_FLOW_NOT_POSITIVE');
   const qualified=!hardFail&&enoughEvidence&&score>=CFG.minScore&&sm.uniqueBuyers>=CFG.minUniqueBuyers&&sm.buyUsd>=CFG.minBuyVolume15m&&mom.buys24h>=CFG.minBuys24h&&sm.buyUsd>sm.sellUsd;
   if(!token.poolAddress) risks.push('برای این توکن استخر معاملاتی قابل تأیید پیدا نشد');
   if(token.pairLookup==='NO_DEXSCREENER_PAIR') risks.push('DexScreener برای این آدرس جفت پیدا نکرد؛ داده استخر از GeckoTerminal حفظ شده است');
@@ -282,7 +297,7 @@ function rank(token,sm,safety,mom,age){
   if(token.liquidityUsd>=CFG.minLiquidity) reasons.push(`نقدینگی استخر ${usd(token.liquidityUsd)}`);
   if(sm.buyUsd>sm.sellUsd) reasons.push(`خالص جریان خرید ۱۵ دقیقه‌ای ${usd(sm.buyUsd-sm.sellUsd)}`);
   if(!enoughEvidence) risks.push('داده‌های ایمنی کافی برای تأیید نهایی موجود نیست');
-  return {score,qualified,hardFail,enoughEvidence,components:{discovery:Math.round(discovery),smartMoney:Math.round(smart),safety:Math.round(safe),momentum:Math.round(flow),market:Math.round(market)},reasons,risks};
+  return {score,qualified,hardFail,enoughEvidence,rejectReasons,components:{discovery:Math.round(discovery),smartMoney:Math.round(smart),safety:Math.round(safe),momentum:Math.round(flow),market:Math.round(market)},reasons,risks};
 }
 
 function buildMessage(t,sm,s,m,r,age){
@@ -298,10 +313,39 @@ async function sendTelegram(text,chat){
   return true;
 }
 
+// Verify the actual bot-to-channel path once per bot/target pair. This sends one
+// small confirmation message, even when no token qualifies, so Telegram delivery
+// is not confused with a zero-signal scan.
+async function telegramHealthCheck(state){
+  if(!CFG.telegramToken||!CFG.telegramChat){
+    console.warn('[TELEGRAM_CONFIG_WARNING] Telegram notifications disabled: TELEGRAM_TOKEN or NOVARA_CHAT_ID is missing.');
+    return 'CONFIG_MISSING';
+  }
+  try{
+    const me=await request(`https://api.telegram.org/bot${CFG.telegramToken}/getMe`);
+    if(!me?.ok||!me?.result?.id) throw new Error(me?.description||'getMe did not return a valid bot identity');
+    const prior=state.telegram||{};
+    if(prior.verifiedAt && String(prior.target)===String(CFG.telegramChat) && String(prior.botId)===String(me.result.id)){
+      console.log(`[TELEGRAM_HEALTH_OK] Bot @${me.result.username||'unknown'} and configured destination were verified previously; no repeat test message sent.`);
+      return 'VERIFIED_PREVIOUSLY';
+    }
+    const testText='🟢 NOVARA MEME HUNTER\nاتصال ربات به این کانال با موفقیت تأیید شد.\nاعلان‌های توکن‌های واجد شرایط از این پس در همین کانال ارسال می‌شوند.\nحالت: فقط پایش و اطلاع‌رسانی؛ بدون خرید یا ثبت سفارش.';
+    await sendTelegram(testText,CFG.telegramChat);
+    state.telegram={verifiedAt:Date.now(),target:String(CFG.telegramChat),botId:String(me.result.id),botUsername:me.result.username||null,lastError:null};
+    console.log(`[TELEGRAM_TEST_OK] Test message delivered to configured channel by @${me.result.username||'unknown'}.`);
+    return 'TEST_SENT';
+  }catch(e){
+    state.telegram={...(state.telegram||{}),lastTestAt:Date.now(),lastError:String(e.message||e).slice(0,500)};
+    console.error(`[TELEGRAM_TEST_FAILED] ${e.message||e}`);
+    console.error('[TELEGRAM_HINT] Check that NOVARA_CHAT_ID is the channel username for a public channel or numeric -100... chat ID for a private channel, and that this bot is an administrator allowed to post.');
+    return 'FAILED';
+  }
+}
+
 async function main(){
   const started=Date.now(),state=await loadState(); state.stats.runs++;
   console.log(`${VERSION} START — READ ONLY / NO ORDERS / NO AUTO-BUY / SINGLE PRIVATE-CHANNEL NOTIFICATIONS`);
-  if (!CFG.telegramToken || !CFG.telegramChat) console.warn('[TELEGRAM_CONFIG_WARNING] Telegram notifications are disabled: configure TELEGRAM_TOKEN secret and NOVARA_CHAT_ID variable in the production environment.');
+  const telegramStatus=await telegramHealthCheck(state);
   console.log(`Discovery feeds: GeckoTerminal (Solana + TON, token relationships included), DEX Screener profiles; Solana RPC ${CFG.solanaRpcConfigured?'custom endpoint':'PUBLIC FALLBACK — SOLANA_RPC_URL secret is empty/unavailable'}`);
   if(!CFG.solanaRpcConfigured) console.warn('[CONFIG_WARNING] SOLANA_RPC_URL is empty in this job; using rate-limited public Solana RPC. Check GitHub Actions environment secrets.');
   const {tokens,errors}=await discover(); console.log(`Discovered ${tokens.length} unique token candidates`);
@@ -328,16 +372,21 @@ async function main(){
         }
         if(sent){alerts++;state.tokens[key].lastAlertAt=Date.now();state.stats.alerts++;}
       }}
-      console.log(`${t.chain} ${t.symbol} score=${rankResult.score} qualified=${rankResult.qualified} tradesFetched=${sm.tradesFetched} trades15m=${sm.recentTradeCount} walletTrades15m=${sm.walletAttributedTrades} buyers15m=${sm.uniqueBuyers} buyUsd15m=${sm.buyUsd.toFixed(2)} liquidity=${n(t.liquidityUsd)} top10=${safety.top10HolderPct} holderCoverage=${safety.holderCoverage} pairLookup=${t.pairLookup||'NOT_RUN'}${sm.error?` tradeError=${sm.error}`:''}`);
+      console.log(`${t.chain} ${t.symbol} score=${rankResult.score} qualified=${rankResult.qualified} tradesFetched=${sm.tradesFetched} trades15m=${sm.recentTradeCount} walletTrades15m=${sm.walletAttributedTrades} buyers15m=${sm.uniqueBuyers} buyUsd15m=${sm.buyUsd.toFixed(2)} liquidity=${n(t.liquidityUsd)} top10=${safety.top10HolderPct} holderCoverage=${safety.holderCoverage} pairLookup=${t.pairLookup||'NOT_RUN'}${!rankResult.qualified?` reject=${rankResult.rejectReasons.join('|')}`:''}${sm.error?` tradeError=${sm.error}`:''}`);
     }catch(e){candidateErrors++;console.error(`Candidate ${key}: ${e.message}`);}
     await sleep(250);
   }
   state.lastRun=new Date().toISOString(); await saveState(state);
-  console.log(`${VERSION} END | checked=${checked} qualified=${qualified} alerts=${alerts} noPool=${noPool} dexPairMissing=${dexPairMissing} tradeApiErrors=${tradeApiErrors} noRecentTrades=${noRecentTrades} candidateErrors=${candidateErrors} feedErrors=${errors.length} elapsed=${Math.round((Date.now()-started)/1000)}s`);
+  console.log(`${VERSION} END | checked=${checked} qualified=${qualified} alerts=${alerts} telegram=${telegramStatus} noPool=${noPool} dexPairMissing=${dexPairMissing} tradeApiErrors=${tradeApiErrors} noRecentTrades=${noRecentTrades} candidateErrors=${candidateErrors} feedErrors=${errors.length} elapsed=${Math.round((Date.now()-started)/1000)}s`);
   for(const e of errors) console.log(`FEED_WARNING ${e}`);
 }
 if (process.env.HUNTER_SELF_TEST === '1') {
   const assert = (await import('node:assert/strict')).default;
+  assert.equal(n(null,123),123);
+  assert.equal(n(0,123),0);
+  assert.equal(positiveOr(null,456),456);
+  assert.equal(positiveOr(0,456),456);
+  assert.equal(positiveOr(12,456),12);
   assert.equal(detectCoordination([{tx_from:'a'},{tx_from:'a'},{tx_from:'a'},{tx_from:'b'},{tx_from:'b'},{tx_from:'b'}],t=>t.tx_from), true);
   assert.equal(detectCoordination([{tx_from:'a'},{tx_from:'b'}],t=>t.tx_from), false);
   assert.equal(tradeIsBuyForToken({from_token_address:'SOL',to_token_address:'TOKEN',kind:'buy'},{tokenAddress:'TOKEN',isBaseToken:false}),true);
