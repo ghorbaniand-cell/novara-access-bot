@@ -744,11 +744,11 @@
     },
     "ton:EQBH1rcJcIzTl9iyM8jjbqPIF1gyjB73ydGQ3Ib9VQQAe0no": {
       "firstSeen": 1795727814189,
-      "lastSeen": 1795728025045,
+      "lastSeen": 1795728254749,
       "name": "Unknown Tokene0no",
       "symbol": "UKWNe0no",
       "priceUsd": 0.0000126449087188151,
-      "liquidityUsd": 1263.8712,
+      "liquidityUsd": 1271.4549,
       "score": 15,
       "qualified": false,
       "chain": "ton",
@@ -774,7 +774,7 @@
     },
     "ton:EQCD_NgsY11DMDqW1xW0X4D7oK8hGmO3ZKeBfKHj79VExizw": {
       "firstSeen": 1795727839236,
-      "lastSeen": 1795728038100,
+      "lastSeen": 1795728267761,
       "name": "duk",
       "symbol": "duk",
       "priceUsd": 3.298e-8,
@@ -849,7 +849,7 @@
     },
     "ton:EQDrEOSwriBurHS0AB-nsNPM8mJ0TjmqTL1tLX3PdKiL6GuP": {
       "firstSeen": 1795728000145,
-      "lastSeen": 1795728000145,
+      "lastSeen": 1795728205731,
       "name": "GRAMMY",
       "symbol": "GRAMMY",
       "priceUsd": 9.763e-9,
@@ -891,11 +891,71 @@
       "poolAddress": "J3GdngEcTgeNn2LZwqhQNBndCjoZoinHrHTHftzbLucc",
       "source": "GeckoTerminal new_pools",
       "top10HolderPct": 100
+    },
+    "solana:7mc2EJT928f52g8ddymCkrNCJ9EsqpLkFmfWdLAS6DWL": {
+      "firstSeen": 1795728192998,
+      "lastSeen": 1795728192998,
+      "name": "Jensen Huang Coin",
+      "symbol": "JENSEN",
+      "priceUsd": 0.00001624,
+      "liquidityUsd": 30498.91,
+      "score": 85,
+      "qualified": false,
+      "chain": "solana",
+      "tokenAddress": "7mc2EJT928f52g8ddymCkrNCJ9EsqpLkFmfWdLAS6DWL",
+      "poolAddress": "9Aj8KfBrxGy8H7tjMxc4GYLQ5rdV82hZQD3qmsXzNzor",
+      "source": "GeckoTerminal new_pools",
+      "top10HolderPct": 95.4545
+    },
+    "solana:2Dph8V1F8ZnjRgnJ6GsnWoTntym2hExUR7SWTZ8CJLtM": {
+      "firstSeen": 1795728199404,
+      "lastSeen": 1795728199404,
+      "name": "Callinu",
+      "symbol": "CALLINU",
+      "priceUsd": 0.000003194,
+      "liquidityUsd": 1588.66676033376,
+      "score": 74,
+      "qualified": false,
+      "chain": "solana",
+      "tokenAddress": "2Dph8V1F8ZnjRgnJ6GsnWoTntym2hExUR7SWTZ8CJLtM",
+      "poolAddress": "6HTJUX3vgTmmGMaP6nHKXMnWjadDoKQ4Uog7XakkyW2m",
+      "source": "GeckoTerminal new_pools",
+      "top10HolderPct": 98.291
+    },
+    "solana:ESqcn3qc9EYcdoHTULF8YBpxHQP4uVJKp7C52D26fBP2": {
+      "firstSeen": 1795728212171,
+      "lastSeen": 1795728212171,
+      "name": "dot product",
+      "symbol": "dot",
+      "priceUsd": 0.00001825,
+      "liquidityUsd": 17643.1371,
+      "score": 81,
+      "qualified": false,
+      "chain": "solana",
+      "tokenAddress": "ESqcn3qc9EYcdoHTULF8YBpxHQP4uVJKp7C52D26fBP2",
+      "poolAddress": "41HqN6xnw6xPxDwyZ853XeH5eqr5zbxeiBYqLt2wbPt4",
+      "source": "GeckoTerminal new_pools",
+      "top10HolderPct": 100
+    },
+    "solana:493ggSUKzTSK3LKc89E768qPUUKUoK4Ci3AuDG33oavC": {
+      "firstSeen": 1795728261863,
+      "lastSeen": 1795728261863,
+      "name": "Snowball",
+      "symbol": "Snowball",
+      "priceUsd": 0.000006582,
+      "liquidityUsd": 10182.36,
+      "score": 85,
+      "qualified": false,
+      "chain": "solana",
+      "tokenAddress": "493ggSUKzTSK3LKc89E768qPUUKUoK4Ci3AuDG33oavC",
+      "poolAddress": "EQBKFQHhMj5HB8WvHybHXF2WxERxQMA5jJQUCPqzNe8e",
+      "source": "GeckoTerminal new_pools",
+      "top10HolderPct": 90.0012
     }
   },
   "stats": {
-    "runs": 9,
+    "runs": 10,
     "alerts": 0
   },
-  "lastRun": "2026-11-26T21:20:38.349Z"
+  "lastRun": "2026-11-26T21:24:28.010Z"
 }
