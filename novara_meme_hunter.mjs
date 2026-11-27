@@ -1,7 +1,7 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 
-const VERSION = 'NOVARA-MEME-HUNTER-V1.0.7-TELEGRAM-HEALTHCHECK-LIQUIDITY-FALLBACK';
+const VERSION = 'NOVARA-MEME-HUNTER-V1.0.8-EARLY-LAUNCH-OBSERVER';
 const ROOT = path.dirname(new URL(import.meta.url).pathname);
 const STATE_FILE = path.join(ROOT, process.env.NOVARA_STATE_FILE || 'data/meme_hunter_state.json');
 const n = (v, d=0) => v == null || v === '' ? d : (Number.isFinite(Number(v)) ? Number(v) : d);
@@ -11,7 +11,7 @@ const num = (k,d) => Math.max(0,n(process.env[k],d));
 const CFG = {
   scanLimit: int('HUNTER_SCAN_LIMIT', 8),
   maxAgeHours: num('HUNTER_MAX_AGE_HOURS', 72),
-  minLiquidity: num('HUNTER_MIN_LIQUIDITY_USD', 8000),
+  minLiquidity: num('HUNTER_MIN_LIQUIDITY_USD', 1500),
   minBuyVolume15m: num('HUNTER_MIN_BUY_VOLUME_15M_USD', 500),
   minBuys24h: int('HUNTER_MIN_BUYS_24H', 8),
   minUniqueBuyers: int('HUNTER_MIN_UNIQUE_BUYERS', 6),
@@ -24,6 +24,10 @@ const CFG = {
   solanaRpcConfigured: Boolean((process.env.SOLANA_RPC_URL || '').trim()),
   tonApiKey: process.env.TONAPI_KEY || '',
   jupiterApiKey: process.env.JUPITER_API_KEY || '',
+  pumpPortalApiKey: (process.env.PUMPPORTAL_API_KEY || '').trim(),
+  pumpPortalListenMs: Math.min(90000, Math.max(10000, num('HUNTER_PUMPPORTAL_LISTEN_MS', 45000))),
+  prelaunchMinVirtualSol: num('HUNTER_PRELAUNCH_MIN_VSOL', 50),
+  prelaunchMinMarketCapSol: num('HUNTER_PRELAUNCH_MIN_MCAP_SOL', 100),
 };
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 // GeckoTerminal's public API is rate-limited. Pace every request across discovery and trade sampling.
@@ -69,10 +73,77 @@ async function rpc(method, params) {
   if(j.error) throw new Error(j.error.message||'Solana RPC error'); return j.result;
 }
 async function loadState(){
-  try { const s=JSON.parse(await fs.readFile(STATE_FILE,'utf8')); return {tokens:s.tokens||{},stats:{runs:n(s.stats?.runs),alerts:n(s.stats?.alerts)},lastRun:s.lastRun||null,telegram:s.telegram||null}; }
-  catch { return {tokens:{},stats:{runs:0,alerts:0},lastRun:null,telegram:null}; }
+  try { const s=JSON.parse(await fs.readFile(STATE_FILE,'utf8')); return {tokens:s.tokens||{},pendingLaunches:Array.isArray(s.pendingLaunches)?s.pendingLaunches:[],stats:{runs:n(s.stats?.runs),alerts:n(s.stats?.alerts)},lastRun:s.lastRun||null,telegram:s.telegram||null}; }
+  catch { return {tokens:{},pendingLaunches:[],stats:{runs:0,alerts:0},lastRun:null,telegram:null}; }
 }
 async function saveState(s){ await fs.mkdir(path.dirname(STATE_FILE),{recursive:true}); await fs.writeFile(STATE_FILE,JSON.stringify(s,null,2)+'\n'); }
+
+// Stage 0 — short, read-only PumpPortal stream window for Solana token creation/migration.
+// The provider requires a PUMPPORTAL_API_KEY. Only the free creation/migration streams are used;
+// no trade subscription, wallet, signing, or paid trade feed is involved.
+async function collectPumpPortalEvents(){
+  if(!CFG.pumpPortalApiKey){
+    console.log('[PUMPPORTAL_DISABLED] PUMPPORTAL_API_KEY is not configured; indexed DEX discovery remains active.');
+    return {events:[],status:'NOT_CONFIGURED'};
+  }
+  if(typeof WebSocket==='undefined'){
+    console.warn('[PUMPPORTAL_UNAVAILABLE] Node runtime has no global WebSocket; use Node 22 or newer.');
+    return {events:[],status:'NO_WEBSOCKET'};
+  }
+  return await new Promise(resolve=>{
+    const events=[]; let settled=false, timer=null, ws;
+    const finish=status=>{if(settled)return;settled=true;clearTimeout(timer);try{ws?.close();}catch{};resolve({events,status});};
+    try{
+      ws=new WebSocket(`wss://pumpportal.fun/api/data?api-key=${encodeURIComponent(CFG.pumpPortalApiKey)}`);
+      timer=setTimeout(()=>finish('WINDOW_COMPLETE'),CFG.pumpPortalListenMs);
+      ws.addEventListener('open',()=>{
+        ws.send(JSON.stringify({method:'subscribeNewToken'}));
+        ws.send(JSON.stringify({method:'subscribeMigration'}));
+        console.log(`[PUMPPORTAL_CONNECTED] Subscribed to new-token and migration streams for ${Math.round(CFG.pumpPortalListenMs/1000)}s.`);
+      });
+      ws.addEventListener('message',ev=>{
+        try{
+          const d=JSON.parse(String(ev.data||''));
+          const mint=String(d.mint||d.tokenAddress||d.token_address||'').trim();
+          if(!mint)return;
+          const txType=String(d.txType||d.type||'').toLowerCase();
+          const isMigration=txType.includes('migrat')||Boolean(d.pool||d.poolAddress||d.pool_address);
+          const item={chain:'solana',tokenAddress:mint,name:String(d.name||'Unknown').slice(0,80),symbol:String(d.symbol||'UNKNOWN').slice(0,24),creator:d.traderPublicKey||d.creator||d.user||null,uri:d.uri||null,virtualSol:n(d.vSolInBondingCurve),marketCapSol:n(d.marketCapSol),signature:d.signature||null,source:isMigration?'PumpPortal migration event':'PumpPortal new-token event',eventType:isMigration?'MIGRATION':'NEW_TOKEN',eventAt:Date.now(),reportedPoolAddress:d.pool||d.poolAddress||d.pool_address||null,poolAddress:null};
+          events.push(item);
+        }catch{}
+      });
+      ws.addEventListener('error',()=>finish('SOCKET_ERROR'));
+      ws.addEventListener('close',()=>finish('SOCKET_CLOSED'));
+    }catch(e){finish(`CONNECT_ERROR:${e.message}`);}
+  });
+}
+
+function mergeLaunchEvents(state,events){
+  const map=new Map((state.pendingLaunches||[]).map(x=>[`${x.chain}:${x.tokenAddress}`,x]));
+  for(const e of events){const k=`${e.chain}:${e.tokenAddress}`;const old=map.get(k)||{};map.set(k,{...old,...e,firstSeen:old.firstSeen||e.eventAt||Date.now(),lastSeen:Date.now()});}
+  const cutoff=Date.now()-48*3600000;
+  state.pendingLaunches=[...map.values()].filter(x=>n(x.lastSeen||x.eventAt)>cutoff).slice(-600);
+}
+
+function buildPrelaunchMessage(t){
+  const ageMin=Math.max(0,(Date.now()-n(t.eventAt,Date.now()))/60000);
+  return [
+    '🟠 <b>NOVARA — EARLY LAUNCH WATCH</b>',
+    '<b>نامزد تازه‌ساخته‌شده در Solana</b>',
+    '━━━━━━━━━━━━━━━━━━',
+    `<b>${esc(t.name||'Unknown')} ($${esc(t.symbol||'UNKNOWN')})</b>`,
+    `<b>سن مشاهده:</b> ${ageMin.toFixed(1)} دقیقه`,
+    `<b>رویداد:</b> ${esc(t.eventType||'NEW_TOKEN')}`,
+    `<b>Virtual SOL curve reserve:</b> ${n(t.virtualSol).toFixed(2)} SOL`,
+    `<b>Market cap اعلام‌شده توسط stream:</b> ${n(t.marketCapSol).toFixed(2)} SOL`,
+    `<b>سازنده:</b> <code>${esc(t.creator||'نامشخص')}</code>`,
+    `<b>Mint:</b> <code>${esc(t.tokenAddress)}</code>`,
+    t.signature?`<b>Signature:</b> <code>${esc(t.signature)}</code>`:'',
+    '',
+    '⚠️ این هشدار مربوط به مرحله پیش از تأیید استخر DEX است. Virtual SOL reserve نقدینگی واقعی/قابل برداشت نیست و Market Cap مقدار گزارش‌شده stream است؛ هنوز امنیت، هولدرها، فروش‌پذیری و ایجاد Pool باید مستقل تأیید شوند.',
+    'فقط پایش و اطلاع‌رسانی — بدون خرید، امضا یا سفارش.'
+  ].filter(Boolean).join('\n');
+}
 
 // Stage 1 — discover freshly-created DEX pools on Solana and TON.
 async function discover(){
@@ -114,7 +185,7 @@ async function enrichDex(token){
     const p=pairs[0]; if(!p) return {...token,pairLookup:'NO_DEXSCREENER_PAIR'};
     const isBase=String(p.baseToken?.address||'').toLowerCase()===String(token.tokenAddress||'').toLowerCase();
     const target=isBase?p.baseToken:p.quoteToken;
-    return {...token,name:target?.name||token.name,symbol:target?.symbol||token.symbol,isBaseToken:isBase,priceUsd:positiveOr(p.priceUsd,token.priceUsd),liquidityUsd:positiveOr(p.liquidity?.usd,token.liquidityUsd),fdv:positiveOr(p.fdv,token.fdv),marketCap:positiveOr(p.marketCap,token.marketCap),volume24h:positiveOr(p.volume?.h24,token.volume24h),txns24h:p.txns?.h24||token.txns24h||{},priceChange:p.priceChange||{},pairCreatedAt:p.pairCreatedAt||token.poolCreatedAt,poolAddress:p.pairAddress||token.poolAddress,pairAddress:p.pairAddress||token.poolAddress,dexId:p.dexId||'',url:p.url||token.url,pairLookup:'FOUND'};
+    return {...token,name:target?.name||token.name,symbol:target?.symbol||token.symbol,isBaseToken:isBase,priceUsd:positiveOr(p.priceUsd,token.priceUsd),liquidityUsd:positiveOr(p.liquidity?.usd,token.liquidityUsd),liquiditySource:p.liquidity?.usd!=null?'DEXSCREENER_POOL_USD':(token.liquidityUsd>0?'GECKOTERMINAL_RESERVE_USD':'UNAVAILABLE'),liquidityBase:n(p.liquidity?.base),liquidityQuote:n(p.liquidity?.quote),fdv:positiveOr(p.fdv,token.fdv),marketCap:positiveOr(p.marketCap,token.marketCap),volume24h:positiveOr(p.volume?.h24,token.volume24h),txns24h:p.txns?.h24||token.txns24h||{},priceChange:p.priceChange||{},pairCreatedAt:p.pairCreatedAt||token.poolCreatedAt,poolAddress:p.pairAddress||token.poolAddress,pairAddress:p.pairAddress||token.poolAddress,dexId:p.dexId||'',url:p.url||token.url,pairLookup:'FOUND'};
   } catch(e) { return {...token,pairLookup:'DEXSCREENER_LOOKUP_ERROR',pairLookupError:e.message}; }
 }
 
@@ -346,9 +417,15 @@ async function main(){
   const started=Date.now(),state=await loadState(); state.stats.runs++;
   console.log(`${VERSION} START — READ ONLY / NO ORDERS / NO AUTO-BUY / SINGLE PRIVATE-CHANNEL NOTIFICATIONS`);
   const telegramStatus=await telegramHealthCheck(state);
-  console.log(`Discovery feeds: GeckoTerminal (Solana + TON, token relationships included), DEX Screener profiles; Solana RPC ${CFG.solanaRpcConfigured?'custom endpoint':'PUBLIC FALLBACK — SOLANA_RPC_URL secret is empty/unavailable'}`);
+  const launchStream=await collectPumpPortalEvents();
+  mergeLaunchEvents(state,launchStream.events);
+  console.log(`Discovery feeds: PumpPortal Solana creation/migration stream=${launchStream.status}; GeckoTerminal new pools (Solana + TON); DEX Screener latest profiles; Solana RPC ${CFG.solanaRpcConfigured?'custom endpoint':'PUBLIC FALLBACK — SOLANA_RPC_URL secret is empty/unavailable'}`);
   if(!CFG.solanaRpcConfigured) console.warn('[CONFIG_WARNING] SOLANA_RPC_URL is empty in this job; using rate-limited public Solana RPC. Check GitHub Actions environment secrets.');
-  const {tokens,errors}=await discover(); console.log(`Discovered ${tokens.length} unique token candidates`);
+  const {tokens,errors}=await discover();
+  const seenKeys=new Set(tokens.map(t=>`${t.chain}:${t.tokenAddress}`));
+  for(const p of state.pendingLaunches||[]){const k=`${p.chain}:${p.tokenAddress}`;if(!seenKeys.has(k)){tokens.push({...p,source:p.source||'PumpPortal launch event'});seenKeys.add(k);}}
+  tokens.sort((a,b)=>Number(String(b.source||'').includes('PumpPortal'))-Number(String(a.source||'').includes('PumpPortal')));
+  console.log(`Discovered ${tokens.length} unique candidates including ${state.pendingLaunches.length} persisted launch events`);
   // Alternate chains so a busy Solana feed cannot starve TON discovery.
   const buckets={solana:[],ton:[]}; for(const t of tokens){(buckets[t.chain]||buckets.solana).push(t);}
   const work=[]; while(work.length<CFG.scanLimit&&(buckets.solana.length||buckets.ton.length)){for(const c of ['solana','ton']) if(buckets[c].length&&work.length<CFG.scanLimit) work.push(buckets[c].shift());}
@@ -358,6 +435,22 @@ async function main(){
     try{
       const t=await enrichDex(raw); if(!t.poolAddress) noPool++; if(t.pairLookup==='NO_DEXSCREENER_PAIR') dexPairMissing++; const age=ageHours(t.pairCreatedAt||t.poolCreatedAt);
       if(age!=null&&age>CFG.maxAgeHours) continue;
+      // Pre-listing watch: only alert when the PumpPortal curve has moved materially beyond
+      // its initial virtual reserve. This is explicitly NOT treated as real liquidity.
+      if(t.chain==='solana' && !t.poolAddress && t.source?.includes('PumpPortal') && t.eventType==='NEW_TOKEN'){
+        const key=`${t.chain}:${t.tokenAddress}`, prior=state.tokens[key]||{};
+        const traction=n(t.virtualSol)>=CFG.prelaunchMinVirtualSol && n(t.marketCapSol)>=CFG.prelaunchMinMarketCapSol;
+        if(traction && !prior.prelaunchAlertAt){
+          const msg=buildPrelaunchMessage(t); let sent=false;
+          if(CFG.telegramToken&&CFG.telegramChat){try{sent=await sendTelegram(msg,CFG.telegramChat);}catch(e){console.error(`Prelaunch Telegram notification failed: ${e.message}`);}}
+          if(sent){state.tokens[key]={...prior,firstSeen:prior.firstSeen||Date.now(),lastSeen:Date.now(),chain:t.chain,tokenAddress:t.tokenAddress,name:t.name,symbol:t.symbol,source:t.source,prelaunchAlertAt:Date.now(),prelaunchVirtualSol:t.virtualSol,prelaunchMarketCapSol:t.marketCapSol};alerts++;state.stats.alerts++;}
+          console.log(`PRELAUNCH ${t.symbol} virtualSol=${n(t.virtualSol)} marketCapSol=${n(t.marketCapSol)} traction=${traction} alertSent=${sent}`);
+        }
+        // Keep this token in the persistent event ledger; wait for a real pool before full scoring.
+        checked++; await sleep(100); continue;
+      }
+      // A migration event is not called a DEX listing until a pool is independently found.
+      if(!t.poolAddress){console.log(`EARLY_CANDIDATE ${t.symbol} source=${t.source} pool=NOT_YET_VERIFIED`);checked++;await sleep(100);continue;}
       const sm=await smartMoney(t); if(sm.coverage==='API_ERROR') tradeApiErrors++; if(sm.coverage==='NO_TRADES_LAST_15M'||sm.coverage==='NO_INDEXED_TRADES') noRecentTrades++;
       const safety=t.chain==='solana'?await solanaSafety(t):await tonSafety(t);
       const mom=momentum(t,sm,previous); const rankResult=rank(t,sm,safety,mom,age); checked++;
@@ -377,7 +470,7 @@ async function main(){
     await sleep(250);
   }
   state.lastRun=new Date().toISOString(); await saveState(state);
-  console.log(`${VERSION} END | checked=${checked} qualified=${qualified} alerts=${alerts} telegram=${telegramStatus} noPool=${noPool} dexPairMissing=${dexPairMissing} tradeApiErrors=${tradeApiErrors} noRecentTrades=${noRecentTrades} candidateErrors=${candidateErrors} feedErrors=${errors.length} elapsed=${Math.round((Date.now()-started)/1000)}s`);
+  console.log(`${VERSION} END | checked=${checked} qualified=${qualified} alerts=${alerts} telegram=${telegramStatus} launchEvents=${launchStream.events.length} pendingLaunches=${state.pendingLaunches.length} pumpPortal=${launchStream.status} noPool=${noPool} dexPairMissing=${dexPairMissing} tradeApiErrors=${tradeApiErrors} noRecentTrades=${noRecentTrades} candidateErrors=${candidateErrors} feedErrors=${errors.length} elapsed=${Math.round((Date.now()-started)/1000)}s`);
   for(const e of errors) console.log(`FEED_WARNING ${e}`);
 }
 if (process.env.HUNTER_SELF_TEST === '1') {
@@ -387,6 +480,8 @@ if (process.env.HUNTER_SELF_TEST === '1') {
   assert.equal(positiveOr(null,456),456);
   assert.equal(positiveOr(0,456),456);
   assert.equal(positiveOr(12,456),12);
+  assert.equal(n(null,7),7);
+  assert.ok(buildPrelaunchMessage({name:'Test',symbol:'TST',tokenAddress:'mint',virtualSol:55,marketCapSol:120}).includes('Virtual SOL reserve'));
   assert.equal(detectCoordination([{tx_from:'a'},{tx_from:'a'},{tx_from:'a'},{tx_from:'b'},{tx_from:'b'},{tx_from:'b'}],t=>t.tx_from), true);
   assert.equal(detectCoordination([{tx_from:'a'},{tx_from:'b'}],t=>t.tx_from), false);
   assert.equal(tradeIsBuyForToken({from_token_address:'SOL',to_token_address:'TOKEN',kind:'buy'},{tokenAddress:'TOKEN',isBaseToken:false}),true);
