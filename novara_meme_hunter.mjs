@@ -1,535 +1,192 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 
-const VERSION = 'NOVARA-MEME-HUNTER-V1.1.0-DUAL-TIER-EARLY-WATCH';
+const VERSION = 'NOVARA-MEME-HUNTER-V2.0.0-EVENT-FIRST-SOLANA';
 const ROOT = path.dirname(new URL(import.meta.url).pathname);
 const STATE_FILE = path.join(ROOT, process.env.NOVARA_STATE_FILE || 'data/meme_hunter_state.json');
-const n = (v, d=0) => v == null || v === '' ? d : (Number.isFinite(Number(v)) ? Number(v) : d);
-const positiveOr = (v, fallback=0) => { const x=Number(v); return Number.isFinite(x)&&x>0 ? x : (Number.isFinite(Number(fallback))&&Number(fallback)>0 ? Number(fallback) : 0); };
-const int = (k,d) => Math.max(1, Math.floor(n(process.env[k],d)));
-const num = (k,d) => Math.max(0,n(process.env[k],d));
 const CFG = {
-  scanLimit: int('HUNTER_SCAN_LIMIT', 8),
-  maxAgeHours: num('HUNTER_MAX_AGE_HOURS', 72),
-  minLiquidity: num('HUNTER_MIN_LIQUIDITY_USD', 1500),
-  minBuyVolume15m: num('HUNTER_MIN_BUY_VOLUME_15M_USD', 500),
-  minBuys24h: int('HUNTER_MIN_BUYS_24H', 8),
-  minUniqueBuyers: int('HUNTER_MIN_UNIQUE_BUYERS', 6),
-  maxTop10Pct: num('HUNTER_MAX_TOP10_HOLDER_PCT', 55),
-  minScore: num('HUNTER_MIN_SCORE', 72),
-  watchMinScore: num('HUNTER_WATCH_MIN_SCORE', 65),
-  watchMinBuyers: int('HUNTER_WATCH_MIN_UNIQUE_BUYERS', 20),
-  watchMinBuyVolume15m: num('HUNTER_WATCH_MIN_BUY_VOLUME_15M_USD', 1500),
-  watchMinBuys24h: int('HUNTER_WATCH_MIN_BUYS_24H', 12),
-  watchCooldownHours: num('HUNTER_WATCH_COOLDOWN_HOURS', 6),
-  alertCooldownHours: num('HUNTER_ALERT_COOLDOWN_HOURS', 6),
   telegramToken: process.env.TELEGRAM_TOKEN || '',
-  telegramChat: process.env.NOVARA_CHAT_ID || '',
-  solanaRpc: (process.env.SOLANA_RPC_URL || '').trim() || 'https://api.mainnet-beta.solana.com',
-  solanaRpcConfigured: Boolean((process.env.SOLANA_RPC_URL || '').trim()),
-  tonApiKey: process.env.TONAPI_KEY || '',
-  jupiterApiKey: process.env.JUPITER_API_KEY || '',
-  pumpPortalApiKey: (process.env.PUMPPORTAL_API_KEY || '').trim(),
-  pumpPortalListenMs: Math.min(90000, Math.max(10000, num('HUNTER_PUMPPORTAL_LISTEN_MS', 45000))),
-  prelaunchMinVirtualSol: num('HUNTER_PRELAUNCH_MIN_VSOL', 50),
-  prelaunchMinMarketCapSol: num('HUNTER_PRELAUNCH_MIN_MCAP_SOL', 100),
+  chatId: process.env.NOVARA_CHAT_ID || '',
+  rpc: (process.env.SOLANA_RPC_URL || '').trim() || 'https://api.mainnet-beta.solana.com',
+  pumpKey: (process.env.PUMPPORTAL_API_KEY || '').trim(),
+  listenMs: Math.min(255000, Math.max(10000, Number(process.env.HUNTER_LISTEN_MS || 250000))),
+  scanLimit: Math.max(10, Math.min(500, Number(process.env.HUNTER_SCAN_LIMIT || 100))),
+  maxProfiles: Math.max(10, Math.min(500, Number(process.env.HUNTER_PROFILE_LIMIT || 100))),
 };
 const sleep = ms => new Promise(r => setTimeout(r, ms));
-// GeckoTerminal's public API is rate-limited. Pace every request across discovery and trade sampling.
-let lastGeckoRequestAt = 0;
-let geckoBlockedUntil = 0;
-const geckoCache = new Map();
-const GECKO_CACHE_TTL_MS = Math.max(5000, num('HUNTER_GECKO_CACHE_TTL_MS', 20000));
-const GECKO_MIN_INTERVAL_MS = Math.max(9000, num('HUNTER_GECKO_MIN_INTERVAL_MS', 10000));
-const GECKO_MAX_429_RETRIES = 3;
-const pct = (a,b) => b > 0 ? a/b*100 : null;
-const short = s => !s ? '—' : String(s).length > 13 ? `${String(s).slice(0,6)}…${String(s).slice(-5)}` : String(s);
-const usd = v => v == null || !Number.isFinite(Number(v)) ? 'نامشخص' : `$${Number(v).toLocaleString('en-US',{maximumFractionDigits:0})}`;
-const fmtPct = v => v == null ? 'نامشخص' : `${Number(v).toFixed(1)}%`;
-const ageHours = ts => ts ? Math.max(0,(Date.now()-ts)/3600000) : null;
+const num = v => Number.isFinite(Number(v)) ? Number(v) : null;
+const esc = v => String(v ?? '—').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;');
+const short = v => v ? `${String(v).slice(0,6)}…${String(v).slice(-5)}` : '—';
 
-async function request(url, opts={}, timeout=12000) {
-  const isGecko = String(url).includes('api.geckoterminal.com');
-  const cacheable = isGecko && (!opts.method || opts.method.toUpperCase()==='GET');
-  const cacheKey = cacheable ? String(url) : '';
-  if(cacheable){ const hit=geckoCache.get(cacheKey); if(hit && Date.now()-hit.at<GECKO_CACHE_TTL_MS) return hit.value; }
-  for (let attempt=0; ; attempt++) {
-    if (isGecko) {
-      if(Date.now()<geckoBlockedUntil) await sleep(geckoBlockedUntil-Date.now());
-      const wait = GECKO_MIN_INTERVAL_MS - (Date.now() - lastGeckoRequestAt);
-      if (wait > 0) await sleep(wait);
-      lastGeckoRequestAt = Date.now();
-    }
-    const controller = new AbortController(); const timer=setTimeout(()=>controller.abort(),timeout);
-    let res;
+async function loadState() {
+  try { const s = JSON.parse(await fs.readFile(STATE_FILE, 'utf8')); return { seen: s.seen || {}, events: s.events || {}, stats: s.stats || {}, lastRun: s.lastRun || null }; }
+  catch { return { seen: {}, events: {}, stats: {}, lastRun: null }; }
+}
+async function saveState(s) { await fs.mkdir(path.dirname(STATE_FILE), {recursive:true}); await fs.writeFile(STATE_FILE, JSON.stringify(s,null,2)+'\n'); }
+async function fetchJson(url, options={}, timeout=12000) {
+  const c = new AbortController(); const t = setTimeout(()=>c.abort(),timeout);
+  try { const r = await fetch(url,{...options,signal:c.signal,headers:{accept:'application/json',...(options.headers||{})}}); if(!r.ok) throw new Error(`HTTP ${r.status} ${url}`); return await r.json(); }
+  finally { clearTimeout(t); }
+}
+async function telegram(text) {
+  if (!CFG.telegramToken || !CFG.chatId) { console.warn('[TELEGRAM_DISABLED] TELEGRAM_TOKEN or NOVARA_CHAT_ID missing'); return false; }
+  const j = await fetchJson(`https://api.telegram.org/bot${CFG.telegramToken}/sendMessage`, {method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({chat_id:CFG.chatId,text,parse_mode:'HTML',disable_web_page_preview:true})});
+  if(!j.ok) throw new Error(j.description || 'Telegram send failed'); return true;
+}
+function buildBirth(e) {
+  return [
+    '🟠 <b>NOVARA — TOKEN BIRTH DETECTED</b>', '━━━━━━━━━━━━━━━━━━',
+    `<b>${esc(e.name)} ($${esc(e.symbol)})</b>`,
+    '<b>وضعیت:</b> رویداد ایجاد توکن از فید لانچ دریافت شد؛ هنوز عرضه/استخر DEX تأیید نشده است.',
+    `<b>شبکه:</b> Solana`, `<b>Mint:</b> <code>${esc(e.mint)}</code>`,
+    `<b>سازنده:</b> <code>${esc(e.creator)}</code>`,
+    `<b>زمان دریافت رویداد:</b> ${new Date(e.eventAt).toISOString()}`,
+    `<b>Virtual SOL (گزارش فید):</b> ${e.virtualSol ?? 'نامشخص'}`,
+    `<b>Market cap SOL (گزارش فید):</b> ${e.marketCapSol ?? 'نامشخص'}`,
+    `<b>منبع:</b> ${esc(e.source)}`,
+    e.signature ? `<b>Signature:</b> <code>${esc(e.signature)}</code>` : '',
+    '', 'ℹ️ این هشدار به تعداد خریداران، حجم معاملات، نقدینگی یا امتیاز وابسته نیست. اطلاعات امنیتی و امکان فروش هنوز بررسی نشده‌اند.',
+    'فقط پایش و اطلاع‌رسانی؛ بدون خرید، امضا یا سفارش.'
+  ].filter(Boolean).join('\n');
+}
+function buildPool(p, eventType='NEW_DEX_POOL') {
+  const age = p.poolCreatedAt ? `${Math.max(0,(Date.now()-p.poolCreatedAt)/60000).toFixed(1)} دقیقه (زمان اعلام‌شده توسط indexer)` : 'نامشخص';
+  return [
+    eventType==='MIGRATION_CONFIRMED' ? '🟣 <b>NOVARA — DEX MIGRATION CONFIRMED</b>' : '🟢 <b>NOVARA — NEW DEX POOL DETECTED</b>',
+    '━━━━━━━━━━━━━━━━━━', `<b>${esc(p.name)} ($${esc(p.symbol)})</b>`,
+    `<b>شبکه:</b> Solana`, `<b>Mint:</b> <code>${esc(p.mint)}</code>`,
+    `<b>DEX:</b> ${esc(p.dex || 'نامشخص')}`, `<b>Pool:</b> <code>${esc(p.pool || 'نامشخص')}</code>`,
+    `<b>سن Pool:</b> ${age}`, `<b>نقدینگی فعلی:</b> ${p.liquidityUsd==null?'نامشخص':`$${p.liquidityUsd.toLocaleString('en-US',{maximumFractionDigits:0})}`}`,
+    `<b>قیمت:</b> ${p.priceUsd==null?'نامشخص':`$${p.priceUsd}`}`,
+    `<b>حجم ۲۴ساعت:</b> ${p.volume24h==null?'نامشخص':`$${p.volume24h.toLocaleString('en-US',{maximumFractionDigits:0})}`}`,
+    `<b>منبع:</b> ${esc(p.source)}`, p.url ? `🔎 <a href="${esc(p.url)}">مشاهده استخر</a>` : '',
+    '', 'ℹ️ هشدار تشکیل استخر است؛ برای ارسال آن حداقل نقدینگی، تعداد خریدار، حجم ۱۵دقیقه‌ای، سن Mint یا امتیاز لازم نیست. اطلاعات امنیتی/فروش‌پذیری جداگانه بررسی می‌شوند.',
+    'فقط پایش و اطلاع‌رسانی؛ بدون خرید، امضا یا سفارش.'
+  ].filter(Boolean).join('\n');
+}
+async function collectLaunchEvents() {
+  const provider = CFG.pumpKey ? 'PUMPPORTAL' : 'PUMPDEV_FREE';
+  const endpoint = CFG.pumpKey ? `wss://pumpportal.fun/api/data?api-key=${encodeURIComponent(CFG.pumpKey)}` : 'wss://pumpdev.io/ws';
+  if(typeof WebSocket === 'undefined') return {events:[],status:'WEBSOCKET_UNAVAILABLE',provider};
+  return new Promise(resolve => {
+    const events=[]; let done=false, ws, timer;
+    const finish = status => { if(done)return; done=true; clearTimeout(timer); try{ws?.close();}catch{} resolve({events,status,provider}); };
     try {
-      res=await fetch(url,{...opts,signal:controller.signal,headers:{'accept':'application/json','user-agent':'NOVARA-Meme-Hunter/1.0',...(opts.headers||{})}});
-      if (res.ok) { const data=await res.json(); if(cacheable){geckoCache.set(cacheKey,{at:Date.now(),value:data}); if(geckoCache.size>250) geckoCache.delete(geckoCache.keys().next().value);} return data; }
-      if (isGecko && res.status===429 && attempt<GECKO_MAX_429_RETRIES) {
-        const retryAfter=Number(res.headers.get('retry-after'));
-        const delay=Number.isFinite(retryAfter)&&retryAfter>0 ? Math.min(90000,retryAfter*1000) : 20000*(attempt+1);
-        geckoBlockedUntil=Math.max(geckoBlockedUntil,Date.now()+delay);
-        console.warn(`[GECKO_RATE_LIMIT] HTTP 429; global cooldown ${delay}ms; retry ${attempt+1}/${GECKO_MAX_429_RETRIES}`);
-        await sleep(delay);
-        continue;
-      }
-      let detail='';
-      try { const body=await res.json(); detail=body?.description||body?.error?.message||body?.message||''; } catch {}
-      const isTelegram=String(url).includes('api.telegram.org/bot');
-      const endpoint=isTelegram?'Telegram API':url;
-      throw new Error(`HTTP ${res.status} ${endpoint}${detail?`: ${detail}`:''}`);
-    } finally { clearTimeout(timer); }
-  }
-}
-async function rpc(method, params) {
-  const j=await request(CFG.solanaRpc,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({jsonrpc:'2.0',id:1,method,params})});
-  if(j.error) throw new Error(j.error.message||'Solana RPC error'); return j.result;
-}
-async function loadState(){
-  try { const s=JSON.parse(await fs.readFile(STATE_FILE,'utf8')); return {tokens:s.tokens||{},pendingLaunches:Array.isArray(s.pendingLaunches)?s.pendingLaunches:[],stats:{runs:n(s.stats?.runs),alerts:n(s.stats?.alerts)},lastRun:s.lastRun||null,telegram:s.telegram||null}; }
-  catch { return {tokens:{},pendingLaunches:[],stats:{runs:0,alerts:0},lastRun:null,telegram:null}; }
-}
-async function saveState(s){ await fs.mkdir(path.dirname(STATE_FILE),{recursive:true}); await fs.writeFile(STATE_FILE,JSON.stringify(s,null,2)+'\n'); }
-
-// Stage 0 — short, read-only PumpPortal stream window for Solana token creation/migration.
-// The provider requires a PUMPPORTAL_API_KEY. Only the free creation/migration streams are used;
-// no trade subscription, wallet, signing, or paid trade feed is involved.
-async function collectPumpPortalEvents(){
-  if(!CFG.pumpPortalApiKey){
-    console.log('[PUMPPORTAL_DISABLED] PUMPPORTAL_API_KEY is not configured; indexed DEX discovery remains active.');
-    return {events:[],status:'NOT_CONFIGURED'};
-  }
-  if(typeof WebSocket==='undefined'){
-    console.warn('[PUMPPORTAL_UNAVAILABLE] Node runtime has no global WebSocket; use Node 22 or newer.');
-    return {events:[],status:'NO_WEBSOCKET'};
-  }
-  return await new Promise(resolve=>{
-    const events=[]; let settled=false, timer=null, ws;
-    const finish=status=>{if(settled)return;settled=true;clearTimeout(timer);try{ws?.close();}catch{};resolve({events,status});};
-    try{
-      ws=new WebSocket(`wss://pumpportal.fun/api/data?api-key=${encodeURIComponent(CFG.pumpPortalApiKey)}`);
-      timer=setTimeout(()=>finish('WINDOW_COMPLETE'),CFG.pumpPortalListenMs);
+      ws = new WebSocket(endpoint);
+      timer = setTimeout(()=>finish('LISTEN_WINDOW_COMPLETE'), CFG.listenMs);
       ws.addEventListener('open',()=>{
         ws.send(JSON.stringify({method:'subscribeNewToken'}));
-        ws.send(JSON.stringify({method:'subscribeMigration'}));
-        console.log(`[PUMPPORTAL_CONNECTED] Subscribed to new-token and migration streams for ${Math.round(CFG.pumpPortalListenMs/1000)}s.`);
+        if(CFG.pumpKey) ws.send(JSON.stringify({method:'subscribeMigration'}));
+        console.log(`[LAUNCH_FEED_OPEN] provider=${provider} listen=${CFG.listenMs}ms`);
       });
       ws.addEventListener('message',ev=>{
-        try{
+        try {
           const d=JSON.parse(String(ev.data||''));
-          const mint=String(d.mint||d.tokenAddress||d.token_address||'').trim();
-          if(!mint)return;
-          const txType=String(d.txType||d.type||'').toLowerCase();
-          const isMigration=txType.includes('migrat')||Boolean(d.pool||d.poolAddress||d.pool_address);
-          const item={chain:'solana',tokenAddress:mint,name:String(d.name||'Unknown').slice(0,80),symbol:String(d.symbol||'UNKNOWN').slice(0,24),creator:d.traderPublicKey||d.creator||d.user||null,uri:d.uri||null,virtualSol:n(d.vSolInBondingCurve),marketCapSol:n(d.marketCapSol),signature:d.signature||null,source:isMigration?'PumpPortal migration event':'PumpPortal new-token event',eventType:isMigration?'MIGRATION':'NEW_TOKEN',eventAt:Date.now(),reportedPoolAddress:d.pool||d.poolAddress||d.pool_address||null,poolAddress:null};
-          events.push(item);
-        }catch{}
+          const mint=String(d.mint||d.tokenAddress||d.token_address||'').trim(); if(!mint)return;
+          const typ=String(d.txType||d.type||'').toLowerCase();
+          const migration=typ.includes('migrat')||Boolean(d.pool||d.poolAddress||d.pool_address);
+          events.push({kind:migration?'MIGRATION_EVENT':'TOKEN_BIRTH',mint,name:String(d.name||'Unknown').slice(0,80),symbol:String(d.symbol||'UNKNOWN').slice(0,24),creator:d.traderPublicKey||d.creator||d.user||null,uri:d.uri||null,virtualSol:num(d.vSolInBondingCurve),marketCapSol:num(d.marketCapSol),signature:d.signature||null,source:provider,eventAt:Date.now(),reportedPool:d.pool||d.poolAddress||d.pool_address||null});
+        } catch {}
       });
       ws.addEventListener('error',()=>finish('SOCKET_ERROR'));
       ws.addEventListener('close',()=>finish('SOCKET_CLOSED'));
-    }catch(e){finish(`CONNECT_ERROR:${e.message}`);}
+    } catch(e) { finish(`CONNECT_ERROR:${e.message}`); }
   });
 }
-
-function mergeLaunchEvents(state,events){
-  const map=new Map((state.pendingLaunches||[]).map(x=>[`${x.chain}:${x.tokenAddress}`,x]));
-  for(const e of events){const k=`${e.chain}:${e.tokenAddress}`;const old=map.get(k)||{};map.set(k,{...old,...e,firstSeen:old.firstSeen||e.eventAt||Date.now(),lastSeen:Date.now()});}
-  const cutoff=Date.now()-48*3600000;
-  state.pendingLaunches=[...map.values()].filter(x=>n(x.lastSeen||x.eventAt)>cutoff).slice(-600);
+async function discoverPools() {
+  const out=[], errors=[];
+  try {
+    const j=await fetchJson('https://api.geckoterminal.com/api/v2/networks/solana/new_pools?include=base_token,quote_token&page=1',{headers:{accept:'application/json;version=20230302'}});
+    const included=new Map((j.included||[]).map(x=>[x.id,x.attributes||{}]));
+    for(const row of j.data||[]) {
+      const a=row.attributes||{}, rel=row.relationships||{};
+      const b=included.get(rel.base_token?.data?.id)||{}, q=included.get(rel.quote_token?.data?.id)||{};
+      const quoteSet=new Set(['SOL','WSOL','USDC','USDT','WETH','ETH','WBTC']);
+      const baseQuote=quoteSet.has(String(b.symbol||'').toUpperCase()); const target=baseQuote&&q.address?q:b; const quote=target===b?q:b;
+      const mint=String(target.address||target.token_address||'').trim(); if(!mint)continue;
+      out.push({kind:'DEX_POOL',mint,name:target.name||'Unknown',symbol:target.symbol||'UNKNOWN',pool:a.address||row.id?.split('_').slice(1).join('_')||null,dex:a.dex_id||'GeckoTerminal',poolCreatedAt:a.pool_created_at?Date.parse(a.pool_created_at):null,liquidityUsd:num(a.reserve_in_usd),priceUsd:num(a.base_token_price_usd),volume24h:num(a.volume_usd?.h24),source:'GECKOTERMINAL_NEW_POOLS',url:`https://www.geckoterminal.com/solana/pools/${a.address||''}`});
+    }
+  } catch(e) { errors.push(`GeckoTerminal: ${e.message}`); }
+  try {
+    const profiles=await fetchJson('https://api.dexscreener.com/token-profiles/latest/v1');
+    for(const p of (Array.isArray(profiles)?profiles:[]).slice(0,CFG.maxProfiles)) if(String(p.chainId||'').toLowerCase()==='solana'&&p.tokenAddress) out.push({kind:'TOKEN_PROFILE',mint:p.tokenAddress,name:String(p.description||'New token profile').slice(0,80),symbol:'UNKNOWN',source:'DEXSCREENER_LATEST_PROFILE',url:p.url||''});
+  } catch(e) { errors.push(`DexScreener profiles: ${e.message}`); }
+  return {items:out,errors};
 }
-
-function buildPrelaunchMessage(t){
-  const ageMin=Math.max(0,(Date.now()-n(t.eventAt,Date.now()))/60000);
-  return [
-    '🟠 <b>NOVARA — EARLY LAUNCH WATCH</b>',
-    '<b>نامزد تازه‌ساخته‌شده در Solana</b>',
-    '━━━━━━━━━━━━━━━━━━',
-    `<b>${esc(t.name||'Unknown')} ($${esc(t.symbol||'UNKNOWN')})</b>`,
-    `<b>سن مشاهده:</b> ${ageMin.toFixed(1)} دقیقه`,
-    `<b>رویداد:</b> ${esc(t.eventType||'NEW_TOKEN')}`,
-    `<b>Virtual SOL curve reserve:</b> ${n(t.virtualSol).toFixed(2)} SOL`,
-    `<b>Market cap اعلام‌شده توسط stream:</b> ${n(t.marketCapSol).toFixed(2)} SOL`,
-    `<b>سازنده:</b> <code>${esc(t.creator||'نامشخص')}</code>`,
-    `<b>Mint:</b> <code>${esc(t.tokenAddress)}</code>`,
-    t.signature?`<b>Signature:</b> <code>${esc(t.signature)}</code>`:'',
-    '',
-    '⚠️ این هشدار مربوط به مرحله پیش از تأیید استخر DEX است. Virtual SOL reserve نقدینگی واقعی/قابل برداشت نیست و Market Cap مقدار گزارش‌شده stream است؛ هنوز امنیت، هولدرها، فروش‌پذیری و ایجاد Pool باید مستقل تأیید شوند.',
-    'فقط پایش و اطلاع‌رسانی — بدون خرید، امضا یا سفارش.'
-  ].filter(Boolean).join('\n');
+async function lookupPool(mint) {
+  try {
+    const pairs=await fetchJson(`https://api.dexscreener.com/token-pairs/v1/solana/${encodeURIComponent(mint)}`);
+    const rows=(Array.isArray(pairs)?pairs:[]).filter(p=>String(p.chainId).toLowerCase()==='solana').sort((a,b)=>(num(b.liquidity?.usd)||0)-(num(a.liquidity?.usd)||0));
+    const p=rows[0]; if(!p)return null;
+    const isBase=String(p.baseToken?.address||'').toLowerCase()===mint.toLowerCase(); const token=isBase?p.baseToken:p.quoteToken;
+    return {kind:'DEX_POOL',mint,name:token?.name||'Unknown',symbol:token?.symbol||'UNKNOWN',pool:p.pairAddress||null,dex:p.dexId||'Unknown',poolCreatedAt:num(p.pairCreatedAt),liquidityUsd:num(p.liquidity?.usd),priceUsd:num(p.priceUsd),volume24h:num(p.volume?.h24),source:'DEXSCREENER_TOKEN_PAIRS',url:p.url||''};
+  } catch(e) { console.warn(`[PAIR_LOOKUP_ERROR] mint=${short(mint)} ${e.message}`); return null; }
 }
-
-// Stage 1 — discover freshly-created DEX pools on Solana and TON.
-async function discover(){
-  const out=[]; const errors=[];
-  for(const network of ['solana','ton']){
+async function processEvent(e,state,stats) {
+  const prior=state.events[e.mint]||{};
+  if(e.kind==='TOKEN_BIRTH') {
+    state.events[e.mint]={...prior,mint:e.mint,name:e.name,symbol:e.symbol,creator:e.creator,firstEventAt:prior.firstEventAt||e.eventAt,source:e.source,launchEvent:e};
+    if(!prior.birthAlertedAt) {
+      const sent=await telegram(buildBirth(e));
+      if(sent){state.events[e.mint].birthAlertedAt=Date.now();stats.birthAlerts++;}
+      console.log(`[TOKEN_BIRTH] mint=${short(e.mint)} sent=${sent} provider=${e.source}`);
+    }
+  } else if(e.kind==='MIGRATION_EVENT') {
+    state.events[e.mint]={...prior,mint:e.mint,name:e.name,symbol:e.symbol,migrationSeenAt:prior.migrationSeenAt||Date.now(),reportedPool:e.reportedPool||null,source:e.source};
+    console.log(`[MIGRATION_EVENT] mint=${short(e.mint)} pool=${e.reportedPool||'not-provided'} — awaiting independent DEX pool verification`);
+  }
+}
+async function main() {
+  const started=Date.now(),state=await loadState();
+  const stats={birthAlerts:0,poolAlerts:0,profilesSeen:0,poolsSeen:0,errors:0};
+  console.log(`${VERSION} START | READ-ONLY / NO ORDERS / NO AUTO-BUY`);
+  console.log(`[CONFIG] listen=${CFG.listenMs}ms scanLimit=${CFG.scanLimit} source=${CFG.pumpKey?'PumpPortal':'PumpDev public feed'}`);
+  const feed=await collectLaunchEvents(); console.log(`[LAUNCH_FEED_END] provider=${feed.provider} status=${feed.status} events=${feed.events.length}`);
+  for(const e of feed.events) { try{await processEvent(e,state,stats);}catch(err){stats.errors++;console.error(`[EVENT_ERROR] ${err.message}`);} }
+  const discovered=await discoverPools(); stats.errors+=discovered.errors.length;
+  const candidates=new Map();
+  for(const x of discovered.items) { if(x.kind==='DEX_POOL') candidates.set(x.mint,{...candidates.get(x.mint),...x}); else {stats.profilesSeen++; const prior=candidates.get(x.mint)||{}; candidates.set(x.mint,{...prior,...x});} }
+  // Retry undelivered birth alerts and recheck recent birth/migration candidates.
+  for(const [mint,ev] of Object.entries(state.events)) {
+    if(!ev.birthAlertedAt && ev.launchEvent && Date.now()-Number(ev.firstEventAt||0)<60*60*1000) {
+      try { const sent=await telegram(buildBirth(ev.launchEvent)); if(sent){ev.birthAlertedAt=Date.now();stats.birthAlerts++;} }
+      catch(err) { stats.errors++; console.error(`[BIRTH_RETRY_ERROR] ${short(mint)} ${err.message}`); }
+    }
+    if(!ev.poolAlertedAt && Date.now()-Number(ev.firstEventAt||ev.migrationSeenAt||0)<60*60*1000 && !candidates.has(mint)) candidates.set(mint,{kind:'PENDING_LAUNCH',mint,name:ev.name||'Unknown',symbol:ev.symbol||'UNKNOWN',source:'PERSISTED_LAUNCH_LEDGER'});
+  }
+  let scanned=0;
+  for(const item of [...candidates.values()].slice(0,CFG.scanLimit)) {
+    scanned++; const prior=state.events[item.mint]||{};
     try {
-      const j=await request(`https://api.geckoterminal.com/api/v2/networks/${network}/new_pools?include=base_token,quote_token&page=1`,{headers:{accept:'application/json;version=20230302'}});
-      const included=new Map((j.included||[]).map(x=>[x.id,x.attributes||{}]));
-      for(const p of j.data||[]){
-        const a=p.attributes||{}, rel=p.relationships||{};
-        const baseId=rel.base_token?.data?.id, quoteId=rel.quote_token?.data?.id;
-        const base=included.get(baseId)||{}, quote=included.get(quoteId)||{};
-        const quoteLike = new Set(['SOL','WSOL','USDC','USDT','USDE','USD₮','TON','WTON','WETH','ETH','WBTC','BTC']);
-        const baseIsQuote = quoteLike.has(String(base.symbol||'').toUpperCase());
-        const target = baseIsQuote && quote.address ? quote : base;
-        const other = target === base ? quote : base;
-        const tokenAddr=(target.address||target.token_address||'').trim();
-        if(!tokenAddr) continue;
-        out.push({chain:network,tokenAddress:tokenAddr,poolAddress:a.address||p.id?.split('_').slice(1).join('_'),name:target.name||'Unknown',symbol:target.symbol||'UNKNOWN',quoteSymbol:other.symbol||'',isBaseToken:target===base,poolCreatedAt:a.pool_created_at?Date.parse(a.pool_created_at):null,priceUsd:n(a.base_token_price_usd),liquidityUsd:n(a.reserve_in_usd),fdv:n(a.fdv_usd),marketCap:n(a.market_cap_usd),volume24h:n(a.volume_usd?.h24),txns24h:a.transactions?.h24||{},source:'GeckoTerminal new_pools',url:`https://www.geckoterminal.com/${network}/pools/${a.address||''}`});
+      let pool=item.kind==='DEX_POOL'?item:await lookupPool(item.mint);
+      if(!pool?.pool) { console.log(`[CANDIDATE_PENDING] ${item.symbol||'UNKNOWN'} mint=${short(item.mint)} pool=NOT_VERIFIED source=${item.source}`); continue; }
+      stats.poolsSeen++;
+      const migrationConfirmed=Boolean(prior.migrationSeenAt||item.kind==='PENDING_LAUNCH');
+      if(!prior.poolAlertedAt) {
+        const sent=await telegram(buildPool(pool,migrationConfirmed?'MIGRATION_CONFIRMED':'NEW_DEX_POOL'));
+        if(sent){state.events[item.mint]={...prior,mint:item.mint,name:pool.name,symbol:pool.symbol,pool:pool.pool,poolAlertedAt:Date.now(),poolSource:pool.source,poolCreatedAt:pool.poolCreatedAt||null};stats.poolAlerts++;}
+        console.log(`[DEX_POOL_ALERT] mint=${short(item.mint)} pool=${short(pool.pool)} sent=${sent} liquidity=${pool.liquidityUsd??'UNKNOWN'} source=${pool.source}`);
       }
-    } catch(e){ errors.push(`${network} discovery: ${e.message}`); }
+    } catch(e) {stats.errors++;console.error(`[POOL_CANDIDATE_ERROR] ${short(item.mint)} ${e.message}`);}
+    await sleep(120);
   }
-  // DexScreener's latest token profiles are an additional discovery feed, not a safety endorsement.
-  try {
-    const profiles=await request('https://api.dexscreener.com/token-profiles/latest/v1');
-    for(const p of Array.isArray(profiles)?profiles:[]){
-      if(!['solana','ton'].includes(String(p.chainId||'').toLowerCase())) continue;
-      out.push({chain:p.chainId.toLowerCase(),tokenAddress:p.tokenAddress,name:p.description?.slice(0,50)||'New profile',symbol:'—',source:'DEX Screener latest profile',url:p.url||''});
-    }
-  } catch(e){ errors.push(`DEX Screener discovery: ${e.message}`); }
-  const dedup=new Map(); for(const x of out){const k=`${x.chain}:${x.tokenAddress}`; if(!dedup.has(k)) dedup.set(k,x); else Object.assign(dedup.get(k),Object.fromEntries(Object.entries(x).filter(([,v])=>v!==undefined&&v!=='')));}
-  return {tokens:[...dedup.values()].slice(0,CFG.scanLimit*3),errors};
+  state.stats.runs=Number(state.stats.runs||0)+1; state.stats.birthAlerts=Number(state.stats.birthAlerts||0)+stats.birthAlerts; state.stats.poolAlerts=Number(state.stats.poolAlerts||0)+stats.poolAlerts; state.lastRun=new Date().toISOString();
+  // Keep the event ledger bounded while retaining recent launch/pool lifecycle state.
+  const cutoff=Date.now()-7*24*60*60*1000;
+  for(const [mint,v] of Object.entries(state.events)) if(Number(v.poolAlertedAt||v.birthAlertedAt||v.migrationSeenAt||v.firstEventAt||0)<cutoff) delete state.events[mint];
+  await saveState(state);
+  console.log(`${VERSION} END | feedEvents=${feed.events.length} profiles=${stats.profilesSeen} poolCandidates=${discovered.items.filter(x=>x.kind==='DEX_POOL').length} scanned=${scanned} birthAlerts=${stats.birthAlerts} poolAlerts=${stats.poolAlerts} errors=${stats.errors} elapsed=${Math.round((Date.now()-started)/1000)}s`);
+  for(const e of discovered.errors) console.log(`[DISCOVERY_WARNING] ${e}`);
 }
-
-async function enrichDex(token){
-  try {
-    const j=await request(`https://api.dexscreener.com/token-pairs/v1/${token.chain}/${encodeURIComponent(token.tokenAddress)}`);
-    const pairs=(Array.isArray(j)?j:[]).filter(x=>String(x.chainId||'').toLowerCase()===token.chain).sort((a,b)=>n(b.liquidity?.usd)-n(a.liquidity?.usd));
-    const p=pairs[0]; if(!p) return {...token,pairLookup:'NO_DEXSCREENER_PAIR'};
-    const isBase=String(p.baseToken?.address||'').toLowerCase()===String(token.tokenAddress||'').toLowerCase();
-    const target=isBase?p.baseToken:p.quoteToken;
-    return {...token,name:target?.name||token.name,symbol:target?.symbol||token.symbol,isBaseToken:isBase,priceUsd:positiveOr(p.priceUsd,token.priceUsd),liquidityUsd:positiveOr(p.liquidity?.usd,token.liquidityUsd),liquiditySource:p.liquidity?.usd!=null?'DEXSCREENER_POOL_USD':(token.liquidityUsd>0?'GECKOTERMINAL_RESERVE_USD':'UNAVAILABLE'),liquidityBase:n(p.liquidity?.base),liquidityQuote:n(p.liquidity?.quote),fdv:positiveOr(p.fdv,token.fdv),marketCap:positiveOr(p.marketCap,token.marketCap),volume24h:positiveOr(p.volume?.h24,token.volume24h),txns24h:p.txns?.h24||token.txns24h||{},priceChange:p.priceChange||{},pairCreatedAt:p.pairCreatedAt||token.poolCreatedAt,poolAddress:p.pairAddress||token.poolAddress,pairAddress:p.pairAddress||token.poolAddress,dexId:p.dexId||'',url:p.url||token.url,pairLookup:'FOUND'};
-  } catch(e) { return {...token,pairLookup:'DEXSCREENER_LOOKUP_ERROR',pairLookupError:e.message}; }
-}
-
-// Stage 2 — infer early buyer activity from recent indexed pool trades.
-// Trade direction is resolved from the token's actual from/to addresses when available.
-function tradeIsBuyForToken(t, token) {
-  const target=String(token.tokenAddress||'').toLowerCase();
-  const from=String(t.from_token_address||'').toLowerCase();
-  const to=String(t.to_token_address||'').toLowerCase();
-  if(target && from && to){
-    if(to===target && from!==target) return true;
-    if(from===target && to!==target) return false;
-  }
-  // Fallback for older/partial indexed records where token addresses are omitted.
-  return (String(t.kind||'').toLowerCase()==='buy') === (token.isBaseToken!==false);
-}
-async function smartMoney(token){
-  let result={trades:[],tradesFetched:0,recentTradeCount:0,walletAttributedTrades:0,latestTradeAt:null,uniqueBuyers:0,uniqueSellers:0,buyUsd:0,sellUsd:0,earlyWallets:[],coordinationRisk:false,coverage:'UNAVAILABLE'};
-  if(!token.poolAddress){result.coverage='NO_POOL';return result;}
-  try {
-    const j=await request(`https://api.geckoterminal.com/api/v2/networks/${token.chain}/pools/${encodeURIComponent(token.poolAddress)}/trades?page=1`,{headers:{accept:'application/json;version=20230302'}});
-    const trades=(j.data||[]).map(x=>x.attributes||{});
-    const cutoff=Date.now()-15*60_000;
-    const stamped=trades.map(t=>({...t,_ts:Date.parse(t.block_timestamp||t.timestamp||'')}));
-    const recent=stamped.filter(t=>Number.isFinite(t._ts)&&t._ts>cutoff);
-    const buys=recent.filter(t=>tradeIsBuyForToken(t,token));
-    const sells=recent.filter(t=>!tradeIsBuyForToken(t,token));
-    const wallet=t=>t.tx_from_address||t.tx_from||t.from_address||t.trader_address||t.maker||'';
-    const buyerSet=new Set(buys.map(wallet).filter(Boolean)), sellerSet=new Set(sells.map(wallet).filter(Boolean));
-    const walletTrades=recent.filter(t=>Boolean(wallet(t)));
-    result={
-      trades:recent,tradesFetched:trades.length,recentTradeCount:recent.length,walletAttributedTrades:walletTrades.length,
-      latestTradeAt:stamped.reduce((m,t)=>Number.isFinite(t._ts)?Math.max(m,t._ts):m,0)||null,
-      uniqueBuyers:buyerSet.size,uniqueSellers:sellerSet.size,
-      buyUsd:buys.reduce((a,t)=>a+n(t.volume_in_usd),0),sellUsd:sells.reduce((a,t)=>a+n(t.volume_in_usd),0),
-      earlyWallets:[...buyerSet].slice(0,8),coordinationRisk:detectCoordination(buys,wallet),
-      coverage:trades.length===0?'NO_INDEXED_TRADES':recent.length===0?'NO_TRADES_LAST_15M':walletTrades.length===0?'NO_WALLET_ATTRIBUTION':'SAMPLED_15M_TRADES'
-    };
-  } catch(e){ result.error=e.message;result.coverage='API_ERROR'; }
-  return result;
-}
-function detectCoordination(buys,walletFn){
-  const counts=new Map(); for(const t of buys){const w=walletFn(t); if(w) counts.set(w,(counts.get(w)||0)+1);}
-  // Repeated buys from a small set of addresses can be suspicious; never proof of common control.
-  return counts.size>=2 && [...counts.values()].filter(v=>v>=3).length>=2;
-}
-
-// Stage 3 — chain-specific safety evidence. Unknown is never silently treated as safe.
-async function solanaSafety(token){
-  const s={mintAuthority:'UNKNOWN',freezeAuthority:'UNKNOWN',top10HolderPct:null,holderCoverage:'UNAVAILABLE',sellability:'NOT_SIMULATED',riskFlags:[]};
-  const checks=await Promise.allSettled([
-    rpc('getAccountInfo',[token.tokenAddress,{encoding:'base64'}]),
-    rpc('getTokenSupply',[token.tokenAddress]),
-    rpc('getTokenLargestAccounts',[token.tokenAddress]),
-  ]);
-  const [infoCheck,supplyCheck,largestCheck]=checks;
-  const info=infoCheck.status==='fulfilled'?infoCheck.value:null;
-  const supply=supplyCheck.status==='fulfilled'?supplyCheck.value:null;
-  const largest=largestCheck.status==='fulfilled'?largestCheck.value:null;
-  const rpcErrors=checks.filter(x=>x.status==='rejected').map(x=>x.reason?.message||String(x.reason));
-  if(info?.value?.data?.[0]){
-    const b=Buffer.from(info.value.data[0],'base64');
-    if(b.length>=82){const mintOpt=b.readUInt32LE(0),freezeOpt=b.readUInt32LE(46);s.mintAuthority=mintOpt===0?'REVOKED':'ACTIVE';s.freezeAuthority=freezeOpt===0?'REVOKED':'ACTIVE';}
-  }
-  try {
-    const total=BigInt(supply?.value?.amount||'0');
-    const accounts=largest?.value||[];
-    if(total>0n&&accounts.length){
-      // getTokenLargestAccounts returns token accounts, not beneficial owners.
-      // Resolve the SPL token-account owner at byte offset 32 and aggregate balances by owner.
-      const details=await rpc('getMultipleAccounts',[accounts.map(x=>x.address),{encoding:'base64'}]);
-      const ownerBalances=new Map();
-      for(let i=0;i<accounts.length;i++){
-        const raw=details?.value?.[i]?.data?.[0];
-        let ownerKey=`account:${accounts[i].address}`;
-        if(raw){const bytes=Buffer.from(raw,'base64');if(bytes.length>=64)ownerKey=bytes.subarray(32,64).toString('hex');}
-        ownerBalances.set(ownerKey,(ownerBalances.get(ownerKey)||0n)+BigInt(accounts[i].amount||'0'));
-      }
-      const topOwners=[...ownerBalances.values()].sort((a,b)=>a>b?-1:a<b?1:0).slice(0,10);
-      const sum=topOwners.reduce((a,v)=>a+v,0n);
-      s.top10HolderPct=Number(sum*1000000n/total)/10000;
-      s.holderCoverage='RPC_TOP10_OWNER_ESTIMATE';
-      s.riskFlags.push('تمرکز هولدر برآوردی از ۲۰ حساب توکنی بزرگ و تجمیع مالک آن‌هاست؛ کیف‌پول استخر/LP ممکن است همچنان در محاسبه باشد');
-    }
-  } catch(e){rpcErrors.push(`owner aggregation: ${e.message}`);}
-  if(rpcErrors.length){s.rpcErrors=rpcErrors;s.riskFlags.push(`برخی درخواست‌های RPC ناموفق بود (${rpcErrors.length})`);}
-  if(s.mintAuthority==='ACTIVE') s.riskFlags.push('اختیار ضرب توکن هنوز فعال است');
-  if(s.freezeAuthority==='ACTIVE') s.riskFlags.push('اختیار فریز هنوز فعال است');
-  if(s.top10HolderPct!=null&&s.top10HolderPct>CFG.maxTop10Pct) s.riskFlags.push(`تمرکز ۱۰ مالک برآوردی ${s.top10HolderPct.toFixed(1)}٪ است`);
-  // Optional Jupiter quote-only sellability probe. It does not sign or send a transaction.
-  if(CFG.jupiterApiKey){
-    try{
-      const amount=1000000;
-      const q=await request(`https://api.jup.ag/swap/v1/quote?inputMint=${encodeURIComponent(token.tokenAddress)}&outputMint=So11111111111111111111111111111111111111112&amount=${amount}&slippageBps=300`,{headers:{'x-api-key':CFG.jupiterApiKey}});
-      s.sellability=q.outAmount?'ROUTE_QUOTE_AVAILABLE':'NO_ROUTE'; s.sellQuoteImpactPct=n(q.priceImpactPct)*100;
-    } catch(e){s.sellability='QUOTE_FAILED';s.sellQuoteError=e.message;}
-  }
-  return s;
-}
-async function tonSafety(token){
-  const s={mintAuthority:'NOT_APPLICABLE',freezeAuthority:'NOT_APPLICABLE',top10HolderPct:null,holderCoverage:'UNAVAILABLE',sellability:'NOT_SIMULATED',riskFlags:[]};
-  if(!CFG.tonApiKey){s.riskFlags.push('برای بررسی هولدرهای TON کلید TONAPI_KEY تنظیم نشده');return s;}
-  try{
-    // TonAPI holders response exposes `total` as holder count, NOT token supply.
-    // Fetch jetton metadata separately to obtain raw total_supply.
-    const [holders,info]=await Promise.all([
-      request(`https://tonapi.io/v2/jettons/${encodeURIComponent(token.tokenAddress)}/holders?limit=10&sort_by=balance`,{headers:{Authorization:`Bearer ${CFG.tonApiKey}`}}),
-      request(`https://tonapi.io/v2/jettons/${encodeURIComponent(token.tokenAddress)}`,{headers:{Authorization:`Bearer ${CFG.tonApiKey}`}})
-    ]);
-    const addresses=holders.addresses||[]; const totalSupply=BigInt(info.total_supply||'0');
-    if(totalSupply>0n&&addresses.length){
-      const sum=addresses.reduce((a,h)=>a+BigInt(h.balance||'0'),0n);
-      s.top10HolderPct=Number(sum*1000000n/totalSupply)/10000;
-      s.holderCoverage='TONAPI_TOP10_HOLDERS';
-      s.holderCount=holders.total??null;
-    } else s.riskFlags.push('TonAPI پاسخ داد اما total_supply یا فهرست هولدرها برای محاسبه کافی نبود');
-  }catch(e){s.error=e.message;s.riskFlags.push(`دریافت اطلاعات هولدرهای TON ناموفق بود: ${e.message}`);}
-  s.riskFlags.push('امکان فروش با شبیه‌سازی واقعی در این نسخه برای TON تأیید نشده');
-  return s;
-}
-
-// Stage 4 — short-window momentum, buyer/seller balance and liquidity evidence.
-function momentum(token,sm,previous){
-  const buys=n(token.txns24h?.buys), sells=n(token.txns24h?.sells);
-  const bsr=buys+sells?buys/(buys+sells):null;
-  const liqDelta=previous?.liquidityUsd>0&&token.liquidityUsd>0?(token.liquidityUsd/previous.liquidityUsd-1)*100:null;
-  const netFlow=sm.buyUsd-sm.sellUsd;
-  return {buys24h:buys,sells24h:sells,buyerSellerRatio:bsr,buyers15m:sm.uniqueBuyers,sellers15m:sm.uniqueSellers,buyUsd15m:sm.buyUsd,sellUsd15m:sm.sellUsd,netFlow15m:netFlow,liquidityDeltaPct:liqDelta,volume5mEstimate:token.volume24h?token.volume24h/288:null};
-}
-
-// Stage 5 — explainable scoring; unknown data earns no safety credit.
-function rank(token,sm,safety,mom,age){
-  let discovery=0,smart=0,safe=0,flow=0,market=0; const reasons=[],risks=[...(safety.riskFlags||[])],rejectReasons=[];
-  if(age!=null&&age<=24) discovery+=10; else if(age!=null&&age<=CFG.maxAgeHours) discovery+=7;
-  if(token.source?.includes('new_pools')) discovery+=5;
-  if(sm.coverage==='SAMPLED_15M_TRADES'){
-    smart+=Math.min(12,sm.uniqueBuyers*1.5);
-    if(sm.uniqueBuyers>sm.uniqueSellers) smart+=5;
-    if(sm.buyUsd>sm.sellUsd) smart+=4;
-    if(sm.uniqueBuyers>=CFG.minUniqueBuyers) reasons.push(`${sm.uniqueBuyers} خریدار متمایز در نمونه ۱۵ دقیقه‌ای`);
-    if(sm.coordinationRisk){smart-=6;risks.push('الگوی خرید تکراری/هماهنگ مشکوک؛ نیازمند بررسی');}
-  } else risks.push(sm.coverage==='NO_TRADES_LAST_15M'?'در نمونه دریافتی معامله‌ای در ۱۵ دقیقه اخیر وجود نداشت':sm.coverage==='NO_INDEXED_TRADES'?'GeckoTerminal برای این استخر معامله‌ای برنگرداند':sm.coverage==='NO_WALLET_ATTRIBUTION'?'معاملات اخیر دریافت شد اما آدرس کیف‌پول معامله‌گران موجود نبود':sm.coverage==='API_ERROR'?`خطای دریافت معاملات: ${sm.error||'نامشخص'}`:'تاریخچه معاملات/کیف‌پول‌ها در دسترس نبود');
-  if(safety.mintAuthority==='REVOKED') safe+=7; else if(safety.mintAuthority==='ACTIVE') safe-=10;
-  if(safety.freezeAuthority==='REVOKED') safe+=7; else if(safety.freezeAuthority==='ACTIVE') safe-=10;
-  if(safety.top10HolderPct!=null){safe+=Math.max(0,12-(safety.top10HolderPct/100*12)); if(safety.top10HolderPct<=CFG.maxTop10Pct) reasons.push(`سهم ۱۰ هولدر اول ${safety.top10HolderPct.toFixed(1)}٪`); else risks.push(`تمرکز تخمینی ${safety.top10HolderPct.toFixed(1)}٪؛ به‌صورت امتیازی لحاظ شده، نه فیلتر قطعی`);}
-  else risks.push('تمرکز هولدرها تأیید نشده');
-  if(safety.sellability==='ROUTE_QUOTE_AVAILABLE') safe+=8; else if(safety.sellability==='NO_ROUTE'||safety.sellability==='QUOTE_FAILED') safe-=12; else risks.push('فروش‌پذیری با مسیر واقعی تأیید نشده');
-  if(token.liquidityUsd>=CFG.minLiquidity) safe+=7; else risks.push(`نقدینگی کمتر از حداقل ${usd(CFG.minLiquidity)}`);
-  if(sm.coverage==='SAMPLED_15M_TRADES'){
-    if(mom.buyers15m>=CFG.minUniqueBuyers) flow+=8;
-    if(mom.netFlow15m>0) flow+=7;
-    if(mom.buyerSellerRatio!=null&&mom.buyerSellerRatio>=0.60) flow+=5;
-  }
-  if(mom.liquidityDeltaPct!=null&&mom.liquidityDeltaPct>0) flow+=Math.min(5,mom.liquidityDeltaPct/2);
-  if(token.volume24h>=10000) market+=5; if(n(token.txns24h?.buys)>n(token.txns24h?.sells)) market+=4;
-  if(token.liquidityUsd>=CFG.minLiquidity) market+=3;
-  const raw=discovery+smart+safe+flow+market; const score=Math.max(0,Math.min(100,Math.round(raw)));
-  // Owner concentration is treated as a risk signal, not a hard rejection: RPC top accounts can include pool/LP/system accounts.
-  const top10ConcentrationFail=false;
-  const liquidityFail=n(token.liquidityUsd)<CFG.minLiquidity;
-  const authorityFail=safety.mintAuthority==='ACTIVE'&&safety.freezeAuthority==='ACTIVE';
-  const noPoolFail=!token.poolAddress;
-  const noRouteFail=safety.sellability==='NO_ROUTE';
-  const hardFail=noPoolFail || liquidityFail || top10ConcentrationFail || authorityFail || noRouteFail;
-  if(noPoolFail) rejectReasons.push('NO_VERIFIED_POOL');
-  if(liquidityFail) rejectReasons.push(`LOW_LIQUIDITY_${n(token.liquidityUsd).toFixed(2)}_LT_${CFG.minLiquidity}`);
-  if(safety.top10HolderPct!=null&&safety.top10HolderPct>CFG.maxTop10Pct) risks.push(`تمرکز تخمینی بالا (${safety.top10HolderPct.toFixed(1)}٪)؛ هشدار ریسک، نه رد خودکار؛ این برآورد ممکن است حساب LP/استخر را شامل شود`);
-  if(authorityFail) rejectReasons.push('MINT_AND_FREEZE_AUTHORITIES_ACTIVE');
-  if(noRouteFail) rejectReasons.push('NO_SELL_ROUTE');
-  const enoughEvidence=sm.coverage==='SAMPLED_15M_TRADES' && safety.top10HolderPct!=null && safety.mintAuthority!=='UNKNOWN' && safety.freezeAuthority!=='UNKNOWN';
-  if(!enoughEvidence) rejectReasons.push('INSUFFICIENT_SAFETY_OR_TRADE_EVIDENCE');
-  if(score<CFG.minScore) rejectReasons.push(`SCORE_${score}_LT_${CFG.minScore}`);
-  if(sm.uniqueBuyers<CFG.minUniqueBuyers) rejectReasons.push(`BUYERS_${sm.uniqueBuyers}_LT_${CFG.minUniqueBuyers}`);
-  if(sm.buyUsd<CFG.minBuyVolume15m) rejectReasons.push(`BUY_VOLUME_${sm.buyUsd.toFixed(2)}_LT_${CFG.minBuyVolume15m}`);
-  if(mom.buys24h<CFG.minBuys24h) rejectReasons.push(`BUYS_24H_${mom.buys24h}_LT_${CFG.minBuys24h}`);
-  if(!(sm.buyUsd>sm.sellUsd)) rejectReasons.push('NET_BUY_FLOW_NOT_POSITIVE');
-  const qualified=!hardFail&&enoughEvidence&&score>=CFG.minScore&&sm.uniqueBuyers>=CFG.minUniqueBuyers&&sm.buyUsd>=CFG.minBuyVolume15m&&mom.buys24h>=CFG.minBuys24h&&sm.buyUsd>sm.sellUsd;
-  // Early Watch is a separate, explicitly provisional tier. It never bypasses hard safety/evidence gates.
-  const earlyWatch=!qualified&&!hardFail&&enoughEvidence&&score>=CFG.watchMinScore&&score<CFG.minScore&&sm.uniqueBuyers>=CFG.watchMinBuyers&&sm.buyUsd>=CFG.watchMinBuyVolume15m&&mom.buys24h>=CFG.watchMinBuys24h&&sm.buyUsd>sm.sellUsd&&safety.mintAuthority!=='ACTIVE'&&safety.freezeAuthority!=='ACTIVE'&&safety.sellability!=='NO_ROUTE'&&safety.sellability!=='QUOTE_FAILED';
-  if(!token.poolAddress) risks.push('برای این توکن استخر معاملاتی قابل تأیید پیدا نشد');
-  if(token.pairLookup==='NO_DEXSCREENER_PAIR') risks.push('DexScreener برای این آدرس جفت پیدا نکرد؛ داده استخر از GeckoTerminal حفظ شده است');
-  if(token.pairLookup==='DEXSCREENER_LOOKUP_ERROR') risks.push(`استعلام DexScreener ناموفق بود: ${token.pairLookupError||'نامشخص'}`);
-  if(token.liquidityUsd>=CFG.minLiquidity) reasons.push(`نقدینگی استخر ${usd(token.liquidityUsd)}`);
-  if(sm.buyUsd>sm.sellUsd) reasons.push(`خالص جریان خرید ۱۵ دقیقه‌ای ${usd(sm.buyUsd-sm.sellUsd)}`);
-  if(!enoughEvidence) risks.push('داده‌های ایمنی کافی برای تأیید نهایی موجود نیست');
-  return {score,qualified,earlyWatch,hardFail,enoughEvidence,rejectReasons,components:{discovery:Math.round(discovery),smartMoney:Math.round(smart),safety:Math.round(safe),momentum:Math.round(flow),market:Math.round(market)},reasons,risks};
-}
-
-function buildMessage(t,sm,s,m,r,age,tier='QUALIFIED'){ 
-  const chain=t.chain==='solana'?'Solana':'TON';
-  const tierTitle=tier==='EARLY_WATCH'?'🟠 EARLY WATCH — نیازمند تأیید مجدد':'🚨 QUALIFIED — عبور از فیلترهای اصلی';
-  const lines=[`<b>NOVARA MEME HUNTER — ${chain}</b>`,tierTitle,`<b>${esc(t.name)} ($${esc(t.symbol)})</b>`,`━━━━━━━━━━━━━━━━━━`,`<b>امتیاز نهایی:</b> ${r.score}/100 | <b>وضعیت:</b> ${tier==='EARLY_WATCH'?'پایش زودهنگام؛ هنوز تأیید نهایی نیست':'واجد شرایط'}`, `<b>سن استخر:</b> ${age==null?'نامشخص':`${age.toFixed(1)} ساعت`}`,`<b>قیمت:</b> ${t.priceUsd?`$${t.priceUsd}`:'نامشخص'}`,`<b>ارزش بازار/FDV:</b> ${usd(t.marketCap||t.fdv)}`,`<b>نقدینگی استخر:</b> ${usd(t.liquidityUsd)}`,`<b>حجم ۲۴ساعته:</b> ${usd(t.volume24h)}`,`<b>DEX:</b> ${esc(t.dexId||'از منبع Pool Indexer')}`,`<b>قرارداد:</b> <code>${esc(t.tokenAddress)}</code>`,`<b>استخر:</b> <code>${esc(t.poolAddress||'نامشخص')}</code>`,``,`<b>۱) Discovery</b>`,`منبع: ${esc(t.source||'Pool indexer')} | شبکه: ${chain}`,`<b>۲) Smart Money / معاملات ۱۵ دقیقه اخیر</b>`,`خریداران متمایز: ${sm.uniqueBuyers} | فروشندگان متمایز: ${sm.uniqueSellers}`,`خرید: ${usd(sm.buyUsd)} | فروش: ${usd(sm.sellUsd)} | خالص: ${usd(sm.buyUsd-sm.sellUsd)}`,`کیف‌پول‌های نمونه: ${sm.earlyWallets.length?sm.earlyWallets.map(short).join(', '):'داده کافی موجود نیست'}`,`<b>۳) Safety</b>`,`Mint authority: ${s.mintAuthority} | Freeze authority: ${s.freezeAuthority}`,`تمرکز ۱۰ هولدر اول: ${fmtPct(s.top10HolderPct)} | فروش‌پذیری: ${s.sellability}`,`پوشش داده هولدرها: ${s.holderCoverage}`,`<b>۴) Early Momentum</b>`,`خریدار/فروشنده ۲۴ساعته: ${m.buys24h}/${m.sells24h}`,`نسبت خریدار به کل معاملات: ${m.buyerSellerRatio==null?'نامشخص':(m.buyerSellerRatio*100).toFixed(1)+'%'}`,`تغییر نقدینگی از اسکن قبل: ${fmtPct(m.liquidityDeltaPct)}`,`<b>۵) Ranking</b>`,`Discovery ${r.components.discovery} | Smart Money ${r.components.smartMoney} | Safety ${r.components.safety} | Momentum ${r.components.momentum} | Market ${r.components.market}`,`<b>دلایل پذیرش:</b>`,...(r.reasons.length?r.reasons.map(x=>`• ${esc(x)}`):['• —']),`<b>هشدارها و موارد تأییدنشده:</b>`,...(r.risks.length?r.risks.map(x=>`⚠️ ${esc(x)}`):['• مورد مهمی در داده‌های موجود ثبت نشد']),``,`🔎 <a href="${esc(t.url||`https://dexscreener.com/${t.chain}/${t.tokenAddress}`)}">مشاهده بازار</a>`,(tier==='EARLY_WATCH'?'⚠️ این فقط هشدار زودهنگام است، نه تأیید نهایی و نه سیگنال خرید. در اسکن بعدی باید دوباره تأیید شود. هیچ معامله‌ای انجام نشده.':'⚠️ این پیام سیگنال خرید نیست. فقط نامزد پژوهشی است؛ ریسک راگ/دستکاری و خطای داده همچنان وجود دارد. هیچ معامله‌ای انجام نشده.')];
-  return lines.join('\n');
-}
-function esc(v){return String(v??'').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;');}
-async function sendTelegram(text,chat){
-  if(!CFG.telegramToken||!chat) return false;
-  const j=await request(`https://api.telegram.org/bot${CFG.telegramToken}/sendMessage`,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({chat_id:chat,text,parse_mode:'HTML',disable_web_page_preview:true})});
-  if(!j.ok) throw new Error(j.description||'Telegram error');
-  return true;
-}
-
-// Verify the actual bot-to-channel path once per bot/target pair. This sends one
-// small confirmation message, even when no token qualifies, so Telegram delivery
-// is not confused with a zero-signal scan.
-async function telegramHealthCheck(state){
-  if(!CFG.telegramToken||!CFG.telegramChat){
-    console.warn('[TELEGRAM_CONFIG_WARNING] Telegram notifications disabled: TELEGRAM_TOKEN or NOVARA_CHAT_ID is missing.');
-    return 'CONFIG_MISSING';
-  }
-  try{
-    const me=await request(`https://api.telegram.org/bot${CFG.telegramToken}/getMe`);
-    if(!me?.ok||!me?.result?.id) throw new Error(me?.description||'getMe did not return a valid bot identity');
-    const prior=state.telegram||{};
-    if(prior.verifiedAt && String(prior.target)===String(CFG.telegramChat) && String(prior.botId)===String(me.result.id)){
-      console.log(`[TELEGRAM_HEALTH_OK] Bot @${me.result.username||'unknown'} and configured destination were verified previously; no repeat test message sent.`);
-      return 'VERIFIED_PREVIOUSLY';
-    }
-    const testText='🟢 NOVARA MEME HUNTER\nاتصال ربات به این کانال با موفقیت تأیید شد.\nاعلان‌های توکن‌های واجد شرایط از این پس در همین کانال ارسال می‌شوند.\nحالت: فقط پایش و اطلاع‌رسانی؛ بدون خرید یا ثبت سفارش.';
-    await sendTelegram(testText,CFG.telegramChat);
-    state.telegram={verifiedAt:Date.now(),target:String(CFG.telegramChat),botId:String(me.result.id),botUsername:me.result.username||null,lastError:null};
-    console.log(`[TELEGRAM_TEST_OK] Test message delivered to configured channel by @${me.result.username||'unknown'}.`);
-    return 'TEST_SENT';
-  }catch(e){
-    state.telegram={...(state.telegram||{}),lastTestAt:Date.now(),lastError:String(e.message||e).slice(0,500)};
-    console.error(`[TELEGRAM_TEST_FAILED] ${e.message||e}`);
-    console.error('[TELEGRAM_HINT] Check that NOVARA_CHAT_ID is the channel username for a public channel or numeric -100... chat ID for a private channel, and that this bot is an administrator allowed to post.');
-    return 'FAILED';
-  }
-}
-
-async function main(){
-  const started=Date.now(),state=await loadState(); state.stats.runs++;
-  console.log(`${VERSION} START — READ ONLY / NO ORDERS / NO AUTO-BUY / SINGLE PRIVATE-CHANNEL NOTIFICATIONS`);
-  console.log(`[CONFIG] liquidityUSD=${CFG.minLiquidity} qualifiedScore>=${CFG.minScore} earlyWatchScore=${CFG.watchMinScore}-${CFG.minScore-1} watchBuyers>=${CFG.watchMinBuyers} watchBuyUSD15m>=${CFG.watchMinBuyVolume15m} watchBuys24h>=${CFG.watchMinBuys24h} top10=${CFG.maxTop10Pct}(soft-risk-only) GeckoInterval=${GECKO_MIN_INTERVAL_MS}ms cacheTTL=${GECKO_CACHE_TTL_MS}ms PumpPortal=${CFG.pumpPortalListenMs}ms`);
-  const telegramStatus=await telegramHealthCheck(state);
-  const launchStream=await collectPumpPortalEvents();
-  mergeLaunchEvents(state,launchStream.events);
-  console.log(`Discovery feeds: PumpPortal Solana creation/migration stream=${launchStream.status}; GeckoTerminal new pools (Solana + TON); DEX Screener latest profiles; Solana RPC ${CFG.solanaRpcConfigured?'custom endpoint':'PUBLIC FALLBACK — SOLANA_RPC_URL secret is empty/unavailable'}`);
-  if(!CFG.solanaRpcConfigured) console.warn('[CONFIG_WARNING] SOLANA_RPC_URL is empty in this job; using rate-limited public Solana RPC. Check GitHub Actions environment secrets.');
-  const {tokens,errors}=await discover();
-  const seenKeys=new Set(tokens.map(t=>`${t.chain}:${t.tokenAddress}`));
-  for(const p of state.pendingLaunches||[]){const k=`${p.chain}:${p.tokenAddress}`;if(!seenKeys.has(k)){tokens.push({...p,source:p.source||'PumpPortal launch event'});seenKeys.add(k);}}
-  tokens.sort((a,b)=>Number(String(b.source||'').includes('PumpPortal'))-Number(String(a.source||'').includes('PumpPortal')));
-  console.log(`Discovered ${tokens.length} unique candidates including ${state.pendingLaunches.length} persisted launch events`);
-  // Alternate chains so a busy Solana feed cannot starve TON discovery.
-  const buckets={solana:[],ton:[]}; for(const t of tokens){(buckets[t.chain]||buckets.solana).push(t);}
-  const work=[]; while(work.length<CFG.scanLimit&&(buckets.solana.length||buckets.ton.length)){for(const c of ['solana','ton']) if(buckets[c].length&&work.length<CFG.scanLimit) work.push(buckets[c].shift());}
-  let checked=0,qualified=0,alerts=0,candidateErrors=0,noPool=0,dexPairMissing=0,tradeApiErrors=0,noRecentTrades=0;
-  for(const raw of work){
-    const key=`${raw.chain}:${raw.tokenAddress}`; const previous=state.tokens[key]||{};
-    try{
-      const t=await enrichDex(raw); if(!t.poolAddress) noPool++; if(t.pairLookup==='NO_DEXSCREENER_PAIR') dexPairMissing++; const age=ageHours(t.pairCreatedAt||t.poolCreatedAt);
-      if(age!=null&&age>CFG.maxAgeHours) continue;
-      // Pre-listing watch: only alert when the PumpPortal curve has moved materially beyond
-      // its initial virtual reserve. This is explicitly NOT treated as real liquidity.
-      if(t.chain==='solana' && !t.poolAddress && t.source?.includes('PumpPortal') && t.eventType==='NEW_TOKEN'){
-        const key=`${t.chain}:${t.tokenAddress}`, prior=state.tokens[key]||{};
-        const traction=n(t.virtualSol)>=CFG.prelaunchMinVirtualSol && n(t.marketCapSol)>=CFG.prelaunchMinMarketCapSol;
-        if(traction && !prior.prelaunchAlertAt){
-          const msg=buildPrelaunchMessage(t); let sent=false;
-          if(CFG.telegramToken&&CFG.telegramChat){try{sent=await sendTelegram(msg,CFG.telegramChat);}catch(e){console.error(`Prelaunch Telegram notification failed: ${e.message}`);}}
-          if(sent){state.tokens[key]={...prior,firstSeen:prior.firstSeen||Date.now(),lastSeen:Date.now(),chain:t.chain,tokenAddress:t.tokenAddress,name:t.name,symbol:t.symbol,source:t.source,prelaunchAlertAt:Date.now(),prelaunchVirtualSol:t.virtualSol,prelaunchMarketCapSol:t.marketCapSol};alerts++;state.stats.alerts++;}
-          console.log(`PRELAUNCH ${t.symbol} virtualSol=${n(t.virtualSol)} marketCapSol=${n(t.marketCapSol)} traction=${traction} alertSent=${sent}`);
-        }
-        // Keep this token in the persistent event ledger; wait for a real pool before full scoring.
-        checked++; await sleep(100); continue;
-      }
-      // A migration event is not called a DEX listing until a pool is independently found.
-      if(!t.poolAddress){console.log(`EARLY_CANDIDATE ${t.symbol} source=${t.source} pool=NOT_YET_VERIFIED`);checked++;await sleep(100);continue;}
-      const sm=await smartMoney(t); if(sm.coverage==='API_ERROR') tradeApiErrors++; if(sm.coverage==='NO_TRADES_LAST_15M'||sm.coverage==='NO_INDEXED_TRADES') noRecentTrades++;
-      const safety=t.chain==='solana'?await solanaSafety(t):await tonSafety(t);
-      const mom=momentum(t,sm,previous); const rankResult=rank(t,sm,safety,mom,age); checked++;
-      const record={firstSeen:previous.firstSeen||Date.now(),lastSeen:Date.now(),name:t.name,symbol:t.symbol,priceUsd:t.priceUsd,liquidityUsd:t.liquidityUsd,score:rankResult.score,qualified:rankResult.qualified,chain:t.chain,tokenAddress:t.tokenAddress,poolAddress:t.poolAddress,source:t.source,top10HolderPct:safety.top10HolderPct};
-      state.tokens[key]={...previous,...record};
-      if(rankResult.qualified) qualified++;
-      const tier=rankResult.qualified?'QUALIFIED':(rankResult.earlyWatch?'EARLY_WATCH':null);
-      const lastAlert=n(previous.lastAlertAt), lastWatch=n(previous.lastWatchAlertAt);
-      const cooldown=tier==='QUALIFIED'?CFG.alertCooldownHours:CFG.watchCooldownHours;
-      const lastTierAlert=tier==='QUALIFIED'?lastAlert:lastWatch;
-      if(tier && Date.now()-lastTierAlert>cooldown*3600000){
-        const msg=buildMessage(t,sm,safety,mom,rankResult,age,tier);
-        let sent=false;
-        if (CFG.telegramToken && CFG.telegramChat) {
-          try { sent=await sendTelegram(msg,CFG.telegramChat); }
-          catch(e) { console.error(`Telegram notification failed: ${e.message}`); }
-        }
-        if(sent){alerts++; if(tier==='QUALIFIED')state.tokens[key].lastAlertAt=Date.now();else state.tokens[key].lastWatchAlertAt=Date.now();state.stats.alerts++;}
-      }
-      console.log(`${t.chain} ${t.symbol} score=${rankResult.score} tier=${tier||'REJECTED'} qualified=${rankResult.qualified} tradesFetched=${sm.tradesFetched} trades15m=${sm.recentTradeCount} walletTrades15m=${sm.walletAttributedTrades} buyers15m=${sm.uniqueBuyers} buyUsd15m=${sm.buyUsd.toFixed(2)} liquidity=${n(t.liquidityUsd)} top10=${safety.top10HolderPct} holderCoverage=${safety.holderCoverage} pairLookup=${t.pairLookup||'NOT_RUN'}${!rankResult.qualified?` reject=${rankResult.rejectReasons.join('|')}`:''}${sm.error?` tradeError=${sm.error}`:''}`);
-    }catch(e){candidateErrors++;console.error(`Candidate ${key}: ${e.message}`);}
-    await sleep(250);
-  }
-  state.lastRun=new Date().toISOString(); await saveState(state);
-  console.log(`${VERSION} END | checked=${checked} qualified=${qualified} alerts=${alerts} telegram=${telegramStatus} launchEvents=${launchStream.events.length} pendingLaunches=${state.pendingLaunches.length} pumpPortal=${launchStream.status} noPool=${noPool} dexPairMissing=${dexPairMissing} tradeApiErrors=${tradeApiErrors} noRecentTrades=${noRecentTrades} candidateErrors=${candidateErrors} feedErrors=${errors.length} elapsed=${Math.round((Date.now()-started)/1000)}s`);
-  for(const e of errors) console.log(`FEED_WARNING ${e}`);
-}
-if (process.env.HUNTER_SELF_TEST === '1') {
-  const assert = (await import('node:assert/strict')).default;
-  assert.equal(n(null,123),123);
-  assert.equal(n(0,123),0);
-  assert.equal(positiveOr(null,456),456);
-  assert.equal(positiveOr(0,456),456);
-  assert.equal(positiveOr(12,456),12);
-  assert.equal(n(null,7),7);
-  assert.ok(buildPrelaunchMessage({name:'Test',symbol:'TST',tokenAddress:'mint',virtualSol:55,marketCapSol:120}).includes('Virtual SOL reserve'));
-  assert.equal(detectCoordination([{tx_from:'a'},{tx_from:'a'},{tx_from:'a'},{tx_from:'b'},{tx_from:'b'},{tx_from:'b'}],t=>t.tx_from), true);
-  assert.equal(detectCoordination([{tx_from:'a'},{tx_from:'b'}],t=>t.tx_from), false);
-  assert.equal(tradeIsBuyForToken({from_token_address:'SOL',to_token_address:'TOKEN',kind:'buy'},{tokenAddress:'TOKEN',isBaseToken:false}),true);
-  assert.equal(tradeIsBuyForToken({from_token_address:'TOKEN',to_token_address:'SOL',kind:'sell'},{tokenAddress:'TOKEN',isBaseToken:false}),false);
-  // Regression test: a successful GeckoTerminal response must populate the mutable result object.
-  const originalFetch=globalThis.fetch;
-  try {
-    globalThis.fetch=async()=>new Response(JSON.stringify({data:[{attributes:{block_timestamp:new Date().toISOString(),from_token_address:'SOL',to_token_address:'TOKEN',tx_from_address:'buyer-1',volume_in_usd:'125',kind:'buy'}}]}),{status:200,headers:{'content-type':'application/json'}});
-    lastGeckoRequestAt=Date.now()-GECKO_MIN_INTERVAL_MS;
-    const sampled=await smartMoney({chain:'solana',poolAddress:'test-pool',tokenAddress:'TOKEN',isBaseToken:false});
-    assert.equal(sampled.coverage,'SAMPLED_15M_TRADES');
-    assert.equal(sampled.tradesFetched,1);
-    assert.equal(sampled.uniqueBuyers,1);
-    assert.equal(sampled.buyUsd,125);
-  } finally { globalThis.fetch=originalFetch; }
-  const scored=rank({chain:'solana',poolAddress:'test-pool',liquidityUsd:10000,volume24h:20000,txns24h:{buys:20,sells:5}}, {coverage:'SAMPLED_15M_TRADES',uniqueBuyers:8,uniqueSellers:2,buyUsd:5000,sellUsd:1000,coordinationRisk:false}, {mintAuthority:'REVOKED',freezeAuthority:'REVOKED',top10HolderPct:20,sellability:'ROUTE_QUOTE_AVAILABLE',riskFlags:[]}, {buyers15m:8,netFlow15m:4000,buyerSellerRatio:0.8,liquidityDeltaPct:5,buys24h:20,sells24h:5}, 2);
-  assert.equal(scored.qualified, true);
-  const concentrated=rank({chain:'solana',poolAddress:'test-pool',liquidityUsd:10000,volume24h:20000,txns24h:{buys:20,sells:5}}, {coverage:'SAMPLED_15M_TRADES',uniqueBuyers:8,uniqueSellers:2,buyUsd:5000,sellUsd:1000,coordinationRisk:false}, {mintAuthority:'REVOKED',freezeAuthority:'REVOKED',top10HolderPct:95.0896,sellability:'ROUTE_QUOTE_AVAILABLE',riskFlags:[]}, {buyers15m:8,netFlow15m:4000,buyerSellerRatio:0.8,liquidityDeltaPct:5,buys24h:20,sells24h:5}, 2);
-  assert.equal(concentrated.hardFail, false);
-  assert.equal(concentrated.qualified, true);
-  if(concentrated.rejectReasons.some(x=>x.startsWith('TOP10_CONCENTRATION_'))) throw new Error('Concentration must not be a hard reject');
-  const watch=rank({chain:'solana',poolAddress:'test-pool',source:'test',liquidityUsd:1500,volume24h:10000,txns24h:{buys:20,sells:5}}, {coverage:'SAMPLED_15M_TRADES',uniqueBuyers:20,uniqueSellers:5,buyUsd:2000,sellUsd:500,coordinationRisk:false}, {mintAuthority:'REVOKED',freezeAuthority:'PENDING',top10HolderPct:95,sellability:'NOT_SIMULATED',riskFlags:[]}, {buyers15m:20,netFlow15m:1500,buyerSellerRatio:0.5,liquidityDeltaPct:4,buys24h:12,sells24h:5}, null);
-  assert.equal(watch.score,65);
-  assert.equal(watch.qualified,false);
-  assert.equal(watch.earlyWatch,true);
-  assert.equal(watch.hardFail,false);
+if(process.env.HUNTER_SELF_TEST==='1') {
+  const assert=(await import('node:assert/strict')).default;
+  assert.equal(num(null),0); assert.equal(num('12.5'),12.5); assert.equal(num('bad'),null);
+  const birth=buildBirth({name:'Test',symbol:'TST',mint:'mint',eventAt:Date.now(),source:'TEST'});
+  assert.ok(birth.includes('TOKEN BIRTH DETECTED'));
+  assert.ok(birth.includes('تعداد خریداران'));
+  const pool=buildPool({name:'Test',symbol:'TST',mint:'mint',pool:'pool',source:'TEST',liquidityUsd:0});
+  assert.ok(pool.includes('NEW DEX POOL DETECTED'));
+  assert.ok(pool.includes('حداقل نقدینگی'));
+  assert.ok(!pool.includes('شرط لازم'));
   console.log('SELF_TEST_OK');
-} else { main().catch(e=>{console.error(e.stack||e);process.exitCode=1;}); }
+} else main().catch(e=>{console.error(e.stack||e);process.exitCode=1;});
