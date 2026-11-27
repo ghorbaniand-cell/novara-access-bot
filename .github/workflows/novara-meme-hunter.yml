@@ -46,6 +46,10 @@ jobs:
           HUNTER_LISTEN_MS: '250000'
           HUNTER_SCAN_LIMIT: '100'
           HUNTER_PROFILE_LIMIT: '100'
+          HUNTER_MIN_DEV_SCORE: '22'
+          HUNTER_MIN_POOL_SCORE: '70'
+          HUNTER_MAX_DEV_CHECKS_PER_RUN: '15'
+          HUNTER_MAX_DEV_CHECKS_PER_DAY: '200'
         run: |
           set -euo pipefail
           node --version
