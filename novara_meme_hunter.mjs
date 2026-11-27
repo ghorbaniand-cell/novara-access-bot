@@ -1,7 +1,7 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 
-const VERSION = 'NOVARA-MEME-HUNTER-V2.0.0-EVENT-FIRST-SOLANA';
+const VERSION = 'NOVARA-MEME-HUNTER-V2.0.2-EVENT-FIRST-FORMATTED-VALUES';
 const ROOT = path.dirname(new URL(import.meta.url).pathname);
 const STATE_FILE = path.join(ROOT, process.env.NOVARA_STATE_FILE || 'data/meme_hunter_state.json');
 const CFG = {
@@ -17,6 +17,22 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
 const num = v => Number.isFinite(Number(v)) ? Number(v) : null;
 const esc = v => String(v ?? '—').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;');
 const short = v => v ? `${String(v).slice(0,6)}…${String(v).slice(-5)}` : '—';
+function formatEventTime(value) {
+  const date = new Date(value);
+  if (!Number.isFinite(date.getTime())) return 'نامشخص';
+  const fmt = (timeZone) => new Intl.DateTimeFormat('en-GB', {
+    timeZone, day:'2-digit', month:'2-digit', year:'numeric',
+    hour:'2-digit', minute:'2-digit', second:'2-digit', hourCycle:'h23'
+  }).format(date);
+  return `${fmt('Europe/Berlin')} (Europe/Berlin) | ${fmt('UTC')} UTC`;
+}
+function formatVirtualSol(value) {
+  const n = num(value);
+  if (n === null) return 'نامشخص';
+  // Pump launch feeds report vSolInBondingCurve in lamports (1 SOL = 1e9 lamports).
+  const sol = n / 1e9;
+  return `${sol.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:4})} SOL`;
+}
 
 async function loadState() {
   try { const s = JSON.parse(await fs.readFile(STATE_FILE, 'utf8')); return { seen: s.seen || {}, events: s.events || {}, stats: s.stats || {}, lastRun: s.lastRun || null }; }
@@ -40,9 +56,9 @@ function buildBirth(e) {
     '<b>وضعیت:</b> رویداد ایجاد توکن از فید لانچ دریافت شد؛ هنوز عرضه/استخر DEX تأیید نشده است.',
     `<b>شبکه:</b> Solana`, `<b>Mint:</b> <code>${esc(e.mint)}</code>`,
     `<b>سازنده:</b> <code>${esc(e.creator)}</code>`,
-    `<b>زمان دریافت رویداد:</b> ${new Date(e.eventAt).toISOString()}`,
-    `<b>Virtual SOL (گزارش فید):</b> ${e.virtualSol ?? 'نامشخص'}`,
-    `<b>Market cap SOL (گزارش فید):</b> ${e.marketCapSol ?? 'نامشخص'}`,
+    `<b>زمان دریافت رویداد:</b> ${formatEventTime(e.eventAt)}`,
+    `<b>Virtual SOL (گزارش فید):</b> ${formatVirtualSol(e.virtualSol)}`,
+    `<b>Market cap SOL (گزارش فید):</b> ${e.marketCapSol == null ? 'نامشخص' : `${num(e.marketCapSol).toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:4})} SOL`}`,
     `<b>منبع:</b> ${esc(e.source)}`,
     e.signature ? `<b>Signature:</b> <code>${esc(e.signature)}</code>` : '',
     '', 'ℹ️ این هشدار به تعداد خریداران، حجم معاملات، نقدینگی یا امتیاز وابسته نیست. اطلاعات امنیتی و امکان فروش هنوز بررسی نشده‌اند.',
@@ -183,6 +199,8 @@ if(process.env.HUNTER_SELF_TEST==='1') {
   assert.equal(num(null),0); assert.equal(num('12.5'),12.5); assert.equal(num('bad'),null);
   const birth=buildBirth({name:'Test',symbol:'TST',mint:'mint',eventAt:Date.now(),source:'TEST'});
   assert.ok(birth.includes('TOKEN BIRTH DETECTED'));
+  assert.ok(birth.includes('Europe/Berlin'));
+  assert.equal(formatVirtualSol(30000000000), '30.00 SOL');
   assert.ok(birth.includes('تعداد خریداران'));
   const pool=buildPool({name:'Test',symbol:'TST',mint:'mint',pool:'pool',source:'TEST',liquidityUsd:0});
   assert.ok(pool.includes('NEW DEX POOL DETECTED'));
