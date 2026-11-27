@@ -17,7 +17,6 @@ jobs:
     runs-on: ubuntu-latest
     environment: production
     timeout-minutes: 15
-
     steps:
       - name: Checkout repository and persistent hunter state
         uses: actions/checkout@v4
@@ -29,6 +28,15 @@ jobs:
         with:
           node-version: '22'
 
+      - name: Validate Hunter logic
+        env:
+          HUNTER_SELF_TEST: '1'
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --check novara_meme_hunter.mjs
+          node novara_meme_hunter.mjs
+
       - name: Run NOVARA Meme Hunter
         env:
           TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
@@ -36,13 +44,18 @@ jobs:
           SOLANA_RPC_URL: ${{ secrets.SOLANA_RPC_URL }}
           TONAPI_KEY: ${{ secrets.TONAPI_KEY }}
           JUPITER_API_KEY: ${{ secrets.JUPITER_API_KEY }}
-          HUNTER_SCAN_LIMIT: '8'
+          PUMPPORTAL_API_KEY: ${{ secrets.PUMPPORTAL_API_KEY }}
+          HUNTER_PUMPPORTAL_LISTEN_MS: '45000'
+          HUNTER_PRELAUNCH_MIN_VSOL: '50'
+          HUNTER_PRELAUNCH_MIN_MCAP_SOL: '100'
+          HUNTER_SCAN_LIMIT: '12'
           HUNTER_MAX_AGE_HOURS: '72'
-          HUNTER_MIN_LIQUIDITY_USD: '8000'
+          HUNTER_MIN_LIQUIDITY_USD: '1500'
+          HUNTER_GECKO_MIN_INTERVAL_MS: '10000'
           HUNTER_MIN_BUY_VOLUME_15M_USD: '500'
           HUNTER_MIN_BUYS_24H: '8'
           HUNTER_MIN_UNIQUE_BUYERS: '6'
-          HUNTER_MAX_TOP10_HOLDER_PCT: '55'
+          HUNTER_MAX_TOP10_HOLDER_PCT: '55' # diagnostic threshold only; no hard rejection
           HUNTER_MIN_SCORE: '72'
           HUNTER_ALERT_COOLDOWN_HOURS: '6'
         shell: bash
