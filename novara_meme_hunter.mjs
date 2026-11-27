@@ -1,7 +1,7 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 
-const VERSION = 'NOVARA-MEME-HUNTER-V1.0.8-EARLY-LAUNCH-OBSERVER';
+const VERSION = 'NOVARA-MEME-HUNTER-V1.0.9-LIQUIDITY-CONCENTRATION-RATE-LIMIT-FIX';
 const ROOT = path.dirname(new URL(import.meta.url).pathname);
 const STATE_FILE = path.join(ROOT, process.env.NOVARA_STATE_FILE || 'data/meme_hunter_state.json');
 const n = (v, d=0) => v == null || v === '' ? d : (Number.isFinite(Number(v)) ? Number(v) : d);
@@ -32,8 +32,8 @@ const CFG = {
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 // GeckoTerminal's public API is rate-limited. Pace every request across discovery and trade sampling.
 let lastGeckoRequestAt = 0;
-const GECKO_MIN_INTERVAL_MS = Math.max(6000, num('HUNTER_GECKO_MIN_INTERVAL_MS', 6500));
-const GECKO_MAX_429_RETRIES = 2;
+const GECKO_MIN_INTERVAL_MS = Math.max(9000, num('HUNTER_GECKO_MIN_INTERVAL_MS', 10000));
+const GECKO_MAX_429_RETRIES = 3;
 const pct = (a,b) => b > 0 ? a/b*100 : null;
 const short = s => !s ? '—' : String(s).length > 13 ? `${String(s).slice(0,6)}…${String(s).slice(-5)}` : String(s);
 const usd = v => v == null || !Number.isFinite(Number(v)) ? 'نامشخص' : `$${Number(v).toLocaleString('en-US',{maximumFractionDigits:0})}`;
@@ -55,7 +55,7 @@ async function request(url, opts={}, timeout=12000) {
       if (res.ok) return await res.json();
       if (isGecko && res.status===429 && attempt<GECKO_MAX_429_RETRIES) {
         const retryAfter=Number(res.headers.get('retry-after'));
-        const delay=Number.isFinite(retryAfter)&&retryAfter>0 ? Math.min(60000,retryAfter*1000) : 12000*(attempt+1);
+        const delay=Number.isFinite(retryAfter)&&retryAfter>0 ? Math.min(60000,retryAfter*1000) : 15000*(attempt+1);
         console.warn(`[GECKO_RATE_LIMIT] HTTP 429; retry ${attempt+1}/${GECKO_MAX_429_RETRIES} after ${delay}ms`);
         await sleep(delay);
         continue;
@@ -343,7 +343,8 @@ function rank(token,sm,safety,mom,age){
   if(token.volume24h>=10000) market+=5; if(n(token.txns24h?.buys)>n(token.txns24h?.sells)) market+=4;
   if(token.liquidityUsd>=CFG.minLiquidity) market+=3;
   const raw=discovery+smart+safe+flow+market; const score=Math.max(0,Math.min(100,Math.round(raw)));
-  const top10ConcentrationFail=safety.top10HolderPct!=null&&safety.top10HolderPct>CFG.maxTop10Pct;
+  // Top-10 ownership is only a heuristic: token-account aggregation may include LP/pool/system accounts. Treat it as a scoring risk, not an automatic rejection.
+  const top10ConcentrationFail=false;
   const liquidityFail=n(token.liquidityUsd)<CFG.minLiquidity;
   const authorityFail=safety.mintAuthority==='ACTIVE'&&safety.freezeAuthority==='ACTIVE';
   const noPoolFail=!token.poolAddress;
@@ -351,7 +352,7 @@ function rank(token,sm,safety,mom,age){
   const hardFail=noPoolFail || liquidityFail || top10ConcentrationFail || authorityFail || noRouteFail;
   if(noPoolFail) rejectReasons.push('NO_VERIFIED_POOL');
   if(liquidityFail) rejectReasons.push(`LOW_LIQUIDITY_${n(token.liquidityUsd).toFixed(2)}_LT_${CFG.minLiquidity}`);
-  if(top10ConcentrationFail) { rejectReasons.push(`TOP10_CONCENTRATION_${safety.top10HolderPct.toFixed(2)}_GT_${CFG.maxTop10Pct}`); risks.push(`تمرکز ۱۰ هولدر (${safety.top10HolderPct.toFixed(1)}٪) از سقف مجاز ${CFG.maxTop10Pct.toFixed(1)}٪ بیشتر است؛ نامزد رد شد`); }
+  if(safety.top10HolderPct!=null&&safety.top10HolderPct>CFG.maxTop10Pct) risks.push(`تمرکز ۱۰ مالک برآوردی ${safety.top10HolderPct.toFixed(1)}٪ بالا است؛ این تخمین ممکن است حساب‌های LP/استخر را شامل شود و به‌تنهایی موجب رد نیست`);
   if(authorityFail) rejectReasons.push('MINT_AND_FREEZE_AUTHORITIES_ACTIVE');
   if(noRouteFail) rejectReasons.push('NO_SELL_ROUTE');
   const enoughEvidence=sm.coverage==='SAMPLED_15M_TRADES' && safety.top10HolderPct!=null && safety.mintAuthority!=='UNKNOWN' && safety.freezeAuthority!=='UNKNOWN';
@@ -416,6 +417,7 @@ async function telegramHealthCheck(state){
 async function main(){
   const started=Date.now(),state=await loadState(); state.stats.runs++;
   console.log(`${VERSION} START — READ ONLY / NO ORDERS / NO AUTO-BUY / SINGLE PRIVATE-CHANNEL NOTIFICATIONS`);
+  console.log(`[CONFIG] minLiquidityUSD=${CFG.minLiquidity} maxAgeHours=${CFG.maxAgeHours} maxTop10Pct=${CFG.maxTop10Pct}(soft-risk-only) minScore=${CFG.minScore} GeckoMinInterval=${GECKO_MIN_INTERVAL_MS}ms retries429=${GECKO_MAX_429_RETRIES}`);
   const telegramStatus=await telegramHealthCheck(state);
   const launchStream=await collectPumpPortalEvents();
   mergeLaunchEvents(state,launchStream.events);
@@ -500,7 +502,7 @@ if (process.env.HUNTER_SELF_TEST === '1') {
   const scored=rank({chain:'solana',poolAddress:'test-pool',liquidityUsd:10000,volume24h:20000,txns24h:{buys:20,sells:5}}, {coverage:'SAMPLED_15M_TRADES',uniqueBuyers:8,uniqueSellers:2,buyUsd:5000,sellUsd:1000,coordinationRisk:false}, {mintAuthority:'REVOKED',freezeAuthority:'REVOKED',top10HolderPct:20,sellability:'ROUTE_QUOTE_AVAILABLE',riskFlags:[]}, {buyers15m:8,netFlow15m:4000,buyerSellerRatio:0.8,liquidityDeltaPct:5,buys24h:20,sells24h:5}, 2);
   assert.equal(scored.qualified, true);
   const concentrated=rank({chain:'solana',poolAddress:'test-pool',liquidityUsd:10000,volume24h:20000,txns24h:{buys:20,sells:5}}, {coverage:'SAMPLED_15M_TRADES',uniqueBuyers:8,uniqueSellers:2,buyUsd:5000,sellUsd:1000,coordinationRisk:false}, {mintAuthority:'REVOKED',freezeAuthority:'REVOKED',top10HolderPct:95.0896,sellability:'ROUTE_QUOTE_AVAILABLE',riskFlags:[]}, {buyers15m:8,netFlow15m:4000,buyerSellerRatio:0.8,liquidityDeltaPct:5,buys24h:20,sells24h:5}, 2);
-  assert.equal(concentrated.hardFail, true);
-  assert.equal(concentrated.qualified, false);
+  assert.equal(concentrated.hardFail, false); // estimated concentration alone must not hard-reject
+  assert.equal(concentrated.qualified, true);
   console.log('SELF_TEST_OK');
 } else { main().catch(e=>{console.error(e.stack||e);process.exitCode=1;}); }
